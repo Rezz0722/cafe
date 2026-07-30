@@ -1,0 +1,23 @@
+.toast {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 26px;
+  z-index: 200;
+  display: flex;
+  justify-content: center;
+  padding-inline: 20px;
+  pointer-events: none;
+}
+
+.bubble {
+  background: var(--c-ink);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 13px 24px;
+  border-radius: var(--r-md);
+  box-shadow: 0 14px 34px rgb(26 26 26 / 32%);
+  animation: cg-rise 0.22s ease both;
+  max-width: 100%;
+  text-align: center;
+}

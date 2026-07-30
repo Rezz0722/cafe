@@ -1,0 +1,158 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgb(255 255 255 / 92%);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--c-border-3);
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-block: 12px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+}
+
+.logo {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center 20%;
+  background: #fff;
+}
+
+.brandName {
+  font-size: var(--fs-xl);
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+
+.nav a:hover {
+  color: var(--c-primary);
+}
+
+.loginButton {
+  background: var(--c-primary);
+  color: #fff;
+  border-radius: var(--r-md);
+  padding: 11px 22px;
+  font-size: 15.5px;
+  font-weight: 700;
+  box-shadow: var(--sh-primary);
+  transition:
+    transform var(--t-fast),
+    box-shadow var(--t-fast);
+  white-space: nowrap;
+}
+
+.loginButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgb(89 150 255 / 38%);
+}
+
+.profileButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  background: var(--c-surface-2);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-pill);
+  padding: 6px 15px 6px 6px;
+  transition: background var(--t-fast);
+}
+
+.profileButton:hover {
+  background: #eef1f5;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center 20%;
+}
+
+.profileName {
+  font-size: var(--fs-base);
+  font-weight: 700;
+}
+
+.burger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--c-border-2);
+  background: #fff;
+  border-radius: var(--r-md);
+  font-size: 22px;
+  padding: 0;
+  flex: none;
+}
+
+/* --- mobile drawer -------------------------------------------------------- */
+
+.drawer {
+  border-top: 1px solid var(--c-border-3);
+  padding: 14px 20px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: #fff;
+  animation: cg-rise 0.2s ease both;
+}
+
+.drawerLink {
+  padding: 12px 6px;
+  font-size: 17px;
+  font-weight: 700;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.drawerLink:last-of-type {
+  border-bottom: none;
+}
+
+.drawerCta {
+  margin-top: 12px;
+  background: var(--c-primary);
+  color: #fff;
+  border-radius: 13px;
+  padding: 14px;
+  font-size: var(--fs-md);
+  font-weight: 700;
+  width: 100%;
+  text-align: center;
+}
+
+@media (max-width: 760px) {
+  .nav,
+  .loginButton,
+  .profileButton {
+    display: none;
+  }
+
+  .burger {
+    display: inline-flex;
+  }
+}

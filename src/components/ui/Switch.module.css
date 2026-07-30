@@ -1,0 +1,32 @@
+.switch {
+  width: 48px;
+  height: 28px;
+  flex: none;
+  border-radius: var(--r-pill);
+  border: none;
+  cursor: pointer;
+  position: relative;
+  padding: 0;
+  background: #d5d9df;
+  transition: background 0.18s;
+}
+
+.on {
+  background: var(--c-primary);
+}
+
+.knob {
+  position: absolute;
+  top: 3px;
+  inset-inline-end: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 25%);
+  transition: inset-inline-end 0.18s;
+}
+
+.on .knob {
+  inset-inline-end: 23px;
+}

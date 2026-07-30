@@ -1,0 +1,87 @@
+.footer {
+  background: var(--c-ink);
+  color: #f2f2f2;
+  margin-top: auto;
+}
+
+.inner {
+  padding: 48px var(--page-pad) 28px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1fr 1fr;
+  gap: 36px;
+}
+
+.brandName {
+  font-size: 23px;
+  font-weight: 800;
+  margin-bottom: 12px;
+}
+
+.tagline {
+  font-size: var(--fs-base);
+  color: #aeaeae;
+  line-height: 1.9;
+  max-width: 320px;
+}
+
+.colTitle {
+  font-size: var(--fs-base);
+  font-weight: 800;
+  margin-bottom: 14px;
+  color: #fff;
+}
+
+.links {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.links a {
+  color: #bdbdbd;
+  transition: color var(--t-fast);
+}
+
+.links a:hover {
+  color: #fff;
+}
+
+.bottom {
+  border-top: 1px solid #333;
+  margin-top: 34px;
+  padding-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.madeBy {
+  font-size: var(--fs-base);
+  font-weight: 700;
+}
+
+.heart {
+  color: var(--c-accent);
+}
+
+.copyright {
+  font-size: var(--fs-sm);
+  color: var(--c-muted-2);
+}
+
+@media (max-width: 760px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 26px;
+  }
+
+  .brandCol {
+    grid-column: 1 / -1;
+  }
+}

@@ -1,0 +1,613 @@
+/* ===== hero ============================================================== */
+
+.hero {
+  padding-block: 58px 30px;
+}
+
+.heroGrid {
+  display: grid;
+  grid-template-columns: 1.08fr 0.92fr;
+  gap: 52px;
+  align-items: center;
+}
+
+.heroCopy {
+  animation: cg-rise 0.6s ease both;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--c-pastel-lime);
+  color: #5a6a00;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  padding: 7px 15px;
+  border-radius: var(--r-pill);
+  margin-bottom: 20px;
+}
+
+.title {
+  font-size: var(--fs-hero);
+  line-height: 1.28;
+  font-weight: 800;
+  margin-bottom: 16px;
+  letter-spacing: -1px;
+}
+
+.titleAccent {
+  color: var(--c-primary);
+}
+
+.lede {
+  font-size: var(--fs-lg);
+  color: var(--c-ink-2);
+  margin-bottom: 26px;
+  max-width: 520px;
+}
+
+.lede b {
+  color: var(--c-ink);
+}
+
+/* --- search box ---------------------------------------------------------- */
+
+.searchForm {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  border: 1.5px solid var(--c-border);
+  border-radius: var(--r-xl);
+  padding: 8px 22px 8px 8px;
+  box-shadow: var(--sh-raised);
+  max-width: 560px;
+}
+
+.searchField {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  padding-inline-end: 12px;
+}
+
+.searchIcon {
+  font-size: 22px;
+  color: #9aa3af;
+  flex: none;
+}
+
+.searchInput {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: var(--fs-md);
+  padding-block: 12px;
+}
+
+.searchSubmit {
+  background: var(--c-primary);
+  color: #fff;
+  border-radius: 14px;
+  padding-inline: 28px;
+  height: 52px;
+  font-size: 16.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  flex: none;
+  transition: background var(--t-fast);
+}
+
+.searchSubmit:hover {
+  background: var(--c-primary-strong);
+}
+
+.suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 18px;
+  align-items: center;
+}
+
+.suggestionsLabel {
+  font-size: 14px;
+  color: var(--c-muted-2);
+  font-weight: 600;
+  margin-inline-end: 4px;
+}
+
+/* --- hero art ------------------------------------------------------------ */
+
+.heroArt {
+  position: relative;
+  animation: cg-rise 0.7s 0.1s ease both;
+}
+
+.heroFrame {
+  position: relative;
+  height: 440px;
+  border-radius: var(--r-2xl);
+  overflow: hidden;
+  box-shadow: var(--sh-hero);
+}
+
+.statCard {
+  position: absolute;
+  bottom: -20px;
+  inset-inline-end: 6px;
+  background: #fff;
+  border-radius: var(--r-lg);
+  padding: 12px 16px;
+  box-shadow: 0 16px 36px rgb(26 26 26 / 16%);
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.statIcon {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--r-md);
+  background: var(--c-pastel-lime);
+  display: grid;
+  place-items: center;
+  font-size: 21px;
+}
+
+.statLabel {
+  font-size: 12.5px;
+  color: var(--c-muted-2);
+}
+
+.statValue {
+  font-size: 16.5px;
+  font-weight: 800;
+}
+
+.ratingTag {
+  position: absolute;
+  top: -14px;
+  inset-inline-start: 2px;
+  background: var(--c-accent);
+  color: var(--c-ink);
+  font-weight: 800;
+  font-size: var(--fs-sm);
+  padding: 8px 14px;
+  border-radius: var(--r-pill);
+  box-shadow: var(--sh-accent);
+  transform: rotate(-6deg);
+}
+
+/* ===== popular filters =================================================== */
+
+.filterBar {
+  background: var(--c-pastel-blue);
+  margin-top: 44px;
+}
+
+.filterBarInner {
+  padding-block: 22px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.filterBarTitle {
+  font-size: var(--fs-md);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.filterChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.priceNote {
+  margin-inline-start: auto;
+  font-size: var(--fs-sm);
+  color: #3d6470;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ===== featured ========================================================== */
+
+.section {
+  padding-block: 52px 24px;
+}
+
+.sectionHead {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.sectionHeadCopy {
+  position: relative;
+}
+
+.h2 {
+  font-size: var(--fs-3xl);
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.sectionSub {
+  font-size: var(--fs-md);
+  color: var(--c-ink-3);
+  margin-top: 8px;
+}
+
+/* Hand-written aside pinned beside the section title. */
+.editorNote {
+  position: absolute;
+  top: -30px;
+  inset-inline-start: -70px;
+  background: var(--c-pastel-lime);
+  border: 1.5px dashed var(--c-accent);
+  color: #5a5000;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  padding: 8px 13px;
+  border-radius: var(--r-md);
+  transform: rotate(-4deg);
+  white-space: nowrap;
+  box-shadow: 0 6px 16px rgb(0 0 0 / 5%);
+}
+
+.seeAll {
+  font-size: 15.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.seeAll:hover {
+  color: var(--c-primary);
+}
+
+.featuredGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-top: 32px;
+}
+
+/* ===== intents =========================================================== */
+
+.intentSection {
+  padding-block: 44px 18px;
+}
+
+.intentHead {
+  text-align: center;
+  max-width: 640px;
+  margin: 0 auto 32px;
+}
+
+.intentHeadSub {
+  font-size: 16.5px;
+  color: var(--c-ink-3);
+  margin-top: 12px;
+}
+
+.intentGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.intentCard {
+  border-radius: var(--r-xl);
+  padding: 24px 22px;
+  display: flex;
+  flex-direction: column;
+  min-height: 210px;
+  transition: transform var(--t-base);
+}
+
+.intentCard:hover {
+  transform: translateY(-6px);
+}
+
+.intentEmoji {
+  font-size: 32px;
+  margin-bottom: auto;
+}
+
+.intentTitle {
+  font-size: var(--fs-xl);
+  font-weight: 800;
+  margin-top: 14px;
+}
+
+.intentText {
+  font-size: var(--fs-base);
+  margin: 8px 0 12px;
+}
+
+.intentCount {
+  font-size: var(--fs-base);
+  font-weight: 800;
+}
+
+/* ===== map invite ======================================================== */
+
+.mapSection {
+  padding-block: 30px;
+}
+
+.mapCard {
+  background: linear-gradient(120deg, #f7fafc 0%, #eef4ff 100%);
+  border: 1px solid #e8eef5;
+  border-radius: 18px;
+  padding: 22px 26px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.mapCopy {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.mapIcon {
+  width: 50px;
+  height: 50px;
+  flex: none;
+  border-radius: 14px;
+  background: var(--c-primary);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 25px;
+}
+
+.mapTitle {
+  font-size: 17.5px;
+  font-weight: 800;
+}
+
+.mapSub {
+  font-size: 14px;
+  color: var(--c-ink-3);
+}
+
+.mapButton {
+  background: #fff;
+  color: var(--c-primary-strong);
+  border: 1.5px solid var(--c-primary);
+  border-radius: var(--r-md);
+  padding: 12px 24px;
+  font-size: 15.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  transition:
+    background var(--t-fast),
+    color var(--t-fast);
+}
+
+.mapButton:hover {
+  background: var(--c-primary);
+  color: #fff;
+}
+
+/* ===== participation ===================================================== */
+
+.partSection {
+  background: var(--c-pastel-green);
+  margin-top: 22px;
+}
+
+.partGrid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 40px;
+  align-items: center;
+  padding-block: 52px;
+}
+
+.partBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  color: var(--c-pastel-green-strong);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  padding: 7px 15px;
+  border-radius: var(--r-pill);
+  margin-bottom: 18px;
+}
+
+.partTitle {
+  font-size: 38px;
+  font-weight: 800;
+  margin-bottom: 14px;
+  line-height: 1.3;
+  letter-spacing: -0.5px;
+}
+
+.partTitleAccent {
+  color: var(--c-pastel-green-strong);
+}
+
+.partText {
+  font-size: 17px;
+  color: #2f4a36;
+  margin-bottom: 24px;
+  max-width: 520px;
+}
+
+.partActions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.partPrimary {
+  background: var(--c-ink);
+  color: #fff;
+  border-radius: 13px;
+  padding: 14px 28px;
+  font-size: var(--fs-md);
+  font-weight: 700;
+  transition: transform var(--t-fast);
+}
+
+.partPrimary:hover {
+  transform: translateY(-2px);
+}
+
+.partSecondary {
+  background: transparent;
+  color: var(--c-ink);
+  border: 1.5px solid var(--c-ink);
+  border-radius: 13px;
+  padding: 14px 26px;
+  font-size: var(--fs-md);
+  font-weight: 700;
+}
+
+.partArt {
+  display: flex;
+  justify-content: center;
+}
+
+.partFrame {
+  background: #fff;
+  border-radius: 24px;
+  padding: 16px;
+  box-shadow: 0 20px 50px rgb(47 122 60 / 18%);
+}
+
+.partMascot {
+  width: 100%;
+  max-width: 280px;
+  border-radius: 14px;
+  animation: cg-float 5s ease-in-out infinite;
+}
+
+@keyframes cg-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+/* ===== responsive ======================================================== */
+
+@media (max-width: 980px) {
+  .featuredGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .intentGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 760px) {
+  .hero {
+    padding-block: 30px 30px;
+  }
+
+  .heroGrid {
+    display: flex;
+    flex-direction: column;
+    gap: 34px;
+  }
+
+  .heroFrame {
+    height: 290px;
+  }
+
+  .searchForm {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px;
+    border-radius: var(--r-xl);
+    max-width: none;
+  }
+
+  .searchSubmit {
+    width: 100%;
+    padding-inline: 0;
+    font-size: 16.5px;
+  }
+
+  .priceNote {
+    display: none;
+  }
+
+  .editorNote {
+    display: none;
+  }
+
+  .featuredGrid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+    margin-top: 26px;
+  }
+
+  .intentGrid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .intentCard {
+    min-height: 150px;
+  }
+
+  .mapCard {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 18px;
+    padding: 22px;
+  }
+
+  .mapButton {
+    width: 100%;
+    padding: 14px;
+  }
+
+  .partGrid {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 26px;
+    padding-block: 40px;
+    text-align: center;
+    align-items: center;
+  }
+
+  .partActions {
+    justify-content: center;
+  }
+
+  .partTitle {
+    font-size: var(--fs-2xl);
+  }
+
+  .partMascot {
+    max-width: 200px;
+  }
+}

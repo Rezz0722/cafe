@@ -1,0 +1,134 @@
+.card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-3);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: var(--sh-card);
+  display: flex;
+  flex-direction: column;
+  transition:
+    transform var(--t-base),
+    box-shadow var(--t-base);
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--sh-card-hover);
+}
+
+.media {
+  position: relative;
+  height: 186px;
+  flex: none;
+}
+
+.ribbon {
+  position: absolute;
+  top: 12px;
+  inset-inline-end: 12px;
+  background: var(--c-accent);
+  color: var(--c-ink);
+  font-weight: 800;
+  font-size: var(--fs-xs);
+  padding: 6px 13px;
+  border-radius: var(--r-pill);
+  box-shadow:
+    0 4px 14px rgb(0 0 0 / 28%),
+    0 2px 6px rgb(0 0 0 / 20%);
+}
+
+.body {
+  padding: 17px 18px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  flex: 1;
+}
+
+.name {
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.hood {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--c-muted);
+  font-size: var(--fs-base);
+  font-weight: 600;
+}
+
+.pin {
+  color: var(--c-primary);
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.tag {
+  background: var(--c-accent-soft);
+  color: #7a5c00;
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 5px 11px;
+  border-radius: var(--r-pill);
+}
+
+.footer {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #f4f4f4;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.star {
+  color: var(--c-accent);
+  font-size: 15px;
+}
+
+.rating {
+  font-weight: 800;
+  font-size: 15px;
+}
+
+.dot {
+  color: var(--c-muted-4);
+}
+
+.price {
+  color: var(--c-muted-2);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.cta {
+  background: var(--c-primary-soft);
+  color: var(--c-primary-strong);
+  border-radius: 11px;
+  padding: 9px 18px;
+  font-size: var(--fs-base);
+  font-weight: 700;
+  transition:
+    background var(--t-fast),
+    color var(--t-fast);
+  white-space: nowrap;
+}
+
+.card:hover .cta,
+.cta:hover {
+  background: var(--c-primary);
+  color: #fff;
+}

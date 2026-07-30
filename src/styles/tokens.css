@@ -1,0 +1,102 @@
+/* ---------------------------------------------------------------------------
+   Design tokens for کافه‌گرد.
+   Every value here comes from the original design mockups — change a token and
+   it changes everywhere, which is the whole point of keeping them in one file.
+   --------------------------------------------------------------------------- */
+
+:root {
+  /* --- brand ------------------------------------------------------------- */
+  --c-primary: #5996ff;
+  --c-primary-strong: #2f6fe0;
+  --c-primary-soft: #eef4ff;
+  --c-accent: #ffb900;
+  --c-accent-soft: #fff3ce;
+  --c-accent-text: #8a6b00;
+
+  /* --- pastel section backgrounds ---------------------------------------- */
+  --c-pastel-blue: #cfecf3;
+  --c-pastel-blue-text: #2a4750;
+  --c-pastel-pink: #f9b2d7;
+  --c-pastel-pink-text: #63274a;
+  --c-pastel-pink-strong: #b23a7d;
+  --c-pastel-lime: #f6ffdc;
+  --c-pastel-lime-text: #494a12;
+  --c-pastel-lime-strong: #8a7000;
+  --c-pastel-green: #daf9de;
+  --c-pastel-green-text: #255230;
+  --c-pastel-green-strong: #2f7a3c;
+
+  /* --- neutrals ---------------------------------------------------------- */
+  --c-ink: #1a1a1a;
+  --c-ink-2: #555555;
+  --c-ink-3: #666666;
+  --c-muted: #7a7a7a;
+  --c-muted-2: #8a8a8a;
+  --c-muted-3: #9aa0a8;
+  --c-muted-4: #b0b0b0;
+  --c-surface: #ffffff;
+  --c-surface-2: #f5f7fa;
+  --c-surface-3: #f5f6f8;
+  --c-surface-4: #f0f2f5;
+  --c-border: #e6e9ee;
+  --c-border-2: #ececf0;
+  --c-border-3: #f0f0f0;
+  --c-border-4: #eef0f2;
+
+  /* --- semantic ---------------------------------------------------------- */
+  --c-open: #1f6e2c;
+  --c-open-bg: var(--c-pastel-green);
+  --c-closed: #c0344d;
+  --c-closed-bg: #fdeef1;
+  --c-closed-neutral-bg: #e9ebee;
+
+  /* --- typography -------------------------------------------------------- */
+  --font-sans: 'Vazirmatn', 'Dana', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --fs-xs: 12px;
+  --fs-sm: 13.5px;
+  --fs-base: 14.5px;
+  --fs-md: 16px;
+  --fs-lg: 19px;
+  --fs-xl: 22px;
+  --fs-2xl: 28px;
+  --fs-3xl: 36px;
+  --fs-hero: 52px;
+
+  /* --- radii ------------------------------------------------------------- */
+  --r-sm: 9px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 20px;
+  --r-2xl: 22px;
+  --r-pill: 999px;
+
+  /* --- shadows ----------------------------------------------------------- */
+  --sh-card: 0 8px 26px rgb(26 26 26 / 5%);
+  --sh-card-hover: 0 18px 40px rgb(26 26 26 / 13%);
+  --sh-raised: 0 14px 40px rgb(26 26 26 / 7%);
+  --sh-hero: 0 26px 60px rgb(26 26 26 / 14%);
+  --sh-primary: 0 6px 16px rgb(89 150 255 / 28%);
+  --sh-primary-lg: 0 10px 26px rgb(89 150 255 / 30%);
+  --sh-accent: 0 10px 24px rgb(255 185 0 / 40%);
+
+  /* --- layout ------------------------------------------------------------ */
+  --page-max: 1200px;
+  --page-pad: 28px;
+  --header-h: 67px;
+
+  /* --- motion ------------------------------------------------------------ */
+  --t-fast: 0.15s;
+  --t-base: 0.2s;
+}
+
+/* On narrow screens the gutter tightens. The mockups did this in JS by reading
+   window.innerWidth; a media query does the same job without a resize listener. */
+@media (max-width: 760px) {
+  :root {
+    --page-pad: 20px;
+    --fs-hero: 33px;
+    --fs-3xl: 28px;
+    --fs-lg: 16px;
+  }
+}

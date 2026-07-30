@@ -1,0 +1,111 @@
+/* The app screens (search, venue, auth, admin) were designed at 430px — a phone
+   frame centred on wider viewports rather than a full-width desktop layout. */
+.shell {
+  max-width: 430px;
+  margin-inline: auto;
+  min-height: 100vh;
+  position: relative;
+  background: var(--c-surface);
+  line-height: 1.7;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Sticky bars and overlays inside the shell must line up with it, not the
+   viewport, so they share the same width constraint. */
+.stickyTop {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--c-surface);
+  border-bottom: 1px solid var(--c-border-4);
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgb(26 26 26 / 45%);
+  z-index: 60;
+  display: flex;
+  align-items: flex-end;
+  max-width: 430px;
+  margin-inline: auto;
+  animation: cg-fade 0.16s ease both;
+}
+
+.sheet {
+  background: var(--c-surface);
+  width: 100%;
+  border-radius: var(--r-2xl) var(--r-2xl) 0 0;
+  padding: 18px 20px 24px;
+  max-height: 86vh;
+  overflow-y: auto;
+  animation: cg-sheet-up 0.24s ease both;
+}
+
+.sheetGrip {
+  width: 44px;
+  height: 5px;
+  border-radius: var(--r-pill);
+  background: #e3e6ea;
+  margin: 0 auto 16px;
+}
+
+/* Horizontal chip rails: scrollable, without a visible scrollbar. */
+.scrollX {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  align-items: center;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollX::-webkit-scrollbar {
+  display: none;
+}
+
+/* --- shared screen chrome ------------------------------------------------- */
+
+.iconButton {
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border: 1px solid var(--c-border-2);
+  border-radius: var(--r-md);
+  display: grid;
+  place-items: center;
+  background: var(--c-surface);
+  transition: background var(--t-fast);
+}
+
+.iconButton:hover {
+  background: var(--c-surface-3);
+}
+
+.screenTitle {
+  font-size: var(--fs-lg);
+  font-weight: 800;
+}
+
+.primaryButton {
+  width: 100%;
+  height: 54px;
+  background: var(--c-primary);
+  color: #fff;
+  border-radius: 14px;
+  font-size: var(--fs-md);
+  font-weight: 800;
+  box-shadow: 0 8px 20px rgb(89 150 255 / 28%);
+  transition: background var(--t-fast);
+}
+
+.primaryButton:hover {
+  background: var(--c-primary-strong);
+}
+
+.primaryButton:disabled {
+  background: #dfe3e8;
+  box-shadow: none;
+  cursor: default;
+}
