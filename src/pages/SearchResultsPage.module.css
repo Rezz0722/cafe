@@ -178,7 +178,7 @@
   border: 1px solid var(--c-border-3);
   border-radius: var(--r-lg);
   padding: 10px;
-  box-shadow: 0 4px 14px rgb(26 26 26 / 4%);
+  box-shadow: var(--sh-card-sm);
   transition: box-shadow var(--t-fast);
 }
 
@@ -237,8 +237,8 @@
   overflow: hidden;
   border: 1px solid var(--c-border-4);
   background:
-    repeating-linear-gradient(0deg, #eef2f6 0 24px, #e6ebf1 24px 26px),
-    repeating-linear-gradient(90deg, #eef2f6 0 24px, #e6ebf1 24px 26px);
+    repeating-linear-gradient(0deg, var(--c-map-line) 0 24px, var(--c-map-line-2) 24px 26px),
+    repeating-linear-gradient(90deg, var(--c-map-line) 0 24px, var(--c-map-line-2) 24px 26px);
 }
 
 .pin {

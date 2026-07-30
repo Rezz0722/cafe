@@ -1,0 +1,373 @@
+/* ===== page ============================================================== */
+
+.page {
+  flex: 1;
+  /* A hair off white so the white cards read as cards. No token matches. */
+  background: var(--c-surface-tint);
+  padding-bottom: 36px;
+}
+
+/* ===== header ============================================================ */
+
+.header {
+  background: var(--c-surface);
+  padding: 22px 20px 24px;
+  border-bottom: 1px solid var(--c-border-4);
+}
+
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+/* Initial-letter avatar: there is no photo upload, so a monogram stands in. */
+.avatar {
+  width: 72px;
+  height: 72px;
+  flex: none;
+  border-radius: 50%;
+  border: 2px solid var(--c-primary-soft);
+  background: var(--c-surface-3);
+  color: var(--c-primary-strong);
+  display: grid;
+  place-items: center;
+  font-size: var(--fs-2xl);
+  font-weight: 800;
+}
+
+.identityBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.name {
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.phone {
+  font-size: 14px;
+  color: var(--c-muted-2);
+  font-weight: 600;
+}
+
+.levelCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+  background: var(--c-pastel-lime);
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+
+.levelIcon {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border-radius: 11px;
+  background: var(--c-accent);
+  color: var(--c-ink);
+  display: grid;
+  place-items: center;
+}
+
+.levelTitle {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.levelSub {
+  font-size: 12.5px;
+  /* Muted olive that sits on the lime card. No token matches. */
+  color: #7a6a2a;
+  font-weight: 600;
+}
+
+/* ===== sections ========================================================== */
+
+.section {
+  padding: 20px 20px 0;
+}
+
+.sectionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.sectionTitle {
+  font-size: 16.5px;
+  font-weight: 800;
+  margin-bottom: 12px;
+}
+
+.sectionHead .sectionTitle {
+  margin-bottom: 0;
+}
+
+.sectionCount {
+  font-size: 13px;
+  color: var(--c-muted-3);
+  font-weight: 700;
+}
+
+/* ===== saved venues ====================================================== */
+
+.savedList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.savedRow {
+  display: flex;
+  gap: 12px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-4);
+  border-radius: var(--r-lg);
+  padding: 10px;
+  box-shadow: var(--sh-card);
+}
+
+.savedMain {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  gap: 12px;
+}
+
+.savedPhoto {
+  position: relative;
+  width: 74px;
+  height: 74px;
+  flex: none;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  background: var(--c-surface-3);
+}
+
+.savedBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.savedName {
+  font-size: var(--fs-md);
+  font-weight: 800;
+}
+
+.savedHood {
+  font-size: 13px;
+  color: var(--c-muted-2);
+  font-weight: 600;
+}
+
+.savedMeta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 5px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.star {
+  color: var(--c-accent);
+}
+
+.dot {
+  /* Separator grey, lighter than any neutral token. */
+  color: #c8ccd2;
+}
+
+.savedPrice {
+  color: var(--c-muted-2);
+}
+
+.unsaveButton {
+  align-self: flex-start;
+  width: 38px;
+  height: 38px;
+  flex: none;
+  border-radius: 11px;
+  background: var(--c-primary-soft);
+  color: var(--c-primary-strong);
+  display: grid;
+  place-items: center;
+  transition: background var(--t-fast);
+}
+
+.unsaveButton:hover {
+  background: var(--c-surface-4);
+}
+
+/* ===== empty states ====================================================== */
+
+.emptyCard {
+  display: block;
+  background: var(--c-surface);
+  /* Dashed placeholder border; matches the disabled button grey. */
+  border: 1.5px dashed var(--c-disabled);
+  border-radius: var(--r-lg);
+  padding: 26px 20px;
+  text-align: center;
+}
+
+.emptyTitle {
+  font-size: 15.5px;
+  font-weight: 800;
+  margin-bottom: 5px;
+}
+
+.emptyText {
+  font-size: var(--fs-sm);
+  color: var(--c-muted-2);
+}
+
+/* ===== contributions ===================================================== */
+
+.contribCard {
+  background: var(--c-pastel-green);
+  border-radius: var(--r-lg);
+  padding: 16px;
+}
+
+.contribRow {
+  display: flex;
+  gap: 10px;
+}
+
+.contribStat {
+  flex: 1;
+  text-align: center;
+  background: var(--c-surface);
+  border-radius: var(--r-md);
+  padding: 12px 8px;
+}
+
+.contribValue {
+  font-size: var(--fs-xl);
+  font-weight: 800;
+}
+
+.contribLabel {
+  font-size: var(--fs-xs);
+  /* Deep green that stays legible on white inside the green card. */
+  color: #37633e;
+  font-weight: 700;
+}
+
+.contribNote {
+  font-size: var(--fs-sm);
+  color: var(--c-pastel-green-body);
+  font-weight: 600;
+  margin-top: 12px;
+  margin-inline: 2px;
+}
+
+/* ===== account settings ================================================== */
+
+.settingsCard {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-4);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+
+.settingRow {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px;
+  font-size: 15px;
+  font-weight: 700;
+  transition: background var(--t-fast);
+}
+
+.settingRow:not(:last-child) {
+  border-bottom: 1px solid var(--c-border-3);
+}
+
+.settingRow:hover {
+  background: var(--c-surface-3);
+}
+
+.settingLabel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.editIcon {
+  color: var(--c-primary);
+}
+
+.settingChevron {
+  color: var(--c-muted-4);
+  flex: none;
+}
+
+.logoutRow {
+  color: var(--c-closed);
+}
+
+/* ===== venue owner entry ================================================= */
+
+.ownerWrap {
+  padding: 16px 20px 0;
+}
+
+.ownerCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--c-ink);
+  color: #fff;
+  border-radius: var(--r-lg);
+  padding: 16px 18px;
+}
+
+.ownerCopy {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ownerIcon {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border-radius: 11px;
+  background: rgb(255 255 255 / 12%);
+  color: var(--c-accent);
+  display: grid;
+  place-items: center;
+}
+
+.ownerTitle {
+  display: block;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.ownerSub {
+  display: block;
+  font-size: 12.5px;
+  /* Light grey on the near-black card; the neutral tokens are all too dark. */
+  color: #b8b8b8;
+}
+
+.ownerChevron {
+  color: var(--c-muted-2);
+  flex: none;
+}

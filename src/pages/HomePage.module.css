@@ -137,10 +137,13 @@
   box-shadow: var(--sh-hero);
 }
 
+/* The two badges overlapping the hero photo keep the design's own sides: the
+   stat card on the physical right (inline-start under RTL), the rating tag on
+   the physical left. Naming them by their logical side would mirror the pair. */
 .statCard {
   position: absolute;
   bottom: -20px;
-  inset-inline-end: 6px;
+  inset-inline-start: 6px;
   background: #fff;
   border-radius: var(--r-lg);
   padding: 12px 16px;
@@ -173,7 +176,7 @@
 .ratingTag {
   position: absolute;
   top: -14px;
-  inset-inline-start: 2px;
+  inset-inline-end: 2px;
   background: var(--c-accent);
   color: var(--c-ink);
   font-weight: 800;
@@ -214,7 +217,7 @@
 .priceNote {
   margin-inline-start: auto;
   font-size: var(--fs-sm);
-  color: #3d6470;
+  color: var(--c-pastel-blue-body);
   font-weight: 600;
   white-space: nowrap;
 }
@@ -254,7 +257,7 @@
 .editorNote {
   position: absolute;
   top: -30px;
-  inset-inline-start: -70px;
+  inset-inline-end: -70px;
   background: var(--c-pastel-lime);
   border: 1.5px dashed var(--c-accent);
   color: #5a5000;
@@ -349,7 +352,7 @@
 }
 
 .mapCard {
-  background: linear-gradient(120deg, #f7fafc 0%, #eef4ff 100%);
+  background: var(--grad-tint);
   border: 1px solid #e8eef5;
   border-radius: 18px;
   padding: 22px 26px;
@@ -449,7 +452,7 @@
 
 .partText {
   font-size: 17px;
-  color: #2f4a36;
+  color: var(--c-pastel-green-body);
   margin-bottom: 24px;
   max-width: 520px;
 }

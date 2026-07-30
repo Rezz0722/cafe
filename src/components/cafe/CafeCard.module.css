@@ -25,7 +25,7 @@
 .ribbon {
   position: absolute;
   top: 12px;
-  inset-inline-end: 12px;
+  inset-inline-start: 12px;
   background: var(--c-accent);
   color: var(--c-ink);
   font-weight: 800;
@@ -71,7 +71,7 @@
 
 .tag {
   background: var(--c-accent-soft);
-  color: #7a5c00;
+  color: var(--c-accent-text-strong);
   font-size: 12.5px;
   font-weight: 700;
   padding: 5px 11px;

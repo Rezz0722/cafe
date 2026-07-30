@@ -47,7 +47,7 @@
   width: 44px;
   height: 5px;
   border-radius: var(--r-pill);
-  background: #e3e6ea;
+  background: var(--c-border-5);
   margin: 0 auto 16px;
 }
 
@@ -96,7 +96,7 @@
   border-radius: 14px;
   font-size: var(--fs-md);
   font-weight: 800;
-  box-shadow: 0 8px 20px rgb(89 150 255 / 28%);
+  box-shadow: var(--sh-primary-md);
   transition: background var(--t-fast);
 }
 
@@ -105,7 +105,7 @@
 }
 
 .primaryButton:disabled {
-  background: #dfe3e8;
+  background: var(--c-disabled);
   box-shadow: none;
   cursor: default;
 }

@@ -12,10 +12,14 @@
   --c-accent: #ffb900;
   --c-accent-soft: #fff3ce;
   --c-accent-text: #8a6b00;
+  /* Darker accent text, for small bold labels sitting on --c-accent-soft. */
+  --c-accent-text-strong: #7a5c00;
 
   /* --- pastel section backgrounds ---------------------------------------- */
   --c-pastel-blue: #cfecf3;
   --c-pastel-blue-text: #2a4750;
+  /* Secondary copy on a pastel-blue panel. */
+  --c-pastel-blue-body: #3d6470;
   --c-pastel-pink: #f9b2d7;
   --c-pastel-pink-text: #63274a;
   --c-pastel-pink-strong: #b23a7d;
@@ -25,6 +29,8 @@
   --c-pastel-green: #daf9de;
   --c-pastel-green-text: #255230;
   --c-pastel-green-strong: #2f7a3c;
+  /* Body copy on a pastel-green panel, softer than --c-pastel-green-text. */
+  --c-pastel-green-body: #2f4a36;
 
   /* --- neutrals ---------------------------------------------------------- */
   --c-ink: #1a1a1a;
@@ -34,18 +40,37 @@
   --c-muted-2: #8a8a8a;
   --c-muted-3: #9aa0a8;
   --c-muted-4: #b0b0b0;
+  --c-muted-5: #aab0b8;
+  --c-muted-6: #b0b4bb;
   --c-surface: #ffffff;
   --c-surface-2: #f5f7fa;
   --c-surface-3: #f5f6f8;
   --c-surface-4: #f0f2f5;
+  /* Barely-off-white — page backgrounds behind white cards. */
+  --c-surface-tint: #fafbfc;
+
+  /* Cool tint sitting under map cards and photo placeholders. */
+  --grad-tint: linear-gradient(120deg, #f7fafc 0%, var(--c-primary-soft) 100%);
   --c-border: #e6e9ee;
   --c-border-2: #ececf0;
   --c-border-3: #f0f0f0;
   --c-border-4: #eef0f2;
+  /* Heaviest of the neutral borders — sheet grips, unselected control outlines. */
+  --c-border-5: #e3e6ea;
+  /* Disabled controls, and the dashed outline of an empty-state drop zone. */
+  --c-disabled: #dfe3e8;
+
+  /* Stripes of the placeholder map grid, standing in for a tile layer. */
+  --c-map-line: #eef2f6;
+  --c-map-line-2: #e6ebf1;
 
   /* --- semantic ---------------------------------------------------------- */
   --c-open: #1f6e2c;
   --c-open-bg: var(--c-pastel-green);
+  /* Brighter success wash than --c-pastel-green, for pills and stat tiles. */
+  --c-success-soft: #e4f8e8;
+  /* Border of an element carrying an active promotion. */
+  --c-accent-border: #ffe28a;
   --c-closed: #c0344d;
   --c-closed-bg: #fdeef1;
   --c-closed-neutral-bg: #e9ebee;
@@ -72,11 +97,13 @@
   --r-pill: 999px;
 
   /* --- shadows ----------------------------------------------------------- */
+  --sh-card-sm: 0 4px 14px rgb(26 26 26 / 4%);
   --sh-card: 0 8px 26px rgb(26 26 26 / 5%);
   --sh-card-hover: 0 18px 40px rgb(26 26 26 / 13%);
   --sh-raised: 0 14px 40px rgb(26 26 26 / 7%);
   --sh-hero: 0 26px 60px rgb(26 26 26 / 14%);
   --sh-primary: 0 6px 16px rgb(89 150 255 / 28%);
+  --sh-primary-md: 0 8px 20px rgb(89 150 255 / 28%);
   --sh-primary-lg: 0 10px 26px rgb(89 150 255 / 30%);
   --sh-accent: 0 10px 24px rgb(255 185 0 / 40%);
 

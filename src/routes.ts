@@ -18,3 +18,11 @@ export function searchUrl(query?: string): string {
 export function authUrl(redirectTo?: string): string {
   return redirectTo ? `${paths.auth}?redirect=${encodeURIComponent(redirectTo)}` : paths.auth
 }
+
+/**
+ * The last step of the sign-up flow doubles as the "change your name" screen —
+ * `edit=1` is what stops a signed-in visitor being bounced to their profile.
+ */
+export function editProfileUrl(): string {
+  return `${paths.auth}?edit=1&redirect=${encodeURIComponent(paths.profile)}`
+}

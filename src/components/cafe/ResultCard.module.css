@@ -20,17 +20,20 @@
   height: 150px;
 }
 
+/* Sides follow the design's physical placement — bookmark on the physical left,
+   status on the physical right — rather than being renamed to logical sides,
+   which would swap the pair under RTL. */
 .bookmark {
   position: absolute;
   top: 10px;
-  inset-inline-start: 10px;
+  inset-inline-end: 10px;
   z-index: 2;
 }
 
 .statusPill {
   position: absolute;
   bottom: 10px;
-  inset-inline-end: 10px;
+  inset-inline-start: 10px;
   font-size: var(--fs-xs);
   font-weight: 800;
   padding: 4px 11px;

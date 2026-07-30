@@ -1,7 +1,9 @@
+/* Screens with a fixed bottom bar raise the toast clear of it by setting
+   --toast-bottom on an ancestor. */
 .toast {
   position: fixed;
   inset-inline: 0;
-  bottom: 26px;
+  bottom: var(--toast-bottom, 26px);
   z-index: 200;
   display: flex;
   justify-content: center;

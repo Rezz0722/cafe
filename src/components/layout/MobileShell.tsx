@@ -6,9 +6,18 @@ export { styles as shellStyles }
 /**
  * Phone-width frame for the app screens. The home page is a full responsive
  * marketing page and deliberately does not use this.
+ *
+ * `className` lands on the frame itself, which is where a screen sets the custom
+ * properties its fixed-position descendants read (see `--toast-bottom`).
  */
-export function MobileShell({ children }: { children: ReactNode }) {
-  return <div className={styles.shell}>{children}</div>
+export function MobileShell({
+  children,
+  className,
+}: {
+  children: ReactNode
+  className?: string
+}) {
+  return <div className={className ? `${styles.shell} ${className}` : styles.shell}>{children}</div>
 }
 
 /** Back chevron. Points left in RTL, which is "back" for a right-to-left reader. */

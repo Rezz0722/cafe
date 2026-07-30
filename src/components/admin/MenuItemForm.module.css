@@ -1,0 +1,32 @@
+.tab {
+  padding: 6px 18px 26px;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-block: 8px 16px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.photo {
+  height: 150px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--c-border-4);
+}
+
+.descInput {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.priceInput {
+  font-weight: 800;
+}

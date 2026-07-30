@@ -1,0 +1,176 @@
+.card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-4);
+  border-radius: var(--r-lg);
+  padding: 14px;
+  box-shadow: var(--sh-card-sm);
+}
+
+/* Hidden from the public menu — dimmed, but still fully operable here. */
+.inactive {
+  opacity: 0.6;
+}
+
+.top {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.names {
+  flex: 1;
+  min-width: 0;
+}
+
+.name {
+  font-size: var(--fs-md);
+  font-weight: 800;
+}
+
+.en {
+  font-size: 12px;
+  color: var(--c-muted-5);
+  font-weight: 600;
+  text-align: start;
+}
+
+.desc {
+  font-size: 12.5px;
+  color: var(--c-muted-3);
+}
+
+/* ===== price ============================================================== */
+
+.priceRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.price,
+.priceNew {
+  font-size: 15.5px;
+  font-weight: 800;
+}
+
+.priceNew {
+  color: var(--c-pastel-green-strong);
+}
+
+.priceOld {
+  font-size: 13px;
+  color: var(--c-muted-6);
+  text-decoration: line-through;
+}
+
+.pctBadge {
+  background: var(--c-accent);
+  color: var(--c-ink);
+  font-size: 11.5px;
+  font-weight: 800;
+  padding: 3px 9px;
+  border-radius: var(--r-pill);
+}
+
+/* ===== discount editor ==================================================== */
+
+.discBox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 11px;
+  background: #fffbe9;
+  border: 1.5px solid var(--c-accent-border);
+  border-radius: var(--r-md);
+  padding: 10px 12px;
+}
+
+.discLabel {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.discInput {
+  width: 70px;
+  height: 42px;
+  border: 1.5px solid var(--c-accent);
+  border-radius: 11px;
+  text-align: center;
+  font-size: var(--fs-md);
+  font-weight: 800;
+  background: var(--c-surface);
+}
+
+.discApply {
+  height: 42px;
+  padding-inline: 16px;
+  background: var(--c-accent);
+  color: var(--c-ink);
+  border-radius: 11px;
+  font-weight: 800;
+}
+
+/* ===== actions ============================================================ */
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.editButton {
+  flex: 1;
+  height: 44px;
+  background: var(--c-primary-soft);
+  color: var(--c-primary-strong);
+  border-radius: 11px;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.discButton {
+  flex: 1;
+  height: 44px;
+  border-radius: 11px;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+
+.discCreate {
+  background: #fff7df;
+  color: var(--c-accent-text);
+}
+
+.discCancel {
+  background: var(--c-closed-bg);
+  color: var(--c-closed);
+}
+
+.deleteButton {
+  width: 44px;
+  height: 44px;
+  flex: none;
+  background: var(--c-closed-bg);
+  color: var(--c-closed);
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+}
+
+.confirmRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  background: var(--c-closed-bg);
+  border-radius: var(--r-md);
+  padding: 10px 12px;
+}
