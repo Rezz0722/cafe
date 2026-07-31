@@ -141,3 +141,16 @@
   font-size: 13px;
   color: var(--c-ink-soft, #999);
 }
+
+/* مسیر دوم ورود — کم‌رنگ‌تر از دکمه‌ی اصلی، چون گزینه‌ی پیش‌فرض نیست */
+.altButton {
+  font: inherit;
+  font-size: 13.5px;
+  background: none;
+  border: 0;
+  padding: 6px;
+  color: var(--c-primary-strong, #2f6fd0);
+  cursor: pointer;
+  text-decoration: underline;
+  align-self: center;
+}

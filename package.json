@@ -12,7 +12,8 @@
     "test": "node --import tsx --test src/core/**/*.test.ts",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
-    "import:cafes": "tsx scripts/import-cafes.ts"
+    "import:cafes": "tsx scripts/import-cafes.ts",
+    "user:create": "tsx scripts/create-user.ts"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.2",

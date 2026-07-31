@@ -23,6 +23,14 @@ export interface VerifyCodeState {
   role?: Role
 }
 
+export interface PasswordLoginState {
+  ok: boolean
+  error?: string
+  role?: Role
+}
+
+export const EMPTY_PASSWORD_STATE: PasswordLoginState = { ok: false }
+
 export const EMPTY_REQUEST_STATE: RequestCodeState = { ok: false }
 export const EMPTY_VERIFY_STATE: VerifyCodeState = { ok: false }
 export const EMPTY_NAME_STATE: { ok: boolean; error?: string } = { ok: false }

@@ -31,3 +31,6 @@ src/data/otp.json
 # صفحه‌های ذخیره‌شده‌ی پنل — کلید API داخل متنشان است
 *.html
 !index.html
+
+# دسترسی محلی — رمز متن ساده دارد
+ACCESS-LOCAL.md

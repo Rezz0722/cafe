@@ -4,9 +4,15 @@ import { useActionState, useEffect, useRef, useState } from 'react'
 import { useFormStatus } from 'react-dom'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { requestCodeAction, setNameAction, verifyCodeAction } from '@/app/auth/actions'
+import {
+  passwordLoginAction,
+  requestCodeAction,
+  setNameAction,
+  verifyCodeAction,
+} from '@/app/auth/actions'
 import {
   EMPTY_NAME_STATE,
+  EMPTY_PASSWORD_STATE,
   EMPTY_REQUEST_STATE,
   EMPTY_VERIFY_STATE,
 } from '@/app/auth/state'
@@ -16,7 +22,7 @@ import { fa } from '@/lib/format'
 import { paths } from '@/routes'
 import styles from './AuthScreen.module.css'
 
-type Step = 'phone' | 'code' | 'name'
+type Step = 'phone' | 'code' | 'name' | 'password'
 
 function SubmitButton({ label, pendingLabel }: { label: string; pendingLabel: string }) {
   const { pending } = useFormStatus()
@@ -49,6 +55,7 @@ export function AuthScreen() {
   const [reqState, requestAction] = useActionState(requestCodeAction, EMPTY_REQUEST_STATE)
   const [verState, verifyAction] = useActionState(verifyCodeAction, EMPTY_VERIFY_STATE)
   const [nameState, nameAction] = useActionState(setNameAction, EMPTY_NAME_STATE)
+  const [pwState, pwAction] = useActionState(passwordLoginAction, EMPTY_PASSWORD_STATE)
 
   // ── گام ۱ → ۲ ──
   useEffect(() => {
@@ -78,6 +85,14 @@ export function AuthScreen() {
       router.refresh()
     }
   }, [nameState, router, redirectTo])
+
+  // ── ورود با رمز → پایان ──
+  useEffect(() => {
+    if (pwState.ok) {
+      router.replace(redirectTo)
+      router.refresh()
+    }
+  }, [pwState, router, redirectTo])
 
   useEffect(() => {
     if (cooldown <= 0) return
@@ -123,6 +138,68 @@ export function AuthScreen() {
             {reqState.error && <div className={styles.error}>{reqState.error}</div>}
 
             <SubmitButton label="ارسال کد" pendingLabel="در حال ارسال…" />
+
+            {/*
+              مسیر دوم. ورود فقط با پیامک یک نقطه‌ی شکست تک‌نقطه‌ای است: اعتبار
+              که تمام شود یا سرویس که قطع شود، مدیر از پنل خودش بیرون می‌ماند.
+              فقط حساب‌هایی که رمز دارند از این راه وارد می‌شوند.
+            */}
+            <button
+              type="button"
+              className={styles.altButton}
+              onClick={() => setStep('password')}
+            >
+              ورود با رمز عبور
+            </button>
+          </form>
+        )}
+
+        {/* ═══ ورود با رمز — برای حساب‌های کاری ═══ */}
+        {step === 'password' && (
+          <form action={pwAction} className={styles.form}>
+            <h1 className={styles.title}>ورود با رمز عبور</h1>
+            <p className={styles.lede}>
+              برای حساب‌های مدیر و مالک کافه. کاربر عادی با کد پیامکی وارد می‌شود.
+            </p>
+
+            <label className={styles.field}>
+              <span className={styles.label}>شماره موبایل</span>
+              <input
+                name="phone"
+                className={styles.input}
+                type="tel"
+                inputMode="numeric"
+                autoComplete="username"
+                placeholder="09151234567"
+                dir="ltr"
+                required
+                autoFocus
+              />
+            </label>
+
+            <label className={styles.field}>
+              <span className={styles.label}>رمز عبور</span>
+              <input
+                name="password"
+                className={styles.input}
+                type="password"
+                autoComplete="current-password"
+                dir="ltr"
+                required
+              />
+            </label>
+
+            {pwState.error && <div className={styles.error}>{pwState.error}</div>}
+
+            <SubmitButton label="ورود" pendingLabel="در حال بررسی…" />
+
+            <button
+              type="button"
+              className={styles.altButton}
+              onClick={() => setStep('phone')}
+            >
+              ورود با کد پیامکی
+            </button>
           </form>
         )}
 

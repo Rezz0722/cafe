@@ -17,10 +17,14 @@ import {
   createSessionToken,
 } from '@/core/auth/session'
 import { sendVerificationCode } from '@/core/sms/smsir'
+import { isLockedOut, pruneFailed, verifyPassword } from '@/core/auth/password'
 import {
   bumpOtpAttempts,
+  clearFailedLogins,
   deleteOtp,
   findOrCreateUser,
+  findUserByPhone,
+  recordFailedLogin,
   getGlobalOtpRequests,
   getOtp,
   recordGlobalOtpRequest,
@@ -29,7 +33,7 @@ import {
 } from '@/data/userStore'
 import { getCurrentUser } from '@/core/auth/currentUser'
 import { SESSION_SECRET } from '@/core/config/env'
-import type { RequestCodeState, VerifyCodeState } from './state'
+import type { PasswordLoginState, RequestCodeState, VerifyCodeState } from './state'
 
 /**
  * اکشن‌های احراز هویت.
@@ -146,6 +150,78 @@ export async function verifyCodeAction(
     needsName: !user.name,
     role: user.role,
   }
+}
+
+// ── ورود با رمز عبور ─────────────────────────────────────────────────
+
+/**
+ * ورود با رمز — مسیر دوم، نه جایگزین کد پیامکی.
+ *
+ * ═══ چرا لازم است ═══
+ *
+ * ورود فقط با پیامک یک نقطه‌ی شکست تک‌نقطه‌ای می‌سازد: اعتبار پیامک که تمام
+ * شود، سرویس که قطع شود، یا شماره که در دسترس نباشد، مدیر از پنل خودش
+ * بیرون می‌ماند و راهی برای برگشتن ندارد.
+ *
+ * رمز فقط برای حساب‌هایی فعال است که `passwordHash` دارند — کاربر عادی
+ * همچنان فقط با کد پیامکی وارد می‌شود و رمزی ندارد که لو برود.
+ */
+export async function passwordLoginAction(
+  _prev: PasswordLoginState,
+  form: FormData,
+): Promise<PasswordLoginState> {
+  if (!SESSION_SECRET) {
+    return { ok: false, error: 'سرویس ورود تنظیم نشده است. (SESSION_SECRET)' }
+  }
+
+  const phone = normalizePhone(str(form, 'phone'))
+  const password = str(form, 'password')
+
+  /*
+    یک پیام برای همه‌ی حالت‌های شکست: کاربر ناموجود، بدون رمز، رمز غلط.
+    پیام‌های متفاوت، این فرم را به ابزار فهرست‌برداری تبدیل می‌کند —
+    مهاجم می‌فهمد کدام شماره ثبت شده و کدام رمز دارد.
+  */
+  const GENERIC = 'شماره یا رمز عبور درست نیست.'
+
+  if (!phone || !password) return { ok: false, error: GENERIC }
+
+  const user = await findUserByPhone(phone)
+  if (!user || !user.passwordHash || user.blocked) {
+    return { ok: false, error: GENERIC }
+  }
+
+  // رمز عبور منقضی نمی‌شود، پس brute-force رویش ارزش دارد.
+  const failed = pruneFailed(user.failedLogins ?? [])
+  if (isLockedOut(failed)) {
+    return {
+      ok: false,
+      error: 'تعداد تلاش‌های ناموفق زیاد بود. ۱۵ دقیقه دیگر دوباره تلاش کنید.',
+    }
+  }
+
+  if (!verifyPassword(password, user.passwordHash)) {
+    await recordFailedLogin(user.id, failed)
+    return { ok: false, error: GENERIC }
+  }
+
+  await clearFailedLogins(user.id)
+
+  const store = await cookies()
+  store.set(
+    SESSION_COOKIE,
+    createSessionToken({ userId: user.id, phone: user.phone, role: user.role }),
+    {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      path: '/',
+      maxAge: SESSION_MAX_AGE_SEC,
+    },
+  )
+
+  revalidatePath('/', 'layout')
+  return { ok: true, role: user.role }
 }
 
 // ── تکمیل نام ────────────────────────────────────────────────────────

@@ -137,6 +137,22 @@ export async function revokePlaceOwnership(
   })
 }
 
+// ── رمز عبور ─────────────────────────────────────────────────────────
+
+export async function setUserPassword(id: string, passwordHash: string | null) {
+  return updateUser(id, { passwordHash })
+}
+
+/** تلاش ناموفق را ثبت می‌کند و فهرست هرس‌شده را برمی‌گرداند. */
+export async function recordFailedLogin(id: string, pruned: number[]): Promise<void> {
+  await updateUser(id, { failedLogins: [...pruned, Date.now()] })
+}
+
+/** بعد از ورود موفق، شمارنده صفر می‌شود. */
+export async function clearFailedLogins(id: string): Promise<void> {
+  await updateUser(id, { failedLogins: [], lastLoginAt: new Date().toISOString() })
+}
+
 // ── کدهای یک‌بارمصرف ─────────────────────────────────────────────────
 
 type OtpMap = Record<string, OtpRecord>
