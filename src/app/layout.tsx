@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import type { ReactNode } from 'react'
 import { Providers } from '@/components/Providers'
+import { getCurrentUser } from '@/core/auth/currentUser'
 import { SITE_URL } from '@/routes'
 import './global.css'
 
@@ -35,11 +36,22 @@ export const viewport: Viewport = {
   initialScale: 1,
 }
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+/**
+ * نشست یک‌بار در ریشه خوانده و به کل درخت داده می‌شود.
+ *
+ * هزینه‌اش را بدانید: `getCurrentUser()` کوکی می‌خواند و خواندن کوکی در layout
+ * ریشه، هر مسیری را داینامیک می‌کند — یعنی صفحات کافه و محله دیگر در build
+ * پیش‌تولید نمی‌شوند. جایگزینش این بود که هدر نشست را با یک fetch کلاینتی
+ * بگیرد، که همان پرشِ «ورود ← پروفایل» را برمی‌گرداند. وقتی PPR پایدار شد،
+ * درست‌ترین کار این است که فقط `SiteHeader` داخل مرز داینامیک برود.
+ */
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const user = await getCurrentUser()
+
   return (
     <html lang="fa" dir="rtl">
       <body>
-        <Providers>{children}</Providers>
+        <Providers user={user}>{children}</Providers>
       </body>
     </html>
   )

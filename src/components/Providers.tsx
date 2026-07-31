@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react'
 import { AuthProvider } from '@/hooks/useAuth'
 import { SavedCafesProvider } from '@/hooks/useSavedCafes'
+import type { SessionUser } from '@/core/auth/types'
 
 /**
  * تنها مرز client در ریشه‌ی درخت.
@@ -11,10 +12,19 @@ import { SavedCafesProvider } from '@/hooks/useSavedCafes'
  * `'use client'` باشند. اما `children` که از layout سرور می‌آید همچنان
  * server component می‌ماند — Next آن را از قبل رندر می‌کند و به‌عنوان
  * prop رد می‌کند. یعنی صفحات SSR خودشان را از دست نمی‌دهند.
+ *
+ * `user` هم از همان‌جا می‌آید: کوکی نشست httpOnly است و کلاینت نمی‌تواند
+ * بخواندش، پس تنها راهِ رسیدن نشست به context، رد کردنش از سرور است.
  */
-export function Providers({ children }: { children: ReactNode }) {
+export function Providers({
+  children,
+  user,
+}: {
+  children: ReactNode
+  user: SessionUser | null
+}) {
   return (
-    <AuthProvider>
+    <AuthProvider user={user}>
       <SavedCafesProvider>{children}</SavedCafesProvider>
     </AuthProvider>
   )

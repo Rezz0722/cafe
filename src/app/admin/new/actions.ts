@@ -10,6 +10,8 @@ import {
 } from '@/core/places/createPlace'
 import { appendCustomPlace, readAllPlaces } from '@/data/placeStore'
 import { ATTRIBUTES } from '@/core/taxonomy/attributes'
+import { getCurrentUser } from '@/core/auth/currentUser'
+import { isAdmin } from '@/core/auth/types'
 import { paths } from '@/routes'
 import type { CreatePlaceState } from './state'
 
@@ -36,6 +38,17 @@ export async function createPlaceAction(
   _prev: CreatePlaceState,
   form: FormData,
 ): Promise<CreatePlaceState> {
+  // لایه‌ی صفر: اجازه. `requireAdmin` روی صفحه فقط رندر را می‌بندد؛ این اکشن
+  // یک endpoint مستقل است و بدون این بررسی، هرکس می‌توانست به کاتالوگ بنویسد.
+  const me = await getCurrentUser()
+  if (!isAdmin(me)) {
+    return {
+      ok: false,
+      duplicates: [],
+      errors: [{ field: 'form', message: 'برای ثبت کافه باید با حساب ادمین وارد شوید.' }],
+    }
+  }
+
   const kindRaw = str(form, 'kind')
   const sourceRaw = str(form, 'source')
   const tierRaw = Number(str(form, 'priceTier'))

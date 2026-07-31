@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { ProfileScreen, type SavedVenue } from '@/components/profile/ProfileScreen'
+import { requireUser } from '@/core/auth/currentUser'
 import { loadDistricts, loadPublishedViews } from '@/core/places/repository'
+import { paths } from '@/routes'
 
 /**
  * پروفایل کاربر — خصوصی، پس از ایندکس بیرون است.
@@ -15,6 +17,7 @@ export const metadata: Metadata = {
 }
 
 export default async function ProfilePage() {
+  const user = await requireUser(paths.profile)
   const [places, districts] = await Promise.all([loadPublishedViews(), loadDistricts()])
 
   const venues: SavedVenue[] = places.map((place) => ({
@@ -26,5 +29,5 @@ export default async function ProfilePage() {
     photo: place.photos[0]?.url,
   }))
 
-  return <ProfileScreen venues={venues} />
+  return <ProfileScreen user={user} venues={venues} />
 }

@@ -1,8 +1,7 @@
 'use client'
 
-import { useEffect, useState, type ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { IconClock, IconGear, IconHome, IconImage, IconList, IconTag } from './AdminIcons'
 import { DashboardTab } from './DashboardTab'
 import { DiscountsTab } from './DiscountsTab'
@@ -15,8 +14,6 @@ import { CafePhoto } from '@/components/ui/CafePhoto'
 import { Toast } from '@/components/ui/Toast'
 import {
   SEED_CATEGORIES,
-  SEED_CONTACT,
-  SEED_HOURS,
   SEED_PROMOTIONS,
   SEED_TAGS,
   type AdminContact,
@@ -24,9 +21,8 @@ import {
   type AdminOpeningHour,
   type AdminPromotion,
 } from '@/data/adminSeed'
-import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/hooks/useToast'
-import { devLoginUrl, paths } from '@/routes'
+import { paths } from '@/routes'
 import styles from './AdminPanel.module.css'
 
 type AdminTab = 'dashboard' | 'menu' | 'photos' | 'hours' | 'info' | 'discounts'
@@ -49,44 +45,57 @@ const NAV_ITEMS: { tab: AdminTab; label: string; icon: ReactNode }[] = [
   { tab: 'discounts', label: 'تخفیف', icon: <IconTag /> },
 ]
 
-/** Fallback for a session with no venue on it; the demo owner runs کافه رُف. */
-const VENUE_NAME = 'کافه رُف'
+/**
+ * کافه‌ی مالک، در همان شکلی که پنل لازم دارد.
+ *
+ * کل `PlaceView` رد نمی‌شود: نظرها، منشأ داده و منوی کامل با خودش می‌آید و
+ * چون این کامپوننت کلاینت است، همه‌ی آن در payload صفحه سریالایز می‌شد.
+ */
+export interface OwnerVenue {
+  slug: string
+  name: string
+  districtName: string
+  photo?: string
+  /** میانگین خام، فقط برای نمایش. */
+  rating: number
+  reviewCount: number
+  /** ۰..۱۰۰ کامل‌بودن پروفایل — همان عددی که ادمین در صف می‌بیند. */
+  qualityScore: number
+  isOpenNow: boolean
+  contact: AdminContact
+  hours: AdminOpeningHour[]
+}
 
 /**
  * پنل مالک کافه.
  *
- * فقط نشست مالک اجازه‌ی ورود دارد؛ بقیه — چه واردنشده و چه مشتری — به صفحه‌ی
- * نام‌کاربری/رمز می‌روند که در هر دو حالت باز است، تا مشتری بتواند حساب عوض
- * کند و به بن‌بست نخورد. شرط به `ready` گره خورده، وگرنه در اولین رندر —
- * پیش از خوانده‌شدن localStorage — خودِ مالک هم بیرون انداخته می‌شود.
+ * نگهبانی اینجا نیست: صفحه‌ی سرور با `requireOwner` جلوی ورود را می‌گیرد.
+ * نگهبانِ کلاینتی قبلی (redirect داخل `useEffect`) هم دیر می‌رسید — محتوا
+ * یک لحظه رندر می‌شد — و هم با یک خط در کنسول دور زدنی بود.
  *
- * ⚠️  بک‌اند وجود ندارد: همه‌ی تب‌ها یک کپی از `data/adminSeed` را در state
- * ویرایش می‌کنند و با رفرش صفحه تغییرات از بین می‌رود.
+ * ⚠️  فقط داشبورد و اطلاعات تماس از کافه‌ی واقعی می‌آیند. تب‌های منو، عکس و
+ * تخفیف هنوز روی `data/adminSeed` کار می‌کنند و هیچ‌کدام ذخیره نمی‌شوند؛
+ * همین را بالای پنل به مالک هم می‌گوییم، چون پنلی که وانمود کند ذخیره کرده
+ * از نبودِ پنل بدتر است.
  */
-export function AdminPanel() {
-  const router = useRouter()
-  const { user, isOwner, ready } = useAuth()
+export function AdminPanel({ venue }: { venue: OwnerVenue | null }) {
   const [tab, setTab] = useState<AdminTab>('dashboard')
-  const [isOpen, setIsOpen] = useState(true)
+  const [isOpen, setIsOpen] = useState(venue?.isOpenNow ?? false)
   const [categories, setCategories] = useState<AdminMenuCategory[]>(SEED_CATEGORIES)
-  const [photos, setPhotos] = useState<string[]>([])
-  const [hours, setHours] = useState<AdminOpeningHour[]>(SEED_HOURS)
-  const [contact, setContact] = useState<AdminContact>(SEED_CONTACT)
+  const [photos, setPhotos] = useState<string[]>(venue?.photo ? [venue.photo] : [])
+  const [hours, setHours] = useState<AdminOpeningHour[]>(venue?.hours ?? [])
+  const [contact, setContact] = useState<AdminContact>(
+    venue?.contact ?? { phone: '', address: '', instagram: '' },
+  )
   const [tags, setTags] = useState<string[]>(SEED_TAGS)
   const [promotions, setPromotions] = useState<AdminPromotion[]>(SEED_PROMOTIONS)
   const saved = useToast()
-
-  const bouncing = ready && !isOwner
-
-  useEffect(() => {
-    if (bouncing) router.replace(devLoginUrl(paths.admin))
-  }, [bouncing, router])
 
   function toggleTag(tag: string) {
     setTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]))
   }
 
-  if (!ready || !isOwner) return null
+  if (!venue) return <NoVenue />
 
   return (
     <MobileShell className={styles.panel}>
@@ -94,18 +103,14 @@ export function AdminPanel() {
       <header className={`${shellStyles.stickyTop} ${styles.topBar}`}>
         <div className={styles.topBarStart}>
           <Link href={paths.profile} className={styles.avatar} aria-label="بازگشت به پروفایل">
-            <CafePhoto alt="" loading="eager" />
+            <CafePhoto alt="" src={venue.photo} loading="eager" />
           </Link>
           <h1 className={shellStyles.screenTitle}>{TAB_TITLES[tab]}</h1>
         </div>
         <div className={styles.topBarEnd}>
-          {/*
-            ثبت کافه‌ی جدید کارِ تیم داده است نه مالک، پس صفحه‌ی جداست و
-            نه یک تب اینجا. لینکش را نگه می‌داریم چون در عمل همان آدم‌ها
-            هر دو را باز می‌کنند.
-          */}
-          <Link href={`${paths.admin}/new`} className={styles.addLink}>
-            + کافه‌ی جدید
+          {/* دیدن صفحه‌ی عمومی، پرتکرارترین کاری است که مالک می‌خواهد بکند. */}
+          <Link href={paths.cafe(venue.slug)} target="_blank" className={styles.addLink}>
+            صفحه‌ی عمومی
           </Link>
           <button
             type="button"
@@ -118,10 +123,20 @@ export function AdminPanel() {
         </div>
       </header>
 
+      <p className={styles.mockNotice}>
+        این پنل هنوز به سرور وصل نیست: هر تغییری که اینجا بدهید با رفرش صفحه از
+        بین می‌رود و در صفحه‌ی عمومی کافه دیده نمی‌شود.
+      </p>
+
       <main className={styles.screen}>
         {tab === 'dashboard' && (
           <DashboardTab
-            venueName={user?.venue ?? VENUE_NAME}
+            venueName={venue.name}
+            districtName={venue.districtName}
+            photo={venue.photo}
+            rating={venue.rating}
+            reviewCount={venue.reviewCount}
+            qualityScore={venue.qualityScore}
             isOpen={isOpen}
             onToggleOpen={() => setIsOpen((open) => !open)}
             onOpenMenu={() => setTab('menu')}
@@ -153,7 +168,8 @@ export function AdminPanel() {
         )}
       </main>
 
-      <Toast visible={saved.visible} message="✓ ذخیره شد" />
+      {/* پیام تُست عمداً «ذخیره نشد» را تکرار نمی‌کند؛ نوار بالا آن را گفته. */}
+      <Toast visible={saved.visible} message="✓ در این صفحه اعمال شد" />
 
       {/* ===== bottom nav ===== */}
       <nav className={styles.bottomNav} aria-label="بخش‌های پنل مدیریت">
@@ -170,6 +186,43 @@ export function AdminPanel() {
           </button>
         ))}
       </nav>
+    </MobileShell>
+  )
+}
+
+/**
+ * مالکی که هنوز هیچ کافه‌ای ندارد.
+ *
+ * حالت واقعی است، نه خطا: نقش «مالک» را ادمین می‌دهد و ممکن است هنوز کافه‌ای
+ * به حسابش وصل نکرده باشد. پنل خالی بهتر از کرش است، به‌شرطی که بگوید قدم
+ * بعدی چیست.
+ */
+function NoVenue() {
+  return (
+    <MobileShell>
+      <div className={styles.claim}>
+        <h1 className={styles.claimTitle}>هنوز کافه‌ای به حساب شما وصل نیست</h1>
+        <p className={styles.claimText}>
+          برای مدیریت یک کافه، اول باید مالکیتش تأیید شود. صفحه‌ی کافه‌تان را در
+          کافه‌گرد پیدا کنید و درخواست مالکیت بدهید؛ تأیید نهایی با ادمین است و
+          بعد از آن همین صفحه پنل کافه‌ی شما می‌شود.
+        </p>
+        <p className={styles.claimText}>
+          اگر قبلاً درخواست داده‌اید، احتمالاً هنوز بررسی نشده. کافه‌تان اصلاً در
+          کافه‌گرد نیست؟ به ما بگویید تا ثبتش کنیم.
+        </p>
+        <div className={styles.claimActions}>
+          <Link
+            href={paths.search}
+            className={`${shellStyles.primaryButton} ${styles.claimPrimary}`}
+          >
+            پیدا کردن کافه‌ام
+          </Link>
+          <Link href={paths.profile} className={styles.claimSecondary}>
+            بازگشت به پروفایل
+          </Link>
+        </div>
+      </div>
     </MobileShell>
   )
 }

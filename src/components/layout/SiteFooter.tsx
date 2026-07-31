@@ -29,7 +29,9 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
       { label: 'دربارهٔ ما', href: paths.home },
       { label: 'مشارکت', href: paths.home },
       { label: 'تماس', href: paths.home },
-      { label: 'پنل مدیریت کافه', href: paths.admin },
+      // `/admin` حالا پنل ادمین است، نه پنل مالک؛ این لینک همان پنل مالک را
+      // می‌خواهد و باید مستقیم به `/admin/venue` برود.
+      { label: 'پنل مدیریت کافه', href: `${paths.admin}/venue` },
     ],
   },
 ]

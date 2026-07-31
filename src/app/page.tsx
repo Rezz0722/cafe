@@ -227,7 +227,12 @@ export default async function HomePage() {
                 بدون تبلیغ، بدون اسپانسر — فقط پیشنهاد آدم‌های واقعی.
               </p>
               <div className={styles.partActions}>
-                <Link href={paths.admin} className={styles.partPrimary}>
+                {/*
+                  به /admin نمی‌رود: آن پنل مدیر است و بازدیدکننده‌ی عادی را
+                  بیرون می‌اندازد. پنل مالک مقصد درست است — و اگر کاربر هنوز
+                  کافه‌ای ندارد، همان‌جا می‌گوید قدم بعدی چیست.
+                */}
+                <Link href={paths.ownerPanel} className={styles.partPrimary}>
                   کافه‌ات رو معرفی کن
                 </Link>
                 <Link href={paths.home} className={styles.partSecondary}>

@@ -1,5 +1,3 @@
-import { WEEKDAY_LABELS } from '@/core/hours/weekdays'
-
 /**
  * داده‌ی ساختگی پنل مالک کافه.
  *
@@ -147,15 +145,11 @@ export const SEED_CATEGORIES: AdminMenuCategory[] = [
   },
 ]
 
-export const SEED_HOURS: AdminOpeningHour[] = [
-  { day: WEEKDAY_LABELS[0], from: '۰۹:۰۰', to: '۲۳:۰۰', closed: false, afterMidnight: false },
-  { day: WEEKDAY_LABELS[1], from: '۰۹:۰۰', to: '۲۳:۰۰', closed: false, afterMidnight: false },
-  { day: WEEKDAY_LABELS[2], from: '۰۹:۰۰', to: '۲۳:۰۰', closed: false, afterMidnight: false },
-  { day: WEEKDAY_LABELS[3], from: '۰۹:۰۰', to: '۲۳:۰۰', closed: false, afterMidnight: false },
-  { day: WEEKDAY_LABELS[4], from: '۰۹:۰۰', to: '۲۴:۰۰', closed: false, afterMidnight: true },
-  { day: WEEKDAY_LABELS[5], from: '۱۰:۰۰', to: '۰۱:۰۰', closed: false, afterMidnight: true },
-  { day: WEEKDAY_LABELS[6], from: '۱۰:۰۰', to: '۲۳:۰۰', closed: true, afterMidnight: false },
-]
+/*
+ * `SEED_HOURS` و `SEED_CONTACT` حذف شدند: ساعت کاری و اطلاعات تماس حالا از
+ * خودِ کافه‌ی مالک خوانده می‌شوند (`src/app/admin/venue/page.tsx`). داده‌ی
+ * ساختگی فقط جایی مانده که هنوز معادل واقعی ندارد — منو، عکس و تخفیف.
+ */
 
 export const SEED_PROMOTIONS: AdminPromotion[] = [
   {
@@ -173,12 +167,6 @@ export const SEED_PROMOTIONS: AdminPromotion[] = [
     active: false,
   },
 ]
-
-export const SEED_CONTACT: AdminContact = {
-  phone: '۰۵۱ ۳۸۴۴ ۲۲۱۰',
-  address: 'مشهد، بلوار سجاد، نبش سجاد ۱۲',
-  instagram: 'cafe.roof@',
-}
 
 /** Owner tags that start switched on — a subset of `OWNER_TAGS`. */
 export const SEED_TAGS: string[] = ['مناسب کار', 'دنج', 'مناسب مطالعه', 'صبحانه']

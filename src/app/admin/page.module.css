@@ -1,0 +1,325 @@
+.wrap {
+  padding-block: 26px 56px;
+}
+
+/* ===== head =============================================================== */
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.title {
+  font-size: clamp(23px, 3.5vw, 30px);
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.lede {
+  font-size: var(--fs-base);
+  color: var(--c-ink-3);
+  max-width: 60ch;
+}
+
+.headActions {
+  display: flex;
+  gap: 8px;
+}
+
+.primaryLink,
+.secondaryLink {
+  font-size: var(--fs-sm);
+  font-weight: 800;
+  padding: 8px 15px;
+  border-radius: var(--r-pill);
+  white-space: nowrap;
+  transition: background var(--t-fast);
+}
+
+.primaryLink {
+  background: var(--c-primary);
+  color: #fff;
+  box-shadow: var(--sh-primary);
+}
+
+.primaryLink:hover {
+  background: var(--c-primary-strong);
+}
+
+.secondaryLink {
+  background: var(--c-surface-4);
+  color: var(--c-ink-2);
+}
+
+.secondaryLink:hover {
+  background: var(--c-border);
+}
+
+/* ===== sections =========================================================== */
+
+.section {
+  margin-bottom: 38px;
+  /* لنگر `#queue` زیر هدر چسبان گم نشود. */
+  scroll-margin-top: calc(var(--header-h) + 16px);
+}
+
+.sectionTitle {
+  font-size: var(--fs-lg);
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.sectionNote {
+  font-size: var(--fs-sm);
+  color: var(--c-muted);
+  line-height: 1.9;
+  max-width: 70ch;
+  margin-bottom: 14px;
+}
+
+/* ===== system health ====================================================== */
+
+.problems {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.problem {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  font-size: var(--fs-sm);
+  line-height: 1.85;
+  border-radius: var(--r-md);
+  padding: 10px 14px;
+  border-inline-start: 3px solid currentcolor;
+}
+
+.problemFatal {
+  color: var(--c-closed);
+  background: var(--c-closed-bg);
+}
+
+.problemWarn {
+  color: var(--c-accent-text-strong);
+  background: var(--c-accent-soft);
+}
+
+.problemOk {
+  color: var(--c-pastel-green-strong);
+  background: var(--c-success-soft);
+}
+
+.problemKey {
+  font-family: ui-monospace, monospace;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  background: rgb(255 255 255 / 60%);
+  border-radius: 5px;
+  padding: 1px 6px;
+}
+
+.healthGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.healthCard {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  padding: 14px 16px;
+}
+
+.healthLabel {
+  font-size: var(--fs-xs);
+  font-weight: 800;
+  color: var(--c-muted);
+}
+
+.healthValue {
+  font-size: var(--fs-2xl);
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+.healthNote {
+  font-size: var(--fs-xs);
+  color: var(--c-muted-2);
+  line-height: 1.9;
+}
+
+/* ===== catalogue stats ==================================================== */
+
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.stat {
+  display: block;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  padding: 14px 16px;
+}
+
+.statAction {
+  transition: border-color var(--t-fast), box-shadow var(--t-fast);
+}
+
+.statAction:hover {
+  border-color: var(--c-primary);
+  box-shadow: var(--sh-card);
+}
+
+.statValue {
+  font-size: var(--fs-2xl);
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.statLabel {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+
+.statHint {
+  font-size: var(--fs-xs);
+  color: var(--c-muted-2);
+  margin-top: 2px;
+}
+
+/* ===== queue ============================================================== */
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 12px;
+}
+
+.filter {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  padding: 5px 13px;
+  border-radius: var(--r-pill);
+  background: var(--c-surface-3);
+  color: var(--c-ink-2);
+}
+
+.filter:hover {
+  background: var(--c-surface-4);
+}
+
+.filterActive {
+  background: var(--c-primary);
+  color: #fff;
+}
+
+.queueEmpty,
+.queueMore {
+  font-size: var(--fs-sm);
+  color: var(--c-muted);
+}
+
+.queueMore {
+  margin-top: 10px;
+}
+
+.scroller {
+  overflow-x: auto;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  background: var(--c-surface);
+}
+
+.table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  font-size: var(--fs-sm);
+}
+
+.table th {
+  text-align: start;
+  font-size: var(--fs-xs);
+  font-weight: 800;
+  color: var(--c-muted);
+  background: var(--c-surface-3);
+  padding: 10px 14px;
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 10px 14px;
+  border-top: 1px solid var(--c-border-3);
+  vertical-align: middle;
+}
+
+.placeLink {
+  font-weight: 800;
+}
+
+.placeLink:hover {
+  color: var(--c-primary-strong);
+}
+
+.slug {
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  color: var(--c-muted-3);
+}
+
+.dim {
+  color: var(--c-muted-2);
+}
+
+/* عدد خالی خوانده نمی‌شود؛ نوار، اختلاف را در یک نگاه نشان می‌دهد. */
+.score {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.scoreNum {
+  font-weight: 800;
+  font-size: var(--fs-xs);
+  min-width: 2.2ch;
+}
+
+.scoreTrack {
+  display: block;
+  width: 54px;
+  height: 5px;
+  border-radius: var(--r-pill);
+  background: var(--c-surface-4);
+  overflow: hidden;
+}
+
+.scoreFill {
+  display: block;
+  height: 100%;
+  border-radius: var(--r-pill);
+}
+
+.scoreGood {
+  background: var(--c-open);
+}
+
+.scoreMid {
+  background: var(--c-accent);
+}
+
+.scoreBad {
+  background: var(--c-closed);
+}

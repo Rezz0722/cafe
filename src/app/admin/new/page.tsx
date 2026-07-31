@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { NewPlaceForm } from '@/components/admin/NewPlaceForm'
 import { SiteHeader } from '@/components/layout/SiteHeader'
+import { requireAdmin } from '@/core/auth/currentUser'
 import { loadDistricts, loadPublishedViews } from '@/core/places/repository'
 import { fa } from '@/lib/format'
 import { paths } from '@/routes'
@@ -20,6 +21,10 @@ export const metadata: Metadata = {
 }
 
 export default async function NewPlacePage() {
+  // نوشتن در کاتالوگ فقط کارِ ادمین است. خودِ اکشن هم جدا بررسی می‌کند —
+  // بستن صفحه، اکشن را نمی‌بندد.
+  await requireAdmin(`${paths.admin}/new`)
+
   const [districts, places] = await Promise.all([loadDistricts(), loadPublishedViews()])
 
   // چند کافه هنوز هیچ ویژگی‌ای ندارند؟ همان صف کار تیم داده است.

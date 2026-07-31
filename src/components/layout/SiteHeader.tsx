@@ -20,7 +20,7 @@ const NAV_LINKS = [
 
 /** Sticky top bar. Collapses to a burger drawer below 760px. */
 export function SiteHeader() {
-  const { isLoggedIn, user, ready } = useAuth()
+  const { isLoggedIn, user } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -51,30 +51,29 @@ export function SiteHeader() {
         </nav>
 
         {/*
-          تا وقتی نشست از localStorage خوانده نشده (`ready === false`) هیچ‌کدام از
-          دو حالت را نشان نمی‌دهیم؛ وگرنه کاربرِ واردشده یک لحظه «ورود | ثبت‌نام»
-          می‌بیند و بعد به پروفایل می‌پرد. رندر سرور هم همین حالت است، پس
-          hydration به‌هم نمی‌ریزد.
+          دیگر پرچم `ready` لازم نیست: نشست از layout سرور می‌آید، پس همین حالت
+          در رندر سرور هم رندر می‌شود و نه چیزی «می‌پرد» و نه hydration به‌هم
+          می‌ریزد. کاربری که هنوز نامش را ثبت نکرده، شماره‌اش را هم نداریم که
+          نشان دهیم، پس «کاربر» می‌ماند.
         */}
-        {ready &&
-          (isLoggedIn ? (
-            <button
-              type="button"
-              className={styles.profileButton}
-              onClick={() => router.push(paths.profile)}
-            >
-              <img className={styles.avatar} src={LOGO_SRC} alt="" width={32} height={32} />
-              <span className={styles.profileName}>{user?.name ?? 'کاربر'}</span>
-            </button>
-          ) : (
-            <button
-              type="button"
-              className={styles.loginButton}
-              onClick={() => router.push(authUrl(pathname ?? undefined))}
-            >
-              ورود | ثبت‌نام
-            </button>
-          ))}
+        {isLoggedIn ? (
+          <button
+            type="button"
+            className={styles.profileButton}
+            onClick={() => router.push(paths.profile)}
+          >
+            <img className={styles.avatar} src={LOGO_SRC} alt="" width={32} height={32} />
+            <span className={styles.profileName}>{user?.name || 'کاربر'}</span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            className={styles.loginButton}
+            onClick={() => router.push(authUrl(pathname ?? undefined))}
+          >
+            ورود | ثبت‌نام
+          </button>
+        )}
 
         <button
           type="button"

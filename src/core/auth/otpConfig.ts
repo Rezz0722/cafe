@@ -1,0 +1,22 @@
+/**
+ * ثابت‌های OTP — بدون هیچ وابستگی به crypto.
+ *
+ * جدا از `otp.ts` چون صفحه‌ی ورود (کامپوننت کلاینت) به طول کد و مدت
+ * شمارش معکوس نیاز دارد. اگر همان‌جا از `otp.ts` بخواند، `node:crypto`
+ * وارد باندل مرورگر می‌شود و build می‌شکند — همان چیزی که این جداسازی
+ * جلویش را می‌گیرد.
+ */
+
+export const OTP_LENGTH = 5
+export const OTP_TTL_SEC = 120
+export const OTP_RESEND_COOLDOWN_SEC = 90
+export const OTP_MAX_PER_HOUR = 5
+export const OTP_MAX_ATTEMPTS = 5
+
+/**
+ * سقف کل ارسال در ساعت، روی همه‌ی شماره‌ها.
+ *
+ * سقف per-phone با عوض‌کردن شماره دور زده می‌شود: مهاجم با چند ده شماره کل
+ * اعتبار پیامک را می‌سوزاند. این عدد را با اعتبار واقعی‌تان تنظیم کنید.
+ */
+export const OTP_MAX_GLOBAL_PER_HOUR = 60

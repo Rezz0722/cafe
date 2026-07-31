@@ -52,6 +52,17 @@
   font-weight: 600;
 }
 
+.roleBadge {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: var(--fs-xs);
+  font-weight: 800;
+  padding: 1px 9px;
+  border-radius: var(--r-pill);
+  background: var(--c-primary-soft);
+  color: var(--c-primary-strong);
+}
+
 .levelCard {
   display: flex;
   align-items: center;
@@ -320,10 +331,30 @@
   color: var(--c-closed);
 }
 
-/* ===== venue owner entry ================================================= */
+/* ===== panel entries ===================================================== */
 
 .ownerWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   padding: 16px 20px 0;
+}
+
+/* پنل ادمین از پنل مالک جدا دیده شود؛ دو دسترسیِ متفاوت‌اند. */
+.adminCard {
+  background: var(--c-primary-strong);
+}
+
+.adminCard .ownerIcon {
+  color: #fff;
+}
+
+.adminCard .ownerSub {
+  color: rgb(255 255 255 / 78%);
+}
+
+.adminCard .ownerChevron {
+  color: rgb(255 255 255 / 60%);
 }
 
 .ownerCard {
@@ -370,4 +401,54 @@
 .ownerChevron {
   color: var(--c-muted-2);
   flex: none;
+}
+
+/* ویرایش نام — درجا، چون مسیر /auth?edit=1 دیگر وجود ندارد */
+.nameForm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+}
+
+.nameInput {
+  font: inherit;
+  font-size: 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--c-border, #dcdcdc);
+  border-radius: 10px;
+  background: #fff;
+  width: 100%;
+}
+
+.nameError {
+  font-size: 12px;
+  color: #a12a2a;
+}
+
+.nameActions {
+  display: flex;
+  gap: 8px;
+}
+
+.nameSave {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 18px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--c-primary, #5996ff);
+  color: #fff;
+  cursor: pointer;
+}
+
+.nameCancel {
+  font: inherit;
+  font-size: 13px;
+  padding: 8px 16px;
+  border: 1px solid var(--c-border, #ddd);
+  border-radius: 999px;
+  background: none;
+  cursor: pointer;
 }

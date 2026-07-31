@@ -21,6 +21,8 @@ export const paths = {
   auth: '/auth',
   profile: '/profile',
   admin: '/admin',
+  /** پنل مالک کافه — جدا از پنل مدیر. */
+  ownerPanel: '/admin/venue',
 } as const
 
 /** `/search?q=…` — با حذف پارامتر وقتی خالی است. */
@@ -37,17 +39,6 @@ export function searchByIntents(intentIds: string[]): string {
 
 export function authUrl(redirectTo?: string): string {
   return redirectTo ? `${paths.auth}?redirect=${encodeURIComponent(redirectTo)}` : paths.auth
-}
-
-/** آخرین گام ثبت‌نام، که «ویرایش نام» هم هست. */
-export function editProfileUrl(): string {
-  return `${paths.auth}?edit=1&redirect=${encodeURIComponent(paths.profile)}`
-}
-
-/** صفحه‌ی نام‌کاربری/رمز حساب‌های دمو. */
-export function devLoginUrl(redirectTo?: string): string {
-  const base = `${paths.auth}?login=1`
-  return redirectTo ? `${base}&redirect=${encodeURIComponent(redirectTo)}` : base
 }
 
 /** آدرس کانونی سایت — برای متادیتا، sitemap و JSON-LD. */

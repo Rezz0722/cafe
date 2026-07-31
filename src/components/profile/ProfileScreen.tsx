@@ -1,20 +1,20 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useActionState, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { setNameAction, signOutAction } from '@/app/auth/actions'
+import { EMPTY_NAME_STATE } from '@/app/auth/state'
 import { MobileShell } from '@/components/layout/MobileShell'
 import { CafePhoto } from '@/components/ui/CafePhoto'
-import { useAuth } from '@/hooks/useAuth'
+import { maskPhone } from '@/core/auth/phone'
+import { isAdmin, isOwner, ROLE_LABELS, type SessionUser } from '@/core/auth/types'
 import { useSavedCafes } from '@/hooks/useSavedCafes'
 import { fa, faDecimal } from '@/lib/format'
-import { authUrl, devLoginUrl, editProfileUrl, paths } from '@/routes'
+import { paths } from '@/routes'
 import { PRICE_TIER_LABELS } from '@/types'
 import type { PriceTier } from '@/core/places/types'
 import styles from './ProfileScreen.module.css'
-
-/** No phone number is kept with the session, so the header shows the mock one. */
-const MASKED_PHONE = '۰۹۱۵ ••• ۴۴۲۱'
 
 /**
  * آن‌قدر از یک مکان که ردیف «ذخیره‌شده‌ها» لازم دارد.
@@ -35,39 +35,34 @@ export interface SavedVenue {
 /**
  * پروفایل کاربر.
  *
+ * `user` از سرور می‌آید (`requireUser`)، پس دیگر نه نگهبان کلاینتی لازم است و
+ * نه پرچم `ready`: صفحه یا رندر می‌شود یا اصلاً به مرورگر نمی‌رسد.
+ *
  * `venues` همه‌ی مکان‌های منتشرشده است — ذخیره‌شده‌ها با کلید slug در
  * localStorage می‌نشینند، پس فهرست واقعی فقط سمت کلاینت قابل ساخت است.
  */
-export function ProfileScreen({ venues }: { venues: SavedVenue[] }) {
+export function ProfileScreen({ user, venues }: { user: SessionUser; venues: SavedVenue[] }) {
   const router = useRouter()
-  const { user, isLoggedIn, isOwner, ready: authReady, signOut } = useAuth()
   const { saved, unsave, ready: savedReady } = useSavedCafes()
+  const [signingOut, startSignOut] = useTransition()
+  const [editingName, setEditingName] = useState(false)
+  const [nameState, saveName] = useActionState(setNameAction, EMPTY_NAME_STATE)
 
-  /**
-   * خروج، خودش صفحه را عوض می‌کند. بدون این پرچم، نشستِ پاک‌شده باعث می‌شود
-   * نگهبانِ پایین کاربر را به صفحه‌ی ورود بفرستد و `push` به خانه بی‌اثر شود.
-   */
-  const [signingOut, setSigningOut] = useState(false)
-
-  // معادل `<Navigate replace />` نسخه‌ی SPA. به `ready` گره خورده، وگرنه در
-  // اولین رندر — پیش از خوانده‌شدن localStorage — کاربرِ واردشده هم پرت می‌شود.
-  const bouncing = authReady && !isLoggedIn && !signingOut
-
-  useEffect(() => {
-    if (bouncing) router.replace(authUrl(paths.profile))
-  }, [bouncing, router])
-
-  if (!authReady || !savedReady || !isLoggedIn) return null
-
-  const name = user?.name ?? 'نگار احمدی'
-  // A dev account has no phone number behind it, so it is named by its username.
-  const subtitle = user?.username ? `@${user.username}` : MASKED_PHONE
+  const name = user.name || 'کاربر کافه‌گرد'
   const savedVenues = venues.filter((venue) => saved.has(venue.slug))
+  const owner = isOwner(user)
 
   function handleSignOut() {
-    setSigningOut(true)
-    signOut()
-    router.push(paths.home)
+    /*
+      خروج، کوکی را روی سرور پاک می‌کند و بعد به خانه می‌رویم — نه رفرش همین
+      صفحه. رفرش، `requireUser` را بیدار می‌کرد و کاربر به‌جای خانه به صفحه‌ی
+      ورود پرت می‌شد؛ که برای کسی که «خروج» زده پیام گیج‌کننده‌ای است.
+    */
+    startSignOut(async () => {
+      await signOutAction()
+      router.replace(paths.home)
+      router.refresh()
+    })
   }
 
   return (
@@ -82,8 +77,9 @@ export function ProfileScreen({ venues }: { venues: SavedVenue[] }) {
             <div className={styles.identityBody}>
               <div className={styles.name}>{name}</div>
               <div className={styles.phone} dir="ltr">
-                {subtitle}
+                {fa(maskPhone(user.phone))}
               </div>
+              <div className={styles.roleBadge}>{ROLE_LABELS[user.role]}</div>
             </div>
           </div>
 
@@ -116,7 +112,12 @@ export function ProfileScreen({ venues }: { venues: SavedVenue[] }) {
             <span className={styles.sectionCount}>{`${fa(savedVenues.length)} کافه`}</span>
           </div>
 
-          {savedVenues.length > 0 ? (
+          {/* تا وقتی localStorage خوانده نشده، «هیچی ذخیره نکردی» دروغ است. */}
+          {!savedReady ? (
+            <div className={styles.emptyCard}>
+              <div className={styles.emptyText}>در حال بارگذاری…</div>
+            </div>
+          ) : savedVenues.length > 0 ? (
             <ul className={styles.savedList}>
               {savedVenues.map((venue) => (
                 <li key={venue.slug} className={styles.savedRow}>
@@ -212,45 +213,83 @@ export function ProfileScreen({ venues }: { venues: SavedVenue[] }) {
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>تنظیمات حساب</h2>
           <div className={styles.settingsCard}>
-            <Link href={editProfileUrl()} className={styles.settingRow}>
-              <span className={styles.settingLabel}>
+            {/*
+              قبلاً این ردیف به `/auth?edit=1` می‌رفت — مسیری که با بازنویسی
+              ورود حذف شد. لینکِ مرده بدتر از نبودِ لینک است، پس ویرایش نام
+              همین‌جا انجام می‌شود با همان اکشنی که گام آخر ثبت‌نام استفاده می‌کند.
+              «عکس» از عنوان حذف شد چون آپلود عکس هنوز واقعی نیست.
+            */}
+            {editingName ? (
+              <form action={saveName} className={styles.nameForm}>
+                <input
+                  name="name"
+                  className={styles.nameInput}
+                  defaultValue={user.name}
+                  maxLength={60}
+                  placeholder="نام شما"
+                  required
+                  autoFocus
+                />
+                {nameState.error && <span className={styles.nameError}>{nameState.error}</span>}
+                <div className={styles.nameActions}>
+                  <button type="submit" className={styles.nameSave}>
+                    ذخیره
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.nameCancel}
+                    onClick={() => setEditingName(false)}
+                  >
+                    انصراف
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <button
+                type="button"
+                className={styles.settingRow}
+                onClick={() => setEditingName(true)}
+              >
+                <span className={styles.settingLabel}>
+                  <svg
+                    className={styles.editIcon}
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.9"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M12 20h9" />
+                    <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z" />
+                  </svg>
+                  ویرایش نام
+                </span>
                 <svg
-                  className={styles.editIcon}
-                  width="20"
-                  height="20"
+                  className={styles.settingChevron}
+                  width="18"
+                  height="18"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
-                  strokeWidth="1.9"
+                  strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   aria-hidden="true"
                 >
-                  <path d="M12 20h9" />
-                  <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z" />
+                  <path d="M15 18l-6-6 6-6" />
                 </svg>
-                ویرایش نام و عکس
-              </span>
-              <svg
-                className={styles.settingChevron}
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M15 18l-6-6 6-6" />
-              </svg>
-            </Link>
+              </button>
+            )}
 
             <button
               type="button"
               className={`${styles.settingRow} ${styles.logoutRow}`}
               onClick={handleSignOut}
+              disabled={signingOut}
             >
               <span className={styles.settingLabel}>
                 <svg
@@ -268,63 +307,100 @@ export function ProfileScreen({ venues }: { venues: SavedVenue[] }) {
                   <polyline points="16 17 21 12 16 7" />
                   <line x1="21" y1="12" x2="9" y2="12" />
                 </svg>
-                خروج از حساب
+                {signingOut ? 'در حال خروج…' : 'خروج از حساب'}
               </span>
             </button>
           </div>
         </section>
 
-        {/* ===== venue owner entry ===== */}
-        {/* The panel is owner-only, so a customer is pointed at the login for it
-            rather than at a route that would bounce them straight back here. */}
-        <div className={styles.ownerWrap}>
-          <Link
-            href={isOwner ? paths.admin : devLoginUrl(paths.admin)}
-            className={styles.ownerCard}
-          >
-            <span className={styles.ownerCopy}>
-              <span className={styles.ownerIcon} aria-hidden="true">
-                <svg
-                  width="21"
-                  height="21"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.9"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
-                  <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4z" />
-                  <line x1="6" y1="1" x2="6" y2="4" />
-                  <line x1="10" y1="1" x2="10" y2="4" />
-                  <line x1="14" y1="1" x2="14" y2="4" />
-                </svg>
-              </span>
-              <span>
-                <span className={styles.ownerTitle}>{isOwner ? 'پنل کافه' : 'کافه داری؟'}</span>
-                <span className={styles.ownerSub}>
-                  {isOwner ? 'صفحه‌ات رو مدیریت کن' : 'با اکانت کافه وارد شو'}
+        {/* ===== panels ===== */}
+        {/*
+          فقط به کسی نشان داده می‌شود که واقعاً دسترسی دارد. لینک‌دادن مشتری به
+          پنلی که بلافاصله پرتش می‌کند، همان بن‌بستی است که نسخه‌ی قبلی داشت —
+          آنجا لینک همیشه بود و به صفحه‌ی ورودِ آزمایشی می‌رفت.
+        */}
+        {(owner || isAdmin(user)) && (
+          <div className={styles.ownerWrap}>
+            <Link href={`${paths.admin}/venue`} className={styles.ownerCard}>
+              <span className={styles.ownerCopy}>
+                <span className={styles.ownerIcon} aria-hidden="true">
+                  <svg
+                    width="21"
+                    height="21"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.9"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
+                    <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4z" />
+                    <line x1="6" y1="1" x2="6" y2="4" />
+                    <line x1="10" y1="1" x2="10" y2="4" />
+                    <line x1="14" y1="1" x2="14" y2="4" />
+                  </svg>
+                </span>
+                <span>
+                  <span className={styles.ownerTitle}>پنل کافه</span>
+                  <span className={styles.ownerSub}>
+                    {user.ownedPlaceSlugs.length > 0
+                      ? 'صفحه‌ات رو مدیریت کن'
+                      : 'هنوز کافه‌ای به حسابت وصل نیست'}
+                  </span>
                 </span>
               </span>
-            </span>
-            <svg
-              className={styles.ownerChevron}
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M15 18l-6-6 6-6" />
-            </svg>
-          </Link>
-        </div>
+              <Chevron />
+            </Link>
+
+            {isAdmin(user) && (
+              <Link href={paths.admin} className={`${styles.ownerCard} ${styles.adminCard}`}>
+                <span className={styles.ownerCopy}>
+                  <span className={styles.ownerIcon} aria-hidden="true">
+                    <svg
+                      width="21"
+                      height="21"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.9"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M12 3l7.5 3.4V12c0 4.6-3.2 7.9-7.5 9-4.3-1.1-7.5-4.4-7.5-9V6.4z" />
+                      <path d="M9.2 12.2l2 2 3.6-3.9" />
+                    </svg>
+                  </span>
+                  <span>
+                    <span className={styles.ownerTitle}>پنل ادمین</span>
+                    <span className={styles.ownerSub}>کاتالوگ، صف اعتبارسنجی و کاربران</span>
+                  </span>
+                </span>
+                <Chevron />
+              </Link>
+            )}
+          </div>
+        )}
       </div>
     </MobileShell>
+  )
+}
+
+function Chevron() {
+  return (
+    <svg
+      className={styles.ownerChevron}
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M15 18l-6-6 6-6" />
+    </svg>
   )
 }

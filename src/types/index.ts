@@ -19,17 +19,14 @@ export type {
   Coords,
 } from '@/core/places/types'
 
-/** آنچه یک نشست می‌تواند ببیند: اپ مشتری، یا پنل مالک کافه. */
-export type Role = 'customer' | 'owner'
-
-export interface User {
-  name: string
-  role: Role
-  /** وقتی نشست از یک حساب دمو آمده باشد (data/devAccounts.ts). */
-  username?: string
-  /** کافه‌ای که این مالک مدیریت می‌کند. برای مشتری بی‌استفاده است. */
-  venue?: string
-}
+/*
+ * `Role` و `User` از اینجا برداشته شدند.
+ *
+ * مدل نشست به `src/core/auth/types.ts` رفت — آنجا `Role` سه مقدار دارد
+ * (customer/owner/admin) و مالکیت با فهرست slug ثبت می‌شود. نگه‌داشتن یک
+ * `Role` دومِ دو‌مقداری اینجا یعنی دو تعریف متناقض از «نقش» در یک پروژه؛
+ * دیر یا زود یکی import اشتباه می‌شود و ادمین بی‌صدا از فیلتر می‌افتد.
+ */
 
 /** برچسب فارسی بازه‌ی قیمت. */
 export const PRICE_TIER_LABELS: Record<number, string> = {

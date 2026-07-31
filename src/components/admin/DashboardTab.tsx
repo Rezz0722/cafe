@@ -1,6 +1,7 @@
 'use client'
 
 import { CafePhoto } from '@/components/ui/CafePhoto'
+import { fa, faDecimal } from '@/lib/format'
 import {
   IconChevronForward,
   IconClock,
@@ -13,6 +14,13 @@ import styles from './DashboardTab.module.css'
 
 interface DashboardTabProps {
   venueName: string
+  districtName: string
+  photo?: string
+  /** میانگین خام امتیاز کاربران. */
+  rating: number
+  reviewCount: number
+  /** ۰..۱۰۰ کامل‌بودن پروفایل. */
+  qualityScore: number
   isOpen: boolean
   onToggleOpen: () => void
   onOpenMenu: () => void
@@ -24,6 +32,11 @@ interface DashboardTabProps {
 
 export function DashboardTab({
   venueName,
+  districtName,
+  photo,
+  rating,
+  reviewCount,
+  qualityScore,
   isOpen,
   onToggleOpen,
   onOpenMenu,
@@ -43,10 +56,18 @@ export function DashboardTab({
     <div className={styles.tab}>
       {/* ===== cover ===== */}
       <div className={styles.cover}>
-        <CafePhoto alt={`عکس کاور ${venueName}`} placeholder="عکس کاور کافه" loading="eager" />
+        <CafePhoto
+          alt={`عکس کاور ${venueName}`}
+          src={photo}
+          placeholder="عکس کاور کافه"
+          loading="eager"
+        />
         <div className={styles.coverShade} />
         <div className={styles.coverBar}>
-          <div className={styles.coverName}>{venueName}</div>
+          <div>
+            <div className={styles.coverName}>{venueName}</div>
+            <div className={styles.coverHood}>{districtName}</div>
+          </div>
           <button
             type="button"
             onClick={onToggleOpen}
@@ -58,19 +79,26 @@ export function DashboardTab({
         </div>
       </div>
 
-      {/* ===== summary ===== */}
+      {/*
+        ===== summary =====
+        «بازدید صفحه» که قبلاً اینجا بود عددی ثابت و ساختگی بود؛ آماری که
+        اندازه‌گیری نمی‌شود نباید به مالک نشان داده شود. سه عددِ زیر واقعی‌اند و
+        از همان داده‌ای می‌آیند که سایت عمومی نشان می‌دهد.
+      */}
       <div className={styles.stats}>
-        <div className={`${styles.stat} ${styles.statViews}`}>
-          <div className={styles.statValue}>۱٬۲۴۰</div>
-          <div className={styles.statLabel}>بازدید صفحه</div>
+        <div className={`${styles.stat} ${styles.statRating}`}>
+          <div className={styles.statValue}>
+            {reviewCount > 0 ? faDecimal(Number(rating.toFixed(1))) : '—'}
+          </div>
+          <div className={styles.statLabel}>امتیاز کافه</div>
         </div>
         <div className={`${styles.stat} ${styles.statReviews}`}>
-          <div className={styles.statValue}>۳</div>
-          <div className={styles.statLabel}>نظر جدید</div>
+          <div className={styles.statValue}>{fa(reviewCount)}</div>
+          <div className={styles.statLabel}>نظر ثبت‌شده</div>
         </div>
-        <div className={`${styles.stat} ${styles.statRating}`}>
-          <div className={styles.statValue}>۴٫۸</div>
-          <div className={styles.statLabel}>امتیاز کافه</div>
+        <div className={`${styles.stat} ${styles.statViews}`}>
+          <div className={styles.statValue}>{fa(qualityScore)}</div>
+          <div className={styles.statLabel}>کامل‌بودن پروفایل</div>
         </div>
       </div>
 

@@ -18,3 +18,16 @@ next-env.d.ts
 
 # کافه‌های افزوده‌شده از پنل ادمین — داده‌ی محلی، در git نمی‌آید
 src/data/places.custom.json
+
+# secrets
+.env.local
+.env*.local
+
+# داده‌ی کاربران و نشست‌ها — هرگز در git
+src/data/users.json
+src/data/sessions.json
+src/data/otp.json
+
+# صفحه‌های ذخیره‌شده‌ی پنل — کلید API داخل متنشان است
+*.html
+!index.html
