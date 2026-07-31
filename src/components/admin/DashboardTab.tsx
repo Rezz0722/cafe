@@ -1,3 +1,5 @@
+'use client'
+
 import { CafePhoto } from '@/components/ui/CafePhoto'
 import {
   IconChevronForward,

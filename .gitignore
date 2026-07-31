@@ -8,3 +8,10 @@ dist-ssr
 .env
 .env.*
 !.env.example
+
+# Next.js
+.next
+next-env.d.ts
+
+# bundles
+*.zip

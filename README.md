@@ -2,97 +2,122 @@
 
 راهنمای کافه‌ها و رستوران‌های مشهد. «اسم جایی رو نگو، حالت رو بگو.»
 
-A Persian, right-to-left guide to cafés and restaurants in Mashhad. This
-repository is the working code conversion of the five design mockups in
-«کافه‌گرد آفلاین»: the marketing home page plus four phone-width app screens.
+Next.js 15 (App Router) · TypeScript · CSS Modules · فارسی/RTL
 
-## Running it
+---
+
+## اجرا
 
 ```bash
 npm install
-npm run dev        # http://localhost:5173
-npm run build      # type-check, then production build into dist/
-npm run typecheck  # types only, no emit
+npm run dev        # http://localhost:3000
+npm run build      # بیلد تولیدی
+npm run typecheck  # فقط تایپ
+npm test           # تست‌های هسته
 ```
 
-Node 20+ is expected. There is no backend and no network dependency: fonts are
-self-hosted, the catalogue is a TypeScript module, and session state lives in
-`localStorage`.
+Node 20+ لازم است. **هیچ زیرساختی لازم نیست** — دیتابیس، Docker، کلید API:
+هیچ‌کدام. اپلیکیشن از یک آداپتور seed می‌خواند. مسیر Postgres در
+[docs/DATA_LAYER.md](docs/DATA_LAYER.md).
 
-## Screens
+---
 
-| Route | Screen | Source mockup |
-| --- | --- | --- |
-| `/` | Home — hero search, featured venues, intent cards, participation | صفحه اصلی |
-| `/search` | Result list, map view, filter sheet | نتایج جستجو |
-| `/cafe/:id` | Venue detail — gallery, menu, hours, reviews | صفحه نمونه کافه |
-| `/auth` | Sign-up flow: phone → OTP → name | ورود و پروفایل |
-| `/profile` | Saved venues and reviews (auth-guarded) | ورود و پروفایل |
-| `/admin` | Venue-owner panel: menu, photos, hours, tags, promotions | پنل مدیریت کافه |
+## مسیرها
 
-The home page is a full responsive page. The other four were designed at 430px
-and render inside `MobileShell`, a centred phone frame — that is intentional, not
-an unfinished responsive pass.
+| مسیر | چیست | رندر |
+|---|---|---|
+| `/` | صفحه‌ی اصلی — hero، منتخب‌ها، کارت‌های نیت، محله‌ها | سرور |
+| `/search` | نتایج با فیلتر و نقشه | سرور (+ تعامل کلاینت) |
+| `/cafe/[slug]` | صفحه‌ی کافه — منو، ساعت، نظرات، JSON-LD | استاتیک |
+| `/mashhad/[district]` | «کافه‌های سجاد» | استاتیک |
+| `/mashhad/[district]/[intent]` | «کافه مناسب کار در سجاد» | استاتیک |
+| `/auth` `/profile` `/admin` | ورود، پروفایل، پنل مالک | کلاینت، `noindex` |
+| `/sitemap.xml` `/robots.txt` | تولیدشده از داده | — |
 
-## Layout
+دو دسته‌ی آخرِ صفحات محتوایی، صفحات «پول‌ساز» SEO هستند: جست‌وجوی محلی
+واقعی دارند و گوگل‌مپ برایشان رتبه‌ی خوبی نمی‌گیرد.
+
+---
+
+## ساختار
 
 ```
 src/
-  main.tsx App.tsx routes.ts     entry, route table, every URL in the app
-  styles/                        tokens.css (design tokens), global.css, fonts.css
-  types/                         domain model — Cafe, MenuItem, Review, …
-  data/                          catalogue, taxonomy, home-page copy, admin seed
-  lib/                           format (Persian numerals), storage, search
-  hooks/                         auth, saved venues, URL-backed filters, toast
-  components/
-    layout/                      SiteHeader, SiteFooter, MobileShell
-    ui/                          Chip, Switch, Toast, Stars, CafePhoto, …
-    cafe/                        CafeCard (home), ResultCard (search)
-    admin/                       one panel per admin tab
-  pages/                         one component + one CSS module per screen
-  assets/                        logo, venue photo
+  app/                 مسیرها (App Router) + sitemap/robots
+  core/                ── منطق دامنه، بدون HTTP و بدون React ──
+    text/              نرمال‌سازی فارسی، stopword، فینگلیش
+    taxonomy/          واژگان ویژگی‌ها + تطبیق نیت  ← قلب محصول
+    places/            مدل، repository، محاسبه‌ی مقادیر مشتق
+    hours/             باز/بسته با پشتیبانی استثنا
+    rating/            میانگین بیزی
+    quality/           امتیاز کامل‌بودن و تازگی
+    search/            فیلتر، رتبه‌بندی، وضعیت URL
+    geo/               فاصله، شعاع dedupe
+    seo/               قانون ایندکس‌پذیری
+  db/schema.ts         شمای Postgres + PostGIS (مقصد تولیدی)
+  data/seed.ts         ⚠️ داده‌ی نمونه — واقعی نیست
+  components/          UI (server component مگر اینکه لازم باشد نباشد)
+  hooks/ lib/ types/
 ```
 
-`@/` is an alias for `src/`.
+**قانون سخت:** `app/**` هیچ‌وقت مستقیم به منبع داده دست نمی‌زند. همه‌چیز از
+`core/places/repository.ts` رد می‌شود. این تنها چیزی است که جلوی تبدیل‌شدن
+monolith به «big ball of mud» را می‌گیرد — و همان چیزی که سوئیچ به Postgres
+را بدون تغییر صفحات ممکن می‌کند.
 
-### Conventions
+---
 
-- **Styling** is CSS Modules over the custom properties in
-  `src/styles/tokens.css`. The mockups were built from inline style strings; those
-  are gone. Inline `style` survives only where a value genuinely comes from data,
-  such as a per-card pastel background.
-- **RTL** is structural: logical properties (`inset-inline-start`,
-  `padding-inline`, `margin-inline`) everywhere, never `left`/`right`.
-- **Responsiveness** is CSS. The mockups tracked `window.innerWidth` in component
-  state and branched on it; media queries replace that.
-- **Persian numerals** are a formatting concern, not stored data. Ratings and
-  prices are numbers in `data/`, rendered through `lib/format`
-  (`fa`, `faDecimal`, `toman`, `faPercent`).
-- **Search state lives in the URL.** `/search?q=…&intents=…&price=…&sort=…` is
-  the single source of truth, so a filtered list is shareable and the back button
-  steps through filter changes.
+## تصمیم‌های معماری که ممکن است غافلگیرتان کند
 
-## What is mock, and what a backend would replace
+مفصل در [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). خلاصه:
 
-The conversion is faithful to the mockups, which means the parts they only
-simulated are still simulated:
+**شناسه، نه رشته‌ی فارسی.** ویژگی‌ها `id` انگلیسی پایدار دارند و `labelFa`
+فقط برای نمایش است. نسخه‌ی قبلی تگ‌ها را رشته‌ی آزاد نگه می‌داشت و با پیشوند
+شش‌کاراکتری تطبیق می‌داد؛ سه نیت پیشوند «مناسب » داشتند و چون فیلتر AND بود،
+جست‌وجوی «مناسب قرار» **صفر نتیجه** می‌داد. تست رگرسیونش در
+`src/core/taxonomy/matchIntent.test.ts` است.
 
-- **The catalogue** (`src/data/cafes.ts`) is eight hard-coded venues. Every venue
-  currently shares one menu, one hours table and one review set.
-- **Authentication** has no server. The OTP step accepts any five digits; signing
-  in writes a name to `localStorage` under `cafegard_user`.
-- **Saved venues** are `localStorage` keys (`cafegard_saved_<id>`), not a user
-  record.
-- **The admin panel** edits React state. Reloading the page restores the seed
-  data in `src/data/adminSeed.ts`; nothing is persisted.
-- **The map view** is a CSS grid with positioned rating pins, not a tile layer.
-- **Photo upload** adds placeholder tiles; no file is read or stored.
-- Venue counts in the home page's intent cards (۲۱۰، ۱۴۵، ۱۸۸، ۹۷) are copy from
-  the mockup, not computed from the catalogue.
+**هیچ مقدار مشتقی ذخیره نمی‌شود.** `isOpenNow`، `distanceKm`، `rating`،
+امتیاز کیفیت و تازگی همگی در لحظه محاسبه می‌شوند. هر مقدار زمان‌وابسته‌ای که
+ذخیره شود، از همان لحظه شروع به غلط‌شدن می‌کند.
 
-## Assets
+**رتبه‌بندی بیزی، نه میانگین خام.** وگرنه ۴٫۹ از ۳ نظر بالای ۴٫۶ از ۵۰۰ نظر
+می‌نشیند. میانگین خام همچنان *نمایش* داده می‌شود؛ فقط ترتیب تصحیح می‌شود.
 
-The logo/mascot and the venue photograph were extracted from the mockup bundles,
-along with the nine Vazirmatn weights now served from `public/fonts`. All venues
-share the one photograph the mockups shipped; `CafePhoto` falls back to a labelled
-placeholder when an image is missing.
+**تازگی داده وارد رتبه‌بندی می‌شود.** کافه‌ای که اطلاعاتش به‌روز است بالاتر
+می‌آید — هم به کاربر خدمت می‌کند، هم به کافه‌دار انگیزه‌ی به‌روزرسانی می‌دهد.
+
+**صفحات کم‌محتوا `noindex` می‌مانند.** ۶ محله × ۱۶ ویژگی = ۹۶ صفحه که
+بیشترشان خالی‌اند. گوگل این را thin content می‌بیند و می‌تواند کل دامنه را
+تنبیه کند. صفحه تا وقتی ۵ کافه ندارد ایندکس نمی‌شود و در sitemap نمی‌آید
+(`src/core/seo/indexability.ts`) — با رشد داده خودکار وارد می‌شود.
+
+**متن آزاد فقط وقتی دروازه است که نیتی پیدا نشده باشد.** اگر نیت داریم، متن
+باقی‌مانده امتیاز می‌دهد نه اینکه حذف کند. وگرنه یک واژه‌ی ناشناخته در
+«کافه‌ای دنج با موزیک ملایم» کل نتایج درست را صفر می‌کرد.
+
+---
+
+## آنچه هنوز واقعی نیست
+
+صادقانه، تا با انتظار غلط جلو نروید:
+
+| بخش | وضعیت |
+|---|---|
+| **داده** | ۸ کافه‌ی ساختگی از ماکاپ. کار اصلی محصول همین است و انجام نشده. |
+| احراز هویت | بک‌اند ندارد. OTP هر کدی را می‌پذیرد. نشست در localStorage. |
+| نقشه | grid با پین، نه تایل واقعی. باید نشان یا بلد شود (گوگل‌مپ در ایران کار نمی‌کند). |
+| پنل مالک | state محلی را ویرایش می‌کند؛ چیزی ذخیره نمی‌شود. |
+| آپلود عکس | placeholder اضافه می‌کند؛ فایلی خوانده یا ذخیره نمی‌شود. |
+| Postgres | شما و مهاجرت آماده است، آداپتورش نوشته نشده. |
+| AI | عمداً ساخته نشده — فاز ۳. با داده‌ی ناقص یا چیزی نمی‌داند یا از خودش درمی‌آورد. |
+
+---
+
+## قدم بعدی
+
+مهم‌ترین کار، کد نیست: **برو ۲۰ کافه در سجاد را حضوری ثبت کن.** این کار
+طراحی مدل داده را بیشتر از هر جلسه‌ی معماری اصلاح می‌کند — خواهی دید کدام
+فیلدها را نمی‌شود جمع کرد و کدام ویژگی‌ها را جا انداخته‌ای.
+
+نقشه‌ی راه کامل در [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) بخش ۱۰.

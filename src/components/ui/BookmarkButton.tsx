@@ -1,3 +1,5 @@
+'use client'
+
 import type { MouseEvent } from 'react'
 import styles from './BookmarkButton.module.css'
 
@@ -11,6 +13,9 @@ interface BookmarkButtonProps {
 /**
  * Save/unsave toggle. Result cards are themselves clickable, so the click is
  * stopped from bubbling into the card's navigation.
+ *
+ * وضعیت ذخیره از بیرون می‌آید (`useSavedCafes` حالا با slug کار می‌کند، نه id)،
+ * ولی چون این دکمه خودش هندلر کلیک دارد، کامپوننت کلاینتی است.
  */
 export function BookmarkButton({ saved, onToggle, cafeName }: BookmarkButtonProps) {
   function handleClick(event: MouseEvent<HTMLButtonElement>) {

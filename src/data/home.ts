@@ -1,33 +1,37 @@
-import { paths, searchUrl } from '@/routes'
+import { paths, searchByIntents } from '@/routes'
 
-/** Rotating examples shown in the hero search field. */
+/** نمونه‌های چرخشی داخل فیلد جست‌وجوی hero. */
 export const SEARCH_PLACEHOLDERS = [
   'مثلاً: کافه‌ای برای کار با لپ‌تاپ توی قاسم‌آباد',
   'مثلاً: جایی دنج برای قرار توی احمدآباد',
-  'مثلاً: بهترین پاستا نزدیک بلوار سجاد',
+  'مثلاً: کافه‌ای با پریز کنار میز',
   'مثلاً: کافه‌ای که تا نیمه‌شب باز باشه',
 ]
 
-/** One-tap queries that drop straight into the search field. */
-export const QUICK_SUGGESTIONS = [
-  'مناسب کار',
-  'مناسب قرار',
-  'فضای باز',
-  'صبحانه',
-  'دنج',
-  'ارزان',
+/**
+ * پیشنهادهای یک‌ضربه‌ای.
+ *
+ * حالا شناسه‌محورند نه رشته‌ی فارسی. در نسخه‌ی قبلی این‌ها متن آزاد بودند و
+ * مستقیم داخل فیلد جست‌وجو ریخته می‌شدند، که یعنی از همان مسیر تطبیق
+ * پیشوندی رد می‌شدند که باگ داشت — «مناسب کار» سه نیت را با هم روشن می‌کرد
+ * و نتیجه صفر می‌شد.
+ */
+export const QUICK_SUGGESTIONS: { label: string; intentId: string }[] = [
+  { label: 'مناسب کار', intentId: 'laptop_friendly' },
+  { label: 'مناسب قرار', intentId: 'good_for_date' },
+  { label: 'فضای باز', intentId: 'outdoor' },
+  { label: 'صبحانه', intentId: 'breakfast' },
+  { label: 'دنج', intentId: 'cozy' },
+  { label: 'پریز کنار میز', intentId: 'power_outlets' },
 ]
 
-/**
- * The pastel filter bar under the hero. Each entry links to a pre-filtered
- * result list rather than toggling local state, so the destination is shareable.
- */
+/** نوار فیلتر پاستلی زیر hero — هرکدام به یک نتیجه‌ی از پیش فیلترشده می‌رود. */
 export const POPULAR_FILTERS: { label: string; to: string }[] = [
   { label: 'باز الان', to: `${paths.search}?open=1` },
   { label: 'نزدیک من', to: `${paths.search}?sort=near` },
-  { label: 'قیمت مناسب', to: `${paths.search}?price=cheap` },
-  { label: 'کافه', to: `${paths.search}?type=${encodeURIComponent('کافه')}` },
-  { label: 'رستوران', to: `${paths.search}?type=${encodeURIComponent('کافه‌رستوران')}` },
+  { label: 'قیمت مناسب', to: `${paths.search}?price=1` },
+  { label: 'کافه', to: `${paths.search}?kind=cafe` },
+  { label: 'کافه‌رستوران', to: `${paths.search}?kind=cafe_restaurant` },
   { label: 'هر دو', to: paths.search },
 ]
 
@@ -35,22 +39,27 @@ export interface IntentCard {
   emoji: string
   title: string
   text: string
-  /** Persian-digit count, shown as copy rather than derived from the catalogue. */
-  count: string
+  intentId: string
   to: string
-  /** Token names for the card's pastel palette. */
   bg: string
   textColor: string
   countColor: string
 }
 
+/**
+ * کارت‌های نیت روی صفحه‌ی اصلی.
+ *
+ * تعداد کافه‌ها دیگر متنِ ثابت نیست («۲۱۰ کافه» در ماکاپ) — در صفحه از روی
+ * کاتالوگ واقعی شمرده می‌شود. عددِ ساختگی روی صفحه‌ی اول، اولین چیزی است که
+ * اعتماد کاربر را می‌شکند وقتی کلیک می‌کند و ۴ نتیجه می‌بیند.
+ */
 export const INTENT_CARDS: IntentCard[] = [
   {
     emoji: '💻',
     title: 'می‌خوای کار کنی؟',
     text: 'کافه‌های آروم با وای‌فای خوب و پریز کنار میز.',
-    count: '۲۱۰ کافه',
-    to: searchUrl('مناسب کار با لپ‌تاپ'),
+    intentId: 'laptop_friendly',
+    to: searchByIntents(['laptop_friendly']),
     bg: 'var(--c-pastel-blue)',
     textColor: 'var(--c-pastel-blue-text)',
     countColor: 'var(--c-primary-strong)',
@@ -59,8 +68,8 @@ export const INTENT_CARDS: IntentCard[] = [
     emoji: '🌙',
     title: 'قرار داری؟',
     text: 'جاهای دنج و باحال، با نور ملایم و موسیقی درست.',
-    count: '۱۴۵ کافه',
-    to: searchUrl('مناسب قرار'),
+    intentId: 'good_for_date',
+    to: searchByIntents(['good_for_date']),
     bg: 'var(--c-pastel-pink)',
     textColor: 'var(--c-pastel-pink-text)',
     countColor: 'var(--c-pastel-pink-strong)',
@@ -69,8 +78,8 @@ export const INTENT_CARDS: IntentCard[] = [
     emoji: '🎉',
     title: 'با دوستات بیرونی؟',
     text: 'فضاهای بزرگ و پرانرژی برای دورهمی‌های شلوغ.',
-    count: '۱۸۸ کافه',
-    to: searchUrl('فضای باز'),
+    intentId: 'outdoor',
+    to: searchByIntents(['outdoor']),
     bg: 'var(--c-pastel-lime)',
     textColor: 'var(--c-pastel-lime-text)',
     countColor: 'var(--c-pastel-lime-strong)',
@@ -79,8 +88,8 @@ export const INTENT_CARDS: IntentCard[] = [
     emoji: '📖',
     title: 'تنها می‌خوای مطالعه کنی؟',
     text: 'گوشه‌های ساکت و دنج برای تمرکز و کتاب خوندن.',
-    count: '۹۷ کافه',
-    to: searchUrl('مناسب مطالعه'),
+    intentId: 'good_for_study',
+    to: searchByIntents(['good_for_study']),
     bg: 'var(--c-pastel-green)',
     textColor: 'var(--c-pastel-green-text)',
     countColor: 'var(--c-pastel-green-strong)',

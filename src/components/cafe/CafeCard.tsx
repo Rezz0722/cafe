@@ -1,43 +1,49 @@
-import { Link } from 'react-router-dom'
+import Link from 'next/link'
 import { CafePhoto } from '@/components/ui/CafePhoto'
-import { PRICE_LABELS } from '@/data/taxonomy'
 import { faDecimal } from '@/lib/format'
 import { paths } from '@/routes'
-import type { Cafe } from '@/types'
+import { attributeLabel } from '@/core/taxonomy/attributes'
+import { PRICE_TIER_LABELS } from '@/types'
+import type { PlaceView } from '@/core/places/types'
 import styles from './CafeCard.module.css'
 
 interface CafeCardProps {
-  cafe: Cafe
-  /** Editorial badges can be switched off per-section. */
+  place: PlaceView
+  districtName: string
+  /** نشان تحریریه‌ای را می‌شود در هر بخش خاموش کرد. */
   showRibbon?: boolean
 }
 
 /**
- * The featured-venue card on the home page. The whole card is one link, so the
- * "مشاهده" button is decorative — a nested <button> inside the link would be a
- * second tab stop to the same destination.
+ * کارت کافه‌ی منتخب روی صفحه‌ی اصلی.
+ *
+ * کل کارت یک لینک است، پس دکمه‌ی «مشاهده» تزئینی است — یک `<button>` تودرتو
+ * داخل لینک، یک توقف‌گاه tab اضافه به همان مقصد می‌ساخت.
+ *
+ * server component است: نه hook دارد نه handler، پس اصلاً به بسته‌ی
+ * جاوااسکریپت کلاینت فرستاده نمی‌شود.
  */
-export function CafeCard({ cafe, showRibbon = true }: CafeCardProps) {
+export function CafeCard({ place, districtName, showRibbon = true }: CafeCardProps) {
   return (
-    <Link to={paths.cafe(cafe.id)} className={styles.card}>
+    <Link href={paths.cafe(place.slug)} className={styles.card}>
       <div className={styles.media}>
-        <CafePhoto alt={`فضای ${cafe.name}`} />
-        {showRibbon && cafe.ribbon && <div className={styles.ribbon}>{cafe.ribbon}</div>}
+        <CafePhoto alt={`فضای ${place.name}`} src={place.photos[0]?.url} />
+        {showRibbon && place.ribbon && <div className={styles.ribbon}>{place.ribbon}</div>}
       </div>
 
       <div className={styles.body}>
-        <div className={styles.name}>{cafe.name}</div>
+        <div className={styles.name}>{place.name}</div>
         <div className={styles.hood}>
           <span className={styles.pin} aria-hidden="true">
             ◍
           </span>
-          {cafe.hood}
+          {districtName}
         </div>
 
         <div className={styles.tags}>
-          {cafe.tags.slice(0, 2).map((tag) => (
-            <span key={tag} className={styles.tag}>
-              {tag}
+          {place.activeAttributeIds.slice(0, 2).map((id) => (
+            <span key={id} className={styles.tag}>
+              {attributeLabel(id)}
             </span>
           ))}
         </div>
@@ -47,11 +53,13 @@ export function CafeCard({ cafe, showRibbon = true }: CafeCardProps) {
             <span className={styles.star} aria-hidden="true">
               ★
             </span>
-            <span className={styles.rating}>{faDecimal(cafe.rating)}</span>
+            <span className={styles.rating}>
+              {faDecimal(Number(place.rawRating.toFixed(1)))}
+            </span>
             <span className={styles.dot} aria-hidden="true">
               ·
             </span>
-            <span className={styles.price}>{PRICE_LABELS[cafe.priceKey]}</span>
+            <span className={styles.price}>{PRICE_TIER_LABELS[place.priceTier]}</span>
           </div>
           <span className={styles.cta}>مشاهده</span>
         </div>

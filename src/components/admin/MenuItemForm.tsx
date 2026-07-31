@@ -1,8 +1,10 @@
+'use client'
+
 import { useId, useState, type FormEvent } from 'react'
 import { BackChevron, shellStyles } from '@/components/layout/MobileShell'
 import { CafePhoto } from '@/components/ui/CafePhoto'
 import { parseNumber } from '@/lib/format'
-import type { MenuCategory, MenuItem } from '@/types'
+import type { AdminMenuCategory, AdminMenuItem } from '@/data/adminSeed'
 import fields from './adminFields.module.css'
 import styles from './MenuItemForm.module.css'
 
@@ -17,10 +19,10 @@ export interface MenuItemDraft {
 
 interface MenuItemFormProps {
   /** The item being edited, or null when adding. */
-  item: MenuItem | null
+  item: AdminMenuItem | null
   /** Category the form opens on — the item can be moved out of it on save. */
   catId: string
-  categories: MenuCategory[]
+  categories: AdminMenuCategory[]
   onCancel: () => void
   onSave: (draft: MenuItemDraft) => void
 }

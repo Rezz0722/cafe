@@ -1,13 +1,15 @@
+'use client'
+
 import { useState, type FormEvent } from 'react'
 import { Switch } from '@/components/ui/Switch'
 import { discountedPrice, faPercent, parseNumber, toman } from '@/lib/format'
-import type { MenuItem } from '@/types'
+import type { AdminMenuItem } from '@/data/adminSeed'
 import { IconPencil, IconTrash } from './AdminIcons'
 import fields from './adminFields.module.css'
 import styles from './MenuItemCard.module.css'
 
 interface MenuItemCardProps {
-  item: MenuItem
+  item: AdminMenuItem
   onToggleActive: () => void
   onEdit: () => void
   onDelete: () => void

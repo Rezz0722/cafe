@@ -1,3 +1,5 @@
+'use client'
+
 import type { Dispatch, SetStateAction } from 'react'
 import { shellStyles } from '@/components/layout/MobileShell'
 import { CafePhoto } from '@/components/ui/CafePhoto'

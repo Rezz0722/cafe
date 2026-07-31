@@ -39,3 +39,32 @@ export function discountedPrice(price: number, discount?: number | null): number
   if (!discount || discount <= 0) return price
   return Math.round((price * (100 - discount)) / 100 / 1000) * 1000
 }
+
+/**
+ * تاریخ ISO → متن نسبی فارسی («۳ روز پیش»).
+ *
+ * در مدل قدیمی، `Review.date` خودش رشته‌ی «۳ روز پیش» بود — یعنی نه قابل
+ * مرتب‌سازی، نه قابل کهنه‌شدن. حالا تاریخ واقعی ذخیره می‌شود و این تابع فقط
+ * لایه‌ی نمایش است.
+ */
+export function relativeFa(iso: string, now: Date = new Date()): string {
+  const then = Date.parse(iso)
+  if (Number.isNaN(then)) return ''
+
+  const seconds = Math.max(0, (now.getTime() - then) / 1000)
+  const minutes = seconds / 60
+  const hours = minutes / 60
+  const days = hours / 24
+
+  if (minutes < 1) return 'همین الان'
+  if (minutes < 60) return `${fa(Math.round(minutes))} دقیقه پیش`
+  if (hours < 24) return `${fa(Math.round(hours))} ساعت پیش`
+  if (days < 30) return `${fa(Math.round(days))} روز پیش`
+  if (days < 365) return `${fa(Math.round(days / 30))} ماه پیش`
+  return `${fa(Math.round(days / 365))} سال پیش`
+}
+
+/** «۰۹:۰۰» با ارقام فارسی، برای نمایش ساعت کاری. */
+export function faTime(hhmm: string): string {
+  return fa(hhmm)
+}

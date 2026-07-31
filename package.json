@@ -1,26 +1,31 @@
 {
   "name": "cafegard",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "description": "کافه‌گرد — راهنمای کافه‌ها و رستوران‌های مشهد",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "preview": "vite preview",
-    "typecheck": "tsc -b"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test src/core/**/*.test.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push"
   },
   "dependencies": {
+    "drizzle-orm": "^0.45.2",
+    "next": "^15.5.22",
+    "postgres": "^3.4.9",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-router-dom": "^6.26.2"
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@types/node": "^22.20.1",
     "@types/react": "^18.3.11",
     "@types/react-dom": "^18.3.1",
-    "@vitejs/plugin-react": "^4.3.2",
-    "typescript": "^5.6.3",
-    "vite": "^5.4.9"
+    "drizzle-kit": "^0.31.6",
+    "tsx": "^4.23.1",
+    "typescript": "^5.6.3"
   }
 }

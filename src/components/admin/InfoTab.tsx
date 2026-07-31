@@ -1,8 +1,9 @@
+'use client'
+
 import { useId, type Dispatch, type FormEvent, type SetStateAction } from 'react'
 import { shellStyles } from '@/components/layout/MobileShell'
 import { Chip } from '@/components/ui/Chip'
-import type { AdminContact } from '@/data/adminSeed'
-import { OWNER_TAGS } from '@/data/taxonomy'
+import { OWNER_TAGS, type AdminContact } from '@/data/adminSeed'
 import fields from './adminFields.module.css'
 import styles from './InfoTab.module.css'
 

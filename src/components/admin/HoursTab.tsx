@@ -1,20 +1,21 @@
+'use client'
+
 import { useId, type Dispatch, type SetStateAction } from 'react'
 import { shellStyles } from '@/components/layout/MobileShell'
-import { TIME_OPTIONS } from '@/data/taxonomy'
-import type { OpeningHour } from '@/types'
+import { TIME_OPTIONS, type AdminOpeningHour } from '@/data/adminSeed'
 import fields from './adminFields.module.css'
 import styles from './HoursTab.module.css'
 
 interface HoursTabProps {
-  hours: OpeningHour[]
-  setHours: Dispatch<SetStateAction<OpeningHour[]>>
+  hours: AdminOpeningHour[]
+  setHours: Dispatch<SetStateAction<AdminOpeningHour[]>>
   onSave: () => void
 }
 
 export function HoursTab({ hours, setHours, onSave }: HoursTabProps) {
   const id = useId()
 
-  function patchDay(index: number, patch: Partial<OpeningHour>) {
+  function patchDay(index: number, patch: Partial<AdminOpeningHour>) {
     setHours((prev) => prev.map((hour, i) => (i !== index ? hour : { ...hour, ...patch })))
   }
 

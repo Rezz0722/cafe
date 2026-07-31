@@ -1,3 +1,5 @@
+'use client'
+
 import styles from './Switch.module.css'
 
 interface SwitchProps {
@@ -7,7 +9,12 @@ interface SwitchProps {
   label: string
 }
 
-/** On/off toggle used throughout the admin panel. */
+/**
+ * On/off toggle used throughout the admin panel.
+ *
+ * `onChange` یک هندلر رویداد است و فقط در کلاینت اجرا می‌شود، پس فایل
+ * `'use client'` دارد.
+ */
 export function Switch({ checked, onChange, label }: SwitchProps) {
   return (
     <button

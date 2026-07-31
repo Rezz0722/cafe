@@ -1,5 +1,7 @@
+'use client'
+
 import type { ButtonHTMLAttributes } from 'react'
-import { Link } from 'react-router-dom'
+import Link from 'next/link'
 import styles from './Chip.module.css'
 
 type ChipVariant = 'solid' | 'outline' | 'suggest'
@@ -24,6 +26,9 @@ interface ChipProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'class
 /**
  * The pill-shaped toggle used for filters, intents and quick suggestions.
  * `selected` drives `aria-pressed` so screen readers report the toggle state.
+ *
+ * چون `onClick` از بیرون به این دکمه پاس داده می‌شود، کل فایل `'use client'`
+ * است — یک هندلر رویداد فقط در مرز کلاینت معنا دارد.
  */
 export function Chip({ label, selected = false, variant, size, ...rest }: ChipProps) {
   return (
@@ -40,7 +45,7 @@ export function Chip({ label, selected = false, variant, size, ...rest }: ChipPr
 
 interface ChipLinkProps extends ChipLook {
   label: string
-  to: string
+  href: string
 }
 
 /**
@@ -48,9 +53,9 @@ interface ChipLinkProps extends ChipLook {
  * has to be an anchor — nesting a button inside a link is invalid and breaks
  * middle-click and "open in new tab".
  */
-export function ChipLink({ label, to, selected, variant, size }: ChipLinkProps) {
+export function ChipLink({ label, href, selected, variant, size }: ChipLinkProps) {
   return (
-    <Link to={to} className={chipClass({ selected, variant, size })}>
+    <Link href={href} className={chipClass({ selected, variant, size })}>
       {label}
     </Link>
   )

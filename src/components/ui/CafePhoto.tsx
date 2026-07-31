@@ -1,6 +1,11 @@
+'use client'
+
 import { useState } from 'react'
-import cafePhoto from '@/assets/cafe-photo.webp'
 import styles from './CafePhoto.module.css'
+
+// دارایی‌ها به `public/` منتقل شده‌اند، پس مسیرشان یک رشته‌ی ساده است و دیگر
+// import نمی‌شود. تصویر هم با `<img>` می‌ماند چون `images.unoptimized` روشن است.
+const FALLBACK_PHOTO = '/cafe-photo.webp'
 
 interface CafePhotoProps {
   alt: string
@@ -18,7 +23,7 @@ interface CafePhotoProps {
  */
 export function CafePhoto({
   alt,
-  src = cafePhoto,
+  src = FALLBACK_PHOTO,
   placeholder = 'عکس کافه',
   loading = 'lazy',
 }: CafePhotoProps) {

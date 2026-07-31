@@ -1,33 +1,35 @@
-import { Link } from 'react-router-dom'
-import { paths, searchUrl } from '@/routes'
+import Link from 'next/link'
+import { paths, searchByIntents } from '@/routes'
 import styles from './SiteFooter.module.css'
 
-const COLUMNS: { title: string; links: { label: string; to: string }[] }[] = [
+const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
   {
     title: 'کشف',
     links: [
-      { label: 'کافه‌های منتخب', to: paths.search },
-      { label: 'باز الان', to: paths.search },
-      { label: 'مناسب کار', to: searchUrl('مناسب کار با لپ‌تاپ') },
-      { label: 'روی نقشه', to: paths.search },
+      { label: 'کافه‌های منتخب', href: paths.search },
+      { label: 'باز الان', href: paths.search },
+      // نیت با شناسه پاس داده می‌شود نه با برچسب فارسی، تا لینک به تطبیق متن وابسته نباشد.
+      { label: 'مناسب کار', href: searchByIntents(['laptop_friendly']) },
+      { label: 'روی نقشه', href: paths.search },
     ],
   },
   {
+    // این‌ها حالا به صفحات محله می‌روند — صفحات SEO، نه جست‌وجوی متنی.
     title: 'محله‌ها',
     links: [
-      { label: 'احمدآباد', to: searchUrl('احمدآباد') },
-      { label: 'بلوار سجاد', to: searchUrl('سجاد') },
-      { label: 'قاسم‌آباد', to: searchUrl('قاسم‌آباد') },
-      { label: 'کوهسنگی', to: searchUrl('کوهسنگی') },
+      { label: 'احمدآباد', href: paths.district('ahmadabad') },
+      { label: 'بلوار سجاد', href: paths.district('sajad') },
+      { label: 'قاسم‌آباد', href: paths.district('ghasemabad') },
+      { label: 'کوهسنگی', href: paths.district('kuhsangi') },
     ],
   },
   {
     title: 'کافه‌گرد',
     links: [
-      { label: 'دربارهٔ ما', to: paths.home },
-      { label: 'مشارکت', to: paths.home },
-      { label: 'تماس', to: paths.home },
-      { label: 'پنل مدیریت کافه', to: paths.admin },
+      { label: 'دربارهٔ ما', href: paths.home },
+      { label: 'مشارکت', href: paths.home },
+      { label: 'تماس', href: paths.home },
+      { label: 'پنل مدیریت کافه', href: paths.admin },
     ],
   },
 ]
@@ -49,7 +51,7 @@ export function SiteFooter() {
               <div className={styles.colTitle}>{column.title}</div>
               <div className={styles.links}>
                 {column.links.map((link) => (
-                  <Link key={link.label} to={link.to}>
+                  <Link key={link.label} href={link.href}>
                     {link.label}
                   </Link>
                 ))}

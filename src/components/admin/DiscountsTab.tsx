@@ -1,14 +1,15 @@
+'use client'
+
 import type { Dispatch, SetStateAction } from 'react'
 import { Switch } from '@/components/ui/Switch'
-import { nextId, NEW_PROMOTION } from '@/data/adminSeed'
-import type { Promotion } from '@/types'
+import { nextId, NEW_PROMOTION, type AdminPromotion } from '@/data/adminSeed'
 import { IconClock, IconPlus } from './AdminIcons'
 import fields from './adminFields.module.css'
 import styles from './DiscountsTab.module.css'
 
 interface DiscountsTabProps {
-  promotions: Promotion[]
-  setPromotions: Dispatch<SetStateAction<Promotion[]>>
+  promotions: AdminPromotion[]
+  setPromotions: Dispatch<SetStateAction<AdminPromotion[]>>
 }
 
 export function DiscountsTab({ promotions, setPromotions }: DiscountsTabProps) {

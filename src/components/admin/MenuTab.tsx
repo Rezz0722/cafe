@@ -1,8 +1,9 @@
+'use client'
+
 import { useState, type Dispatch, type FormEvent, type SetStateAction } from 'react'
 import { BackChevron, shellStyles } from '@/components/layout/MobileShell'
-import { nextId } from '@/data/adminSeed'
+import { nextId, type AdminMenuCategory, type AdminMenuItem } from '@/data/adminSeed'
 import { fa } from '@/lib/format'
-import type { MenuCategory, MenuItem } from '@/types'
 import { IconChevronForward, IconPencil, IconPlus, IconTrash } from './AdminIcons'
 import fields from './adminFields.module.css'
 import { MenuItemCard } from './MenuItemCard'
@@ -10,15 +11,15 @@ import { MenuItemForm, type MenuItemDraft } from './MenuItemForm'
 import styles from './MenuTab.module.css'
 
 interface MenuTabProps {
-  categories: MenuCategory[]
-  setCategories: Dispatch<SetStateAction<MenuCategory[]>>
+  categories: AdminMenuCategory[]
+  setCategories: Dispatch<SetStateAction<AdminMenuCategory[]>>
 }
 
 type MenuView = 'cats' | 'items' | 'form'
 
 interface FormTarget {
   /** The item being edited, or null when adding a new one. */
-  item: MenuItem | null
+  item: AdminMenuItem | null
   catId: string
 }
 
@@ -39,13 +40,13 @@ export function MenuTab({ categories, setCategories }: MenuTabProps) {
 
   const activeCat = categories.find((cat) => cat.id === activeCatId) ?? null
 
-  function updateItems(catId: string, map: (items: MenuItem[]) => MenuItem[]) {
+  function updateItems(catId: string, map: (items: AdminMenuItem[]) => AdminMenuItem[]) {
     setCategories((prev) =>
       prev.map((cat) => (cat.id !== catId ? cat : { ...cat, items: map(cat.items) })),
     )
   }
 
-  function patchItem(catId: string, itemId: string, patch: Partial<MenuItem>) {
+  function patchItem(catId: string, itemId: string, patch: Partial<AdminMenuItem>) {
     updateItems(catId, (items) =>
       items.map((item) => (item.id !== itemId ? item : { ...item, ...patch })),
     )
@@ -86,7 +87,7 @@ export function MenuTab({ categories, setCategories }: MenuTabProps) {
 
     setCategories((prev) => {
       if (!editingId) {
-        const created: MenuItem = { id: nextId('n'), ...values, active: true, discount: null }
+        const created: AdminMenuItem = { id: nextId('n'), ...values, active: true, discount: null }
         return prev.map((cat) =>
           cat.id !== draft.catId ? cat : { ...cat, items: [...cat.items, created] },
         )
@@ -94,7 +95,7 @@ export function MenuTab({ categories, setCategories }: MenuTabProps) {
 
       // Saving can move the item to another category, so it is pulled out of
       // every category first and then appended to the chosen one.
-      let moved: MenuItem | undefined
+      let moved: AdminMenuItem | undefined
       const without = prev.map((cat) => ({
         ...cat,
         items: cat.items.filter((item) => {
@@ -103,7 +104,13 @@ export function MenuTab({ categories, setCategories }: MenuTabProps) {
           return false
         }),
       }))
-      const updated: MenuItem = { active: true, discount: null, ...moved, id: editingId, ...values }
+      const updated: AdminMenuItem = {
+        active: true,
+        discount: null,
+        ...moved,
+        id: editingId,
+        ...values,
+      }
       return without.map((cat) =>
         cat.id !== draft.catId ? cat : { ...cat, items: [...cat.items, updated] },
       )
