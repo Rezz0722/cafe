@@ -98,13 +98,22 @@ export function CafeDetail({ place, districtName, districtSlug, similar }: CafeD
         {/* ===== key info ===== */}
         <div className={styles.infoBar}>
           <div className={styles.infoCell}>
-            <div className={styles.infoValue}>
-              <span className={styles.star} aria-hidden="true">
-                ★
-              </span>
-              {faDecimal(Number(place.rawRating.toFixed(1)))}
-            </div>
-            <div className={styles.infoLabel}>{`${fa(place.ratingCount)} نظر`}</div>
+            {place.ratingCount > 0 ? (
+              <>
+                <div className={styles.infoValue}>
+                  <span className={styles.star} aria-hidden="true">
+                    ★
+                  </span>
+                  {faDecimal(Number(place.rawRating.toFixed(1)))}
+                </div>
+                <div className={styles.infoLabel}>{`${fa(place.ratingCount)} نظر`}</div>
+              </>
+            ) : (
+              <>
+                <div className={styles.infoValue}>—</div>
+                <div className={styles.infoLabel}>هنوز نظری نیست</div>
+              </>
+            )}
           </div>
           <div className={styles.infoDivider} aria-hidden="true" />
           <div className={styles.infoCell}>
@@ -146,6 +155,26 @@ export function CafeDetail({ place, districtName, districtSlug, similar }: CafeD
             </span>
           ))}
         </div>
+
+        {/* آیتم شاخص — اولین چیزی که کاربر می‌خواهد بداند */}
+        {place.signatureItem && (
+          <div className={styles.signature}>
+            <span className={styles.signatureLabel}>معروف به</span>
+            {place.signatureItem}
+          </div>
+        )}
+
+        {/*
+          نکات آزاد — عمداً با ظاهری متفاوت از تگ‌های بالا. آن‌ها قابل فیلترند
+          و این‌ها نیستند؛ یکسان نشان‌دادنشان به کاربر وعده‌ی دروغ می‌دهد.
+        */}
+        {place.highlights.length > 0 && (
+          <ul className={styles.highlights}>
+            {place.highlights.map((h) => (
+              <li key={h}>{h}</li>
+            ))}
+          </ul>
+        )}
 
         {/* ===== quick actions ===== */}
         <div className={styles.actions}>
@@ -271,15 +300,24 @@ export function CafeDetail({ place, districtName, districtSlug, similar }: CafeD
         <section className={styles.block}>
           <h2 className={styles.blockTitle}>نظرها و امتیازها</h2>
           <div className={styles.ratingCard}>
-            <div className={styles.ratingSummary}>
-              <div className={styles.ratingValue}>
-                {faDecimal(Number(place.rawRating.toFixed(1)))}
-              </div>
-              <Stars count={place.rawRating} />
-            </div>
-            <p className={styles.ratingNote}>
-              {`میانگین امتیاز از ${fa(place.ratingCount)} نظر واقعیِ کاربران. امتیاز فقط با نظر کاربرها تعیین می‌شه.`}
-            </p>
+            {place.ratingCount > 0 ? (
+              <>
+                <div className={styles.ratingSummary}>
+                  <div className={styles.ratingValue}>
+                    {faDecimal(Number(place.rawRating.toFixed(1)))}
+                  </div>
+                  <Stars count={place.rawRating} />
+                </div>
+                <p className={styles.ratingNote}>
+                  {`میانگین امتیاز از ${fa(place.ratingCount)} نظر واقعیِ کاربران. امتیاز فقط با نظر کاربرها تعیین می‌شه.`}
+                </p>
+              </>
+            ) : (
+              <p className={styles.ratingNote}>
+                هنوز کسی برای این کافه نظر ننوشته. اولین نفر باش — امتیاز فقط با
+                نظر کاربرهای واقعی ساخته می‌شه.
+              </p>
+            )}
           </div>
 
           <div className={styles.reviewList}>

@@ -98,14 +98,24 @@ export function AdminPanel() {
           </Link>
           <h1 className={shellStyles.screenTitle}>{TAB_TITLES[tab]}</h1>
         </div>
-        <button
-          type="button"
-          className={shellStyles.iconButton}
-          aria-label="اطلاعات و تنظیمات"
-          onClick={() => setTab('info')}
-        >
-          <IconGear size={21} />
-        </button>
+        <div className={styles.topBarEnd}>
+          {/*
+            ثبت کافه‌ی جدید کارِ تیم داده است نه مالک، پس صفحه‌ی جداست و
+            نه یک تب اینجا. لینکش را نگه می‌داریم چون در عمل همان آدم‌ها
+            هر دو را باز می‌کنند.
+          */}
+          <Link href={`${paths.admin}/new`} className={styles.addLink}>
+            + کافه‌ی جدید
+          </Link>
+          <button
+            type="button"
+            className={shellStyles.iconButton}
+            aria-label="اطلاعات و تنظیمات"
+            onClick={() => setTab('info')}
+          >
+            <IconGear size={21} />
+          </button>
+        </div>
       </header>
 
       <main className={styles.screen}>

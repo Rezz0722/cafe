@@ -15,3 +15,6 @@ next-env.d.ts
 
 # bundles
 *.zip
+
+# کافه‌های افزوده‌شده از پنل ادمین — داده‌ی محلی، در git نمی‌آید
+src/data/places.custom.json

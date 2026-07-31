@@ -174,6 +174,107 @@ export const ATTRIBUTES: AttributeDef[] = [
     sortOrder: 16,
     synonyms: ['اسپرسو', 'قهوه خوب', 'بهترین اسپرسو', 'بریو', 'specialty', 'espresso'],
   },
+
+  // ── ویژگی‌هایی که داده‌ی واقعی اضافه کرد ─────────────────────────────
+  // این‌ها بعد از import صد کافه‌ی مشهد اضافه شدند: در فایل ورودی به‌اندازه‌ی
+  // کافی تکرار شده بودند که ارزش فیلترشدن داشته باشند. taxonomy باید از روی
+  // داده‌ی واقعی رشد کند، نه از روی حدس.
+  {
+    id: 'vip_room',
+    labelFa: 'سالن خصوصی / VIP',
+    kind: 'amenity',
+    isFilter: true,
+    sortOrder: 17,
+    synonyms: ['وی آی پی', 'سالن خصوصی', 'تشریفات', 'پذیرایی تشریفاتی', 'vip'],
+  },
+  {
+    id: 'live_music',
+    labelFa: 'موسیقی زنده',
+    kind: 'amenity',
+    isFilter: true,
+    sortOrder: 18,
+    synonyms: ['موسیقی زنده', 'اجرای زنده', 'کنسرت', 'live music'],
+  },
+  {
+    id: 'boardgames',
+    labelFa: 'بردگیم',
+    kind: 'amenity',
+    isFilter: true,
+    sortOrder: 19,
+    synonyms: ['بردگیم', 'بازی رومیزی', 'مافیا', 'boardgame'],
+  },
+  {
+    id: 'takeaway',
+    labelFa: 'بیرون‌بر',
+    kind: 'amenity',
+    isFilter: true,
+    sortOrder: 20,
+    synonyms: ['بیرون بر', 'تیک اوی', 'بیرون‌بر express', 'takeaway'],
+  },
+  {
+    id: 'sports_screening',
+    labelFa: 'پخش مسابقات ورزشی',
+    kind: 'amenity',
+    isFilter: true,
+    sortOrder: 21,
+    synonyms: ['پخش مسابقات', 'فوتبال', 'مسابقات ورزشی'],
+  },
+  {
+    id: 'lively',
+    labelFa: 'فضای پرانرژی',
+    kind: 'vibe',
+    isFilter: true,
+    sortOrder: 22,
+    synonyms: ['پرانرژی', 'شلوغ', 'جوانانه', 'پرجنب و جوش'],
+  },
+  {
+    id: 'quick_service',
+    labelFa: 'سرو سریع',
+    kind: 'amenity',
+    isFilter: true,
+    sortOrder: 23,
+    synonyms: ['سرو سریع', 'سریع', 'فوری'],
+  },
+  {
+    id: 'scenic_view',
+    labelFa: 'منظره و دید',
+    kind: 'amenity',
+    isFilter: true,
+    sortOrder: 24,
+    synonyms: ['دید به شهر', 'پانوراما', 'منظره', 'ویو', 'دید باز'],
+  },
+  {
+    id: 'upscale',
+    labelFa: 'شیک و لوکس',
+    kind: 'vibe',
+    isFilter: true,
+    sortOrder: 25,
+    synonyms: ['لوکس', 'شیک', 'مجلل', 'خاص'],
+  },
+  {
+    id: 'photogenic',
+    labelFa: 'مناسب عکاسی',
+    kind: 'vibe',
+    isFilter: true,
+    sortOrder: 26,
+    synonyms: ['عکاسی', 'دکور خاص', 'دیوارنگاری', 'مینیمال', 'اینستاگرامی'],
+  },
+  {
+    id: 'desserts',
+    labelFa: 'دسر و شیرینی',
+    kind: 'amenity',
+    isFilter: true,
+    sortOrder: 27,
+    synonyms: ['کیک', 'دسر', 'شیرینی', 'تارت', 'چیزکیک', 'پاستری', 'وافل', 'بستنی'],
+  },
+  {
+    id: 'healthy_options',
+    labelFa: 'گزینه‌های گیاهی و سالم',
+    kind: 'amenity',
+    isFilter: true,
+    sortOrder: 28,
+    synonyms: ['گیاهی', 'ارگانیک', 'رژیمی', 'وگان', 'سالم'],
+  },
 ]
 
 // ── ایندکس‌های مشتق ─────────────────────────────────────────────────

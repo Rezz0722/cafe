@@ -140,3 +140,18 @@ export function finglishToFa(input: string): string {
 export function isLatin(input: string): boolean {
   return /[a-z]/i.test(input)
 }
+
+/**
+ * نرمال‌سازی + حذف کامل فاصله‌ها.
+ *
+ * `normalizeFa` نیم‌فاصله را به فاصله تبدیل می‌کند، پس «کافه‌گرد» و
+ * «کافه گرد» یکی می‌شوند — ولی «کافهگرد» (بدون هیچ جداکننده‌ای) همچنان
+ * متفاوت می‌ماند. فارسی‌زبان‌ها هر سه شکل را می‌نویسند.
+ *
+ * برای *تطابق نام* (محله، نام کافه) این نسخه را مقایسه کنید، نه
+ * `normalizeFa` را. برای جست‌وجوی متنی همچنان `normalizeFa` درست است، چون
+ * آنجا مرز واژه معنی دارد.
+ */
+export function squashFa(input: string): string {
+  return normalizeFa(input).replace(/\s+/g, '')
+}

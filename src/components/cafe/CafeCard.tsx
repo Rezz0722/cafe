@@ -50,12 +50,22 @@ export function CafeCard({ place, districtName, showRibbon = true }: CafeCardPro
 
         <div className={styles.footer}>
           <div className={styles.meta}>
-            <span className={styles.star} aria-hidden="true">
-              ★
-            </span>
-            <span className={styles.rating}>
-              {faDecimal(Number(place.rawRating.toFixed(1)))}
-            </span>
+            {/*
+              کافه‌ی بدون نظر «★ ۰» نشان داده نمی‌شود — صفر شبیه امتیاز بد
+              به نظر می‌رسد، در حالی که یعنی «هنوز کسی نظر نداده».
+            */}
+            {place.ratingCount > 0 ? (
+              <>
+                <span className={styles.star} aria-hidden="true">
+                  ★
+                </span>
+                <span className={styles.rating}>
+                  {faDecimal(Number(place.rawRating.toFixed(1)))}
+                </span>
+              </>
+            ) : (
+              <span className={styles.noRating}>بدون نظر</span>
+            )}
             <span className={styles.dot} aria-hidden="true">
               ·
             </span>

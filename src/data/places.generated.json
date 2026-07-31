@@ -1,0 +1,6706 @@
+[
+  {
+    "id": "import-1",
+    "slug": "vien-cafe",
+    "name": "کافه وین",
+    "nameNormalized": "وین",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.3157,
+      "lng": 59.5391
+    },
+    "address": "بلوار سجاد، خیابان بهارستان ۴",
+    "districtId": "sajad",
+    "priceTier": 3,
+    "phone": "۰۵۱-۳۷۶۰۰۰۰۱",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "outdoor",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "fast_wifi",
+        "value": 1,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "laptop_friendly",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "ایتالیایی / تخصصی",
+    "highlights": [],
+    "signatureItem": "اسپرسو سینگل اورجین، چیزکیک نیویورکی",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-2",
+    "slug": "aknoon-cafe",
+    "name": "کافه اکنون",
+    "nameNormalized": "اکنون",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.3157,
+      "lng": 59.5391
+    },
+    "address": "بلوار سجاد، بین سجاد ۲ و ۴",
+    "districtId": "sajad",
+    "priceTier": 2,
+    "phone": "۰۵۱-۳۷۶۰۰۰۰۲",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "laptop_friendly",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "quiet",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "fast_wifi",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "مینیمال / مدرن",
+    "highlights": [],
+    "signatureItem": "قهوه دمی V60، تارت میوه‌ای",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-3",
+    "slug": "ramouz-cafe",
+    "name": "کافه راموز",
+    "nameNormalized": "راموز",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.3157,
+      "lng": 59.5391
+    },
+    "address": "بلوار سجاد، بزرگمهر شمالی ۳",
+    "districtId": "sajad",
+    "priceTier": 3,
+    "phone": "۰۵۱-۳۷۶۰۰۰۰۳",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "live_music",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "vip_room",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "کلاسیک / فرانسوی",
+    "highlights": [],
+    "signatureItem": "کاپوچینو اصیل، کرواسان شکلاتی",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-4",
+    "slug": "bakery-cafe-noon",
+    "name": "کافه نون",
+    "nameNormalized": "نون",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.3157,
+      "lng": 59.5391
+    },
+    "address": "بلوار سجاد، خیابان بهارستان ۲",
+    "districtId": "sajad",
+    "priceTier": 3,
+    "phone": null,
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "breakfast",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "takeaway",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "بیکری / تخصصی موج سوم",
+    "highlights": [],
+    "signatureItem": "کرواسان تازه، آیس لاته دبل",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-5",
+    "slug": "terrace-cafe",
+    "name": "کافه تراس",
+    "nameNormalized": "تراس",
+    "kind": "cafe_restaurant",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.3298,
+      "lng": 59.479
+    },
+    "address": "بین وکیل‌آباد ۹ و ۱۱، مجتمع تجاری تراس",
+    "districtId": "vakilabad",
+    "priceTier": 3,
+    "phone": null,
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "outdoor",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "scenic_view",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "vip_room",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "parking",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "روف‌تاپ / لوکس",
+    "highlights": [],
+    "signatureItem": "استیک ریب‌آی، موکای مخصوص تراس",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-6",
+    "slug": "chocolat-chouquette",
+    "name": "کافه شوکت",
+    "nameNormalized": "شوکت",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.3,
+      "lng": 59.58
+    },
+    "address": "خیابان فرهاد، فرهاد ۲۴",
+    "districtId": "farhad",
+    "priceTier": 3,
+    "phone": "۰۵۱-۳۷۶۶۶۰۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "desserts",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "upscale",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "outdoor",
+        "value": 1,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "شیرینی‌پزی تخصصی فرانسوی",
+    "highlights": [],
+    "signatureItem": "دسر فرانسوی شوکت، پاستری رز، اسپرسو",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-7",
+    "slug": "kiosk-cake",
+    "name": "کافه کیک کیوسک",
+    "nameNormalized": "کیک کیوسک",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.3157,
+      "lng": 59.5391
+    },
+    "address": "بلوار سجاد، حامد جنوبی ۱۲",
+    "districtId": "sajad",
+    "priceTier": 2,
+    "phone": "۰۵۱-۳۶۰۲۴۰۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "desserts",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "cozy",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "outdoor",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "دسر و بیکری",
+    "highlights": [],
+    "signatureItem": "چیزکیک نیویورک، کاپوچینو",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-8",
+    "slug": "hatra-cafe",
+    "name": "کافه هترا",
+    "nameNormalized": "هترا",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.3157,
+      "lng": 59.5391
+    },
+    "address": "بلوار سجاد، بزرگمهر شمالی ۳",
+    "districtId": "sajad",
+    "priceTier": 2,
+    "phone": "۰۵۱-۳۷۶۰۲۰۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "power_outlets",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "natural_light",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "laptop_friendly",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "مدرن / فضای کار (Coworking)",
+    "highlights": [],
+    "signatureItem": "فلت وایت، قهوه دمی کمکس",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-9",
+    "slug": "episode-cafe",
+    "name": "کافه اپیزود",
+    "nameNormalized": "اپیزود",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.3157,
+      "lng": 59.5391
+    },
+    "address": "بلوار سجاد، امین ۲",
+    "districtId": "sajad",
+    "priceTier": 3,
+    "phone": "۰۵۱-۳۷۶۵۱۰۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "upscale",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "photogenic",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "outdoor",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "مینیمال / مدرن",
+    "highlights": [],
+    "signatureItem": "قهوه تخصصی، دسر مدرن اپیزود",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-10",
+    "slug": "malmo-cafe",
+    "name": "کافه مالمو",
+    "nameNormalized": "مالمو",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.3157,
+      "lng": 59.5391
+    },
+    "address": "بلوار سجاد، بزرگمهر ۲",
+    "districtId": "sajad",
+    "priceTier": 3,
+    "phone": "۰۵۱-۳۷۶۱۱۰۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "photogenic",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "specialty_coffee",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "fast_wifi",
+        "value": 1,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "سبک اسکاندیناوی",
+    "highlights": [],
+    "signatureItem": "قهوه دمی تک‌خاستگاه، کرواسان گرم",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-11",
+    "slug": "lamiz-coffee",
+    "name": "کافه لمیز",
+    "nameNormalized": "لمیز",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.3157,
+      "lng": 59.5391
+    },
+    "address": "بلوار سجاد، تقاطع خیام",
+    "districtId": "sajad",
+    "priceTier": 2,
+    "phone": "۰۵۱-۳۷۶۲۹۰۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "quick_service",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "takeaway",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "زنجیره‌ای / سرو سریع",
+    "highlights": [
+      "ساعت کاری زودهنگام"
+    ],
+    "signatureItem": "قهوه فلئور رگولار، لاته‌وانیل",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-12",
+    "slug": "barana-cafe",
+    "name": "کافه بارانا",
+    "nameNormalized": "بارانا",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.3157,
+      "lng": 59.5391
+    },
+    "address": "بلوار سجاد، بین بهار و گلریز",
+    "districtId": "sajad",
+    "priceTier": 2,
+    "phone": "۰۵۱-۳۷۶۴۴۰۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "quiet",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "family_friendly",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "desserts",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "healthy_options",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "خانوادگی",
+    "highlights": [],
+    "signatureItem": "کیک کم‌شیرین خانگی، دمنوش ارگانیک",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-13",
+    "slug": "floria-cafe",
+    "name": "کافه فلوریا",
+    "nameNormalized": "فلوریا",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.3157,
+      "lng": 59.5391
+    },
+    "address": "بلوار سجاد، پاساژ فرزاد",
+    "districtId": "sajad",
+    "priceTier": 3,
+    "phone": "۰۵۱-۳۷۶۵۸۸۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "photogenic",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "family_friendly",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "good_for_date",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "دیزاین / گل‌آرایی",
+    "highlights": [],
+    "signatureItem": "موهیتو استوایی، وافل بستنی",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-14",
+    "slug": "cinnamon-cafe",
+    "name": "کافه دارچین",
+    "nameNormalized": "دارچین",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.3157,
+      "lng": 59.5391
+    },
+    "address": "بلوار سجاد، بین شقایق و نیلوفر",
+    "districtId": "sajad",
+    "priceTier": 2,
+    "phone": "۰۵۱-۳۷۶۲۴۴۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "desserts",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "cozy",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "کافه کیک خانگی",
+    "highlights": [
+      "عطر دارچین و قهوه"
+    ],
+    "signatureItem": "پای سیب و دارچین داغ، قهوه کالیتا",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-15",
+    "slug": "vanilla-cafe",
+    "name": "کافه وانیلا",
+    "nameNormalized": "وانیلا",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.325,
+      "lng": 59.525
+    },
+    "address": "بلوار فرامرز عباسی، فرامرز ۱۱",
+    "districtId": "faramarz",
+    "priceTier": 2,
+    "phone": "۰۵۱-۳۶۰۸۵۰۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "desserts",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "cozy",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "شیرینی خانگی و قنادی",
+    "highlights": [],
+    "signatureItem": "تارت میوه‌ای، قهوه ترک اصیل",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-16",
+    "slug": "gandom-bakery-cafe",
+    "name": "کافه گندم",
+    "nameNormalized": "گندم",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.325,
+      "lng": 59.525
+    },
+    "address": "بلوار فرامرز عباسی، بین فرامرز ۱۲ و ۱۴",
+    "districtId": "faramarz",
+    "priceTier": 1,
+    "phone": "۰۵۱-۳۶۰۷۰۰۰۱",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "breakfast",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "cozy",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "صبحانه و بیکری",
+    "highlights": [],
+    "signatureItem": "املت فرانسوی، نان تازه خانگی",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-17",
+    "slug": "shin-cafe",
+    "name": "کافه شین",
+    "nameNormalized": "شین",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.325,
+      "lng": 59.525
+    },
+    "address": "بلوار فرامرز عباسی، فرامرز ۵",
+    "districtId": "faramarz",
+    "priceTier": 2,
+    "phone": null,
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "good_for_study",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "natural_light",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "هنری / معماری",
+    "highlights": [],
+    "signatureItem": "اسپرسو دوبل، پنینی مرغ گریل",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-18",
+    "slug": "cake-box-cafe",
+    "name": "کافه کیک بوکس",
+    "nameNormalized": "کیک بوکس",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.305,
+      "lng": 59.555
+    },
+    "address": "بلوار ملک‌آباد، بین ملک‌آباد ۱۳ و ۱۵",
+    "districtId": "malekabad",
+    "priceTier": 3,
+    "phone": "۰۵۱-۳۷۶۳۳۰۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "desserts",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "upscale",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "specialty_coffee",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "دسر تخصصی",
+    "highlights": [],
+    "signatureItem": "چیزکیک کلاژ، قهوه فرانسه",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-19",
+    "slug": "deline-cafe",
+    "name": "کافه دلین",
+    "nameNormalized": "دلین",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.305,
+      "lng": 59.555
+    },
+    "address": "بلوار ملک‌آباد، خیابان خیام جنوبی",
+    "districtId": "malekabad",
+    "priceTier": 3,
+    "phone": "۰۵۱-۳۷۶۹۹۰۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "breakfast",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "vip_room",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "upscale",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "outdoor",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "لوکس / تشریفاتی",
+    "highlights": [],
+    "signatureItem": "صبحانه انگلیسی VIP، قهوه موج سوم",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-20",
+    "slug": "nutella-bar",
+    "name": "کافه نوتلا بار",
+    "nameNormalized": "نوتلا بار",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.3157,
+      "lng": 59.5391
+    },
+    "address": "بلوار سجاد، پاساژ تندیس",
+    "districtId": "sajad",
+    "priceTier": 2,
+    "phone": "۰۵۱-۳۷۶۴۰۰۰۱",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "desserts",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "quick_service",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "lively",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "تخصصی شکلات و وافل",
+    "highlights": [],
+    "signatureItem": "کرپ نوتلا موز، شیک نوتلا",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-21",
+    "slug": "gord-cafe",
+    "name": "کافه گرد",
+    "nameNormalized": "گرد",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.33,
+      "lng": 59.51
+    },
+    "address": "بلوار هاشمیه، هاشمیه ۲۶",
+    "districtId": "hashemieh",
+    "priceTier": 2,
+    "phone": "۰۵۱-۳۸۸۰۰۰۰۲",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "specialty_coffee",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "قهوه تخصصی موج سوم (Wave 3)",
+    "highlights": [],
+    "signatureItem": "کولدبرو تپ، دم‌آوری ایروپرس",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-22",
+    "slug": "cake-co-cafe",
+    "name": "کافه کیک اند کو",
+    "nameNormalized": "کیک اند کو",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.33,
+      "lng": 59.51
+    },
+    "address": "بلوار هاشمیه، بین هاشمیه ۶ و ۸",
+    "districtId": "hashemieh",
+    "priceTier": 3,
+    "phone": "۰۵۱-۳۸۸۰۰۰۰۱",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "desserts",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "upscale",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "کافه قنادی تخصصی",
+    "highlights": [
+      "نوشیدنی گرم"
+    ],
+    "signatureItem": "کیک هویج، آفوگاتو بستنی",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-23",
+    "slug": "wall-cafe",
+    "name": "کافه وال",
+    "nameNormalized": "وال",
+    "kind": "cafe_restaurant",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.33,
+      "lng": 59.51
+    },
+    "address": "بلوار هاشمیه، بین هاشمیه ۲۸ و ۳۰",
+    "districtId": "hashemieh",
+    "priceTier": 2,
+    "phone": "۰۵۱-۳۸۸۳۴۰۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "photogenic",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "outdoor",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "specialty_coffee",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "مدرن / گرافیتی",
+    "highlights": [],
+    "signatureItem": "موهیتو طبیعی، برگر مخصوص وال",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-24",
+    "slug": "cafe-93",
+    "name": "کافه ۹۳",
+    "nameNormalized": "93",
+    "kind": "cafe_restaurant",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.33,
+      "lng": 59.51
+    },
+    "address": "بلوار هاشمیه، هاشمیه ۹۳",
+    "districtId": "hashemieh",
+    "priceTier": 2,
+    "phone": "۰۵۱-۳۸۸۲۲۰۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "sports_screening",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "lively",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "اسپرت / جوانانه",
+    "highlights": [
+      "برگر و فست کافه"
+    ],
+    "signatureItem": "برگر زغالی، آیس لاته",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-25",
+    "slug": "karma-veg-cafe",
+    "name": "کافه کارما",
+    "nameNormalized": "کارما",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.33,
+      "lng": 59.51
+    },
+    "address": "بلوار هاشمیه، هاشمیه ۶۲",
+    "districtId": "hashemieh",
+    "priceTier": 2,
+    "phone": null,
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "healthy_options",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "outdoor",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "quiet",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "وگان / گیاهی",
+    "highlights": [],
+    "signatureItem": "دمنوش ارگانیک کارما، سالاد وگان",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-26",
+    "slug": "locafein-cafe",
+    "name": "کافه لوکافین",
+    "nameNormalized": "لوکافین",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.335,
+      "lng": 59.5
+    },
+    "address": "بلوار کوثر، کوثر ۴",
+    "districtId": "kowsar",
+    "priceTier": 2,
+    "phone": "۰۵۱-۳۸۸۱۹۰۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "specialty_coffee",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "قهوه تخصصی",
+    "highlights": [],
+    "signatureItem": "اسپرسو سینگل، کمکس V60",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-27",
+    "slug": "shadow-cafe",
+    "name": "کافه سایه",
+    "nameNormalized": "سایه",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.335,
+      "lng": 59.5
+    },
+    "address": "بلوار کوثر، کوثر ۲۴",
+    "districtId": "kowsar",
+    "priceTier": 2,
+    "phone": "۰۵۱-۳۸۸۱۲۰۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "natural_light",
+        "value": 1,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "quiet",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "good_for_study",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "دنج / لایت",
+    "highlights": [
+      "موسیقی بی‌کلام"
+    ],
+    "signatureItem": "آمریکانو، چیزکیک شکلاتی",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-28",
+    "slug": "nora-cafe",
+    "name": "کافه نورا",
+    "nameNormalized": "نورا",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.335,
+      "lng": 59.5
+    },
+    "address": "بلوار کوثر، بین کوثر ۷ و ۹",
+    "districtId": "kowsar",
+    "priceTier": 2,
+    "phone": "۰۵۱-۳۸۸۱۷۷۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "photogenic",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "desserts",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "natural_light",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "مینیمال / روشن",
+    "highlights": [],
+    "signatureItem": "اسپرسوبار تخصصی، کیک هویج",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-29",
+    "slug": "green-cafe",
+    "name": "کافه گرین",
+    "nameNormalized": "گرین",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.33,
+      "lng": 59.51
+    },
+    "address": "بلوار هاشمیه، هاشمیه ۱۵",
+    "districtId": "hashemieh",
+    "priceTier": 2,
+    "phone": "۰۵۱-۳۸۸۴۷۷۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "healthy_options",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "outdoor",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "ارگانیک / سالادبار",
+    "highlights": [
+      "سالاد سزار محبوب"
+    ],
+    "signatureItem": "سالاد سزار، اسموتی کرفس و سیب",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-30",
+    "slug": "gelacraft-cafe",
+    "name": "کافه ژلاکرافت",
+    "nameNormalized": "ژلاکرافت",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.33,
+      "lng": 59.51
+    },
+    "address": "بلوار هاشمیه، هاشمیه ۱۴",
+    "districtId": "hashemieh",
+    "priceTier": 2,
+    "phone": "۰۵۱-۳۸۸۳۰۰۰۱",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "desserts",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "specialty_coffee",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "بستنی دست‌ساز / کافه",
+    "highlights": [
+      "فضای مدرن"
+    ],
+    "signatureItem": "آفوگاتو ژلاتو، لاته‌آرت",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-31",
+    "slug": "mahestan-cafe",
+    "name": "کافه مهستان",
+    "nameNormalized": "مهستان",
+    "kind": "cafe_restaurant",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.315,
+      "lng": 59.545
+    },
+    "address": "بلوار هفت تیر، هفت تیر ۸",
+    "districtId": "haft-tir",
+    "priceTier": 3,
+    "phone": "۰۵۱-۳۸۸۵۱۰۰۱",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "upscale",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "family_friendly",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "مدرن / ایتالیایی",
+    "highlights": [
+      "پاستا تنوری"
+    ],
+    "signatureItem": "پاستا آلفردو، آیس لاته",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-32",
+    "slug": "armitaj-vip-cafe",
+    "name": "کافه آرمیتاژ VIP",
+    "nameNormalized": "ارمیتاژ vip",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.315,
+      "lng": 59.545
+    },
+    "address": "بلوار هفت تیر، برج اداری آرمیتاژ",
+    "districtId": "haft-tir",
+    "priceTier": 3,
+    "phone": "۰۵۱-۳۸۸۵۰۰۰۱",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "laptop_friendly",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "vip_room",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "upscale",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "scenic_view",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "VIP / تجاری",
+    "highlights": [],
+    "signatureItem": "اسپرسو سنگین، فینگر فود VIP",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-33",
+    "slug": "lounge-360",
+    "name": "کافه لانژ ۳۶۰",
+    "nameNormalized": "لانژ 360",
+    "kind": "cafe_restaurant",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.33,
+      "lng": 59.51
+    },
+    "address": "بلوار هاشمیه، برج آمیتیس",
+    "districtId": "hashemieh",
+    "priceTier": 3,
+    "phone": "۰۵۱-۳۸۸۰۰۰۰۵",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "scenic_view",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "vip_room",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "لوکس / روف‌تاپ",
+    "highlights": [],
+    "signatureItem": "استیک فیله، اسپرسو رومانو",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-34",
+    "slug": "kar-co-working-cafe",
+    "name": "کافه کار کو-ورکینگ",
+    "nameNormalized": "کار کو ورکینگ",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.33,
+      "lng": 59.51
+    },
+    "address": "بلوار هاشمیه، هاشمیه ۱۵",
+    "districtId": "hashemieh",
+    "priceTier": 1,
+    "phone": "۰۵۱-۳۸۸۰۰۰۰۷",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "laptop_friendly",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "fast_wifi",
+        "value": 1,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "فضای کار اشتراکی",
+    "highlights": [],
+    "signatureItem": "قهوه دمی چکاری، ساندویچ فیله",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-35",
+    "slug": "academy-cafe",
+    "name": "کافه آکادمی",
+    "nameNormalized": "اکادمی",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.31,
+      "lng": 59.55
+    },
+    "address": "بلوار نماز، نبش نماز ۱۲",
+    "districtId": "namaz",
+    "priceTier": 3,
+    "phone": "۰۵۱-۳۸۷۹۰۰۰۴",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "outdoor",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "parking",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "کوهپایه‌ای / مدرن",
+    "highlights": [],
+    "signatureItem": "اسپرسو سنگین، سالاد سزار ویژه",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-36",
+    "slug": "retro-cafe",
+    "name": "کافه رترو",
+    "nameNormalized": "رترو",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.29,
+      "lng": 59.55
+    },
+    "address": "بلوار پیروزی، بین پیروزی ۳۳ و ۳۵",
+    "districtId": "pirouzi",
+    "priceTier": 2,
+    "phone": "۰۵۱-۳۸۶۹۷۰۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "photogenic",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "boardgames",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "specialty_coffee",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "نوستالژیک / گیم",
+    "highlights": [],
+    "signatureItem": "شیک شکلات داغ، اسپرسو دوبل",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-37",
+    "slug": "piano-cafe",
+    "name": "کافه پیانو",
+    "nameNormalized": "پیانو",
+    "kind": "cafe_restaurant",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.29,
+      "lng": 59.55
+    },
+    "address": "بلوار پیروزی، بین پیروزی ۴۹ و ۵۱",
+    "districtId": "pirouzi",
+    "priceTier": 2,
+    "phone": null,
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "natural_light",
+        "value": 1,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "cozy",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "دنج / دونفره",
+    "highlights": [
+      "موسیقی کلاسیک پیانو"
+    ],
+    "signatureItem": "پاستا آلفردو، کاپوچینو فوم‌دار",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-38",
+    "slug": "hiva-cafe",
+    "name": "کافه هیوا",
+    "nameNormalized": "هیوا",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.29,
+      "lng": 59.55
+    },
+    "address": "بلوار پیروزی، بین پیروزی ۱۲ و ۱۴",
+    "districtId": "pirouzi",
+    "priceTier": 2,
+    "phone": "۰۵۱-۳۸۷۶۲۰۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "هنری / دنج",
+    "highlights": [
+      "نمایشگاه هنری کوچک",
+      "موسیقی گیلان و جنوب",
+      "دمنوش خاص"
+    ],
+    "signatureItem": "دمنوش خاص هیوا، کاپوچینو",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-39",
+    "slug": "puzzle-game-cafe",
+    "name": "کافه پازل",
+    "nameNormalized": "پازل",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.29,
+      "lng": 59.55
+    },
+    "address": "بلوار پیروزی، بین پیروزی ۲۰ و ۲۲",
+    "districtId": "pirouzi",
+    "priceTier": 2,
+    "phone": "۰۵۱-۳۸۷۸۵۵۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "boardgames",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "کافه گیم / اتاق فرار",
+    "highlights": [
+      "اتاق فرار",
+      "اسنک داغ"
+    ],
+    "signatureItem": "نوشیدنی انرژی‌زا، پنینی گرم",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-40",
+    "slug": "rio-cafe",
+    "name": "کافه ریو",
+    "nameNormalized": "ریو",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.3298,
+      "lng": 59.479
+    },
+    "address": "بلوار وکیل‌آباد، بین وکیل‌آباد ۲۵ و ۲۷",
+    "districtId": "vakilabad",
+    "priceTier": 2,
+    "phone": null,
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "desserts",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "breakfast",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "lively",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "آمریکایی / تجاری",
+    "highlights": [],
+    "signatureItem": "پنکیک موز و نوتلا، صبحانه انگلیسی",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-41",
+    "slug": "cook-cafe",
+    "name": "کافه کوک",
+    "nameNormalized": "کوک",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.3298,
+      "lng": 59.479
+    },
+    "address": "بین صیاد شیرازی و هفت‌تیر",
+    "districtId": "vakilabad",
+    "priceTier": 2,
+    "phone": "۰۵۱-۳۸۶۷۷۰۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "quick_service",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "فست‌کافه",
+    "highlights": [
+      "ساندویچ سرد و گرم گازت",
+      "قهوه روبوستا"
+    ],
+    "signatureItem": "ساندویچ گازت، اسپرسو دوبل",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-42",
+    "slug": "theater-cafe",
+    "name": "کافه تئاتر",
+    "nameNormalized": "تیاتر",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.32,
+      "lng": 59.53
+    },
+    "address": "بلوار دانشجو، بین دانشجو ۶ و ۸",
+    "districtId": "daneshjou",
+    "priceTier": 2,
+    "phone": "۰۵۱-۳۸۹۳۳۰۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "هنری / تئاتر",
+    "highlights": [
+      "پاتوق هنرمندان مشهد",
+      "گالری عکس",
+      "بحث‌های هنری"
+    ],
+    "signatureItem": "قهوه دمی کالیتا، کیک شکلاتی",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-43",
+    "slug": "hive-cafe",
+    "name": "کافه کندو",
+    "nameNormalized": "کندو",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.32,
+      "lng": 59.53
+    },
+    "address": "بلوار دانشجو، دانشجو ۱۵",
+    "districtId": "daneshjou",
+    "priceTier": 2,
+    "phone": "۰۵۱-۳۸۹۱۴۰۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "healthy_options",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "fast_wifi",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "مدرن / خلاقانه",
+    "highlights": [
+      "طراحی کندویی خاص"
+    ],
+    "signatureItem": "شیک استوایی، اسپرسو دبل",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-44",
+    "slug": "boom-cafe",
+    "name": "کافه بوم",
+    "nameNormalized": "بوم",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.32,
+      "lng": 59.53
+    },
+    "address": "بلوار دانشجو، دانشجو ۹",
+    "districtId": "daneshjou",
+    "priceTier": 2,
+    "phone": "۰۵۱-۳۸۹۲۷۷۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "photogenic",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "cozy",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "چوبی / گرم",
+    "highlights": [
+      "نوشیدنی شکلاتی"
+    ],
+    "signatureItem": "کیک نوتلا، کاپوچینو",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-45",
+    "slug": "radin-cafe",
+    "name": "کافه رادین",
+    "nameNormalized": "رادین",
+    "kind": "cafe_restaurant",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.3298,
+      "lng": 59.479
+    },
+    "address": "بلوار وکیل‌آباد، بین وکیل‌آباد ۳۱ و ۳۳",
+    "districtId": "vakilabad",
+    "priceTier": 2,
+    "phone": "۰۵۱-۳۸۹۳۸۸۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "outdoor",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "ایتالیایی",
+    "highlights": [
+      "پیتزا تنوری دست‌ساز",
+      "پاستا پستو"
+    ],
+    "signatureItem": "پاستا پستو، تیرامیسو خانگی",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-46",
+    "slug": "karen-cafe",
+    "name": "کافه کارن",
+    "nameNormalized": "کارن",
+    "kind": "cafe_restaurant",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.3298,
+      "lng": 59.479
+    },
+    "address": "بلوار وکیل‌آباد، نبش صیاد شیرازی ۲",
+    "districtId": "vakilabad",
+    "priceTier": 3,
+    "phone": "۰۵۱-۳۸۶۵۲۲۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "breakfast",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "outdoor",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "لوکس / تراس‌دار",
+    "highlights": [
+      "استیک"
+    ],
+    "signatureItem": "استیک و قهوه، صبحانه VIP",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-47",
+    "slug": "waffle-club-cafe",
+    "name": "کافه وافل کلاب",
+    "nameNormalized": "وافل کلاب",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.3298,
+      "lng": 59.479
+    },
+    "address": "بلوار وکیل‌آباد، وکیل‌آباد ۲۹",
+    "districtId": "vakilabad",
+    "priceTier": 2,
+    "phone": "۰۵۱-۳۸۶۲۰۰۰۱",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "desserts",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "تخصصی وافل",
+    "highlights": [
+      "آیس لاته",
+      "محیط مدرن"
+    ],
+    "signatureItem": "وافل توت‌فرنگی و نوتلا، آیس لاته",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-48",
+    "slug": "emamat-16-cafe",
+    "name": "کافه امامت ۱۶",
+    "nameNormalized": "امامت 16",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.335,
+      "lng": 59.515
+    },
+    "address": "بلوار امامت، امامت ۱۶",
+    "districtId": "emamat",
+    "priceTier": 2,
+    "phone": "۰۵۱-۳۶۰۱۰۰۰۱",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "lively",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "quick_service",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "محبوب / جوانانه",
+    "highlights": [
+      "پخش موزیک"
+    ],
+    "signatureItem": "شیک نوتلا، اسپرسو سنگین",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-49",
+    "slug": "chaman-cafe",
+    "name": "کافه چمن",
+    "nameNormalized": "چمن",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.335,
+      "lng": 59.515
+    },
+    "address": "بلوار امامت، امامت ۱",
+    "districtId": "emamat",
+    "priceTier": 2,
+    "phone": "۰۵۱-۳۶۰۳۰۰۰۱",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "sports_screening",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "upscale",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "ورزشی / سلامت",
+    "highlights": [
+      "نزدیک پارک ملت"
+    ],
+    "signatureItem": "شیک پروتئین، اسپرسو سینگل",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-50",
+    "slug": "fekrkadeh-game-cafe",
+    "name": "کافه بازی فکرکده",
+    "nameNormalized": "بازی فکرکده",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.3,
+      "lng": 59.58
+    },
+    "address": "خیابان فرهاد، فرهاد ۱۹",
+    "districtId": "farhad",
+    "priceTier": 2,
+    "phone": "۰۵۱-۳۷۶۷۹۰۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "boardgames",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "کافه گیم تخصصی",
+    "highlights": [
+      "مربی آموزش بازی",
+      "فضای هیجانی"
+    ],
+    "signatureItem": "موهیتو استوایی، سیب‌زمینی ویژه فکرکده",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-51",
+    "slug": "boomerang-game-cafe",
+    "name": "کافه بازی بومرنگ",
+    "nameNormalized": "بازی بومرنگ",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.3157,
+      "lng": 59.5391
+    },
+    "address": "بلوار سجاد، خیابان ابن‌سینا",
+    "districtId": "sajad",
+    "priceTier": 2,
+    "phone": "۰۵۱-۳۷۶۸۴۴۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "boardgames",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "کافه گیم / مافیا",
+    "highlights": [
+      "محیط بسیار شاد",
+      "اسنک گرم"
+    ],
+    "signatureItem": "چیپس و پنیر ویژه، اسموتی فصل",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-52",
+    "slug": "biscuit-cafe",
+    "name": "کافه بیسکوئیت",
+    "nameNormalized": "بیسکوییت",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.2977,
+      "lng": 59.5895
+    },
+    "address": "خیابان رضا، رضا ۲۵",
+    "districtId": "ahmadabad",
+    "priceTier": 2,
+    "phone": null,
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "desserts",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "quiet",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "خانگی / دنج",
+    "highlights": [
+      "مناسب گفتگو"
+    ],
+    "signatureItem": "کیک خانگی روز، قهوه دمی کمکس",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-53",
+    "slug": "bukhara-traditional-cafe",
+    "name": "کافه سنتی بخارا",
+    "nameNormalized": "سنتی بخارا",
+    "kind": "cafe_restaurant",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.307,
+      "lng": 59.5666
+    },
+    "address": "احمدآباد، خیابان راهنمایی ۴",
+    "districtId": "rahnamaei",
+    "priceTier": 2,
+    "phone": "۰۵۱-۳۸۴۵۲۰۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "outdoor",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "quiet",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "سنتی / شربت‌خانه",
+    "highlights": [
+      "شربت‌های ایرانی",
+      "معماری سنتی زیبا"
+    ],
+    "signatureItem": "شربت زعفران، دمنوش شاه‌عباسی",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-54",
+    "slug": "alma-cafe",
+    "name": "کافه آلما",
+    "nameNormalized": "الما",
+    "kind": "cafe_restaurant",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.2977,
+      "lng": 59.5895
+    },
+    "address": "خیابان عدالت، عدالت ۶",
+    "districtId": "ahmadabad",
+    "priceTier": 2,
+    "phone": "۰۵۱-۳۸۴۴۸۰۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "specialty_coffee",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "ایتالیایی اصیل",
+    "highlights": [
+      "پاستا دست‌ساز",
+      "فضای گرم"
+    ],
+    "signatureItem": "پاستا فوتچینی، اسپرسو ریسترتو",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-55",
+    "slug": "rahnamaee-book-cafe",
+    "name": "کافه کتاب راهنمایی",
+    "nameNormalized": "کتاب راهنمایی",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.307,
+      "lng": 59.5666
+    },
+    "address": "خیابان راهنمایی، راهنمایی ۲۰",
+    "districtId": "rahnamaei",
+    "priceTier": 1,
+    "phone": "۰۵۱-۳۸۴۰۰۰۰۱",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "good_for_study",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "کتاب‌کافه",
+    "highlights": [
+      "کارگاه نگارش"
+    ],
+    "signatureItem": "قهوه ترک، کیک باقلوایی",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-56",
+    "slug": "nahar-khoran-cafe",
+    "name": "کافه نهارخوران",
+    "nameNormalized": "نهارخوران",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.2977,
+      "lng": 59.5895
+    },
+    "address": "خیابان ملاصدرا، ملاصدرا ۲",
+    "districtId": "ahmadabad",
+    "priceTier": 2,
+    "phone": "۰۵۱-۳۸۴۰۰۰۰۲",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "breakfast",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "کلاسیک / اصیل",
+    "highlights": [
+      "سابقه بالا",
+      "سرشیر عسل تازه"
+    ],
+    "signatureItem": "سرشیر عسل تازه، قهوه فرانسه",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-57",
+    "slug": "diplomat-cafe",
+    "name": "کافه دیپلمات",
+    "nameNormalized": "دیپلمات",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.2977,
+      "lng": 59.5895
+    },
+    "address": "خیابان طالقانی، نبش طالقانی ۴",
+    "districtId": "ahmadabad",
+    "priceTier": 3,
+    "phone": "۰۵۱-۳۸۴۰۰۰۰۴",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "quiet",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "اداری / جلسات",
+    "highlights": [
+      "صندلی‌های چرمی",
+      "مناسب مذاکره کاری"
+    ],
+    "signatureItem": "اسپرسو سنگین، سالاد سزار",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-58",
+    "slug": "verona-cafe",
+    "name": "کافه ورونا",
+    "nameNormalized": "ورونا",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.32,
+      "lng": 59.54
+    },
+    "address": "خیابان ملاصدرا، ملاصدرا ۹",
+    "districtId": "mollasadra",
+    "priceTier": 3,
+    "phone": "۰۵۱-۳۸۴۱۰۰۰۱",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "desserts",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "ایتالیایی",
+    "highlights": [
+      "پاستا دست‌ساز",
+      "پیتزا تنوری"
+    ],
+    "signatureItem": "پناکوتا، اسپرسو ریسترتو",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-59",
+    "slug": "plato-cafe",
+    "name": "کافه پلاتو",
+    "nameNormalized": "پلاتو",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.307,
+      "lng": 59.5666
+    },
+    "address": "خیابان راهنمایی، برج سلمان",
+    "districtId": "rahnamaei",
+    "priceTier": 2,
+    "phone": null,
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "quick_service",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "مدرن / تجاری",
+    "highlights": [
+      "واقع در مرکز خرید",
+      "قهوه باکیفیت"
+    ],
+    "signatureItem": "قهوه باکیفیت، اسنک داغ",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-60",
+    "slug": "arasbaran-book-cafe",
+    "name": "کافه کتاب ارسباران",
+    "nameNormalized": "کتاب ارسباران",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.2977,
+      "lng": 59.5895
+    },
+    "address": "احمدآباد، بین پاستور و قائم",
+    "districtId": "ahmadabad",
+    "priceTier": 1,
+    "phone": "۰۵۱-۳۸۴۱۵۵۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "good_for_study",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "quiet",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "healthy_options",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "کتاب‌فروشی / کافه",
+    "highlights": [],
+    "signatureItem": "قهوه ترک، دمنوش ارگانیک",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-61",
+    "slug": "art-cafe-gallery",
+    "name": "کافه گالری آرت",
+    "nameNormalized": "گالری ارت",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.2977,
+      "lng": 59.5895
+    },
+    "address": "خیابان ابوذر غفاری",
+    "districtId": "ahmadabad",
+    "priceTier": 2,
+    "phone": "۰۵۱-۳۸۴۳۸۸۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "specialty_coffee",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "گالری نقاشی",
+    "highlights": [
+      "نمایشگاه آثار هنرمندان",
+      "موسیقی جاز"
+    ],
+    "signatureItem": "قهوه فرانسه، تارت سیب",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-62",
+    "slug": "naderi-historic-cafe",
+    "name": "کافه نادری مشهد",
+    "nameNormalized": "نادری مشهد",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.287,
+      "lng": 59.605
+    },
+    "address": "خیابان امام خمینی (ارگ سابق)",
+    "districtId": "arg",
+    "priceTier": 1,
+    "phone": "۰۵۱-۳۲۲۲۴۰۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "specialty_coffee",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "نوستالژیک تاریخی",
+    "highlights": [
+      "حس و حال مشهد قدیم",
+      "باقلوای خانگی"
+    ],
+    "signatureItem": "قهوه ترک اصیل، باقلوای ترکی",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-63",
+    "slug": "arg-historic-cafe",
+    "name": "کافه ارگ تاریخی",
+    "nameNormalized": "ارگ تاریخی",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.287,
+      "lng": 59.605
+    },
+    "address": "خیابان امام خمینی، مقابل ارگ",
+    "districtId": "arg",
+    "priceTier": 2,
+    "phone": "۰۵۱-۳۲۲۲۰۰۰۱",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "میراثی / قاجاری",
+    "highlights": [
+      "ساختمان قدیمی بازسازی‌شده",
+      "عکس‌های مشهد قدیم",
+      "شربت‌خانه"
+    ],
+    "signatureItem": "شربت بهارنارنج، قهوه قجری",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-64",
+    "slug": "1001-nights-cafe",
+    "name": "کافه سنتی هزار و یک شب",
+    "nameNormalized": "سنتی هزار و یک شب",
+    "kind": "cafe_restaurant",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.288,
+      "lng": 59.61
+    },
+    "address": "خیابان امام رضا، نزدیک حرم مطهر",
+    "districtId": "emam-reza",
+    "priceTier": 2,
+    "phone": "۰۵۱-۳۸۵۱۳۳۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "سنتی / اصیل",
+    "highlights": [
+      "معماری کاشی‌کاری سنتی",
+      "چای معطر ایرانی",
+      "مناسب زائرین"
+    ],
+    "signatureItem": "چای معطر ایرانی، دمنوش زعفران",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-65",
+    "slug": "rezwan-haram-cafe",
+    "name": "کافه حرم (رضوان)",
+    "nameNormalized": "حرم رضوان",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.288,
+      "lng": 59.6157
+    },
+    "address": "صحن رضوان، ورودی شیخ طوسی",
+    "districtId": "haram",
+    "priceTier": 1,
+    "phone": "۰۵۱-۳۲۰۰۰۰۰۱",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "quiet",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "زیارتی / آرام",
+    "highlights": [
+      "استراحت زائرین",
+      "چای تبرکی"
+    ],
+    "signatureItem": "چای تبرکی، دمنوش زعفران",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-66",
+    "slug": "darvishi-hotel-cafe",
+    "name": "کافه هتل درویشی",
+    "nameNormalized": "هتل درویشی",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.288,
+      "lng": 59.61
+    },
+    "address": "بین امام رضا ۲۴ و ۲۶، هتل درویشی",
+    "districtId": "emam-reza",
+    "priceTier": 3,
+    "phone": "۰۵۱-۳۸۰۸۰۰۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "upscale",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "vip_room",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "desserts",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "هتلی ۵ ستاره / لوکس",
+    "highlights": [],
+    "signatureItem": "قهوه عربی، دسر اختصاصی درویشی",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-67",
+    "slug": "ghasr-talaee-hotel-cafe",
+    "name": "کافه هتل قصر طلایی",
+    "nameNormalized": "هتل قصر طلایی",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.288,
+      "lng": 59.61
+    },
+    "address": "خیابان امام رضا، میدان بسیج، هتل قصر طلایی",
+    "districtId": "emam-reza",
+    "priceTier": 3,
+    "phone": "۰۵۱-۳۸۰۳۰۰۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "outdoor",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "upscale",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "desserts",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "هتلی ۵ ستاره / روف‌تاپ",
+    "highlights": [
+      "موسیقی پیانو زنده"
+    ],
+    "signatureItem": "کاپوچینو با طلا، تارت میوه",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-68",
+    "slug": "international-ghasr-hotel-cafe",
+    "name": "کافه هتل بین‌المللی قصر",
+    "nameNormalized": "هتل بین المللی قصر",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.288,
+      "lng": 59.61
+    },
+    "address": "خیابان امام رضا، امام رضا ۱۶",
+    "districtId": "emam-reza",
+    "priceTier": 3,
+    "phone": null,
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "breakfast",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "upscale",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "vip_room",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "specialty_coffee",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "هتلی ۵ ستاره",
+    "highlights": [],
+    "signatureItem": "قهوه اسپرسو، بوفه بین‌المللی",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-69",
+    "slug": "almas-2-hotel-cafe",
+    "name": "کافه هتل الماس ۲",
+    "nameNormalized": "هتل الماس 2",
+    "kind": "cafe_restaurant",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.288,
+      "lng": 59.61
+    },
+    "address": "خیابان امام رضا، نبش امام رضا ۲۰",
+    "districtId": "emam-reza",
+    "priceTier": 3,
+    "phone": "۰۵۱-۳۸۵۷۰۰۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "scenic_view",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "upscale",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "روف‌تاپ هتلی",
+    "highlights": [
+      "قهوه عربی"
+    ],
+    "signatureItem": "قهوه عربی، استیک بوفالو",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-70",
+    "slug": "madinat-al-reza-hotel-cafe",
+    "name": "کافه هتل مدینه‌الرضا",
+    "nameNormalized": "هتل مدینه الرضا",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.289,
+      "lng": 59.612
+    },
+    "address": "خیابان شیرازی، نبش شارستان",
+    "districtId": "shirazi",
+    "priceTier": 3,
+    "phone": "۰۵۱-۳۲۲۳۷۰۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "desserts",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "گردان / ۵ ستاره",
+    "highlights": [
+      "رستوران و کافه گردان",
+      "دید مستقیم به حرم"
+    ],
+    "signatureItem": "قهوه فرانسه، دسر مخصوص مدینه‌الرضا",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-71",
+    "slug": "homa-1-hotel-cafe",
+    "name": "کافه هتل هما ۱",
+    "nameNormalized": "هتل هما 1",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.2977,
+      "lng": 59.5895
+    },
+    "address": "خیابان کلاهدوز، هتل هما ۱",
+    "districtId": "ahmadabad",
+    "priceTier": 3,
+    "phone": "۰۵۱-۳۸۴۳۲۰۰۱",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "outdoor",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "specialty_coffee",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "باغ هتلی / کلاسیک",
+    "highlights": [
+      "ارکستر زنده"
+    ],
+    "signatureItem": "قهوه ترک اصیل، مافین شوکو",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-72",
+    "slug": "homa-2-hotel-cafe",
+    "name": "کافه هتل هما ۲",
+    "nameNormalized": "هتل هما 2",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.31,
+      "lng": 59.575
+    },
+    "address": "بلوار خیام، میدان خیام",
+    "districtId": "khayyam",
+    "priceTier": 3,
+    "phone": "۰۵۱-۳۷۶۱۵۰۰۱",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "outdoor",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "vip_room",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "مدرن / هتلی",
+    "highlights": [
+      "سالاد سالمون"
+    ],
+    "signatureItem": "اسپرسو سنگین، سالاد سالمون گریل",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-73",
+    "slug": "silo-cafe",
+    "name": "کافه سیلو",
+    "nameNormalized": "سیلو",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.31,
+      "lng": 59.575
+    },
+    "address": "خیام جنوبی ۱۲",
+    "districtId": "khayyam",
+    "priceTier": 3,
+    "phone": "۰۵۱-۳۷۶۳۹۰۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "upscale",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "photogenic",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "fast_wifi",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "صنعتی / مدرن",
+    "highlights": [
+      "دان تک‌خاستگاه"
+    ],
+    "signatureItem": "قهوه دمی V60، دان تک‌خاستگاه",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-74",
+    "slug": "classic-cafe",
+    "name": "کافه کلاسیک",
+    "nameNormalized": "کلاسیک",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.31,
+      "lng": 59.575
+    },
+    "address": "بلوار خیام، خیام ۱۱",
+    "districtId": "khayyam",
+    "priceTier": 3,
+    "phone": "۰۵۱-۳۷۶۱۸۰۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "upscale",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "laptop_friendly",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "رسمی / کاری",
+    "highlights": [
+      "سالاد سزار"
+    ],
+    "signatureItem": "اسپرسو سنگین، سالاد سزار",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-75",
+    "slug": "shandiz-cafe",
+    "name": "کافه شاندیز",
+    "nameNormalized": "شاندیز",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.3833,
+      "lng": 59.3167
+    },
+    "address": "ابتدای جاده شاندیز",
+    "districtId": "shandiz",
+    "priceTier": 3,
+    "phone": "۰۵۱-۳۴۲۸۲۰۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "family_friendly",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "یلاقی / آلاچیق",
+    "highlights": [
+      "محیط سرسبز یلاقی",
+      "آلاچیق گرمایشی"
+    ],
+    "signatureItem": "چای ذغالی، شیشلیک، وافل بستنی",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-76",
+    "slug": "torghabeh-cafe",
+    "name": "کافه طرقی",
+    "nameNormalized": "طرقی",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.3167,
+      "lng": 59.3833
+    },
+    "address": "طرقبه، عنبران",
+    "districtId": "torghabeh",
+    "priceTier": 3,
+    "phone": "۰۵۱-۳۴۲۲۵۰۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "طبیعت / رودخانه",
+    "highlights": [
+      "حاشیه رودخانه طرقبه",
+      "املت آتیشی",
+      "چای ذغالی"
+    ],
+    "signatureItem": "املت آتیشی، چای ذغالی",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-77",
+    "slug": "didar-cafe",
+    "name": "کافه دیدار",
+    "nameNormalized": "دیدار",
+    "kind": "cafe_restaurant",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.3167,
+      "lng": 59.3833
+    },
+    "address": "طرقبه، بعد از چالیدره",
+    "districtId": "torghabeh",
+    "priceTier": 2,
+    "phone": "۰۵۱-۳۴۲۲۹۹۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "سنتی / باغی",
+    "highlights": [
+      "ویو عالی کوهستان",
+      "چای آتشی",
+      "دیزی محلی"
+    ],
+    "signatureItem": "دیزی محلی، دمنوش کوهستان",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-78",
+    "slug": "river-cafe",
+    "name": "کافه ریور",
+    "nameNormalized": "ریور",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.3167,
+      "lng": 59.3833
+    },
+    "address": "طرقبه، جنب رودخانه",
+    "districtId": "torghabeh",
+    "priceTier": 3,
+    "phone": "۰۵۱-۳۴۲۲۴۴۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "outdoor",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "ساحلی / تراس",
+    "highlights": [
+      "صدای رودخانه",
+      "قلیان عربی"
+    ],
+    "signatureItem": "قلیان عربی، نوشیدنی سرد طبیعی",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-79",
+    "slug": "padideh-shandiz-cafe",
+    "name": "کافه شاندیز پدیده",
+    "nameNormalized": "شاندیز پدیده",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.3833,
+      "lng": 59.3167
+    },
+    "address": "مرکز تعطیلات پدیده شاندیز",
+    "districtId": "shandiz",
+    "priceTier": 3,
+    "phone": "۰۵۱-۳۴۲۸۰۰۰۱",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "upscale",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "desserts",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "مدرن / تجاری",
+    "highlights": [
+      "برندهای بین‌المللی"
+    ],
+    "signatureItem": "اسپرسو ایتالیایی، چیزکیک ویژه",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-80",
+    "slug": "bolbol-garden-cafe",
+    "name": "کافه باغ بلبل",
+    "nameNormalized": "باغ بلبل",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.3167,
+      "lng": 59.3833
+    },
+    "address": "عنبران، نبش عنبران ۵",
+    "districtId": "torghabeh",
+    "priceTier": 3,
+    "phone": "۰۵۱-۳۴۲۲۰۰۰۱",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "باغ کافه",
+    "highlights": [
+      "تخت‌های روی آب",
+      "محیط سرسبز",
+      "چای ذغالی"
+    ],
+    "signatureItem": "چای ذغالی، دیزی سنگلی",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-81",
+    "slug": "torghabeh-mountain-cafe",
+    "name": "کافه کوهستان طرقبه",
+    "nameNormalized": "کوهستان طرقبه",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.3167,
+      "lng": 59.3833
+    },
+    "address": "جاده چالیدره",
+    "districtId": "torghabeh",
+    "priceTier": 3,
+    "phone": "۰۵۱-۳۴۲۲۰۰۰۲",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "desserts",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "تله‌کابین / روف",
+    "highlights": [
+      "تله‌کابین و قایق‌سواری",
+      "ویوی کامل دریاچه"
+    ],
+    "signatureItem": "قهوه هل، وافل میوه‌ای",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-82",
+    "slug": "cactus-shandiz-cafe",
+    "name": "کافه شاندیز کاکتوس",
+    "nameNormalized": "شاندیز کاکتوس",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.3833,
+      "lng": 59.3167
+    },
+    "address": "بلوار مدرس شاندیز، مدرس ۵",
+    "districtId": "shandiz",
+    "priceTier": 2,
+    "phone": null,
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "specialty_coffee",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "desserts",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "گلخانه‌ای",
+    "highlights": [
+      "نمایشگاه گیاهان آپارتمانی"
+    ],
+    "signatureItem": "قهوه دمی، کیک سیب دارچین",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-83",
+    "slug": "villa-torghabeh-cafe",
+    "name": "کافه ویلا طرقبه",
+    "nameNormalized": "ویلا طرقبه",
+    "kind": "cafe_restaurant",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.3167,
+      "lng": 59.3833
+    },
+    "address": "خیابان امام خمینی ۱۵",
+    "districtId": "torghabeh",
+    "priceTier": 3,
+    "phone": "۰۵۱-۳۴۲۲۲۰۰۱",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "outdoor",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "ویلا کافه",
+    "highlights": [
+      "آلاچیق مدرن",
+      "موهیتو استوایی"
+    ],
+    "signatureItem": "موهیتو استوایی، پیتزا ایتالیایی",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-84",
+    "slug": "chenar-torghabeh-cafe",
+    "name": "کافه چنار طرقبه",
+    "nameNormalized": "چنار طرقبه",
+    "kind": "cafe_restaurant",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.3167,
+      "lng": 59.3833
+    },
+    "address": "جنب چنار کهنسال طرقبه",
+    "districtId": "torghabeh",
+    "priceTier": 2,
+    "phone": "۰۵۱-۳۴۲۲۳۰۰۱",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "desserts",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "سنتی / صمیمی",
+    "highlights": [
+      "سایه چنار ۵۰۰ ساله",
+      "چای آتیشی"
+    ],
+    "signatureItem": "چای آتیشی، کیک یزدی داغ",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-85",
+    "slug": "kaleskeh-shandiz-cafe",
+    "name": "کافه کالسکه شاندیز",
+    "nameNormalized": "کالسکه شاندیز",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.3833,
+      "lng": 59.3167
+    },
+    "address": "ابتدای ورودی شاندیز",
+    "districtId": "shandiz",
+    "priceTier": 2,
+    "phone": "۰۵۱-۳۴۲۸۲۰۰۱",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "photogenic",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "desserts",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "کلاسیک نوستالژیک",
+    "highlights": [
+      "عکس یادگاری"
+    ],
+    "signatureItem": "قهوه فرانسه، وافل نوتلا",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-86",
+    "slug": "negarestan-garden-cafe",
+    "name": "کافه باغ نگارستان",
+    "nameNormalized": "باغ نگارستان",
+    "kind": "cafe_restaurant",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.3833,
+      "lng": 59.3167
+    },
+    "address": "جاده ویرانی شاندیز",
+    "districtId": "shandiz",
+    "priceTier": 3,
+    "phone": "۰۵۱-۳۴۲۷۰۰۰۱",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "سنتی هنری",
+    "highlights": [
+      "کارگاه سفال زنده",
+      "باغ گل",
+      "دمنوش زعفرانی"
+    ],
+    "signatureItem": "دمنوش زعفرانی، کاپوچینو",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-87",
+    "slug": "snow-tower-cafe",
+    "name": "کافه برج برفی",
+    "nameNormalized": "برج برفی",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.295,
+      "lng": 59.595
+    },
+    "address": "بین جانباز ۱ و ۳، برج برفی",
+    "districtId": "janbaz",
+    "priceTier": 3,
+    "phone": "۰۵۱-۳۷۶۱۰۰۰۱",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "photogenic",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "desserts",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "مدرن / سینمایی",
+    "highlights": [
+      "پردیس سینمایی"
+    ],
+    "signatureItem": "وافل بستنی، موکا",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-88",
+    "slug": "armitaj-cinema-cafe",
+    "name": "کافه سینما آرمیتاژ",
+    "nameNormalized": "سینما ارمیتاژ",
+    "kind": "cafe_restaurant",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.295,
+      "lng": 59.595
+    },
+    "address": "برج آرمیتاژ، طبقه ۴",
+    "districtId": "janbaz",
+    "priceTier": 3,
+    "phone": "۰۵۱-۳۷۶۷۰۰۰۱",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "scenic_view",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "لوکس / سینمایی",
+    "highlights": [
+      "گالری فیلم",
+      "پاستا پستو"
+    ],
+    "signatureItem": "قهوه تخصصی، پاستا پستو",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-89",
+    "slug": "kian-center-cafe",
+    "name": "کافه کیان سنتر",
+    "nameNormalized": "کیان سنتر",
+    "kind": "cafe_restaurant",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.295,
+      "lng": 59.595
+    },
+    "address": "کیان سنتر ۲، طبقه +۲",
+    "districtId": "janbaz",
+    "priceTier": 2,
+    "phone": "۰۵۱-۳۷۶۱۰۰۰۳",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "quick_service",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "upscale",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "تجاری / تفریحی",
+    "highlights": [
+      "شهربازی"
+    ],
+    "signatureItem": "شیک شکلات، پیتزا تکه‌ای",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-90",
+    "slug": "ferdowsi-cafe",
+    "name": "کافه فردوسی",
+    "nameNormalized": "فردوسی",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.317,
+      "lng": 59.521
+    },
+    "address": "پردیس دانشگاه فردوسی",
+    "districtId": "azadi",
+    "priceTier": 1,
+    "phone": "۰۵۱-۳۸۸۰۳۰۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "دانشجویی / سبز",
+    "highlights": [
+      "قیمت بسیار مناسب",
+      "فضای دانشگاه فردوسی",
+      "ساندویچ سرد"
+    ],
+    "signatureItem": "قهوه فرانسه، ساندویچ سرد",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-91",
+    "slug": "aftab-book-cafe",
+    "name": "کافه کتاب آفتاب",
+    "nameNormalized": "کتاب افتاب",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.3,
+      "lng": 59.53
+    },
+    "address": "بازارچه کتاب گلستان",
+    "districtId": "daneshgah",
+    "priceTier": 1,
+    "phone": "۰۵۱-۳۸۵۴۴۰۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "quiet",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "good_for_study",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "فرهنگی / آرام",
+    "highlights": [
+      "دمنوش خانگی"
+    ],
+    "signatureItem": "دمنوش خانگی، قهوه دمی",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-92",
+    "slug": "nabat-cafe",
+    "name": "کافه نبات",
+    "nameNormalized": "نبات",
+    "kind": "cafe_restaurant",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.2856,
+      "lng": 59.5836
+    },
+    "address": "خیابان کوه‌سنگی، نزدیک بوستان",
+    "districtId": "kuhsangi",
+    "priceTier": 2,
+    "phone": "۰۵۱-۳۸۴۳۵۰۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "desserts",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "گردشگری / سنتی",
+    "highlights": [
+      "نزدیک پارک کوه‌سنگی",
+      "شربت‌های خاص زعفرانی"
+    ],
+    "signatureItem": "شربت زعفران، بستنی مخصوص",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-93",
+    "slug": "airport-cafe",
+    "name": "کافه فرودگاه مشهد",
+    "nameNormalized": "فرودگاه مشهد",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.235,
+      "lng": 59.641
+    },
+    "address": "ترمینال پروازهای داخلی، طبقه ۲",
+    "districtId": "forudgah",
+    "priceTier": 3,
+    "phone": "۰۵۱-۳۳۴۰۰۰۰۱",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "quick_service",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "مسافری",
+    "highlights": [
+      "مناسب انتظار پرواز",
+      "کلاب ساندویچ"
+    ],
+    "signatureItem": "اسپرسو دوبل، کلاب ساندویچ",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-94",
+    "slug": "railway-cafe",
+    "name": "کافه راه آهن مشهد",
+    "nameNormalized": "راه اهن مشهد",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.302,
+      "lng": 59.568
+    },
+    "address": "میدان راه آهن، سالن انتظار",
+    "districtId": "rahahan",
+    "priceTier": 1,
+    "phone": "۰۵۱-۳۲۲۳۰۰۰۱",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "open_late",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "مسافری",
+    "highlights": [
+      "چای لیوانی داغ",
+      "اسنک گرم"
+    ],
+    "signatureItem": "چای لیوانی داغ، اسنک گرم",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-95",
+    "slug": "limon-cafe",
+    "name": "کافه لیمون",
+    "nameNormalized": "لیمون",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.3157,
+      "lng": 59.5391
+    },
+    "address": "حامد جنوبی ۱۰",
+    "districtId": "sajad",
+    "priceTier": 3,
+    "phone": "۰۵۱-۳۶۰۲۱۱۱۱",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "outdoor",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "breakfast",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "حیاط‌دار / سرسبز",
+    "highlights": [
+      "موهیتو طبیعی تازه"
+    ],
+    "signatureItem": "صبحانه انگلیسی، موهیتو طبیعی",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-96",
+    "slug": "arma-cafe",
+    "name": "کافه آرما",
+    "nameNormalized": "ارما",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.33,
+      "lng": 59.51
+    },
+    "address": "هاشمیه ۲۶",
+    "districtId": "hashemieh",
+    "priceTier": 2,
+    "phone": "۰۵۱-۳۸۸۳۹۰۰۰",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "specialty_coffee",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "laptop_friendly",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "قهوه تخصصی صنعتی",
+    "highlights": [
+      "دان تازه برشته"
+    ],
+    "signatureItem": "اسپرسو موج سوم، کولدبرو",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-97",
+    "slug": "bukhara-ahmadabad",
+    "name": "کافه سنتی بخارا احمدآباد",
+    "nameNormalized": "سنتی بخارا احمداباد",
+    "kind": "cafe_restaurant",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.2977,
+      "lng": 59.5895
+    },
+    "address": "خیابان راهنمایی ۴",
+    "districtId": "ahmadabad",
+    "priceTier": 2,
+    "phone": "۰۵۱-۳۸۴۵۲۰۰۱",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "healthy_options",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "شربت‌خانه و سنتی",
+    "highlights": [
+      "دمنوش ترکیبی",
+      "معماری اصفهانی"
+    ],
+    "signatureItem": "شربت سکنجبین و خیار، دمنوش بابونه",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-98",
+    "slug": "karma-vegan-cafe",
+    "name": "کافه کارما وگان",
+    "nameNormalized": "کارما وگان",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.33,
+      "lng": 59.51
+    },
+    "address": "هاشمیه ۶۲",
+    "districtId": "hashemieh",
+    "priceTier": 2,
+    "phone": "۰۵۱-۳۸۸۴۱۰۱۲",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "healthy_options",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "desserts",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "outdoor",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "کاملاً وگان (Vegan)",
+    "highlights": [],
+    "signatureItem": "لاته با شیر بادام، سالاد کینوآ",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-99",
+    "slug": "boomerang-mafia-cafe",
+    "name": "کافه بازی بومرنگ مافیا",
+    "nameNormalized": "بازی بومرنگ مافیا",
+    "kind": "cafe",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.3157,
+      "lng": 59.5391
+    },
+    "address": "ابن سینا ۱۰",
+    "districtId": "sajad",
+    "priceTier": 2,
+    "phone": "۰۵۱-۳۷۶۸۴۴۰۱",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "boardgames",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "کافه گیم / مافیا",
+    "highlights": [
+      "اسنک"
+    ],
+    "signatureItem": "اسموتی میوه‌های قرمز، چیپس داغ",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  },
+  {
+    "id": "import-100",
+    "slug": "deline-malekabad",
+    "name": "کافه دلین ملک‌آباد",
+    "nameNormalized": "دلین ملک اباد",
+    "kind": "cafe_restaurant",
+    "status": "published",
+    "mergedInto": null,
+    "coords": {
+      "lat": 36.305,
+      "lng": 59.555
+    },
+    "address": "خیابان خیام جنوبی، ملک‌آباد",
+    "districtId": "malekabad",
+    "priceTier": 3,
+    "phone": "۰۵۱-۳۷۶۹۹۰۰۱",
+    "instagram": null,
+    "ratingSum": 0,
+    "ratingCount": 0,
+    "attributes": [
+      {
+        "attributeId": "vip_room",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "outdoor",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      },
+      {
+        "attributeId": "upscale",
+        "value": 2,
+        "confidence": 45,
+        "source": "inferred",
+        "verifiedAt": null
+      }
+    ],
+    "hours": [],
+    "hoursExceptions": [],
+    "menu": [],
+    "reviews": [],
+    "photos": [],
+    "provenance": [
+      {
+        "field": "address",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "attributes",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      },
+      {
+        "field": "phone",
+        "source": "inferred",
+        "confidence": 45,
+        "observedAt": "2026-07-31T14:07:12.540Z"
+      }
+    ],
+    "description": "تشریفاتی / لوکس",
+    "highlights": [
+      "موسیقی لایت"
+    ],
+    "signatureItem": "قهوه تخصصی اتیوپی، استیک صبحانه",
+    "lastVerifiedAt": null,
+    "createdAt": "2026-07-31T14:07:12.540Z",
+    "updatedAt": "2026-07-31T14:07:12.540Z"
+  }
+]

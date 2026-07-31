@@ -132,3 +132,9 @@
   background: var(--c-primary);
   color: #fff;
 }
+
+/* کافه‌ی بدون نظر — «★ ۰» گمراه‌کننده است */
+.noRating {
+  font-size: 12px;
+  color: var(--c-ink-soft, #999);
+}

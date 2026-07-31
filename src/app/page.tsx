@@ -169,18 +169,27 @@ export default async function HomePage() {
             </div>
           </div>
           <div className={styles.filterChips}>
-            {districts.map((d) => {
-              const count = places.filter((p) => p.districtId === d.id).length
-              return (
+            {/*
+              محله‌های خالی نمایش داده نمی‌شوند. «قاسم‌آباد (۰)» هم کاربر را
+              به صفحه‌ی خالی می‌فرستد، هم سایت را ناقص نشان می‌دهد — در حالی
+              که فقط هنوز داده‌اش جمع نشده. با آمدن اولین کافه خودش برمی‌گردد.
+            */}
+            {districts
+              .map((d) => ({
+                district: d,
+                count: places.filter((p) => p.districtId === d.id).length,
+              }))
+              .filter(({ count }) => count > 0)
+              .sort((a, b) => b.count - a.count)
+              .map(({ district, count }) => (
                 <ChipLink
-                  key={d.id}
-                  label={`${d.name} (${fa(count)})`}
-                  href={paths.district(d.slug)}
+                  key={district.id}
+                  label={`${district.name} (${fa(count)})`}
+                  href={paths.district(district.slug)}
                   variant="outline"
                   size="lg"
                 />
-              )
-            })}
+              ))}
           </div>
         </section>
 

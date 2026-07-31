@@ -651,3 +651,38 @@
   font-size: 11px;
   color: var(--c-warning, #b26a00);
 }
+
+/* ── آیتم شاخص ─────────────────────────────────────────────────────── */
+.signature {
+  margin: 4px 16px 0;
+  padding: 10px 13px;
+  border-radius: 12px;
+  background: var(--c-pastel-lime, #f1f7e8);
+  color: var(--c-pastel-lime-text, #4a6b1f);
+  font-size: 13.5px;
+  line-height: 1.9;
+}
+
+.signatureLabel {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 800;
+  opacity: 0.75;
+  margin-inline-end: 6px;
+}
+
+/* نکات آزاد — ظاهر عمداً متفاوت از تگ‌های قابل فیلتر */
+.highlights {
+  margin: 10px 16px 0;
+  padding-inline-start: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.highlights li {
+  font-size: 13px;
+  color: var(--c-ink-soft, #666);
+  line-height: 1.9;
+  list-style: disc;
+}

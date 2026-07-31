@@ -69,15 +69,24 @@ export function ResultCard({
           </div>
 
           <div className={styles.scoreCol}>
-            <div className={styles.score}>
-              <span className={styles.star} aria-hidden="true">
-                ★
-              </span>{' '}
-              {faDecimal(Number(place.rawRating.toFixed(1)))}
-            </div>
-            <div className={styles.scoreSub}>
-              {`${fa(place.ratingCount)} نظر · ${PRICE_TIER_LABELS[place.priceTier]}`}
-            </div>
+            {/* بدون نظر یعنی «هنوز کسی نظر نداده»، نه امتیاز صفر. */}
+            {place.ratingCount > 0 ? (
+              <>
+                <div className={styles.score}>
+                  <span className={styles.star} aria-hidden="true">
+                    ★
+                  </span>{' '}
+                  {faDecimal(Number(place.rawRating.toFixed(1)))}
+                </div>
+                <div className={styles.scoreSub}>
+                  {`${fa(place.ratingCount)} نظر · ${PRICE_TIER_LABELS[place.priceTier]}`}
+                </div>
+              </>
+            ) : (
+              <div className={styles.scoreSub}>
+                {`بدون نظر · ${PRICE_TIER_LABELS[place.priceTier]}`}
+              </div>
+            )}
           </div>
         </div>
 

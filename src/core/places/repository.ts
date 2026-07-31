@@ -14,7 +14,8 @@ import type { District, Place, PlaceView } from './types'
 import type { ViewContext } from './view'
 import { toPlaceView, toPlaceViews } from './view'
 import { computeSiteMean } from '@/core/rating/bayesian'
-import { SEED_DISTRICTS, SEED_PLACES } from '@/data/seed'
+import { DISTRICTS } from '@/data/districts'
+import { readAllPlaces } from '@/data/placeStore'
 
 export interface PlaceRepository {
   listPlaces(): Promise<Place[]>
@@ -22,25 +23,28 @@ export interface PlaceRepository {
   listDistricts(): Promise<District[]>
 }
 
-// ── آداپتور seed ─────────────────────────────────────────────────────
+// ── آداپتور فایل ─────────────────────────────────────────────────────
+// از `places.generated.json` (خروجی import) به‌علاوه‌ی `places.custom.json`
+// (افزوده‌های پنل ادمین) می‌خواند. مسیر Postgres در docs/DATA_LAYER.md.
 
-class SeedPlaceRepository implements PlaceRepository {
+class FilePlaceRepository implements PlaceRepository {
   async listPlaces(): Promise<Place[]> {
-    return SEED_PLACES
+    return readAllPlaces()
   }
 
   async getPlaceBySlug(slug: string): Promise<Place | null> {
-    return SEED_PLACES.find((p) => p.slug === slug) ?? null
+    const all = await readAllPlaces()
+    return all.find((p) => p.slug === slug) ?? null
   }
 
   async listDistricts(): Promise<District[]> {
-    return SEED_DISTRICTS
+    return DISTRICTS
   }
 }
 
 // ── انتخاب آداپتور ───────────────────────────────────────────────────
 
-let repository: PlaceRepository = new SeedPlaceRepository()
+let repository: PlaceRepository = new FilePlaceRepository()
 
 /** برای تست یا سوئیچ به Postgres. */
 export function setRepository(next: PlaceRepository): void {

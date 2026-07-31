@@ -166,6 +166,18 @@ export interface Place {
   ribbon?: string
   description?: string
 
+  /**
+   * متن آزادی که به هیچ ویژگی‌ای نگاشت نشد — «کرواسان تازه»، «دیوارنگاری هنری».
+   *
+   * عمداً از `attributes` جداست: این‌ها **قابل فیلتر نیستند**. ریختنشان در
+   * واژگان فیلتر، فیلتر را بی‌معنی می‌کند (فایل ورودی ۲۶۵ رشته‌ی یکتا داشت).
+   * ولی دور هم ریخته نمی‌شوند، چون برای کاربر ارزش خواندن دارند.
+   */
+  highlights: string[]
+
+  /** آیتم شاخص منو — «اسپرسو سینگل اورجین، چیزکیک نیویورکی». */
+  signatureItem?: string
+
   lastVerifiedAt: string | null
   createdAt: string
   updatedAt: string
