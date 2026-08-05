@@ -1,0 +1,613 @@
+/* پنل کافه‌دار — و پنل ادمین همین استایل را به اشتراک می‌گذارد. */
+
+.panel {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 18px 16px 56px;
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--c-border-3);
+}
+
+.headMain {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo,
+.logoEmpty {
+  width: 52px;
+  height: 52px;
+  border-radius: 13px;
+  object-fit: cover;
+  background: var(--c-surface-3);
+}
+
+.logoEmpty {
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--c-ink);
+}
+
+.sub {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 3px 0 0;
+  font-size: 0.82rem;
+}
+
+.sub a {
+  color: var(--c-primary-strong);
+  text-decoration: none;
+}
+
+.draftBadge {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--c-accent-soft);
+  color: var(--c-accent-text-strong);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.placeSwitch select {
+  padding: 8px 13px;
+  border: 1px solid var(--c-border);
+  border-radius: 999px;
+  background: var(--c-surface);
+  color: var(--c-ink);
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.readOnlyNote {
+  margin: 14px 0 0;
+  padding: 11px 14px;
+  border-radius: var(--r-md, 12px);
+  background: var(--c-accent-soft);
+  color: var(--c-accent-text-strong);
+  font-size: 0.85rem;
+}
+
+/* ── تب ─────────────────────────────────────────────────────────────── */
+
+.tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  margin: 16px 0 20px;
+  padding-bottom: 2px;
+}
+
+.tab,
+.tabOn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  padding: 9px 15px;
+  border: 1px solid var(--c-border);
+  border-radius: 999px;
+  background: var(--c-surface);
+  color: var(--c-ink-2);
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tab:hover {
+  border-color: var(--c-primary);
+  color: var(--c-primary-strong);
+}
+
+.tabOn {
+  background: var(--c-ink);
+  border-color: var(--c-ink);
+  color: #fff;
+}
+
+.tabCount {
+  padding: 0 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, currentColor 18%, transparent);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.section {
+  display: grid;
+  gap: 18px;
+}
+
+/* ── آمار ───────────────────────────────────────────────────────────── */
+
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg, 16px);
+  background: var(--c-border-3);
+  overflow: hidden;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 14px 15px;
+  background: var(--c-surface);
+}
+
+.statValue {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--c-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.statLabel {
+  font-size: 0.74rem;
+  color: var(--c-muted);
+}
+
+/* ── کارهای باقی‌مانده ──────────────────────────────────────────────── */
+
+.todoBox,
+.bulkBox {
+  padding: 15px 17px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg, 16px);
+  background: var(--c-surface);
+}
+
+.boxTitle {
+  margin: 0 0 10px;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--c-ink);
+}
+
+.todoList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 9px;
+}
+
+.todoList li {
+  padding-inline-start: 16px;
+  position: relative;
+  font-size: 0.87rem;
+  line-height: 1.8;
+  color: var(--c-ink-2);
+}
+
+.todoList li::before {
+  content: '•';
+  position: absolute;
+  inset-inline-start: 0;
+  color: var(--c-accent-text);
+}
+
+.todoList button {
+  border: none;
+  background: none;
+  color: var(--c-primary-strong);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+}
+
+.allDone {
+  color: var(--c-open, #1f6e2c);
+  font-weight: 700;
+}
+
+.allDone::before {
+  color: var(--c-open, #1f6e2c);
+}
+
+/* ── فرم ────────────────────────────────────────────────────────────── */
+
+.form {
+  display: grid;
+  gap: 13px;
+  max-width: 560px;
+}
+
+.field {
+  display: grid;
+  gap: 5px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.label {
+  font-size: 0.83rem;
+  font-weight: 700;
+  color: var(--c-ink-2);
+}
+
+.input,
+.textarea {
+  width: 100%;
+  padding: 10px 13px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md, 12px);
+  background: var(--c-surface);
+  color: var(--c-ink);
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.input:focus,
+.textarea:focus {
+  outline: none;
+  border-color: var(--c-primary);
+  box-shadow: 0 0 0 3px var(--c-primary-soft);
+}
+
+.textarea {
+  resize: vertical;
+  line-height: 1.8;
+}
+
+.hint {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.75;
+  color: var(--c-muted);
+}
+
+.save {
+  justify-self: start;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 999px;
+  background: var(--c-primary);
+  color: #fff;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.save:hover:not(:disabled) {
+  background: var(--c-primary-strong);
+}
+
+.save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.error,
+.success {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: var(--r-md, 12px);
+  font-size: 0.85rem;
+  line-height: 1.7;
+}
+
+.error {
+  background: var(--c-danger-bg, #fdeaea);
+  color: var(--c-danger, #a32020);
+}
+
+.success {
+  background: var(--c-open-bg, #daf9de);
+  color: var(--c-open, #1f6e2c);
+}
+
+/* ── ساعت کاری ──────────────────────────────────────────────────────── */
+
+.hoursGrid {
+  display: grid;
+  gap: 8px;
+}
+
+.hourRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border: 1px solid var(--c-border-3);
+  border-radius: var(--r-md, 12px);
+  background: var(--c-surface);
+}
+
+.dayName {
+  min-width: 66px;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--c-ink);
+}
+
+.closedToggle,
+.itemToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.79rem;
+  color: var(--c-ink-2);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.closedToggle input,
+.itemToggle input {
+  accent-color: var(--c-primary);
+}
+
+.shiftPair {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.timeInput {
+  padding: 6px 9px;
+  border: 1px solid var(--c-border);
+  border-radius: 9px;
+  background: var(--c-surface);
+  color: var(--c-ink);
+  font: inherit;
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.dash {
+  font-size: 0.76rem;
+  color: var(--c-muted);
+}
+
+/* ── منو ────────────────────────────────────────────────────────────── */
+
+.bulkRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.bulkRow .input {
+  max-width: 110px;
+}
+
+.percentSign {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--c-ink-2);
+}
+
+.menuList {
+  display: grid;
+  gap: 8px;
+}
+
+.menuSection {
+  border: 1px solid var(--c-border-3);
+  border-radius: var(--r-md, 12px);
+  background: var(--c-surface);
+  overflow: hidden;
+}
+
+.menuSection summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 15px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--c-ink);
+  cursor: pointer;
+}
+
+.sectionCount {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--c-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.itemRows {
+  display: grid;
+  gap: 1px;
+  background: var(--c-border-3);
+  border-top: 1px solid var(--c-border-3);
+}
+
+.itemRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 14px;
+  background: var(--c-surface);
+}
+
+.itemRow img,
+.itemNoImage {
+  width: 40px;
+  height: 40px;
+  border-radius: 9px;
+  object-fit: cover;
+  background: var(--c-surface-3);
+  flex: 0 0 auto;
+}
+
+.itemName {
+  flex: 1 1 140px;
+  min-width: 0;
+  font-size: 0.85rem;
+  color: var(--c-ink);
+}
+
+.priceCell {
+  flex: 0 0 auto;
+}
+
+.priceInput {
+  width: 118px;
+  padding: 7px 10px;
+  border: 1px solid var(--c-border);
+  border-radius: 9px;
+  background: var(--c-surface);
+  color: var(--c-ink);
+  font: inherit;
+  font-size: 0.83rem;
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+
+.itemSave {
+  padding: 7px 14px;
+  border: 1px solid var(--c-border);
+  border-radius: 999px;
+  background: var(--c-surface);
+  color: var(--c-ink-2);
+  font: inherit;
+  font-size: 0.79rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.itemSave:hover {
+  border-color: var(--c-primary);
+  color: var(--c-primary-strong);
+}
+
+/* ── نظرها ──────────────────────────────────────────────────────────── */
+
+.reviewList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.reviewItem {
+  padding: 13px 15px;
+  border: 1px solid var(--c-border-3);
+  border-radius: var(--r-md, 12px);
+  background: var(--c-surface);
+}
+
+.reviewHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 6px;
+}
+
+.reviewHead strong {
+  font-size: 0.89rem;
+  color: var(--c-ink);
+}
+
+.reviewStars {
+  color: var(--c-accent);
+  font-size: 0.83rem;
+  letter-spacing: 1px;
+}
+
+.starsDim {
+  color: var(--c-disabled);
+}
+
+.pendingBadge {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--c-accent-soft);
+  color: var(--c-accent-text-strong);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.reviewText {
+  margin: 0;
+  font-size: 0.87rem;
+  line-height: 1.85;
+  color: var(--c-ink-2);
+}
+
+.replyText {
+  margin: 9px 0 0;
+  padding: 9px 12px;
+  border-radius: var(--r-md, 12px);
+  background: var(--c-primary-soft);
+  color: var(--c-ink-2);
+  font-size: 0.84rem;
+  line-height: 1.8;
+}
+
+.replyForm {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.emptyNote {
+  margin: 0;
+  padding: 20px;
+  border: 1px dashed var(--c-disabled);
+  border-radius: var(--r-md, 12px);
+  color: var(--c-muted);
+  font-size: 0.88rem;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .row {
+    grid-template-columns: 1fr;
+  }
+
+  .hourRow {
+    gap: 7px;
+  }
+
+  .dayName {
+    min-width: 100%;
+  }
+}

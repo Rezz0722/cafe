@@ -1,70 +1,182 @@
 import type { Metadata } from 'next'
-import { SearchResults } from '@/components/search/SearchResults'
-import { loadDistricts, loadPublishedViews } from '@/core/places/repository'
-import { filtersFromQuery, searchPlaces } from '@/core/search/query'
-import { parseSearchState } from '@/core/search/urlState'
-import { MASHHAD_CENTER } from '@/core/geo/distance'
+import { inArray } from 'drizzle-orm'
+import { SearchView } from '@/components/search/SearchView'
+import { computeOpenState } from '@/core/hours/openNow'
+import { getMapLabels } from '@/core/map/labels'
+import {
+  countPlaces,
+  getDishBySlug,
+  listCardsWithDishPrice,
+  listDistricts,
+  listFilterFacets,
+  listPlaceCards,
+  listPopularDishes,
+} from '@/core/places/queries'
+import { describeFilters, parseFilters } from '@/core/search/filters'
+import { getDb } from '@/db/client'
+import { placeHours } from '@/db/schema'
 
 /**
- * صفحه‌ی نتایج — server component.
+ * صفحه‌ی کشف و جست‌وجو.
  *
- * جست‌وجو روی سرور اجرا می‌شود و نتیجه داخل HTML می‌آید. یعنی یک لینک
- * فیلترشده هم قابل اشتراک است، هم برای کرالر خواندنی.
+ * ═══ چرا فیلتر «الان باز» در SQL نیست ═══
  *
- * ولی ایندکس نمی‌شود: ترکیب‌های فیلتر بی‌نهایت‌اند و ایندکس‌شدنشان یعنی
- * هزاران صفحه‌ی تکراری و کم‌محتوا. صفحاتی که *باید* ایندکس شوند، صفحات
- * ساخت‌یافته‌ی `/mashhad/[district]/[intent]` هستند.
+ * «باز بودن» به لحظه‌ی حال، منطقه‌ی زمانی و شیفت شکسته بستگی دارد. نوشتنش در
+ * SQL یعنی تکرار منطقِ `openNow.ts` در دو زبان — و دو پیاده‌سازی از یک قاعده
+ * همیشه از هم می‌افتند. اینجا ساعت‌ها یک‌جا خوانده و با همان تابعِ **تست‌شده**
+ * فیلتر می‌شوند. برای ۳۳۱ مکان هزینه‌اش ناچیز است.
+ *
+ * ═══ چرا مرتب‌سازی فاصله در کلاینت است ═══
+ *
+ * موقعیت کاربر فقط در مرورگر هست. سرور نتایج را با رتبه‌بندی معمول می‌دهد و
+ * `SearchView` بعد از گرفتن اجازه‌ی موقعیت، همان‌ها را با فاصله مرتب می‌کند.
  */
 
-export const metadata: Metadata = {
-  title: 'جست‌وجوی کافه',
-  robots: { index: false, follow: true },
-}
+const PAGE_SIZE = 24
 
-const FALLBACK_COUNT = 3
+type SearchParams = Promise<Record<string, string | string[] | undefined>>
 
-interface PageProps {
-  searchParams: Promise<Record<string, string | string[] | undefined>>
-}
-
-export default async function SearchPage({ searchParams }: PageProps) {
-  const params = await searchParams
-  const state = parseSearchState(params)
-
-  const [places, districts] = await Promise.all([
-    // مرکز شهر به‌عنوان مبدأ پیش‌فرض؛ موقعیت واقعی کاربر فقط سمت کلاینت
-    // در دسترس است و فاز بعد اضافه می‌شود.
-    loadPublishedViews({ userCoords: MASHHAD_CENTER }),
-    loadDistricts(),
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: SearchParams
+}): Promise<Metadata> {
+  const filters = parseFilters(await searchParams)
+  const [facets, dishes, districts] = await Promise.all([
+    listFilterFacets(),
+    listPopularDishes(),
+    listDistricts(),
   ])
 
-  // متن آزاد هم به نیت تبدیل می‌شود — «جایی دنج برای قرار توی احمدآباد»
-  // باید همان چیزی را بدهد که chip زدن می‌دهد.
-  const derived = state.query.trim() ? filtersFromQuery(state.query, districts) : null
+  const heading = describeFilters(filters, {
+    facetLabel: (id) => facets.find((facet) => facet.id === id)?.labelFa,
+    dishLabel: (slug) => dishes.find((dish) => dish.slug === slug)?.nameFa,
+    districtLabel: (id) => districts.find((district) => district.id === id)?.name,
+  })
 
-  const effective = derived
-    ? {
-        ...state,
-        // نیت‌های صریحِ URL بر استنتاج از متن اولویت دارند.
-        attributeIds: state.attributeIds.length ? state.attributeIds : derived.attributeIds,
-        districtId: state.districtId || derived.districtId,
-        text: derived.text,
-      }
-    : state
+  return {
+    title: `${heading} — کافه‌گرد`,
+    description: `${heading}. فیلتر بر اساس قیمت واقعی منو، محله، دسته و فاصله.`,
+    // صفحه‌ی نتیجه با فیلترِ آزاد ایندکس نمی‌شود: ترکیب فیلترها بی‌نهایت URL
+    // می‌سازد و همه‌شان محتوای تقریباً یکسان دارند. صفحات محله مسیر کانونی‌اند.
+    robots: { index: false, follow: true },
+  }
+}
 
-  const scored = searchPlaces(places, effective)
-  const results = scored.map((s) => s.place)
+export default async function SearchPage({ searchParams }: { searchParams: SearchParams }) {
+  const filters = parseFilters(await searchParams)
 
-  const fallback = [...places]
-    .sort((a, b) => b.rating - a.rating)
-    .slice(0, FALLBACK_COUNT)
+  const [facets, popularDishes, districts] = await Promise.all([
+    listFilterFacets(),
+    listPopularDishes(),
+    listDistricts(),
+  ])
+
+  const dish = filters.dish ? await getDishBySlug(filters.dish) : null
+
+  const queryFilters = {
+    facetIds: filters.facets,
+    districtId: filters.districtId,
+    priceTiers: filters.tiers.length ? filters.tiers : undefined,
+    maxPrice: filters.maxPrice,
+    query: filters.q || null,
+    // «نزدیک من» و نمای نقشه بدون مختصات بی‌معنی‌اند.
+    mappableOnly: filters.nearMe || filters.view === 'map',
+    // مرتب‌سازی فاصله در کلاینت انجام می‌شود، پس سرور رتبه‌ی معمول می‌دهد.
+    sort: filters.sort === 'distance' ? ('rating' as const) : filters.sort,
+    // فیلتر «باز است» بعد از پرس‌وجو اعمال می‌شود، پس باید بیشتر بگیریم و
+    // صفحه‌بندی را خودمان انجام دهیم.
+    limit: filters.openNow ? 400 : PAGE_SIZE,
+    offset: filters.openNow ? 0 : (filters.page - 1) * PAGE_SIZE,
+  }
+
+  let cards: Awaited<ReturnType<typeof listCardsWithDishPrice>> | Awaited<
+    ReturnType<typeof listPlaceCards>
+  > = dish
+    ? await listCardsWithDishPrice(dish.id, queryFilters)
+    : await listPlaceCards(queryFilters)
+
+  let total = filters.openNow ? cards.length : await countPlaces(queryFilters)
+
+  if (filters.openNow && cards.length > 0) {
+    const db = getDb()
+    const hourRows = await db
+      .select()
+      .from(placeHours)
+      .where(
+        inArray(
+          placeHours.placeId,
+          cards.map((card) => card.id),
+        ),
+      )
+
+    const byPlace = new Map<number, typeof hourRows>()
+    for (const row of hourRows) {
+      const list = byPlace.get(row.placeId)
+      if (list) list.push(row)
+      else byPlace.set(row.placeId, [row])
+    }
+
+    cards = cards.filter((card) => {
+      const shifts = byPlace.get(card.id) ?? []
+      // ساعت نامشخص یعنی نمی‌توانیم بگوییم باز است. حذفش صادقانه‌تر از
+      // نشان‌دادنش زیر برچسب «الان باز» است.
+      if (shifts.length === 0) return false
+      return (
+        computeOpenState(
+          shifts.map((shift) => ({
+            dow: shift.dow,
+            shiftIndex: shift.shiftIndex,
+            opensAt: shift.opensAt ? shift.opensAt.slice(0, 5) : null,
+            closesAt: shift.closesAt ? shift.closesAt.slice(0, 5) : null,
+            crossesMidnight: shift.crossesMidnight,
+            closed: shift.closed,
+          })),
+        ).status === 'open'
+      )
+    })
+
+    total = cards.length
+    const start = (filters.page - 1) * PAGE_SIZE
+    cards = cards.slice(start, start + PAGE_SIZE)
+  }
+
+  const heading = describeFilters(filters, {
+    facetLabel: (id) => facets.find((facet) => facet.id === id)?.labelFa,
+    dishLabel: (slug) => popularDishes.find((item) => item.slug === slug)?.nameFa,
+    districtLabel: (id) => districts.find((district) => district.id === id)?.name,
+  })
+
+  const subheading = dish
+    ? `${dish.placeCount.toLocaleString('fa-IR')} مجموعه ${dish.nameFa} دارند` +
+      (dish.minPrice ? ` · ارزان‌ترین ${dish.minPrice.toLocaleString('fa-IR')} تومان` : '')
+    : `${total.toLocaleString('fa-IR')} مجموعه`
 
   return (
-    <SearchResults
-      state={{ ...effective, view: state.view, query: state.query }}
-      results={results}
-      fallback={fallback}
-      districts={districts}
+    <SearchView
+      filters={filters}
+      cards={cards}
+      total={total}
+      pageSize={PAGE_SIZE}
+      heading={heading}
+      subheading={subheading}
+      facets={facets.map((facet) => ({
+        id: facet.id,
+        labelFa: facet.labelFa,
+        icon: facet.icon,
+        placeCount: facet.placeCount,
+      }))}
+      dishes={popularDishes.map((item) => ({
+        slug: item.slug,
+        nameFa: item.nameFa,
+        placeCount: item.placeCount,
+      }))}
+      districts={districts.map((district) => ({
+        id: district.id,
+        name: district.name,
+        placeCount: district.placeCount,
+      }))}
+      labels={getMapLabels({ zoom: 12, limit: 30 })}
     />
   )
 }

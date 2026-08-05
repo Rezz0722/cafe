@@ -81,6 +81,85 @@
   margin-bottom: 14px;
 }
 
+/* ===== panels ============================================================= */
+
+.panelGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.panelCard {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  padding: 14px 16px;
+}
+
+.panelTitle {
+  font-size: var(--fs-md);
+  font-weight: 800;
+}
+
+.panelText {
+  font-size: var(--fs-xs);
+  color: var(--c-muted);
+  line-height: 1.9;
+  /* کارت‌ها هم‌قد بمانند تا دکمه‌ها یک خط شوند. */
+  flex: 1;
+}
+
+.panelRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.panelSelect {
+  flex: 1;
+  min-width: 0;
+  height: 38px;
+  padding-inline: 10px;
+  border: 1.5px solid var(--c-border-5);
+  border-radius: var(--r-md);
+  background: var(--c-surface);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+
+.panelButton,
+.panelGhost {
+  flex: none;
+  padding: 8px 15px;
+  border-radius: var(--r-pill);
+  font-size: var(--fs-sm);
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background var(--t-fast);
+}
+
+.panelButton {
+  background: var(--c-primary);
+  color: #fff;
+}
+
+.panelButton:hover {
+  background: var(--c-primary-strong);
+}
+
+.panelGhost {
+  background: var(--c-surface-4);
+  color: var(--c-ink-2);
+}
+
+.panelGhost:hover {
+  background: var(--c-border);
+}
+
 /* ===== system health ====================================================== */
 
 .problems {
@@ -264,6 +343,24 @@
   padding: 10px 14px;
   border-top: 1px solid var(--c-border-3);
   vertical-align: middle;
+}
+
+/* لینک عملیاتی داخل ردیف جدول — کوچک، ولی قابل هدف‌گیری. */
+.rowLink {
+  display: inline-block;
+  padding: 5px 11px;
+  border-radius: var(--r-pill);
+  background: var(--c-surface-4);
+  color: var(--c-ink-2);
+  font-size: var(--fs-xs);
+  font-weight: 800;
+  white-space: nowrap;
+  transition: background var(--t-fast);
+}
+
+.rowLink:hover {
+  background: var(--c-primary-soft);
+  color: var(--c-primary-strong);
 }
 
 .placeLink {

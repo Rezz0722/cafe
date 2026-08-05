@@ -15,7 +15,8 @@
    viewport, so they share the same width constraint. */
 .stickyTop {
   position: sticky;
-  top: 0;
+  /* همان offsetِ نوار «مشاهده به‌عنوان» که هدر سایت هم می‌خواند. */
+  top: var(--view-as-h, 0px);
   z-index: 30;
   background: var(--c-surface);
   border-bottom: 1px solid var(--c-border-4);

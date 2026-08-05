@@ -1,0 +1,233 @@
+.form {
+  display: grid;
+  gap: 14px;
+  padding: 16px 17px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg, 16px);
+  background: var(--c-surface);
+}
+
+.field {
+  display: grid;
+  gap: 5px;
+}
+
+.label {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--c-ink-2);
+}
+
+.required {
+  color: var(--c-danger, #a32020);
+}
+
+.input,
+.textarea {
+  width: 100%;
+  padding: 10px 13px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md, 12px);
+  background: var(--c-surface);
+  color: var(--c-ink);
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.input:focus,
+.textarea:focus {
+  outline: none;
+  border-color: var(--c-primary);
+  box-shadow: 0 0 0 3px var(--c-primary-soft);
+}
+
+.textarea {
+  resize: vertical;
+  line-height: 1.8;
+}
+
+/* ── ستاره ──────────────────────────────────────────────────────────── */
+
+.overall {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.starGroup {
+  display: inline-flex;
+  flex-direction: row-reverse;
+  gap: 2px;
+}
+
+.starLabel {
+  cursor: pointer;
+  line-height: 1;
+}
+
+/* `radio` واقعی می‌ماند (کیبورد و فرم بدون JS) ولی دیده نمی‌شود. */
+.starInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.starOn,
+.starOff {
+  font-size: 1.5rem;
+  line-height: 1;
+  transition: transform 0.1s ease;
+}
+
+.starOn {
+  color: var(--c-accent);
+}
+
+.starOff {
+  color: var(--c-disabled);
+}
+
+.starLabel:hover .starOn,
+.starLabel:hover .starOff {
+  transform: scale(1.12);
+}
+
+.starInput:focus-visible + span {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ── امتیاز تفکیکی ──────────────────────────────────────────────────── */
+
+.aspects {
+  border: 1px solid var(--c-border-3);
+  border-radius: var(--r-md, 12px);
+  padding: 10px 13px;
+}
+
+.aspects summary {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--c-ink-2);
+  cursor: pointer;
+}
+
+.aspectGrid {
+  display: grid;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.aspectRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.aspectLabel {
+  font-size: 0.83rem;
+  color: var(--c-ink-2);
+}
+
+.aspectRow .starOn,
+.aspectRow .starOff {
+  font-size: 1.15rem;
+}
+
+/* ── پیام و دکمه ────────────────────────────────────────────────────── */
+
+.hint {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.7;
+  color: var(--c-muted);
+}
+
+.existingNote {
+  margin: 0;
+  padding: 9px 13px;
+  border-radius: var(--r-md, 12px);
+  background: var(--c-surface-3);
+  color: var(--c-ink-2);
+  font-size: 0.82rem;
+  line-height: 1.7;
+}
+
+.error,
+.success {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: var(--r-md, 12px);
+  font-size: 0.85rem;
+  line-height: 1.7;
+}
+
+.error {
+  background: var(--c-danger-bg, #fdeaea);
+  color: var(--c-danger, #a32020);
+}
+
+.success {
+  background: var(--c-open-bg, #daf9de);
+  color: var(--c-open, #1f6e2c);
+}
+
+.submit {
+  justify-self: start;
+  padding: 11px 22px;
+  border: none;
+  border-radius: 999px;
+  background: var(--c-primary);
+  color: #fff;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.submit:hover:not(:disabled) {
+  background: var(--c-primary-strong);
+}
+
+.submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── دعوت به ورود ───────────────────────────────────────────────────── */
+
+.signInPrompt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px;
+  border: 1px dashed var(--c-disabled);
+  border-radius: var(--r-lg, 16px);
+}
+
+.signInPrompt p {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--c-muted);
+}
+
+.signInLink {
+  padding: 9px 18px;
+  border-radius: 999px;
+  background: var(--c-primary);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.signInLink:hover {
+  background: var(--c-primary-strong);
+}

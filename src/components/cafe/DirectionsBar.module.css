@@ -1,0 +1,88 @@
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.action,
+.primaryAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 15px;
+  border: 1px solid var(--c-border);
+  border-radius: 999px;
+  background: var(--c-surface);
+  color: var(--c-ink);
+  font-size: 0.87rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.action:hover {
+  border-color: var(--c-primary);
+  color: var(--c-primary-strong);
+}
+
+/* مسیریابی مهم‌ترین کارِ این صفحه است، پس تنها دکمه‌ی پُررنگ است. */
+.primaryAction {
+  background: var(--c-primary);
+  border-color: var(--c-primary);
+  color: #fff;
+}
+
+.primaryAction:hover {
+  background: var(--c-primary-strong);
+  border-color: var(--c-primary-strong);
+  color: #fff;
+}
+
+.menuWrap {
+  position: relative;
+}
+
+.menu {
+  position: absolute;
+  inset-block-start: calc(100% + 6px);
+  inset-inline-start: 0;
+  z-index: 20;
+  min-width: 190px;
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md, 12px);
+  background: var(--c-surface);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.14);
+}
+
+.menuItem {
+  padding: 9px 11px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: var(--c-ink-2);
+  font: inherit;
+  font-size: 0.85rem;
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.menuItem:hover {
+  background: var(--c-surface-3);
+  color: var(--c-ink);
+}
+
+.noCoords {
+  margin: 0;
+  padding: 9px 13px;
+  border: 1px dashed var(--c-disabled);
+  border-radius: var(--r-md, 12px);
+  color: var(--c-muted);
+  font-size: 0.82rem;
+  line-height: 1.6;
+}

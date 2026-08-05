@@ -1,93 +1,116 @@
 import type { Metadata } from 'next'
-import { AdminPanel, type OwnerVenue } from '@/components/admin/AdminPanel'
-import { requireOwner } from '@/core/auth/currentUser'
-import { WEEKDAY_LABELS } from '@/core/hours/weekdays'
-import { loadDistricts, loadPlaceView } from '@/core/places/repository'
-import type { OpeningHour } from '@/core/places/types'
-import type { AdminOpeningHour } from '@/data/adminSeed'
-import { fa } from '@/lib/format'
-import { paths } from '@/routes'
+import Link from 'next/link'
+import { redirect } from 'next/navigation'
+import { VenuePanel } from '@/components/venue/VenuePanel'
+import { getSession } from '@/core/auth/currentUser'
+import { findUserById } from '@/core/auth/userRepo'
+import { loadOwnerPlace, loadPlaceReviewsForOwner } from '@/core/places/manage'
+import { listPlaceCards } from '@/core/places/queries'
+import { authUrl, paths } from '@/routes'
+import styles from '@/components/venue/VenuePanel.module.css'
 
 /**
- * پنل مالک کافه — خصوصی، پس از ایندکس بیرون است.
+ * پنل کافه‌دار.
  *
- * قبلاً روی `/admin` بود و با یک redirect سمت کلاینت محافظت می‌شد. حالا
- * `/admin` پنل ادمین است و این صفحه با `requireOwner` روی سرور بسته می‌شود —
- * یعنی کاربر غیرمجاز اصلاً HTML پنل را نمی‌گیرد، نه اینکه بگیرد و بعد پرت شود.
+ * ═══ چه کسی چه چیزی می‌بیند ═══
+ *
+ *   مالک   → فقط کافه‌های خودش (از `user_place_role`)
+ *   ادمین  → هر کافه‌ای، با `?place=<id>`
+ *
+ * ادمین بدون پارامتر، فهرست کافه‌ها را می‌بیند نه یک کافه‌ی تصادفی: باز شدنِ
+ * پنلِ کافه‌ای که ادمین انتخابش نکرده، خطرِ ویرایش اشتباه دارد.
  */
+
 export const metadata: Metadata = {
-  title: 'پنل کافه',
+  title: 'پنل کافه — کافه‌گرد',
   robots: { index: false, follow: false },
 }
 
-/**
- * ساعت کاری دامنه → شکلی که ویرایشگر پنل می‌فهمد.
- *
- * همیشه هر هفت روز ساخته می‌شود، حتی روزهایی که رکورد ندارند: روزِ بدون
- * رکورد «تعطیل» است نه «غایب»، وگرنه مالک نمی‌تواند روزی را که هرگز ثبت
- * نشده باز کند. ساعت‌ها فارسی می‌شوند چون `TIME_OPTIONS` فارسی است و
- * `<select>` فقط با مقدار دقیقاً برابر، گزینه را انتخاب‌شده نشان می‌دهد.
- */
-function toAdminHours(hours: OpeningHour[]): AdminOpeningHour[] {
-  return WEEKDAY_LABELS.map((day, dow) => {
-    const match = hours.find((h) => h.dow === dow)
-    if (!match || match.closed) {
-      return { day, from: '۰۹:۰۰', to: '۲۳:۰۰', closed: true, afterMidnight: false }
-    }
-    return {
-      day,
-      from: fa(match.opensAt),
-      to: fa(match.closesAt),
-      closed: false,
-      afterMidnight: match.crossesMidnight,
-    }
-  })
+export const dynamic = 'force-dynamic'
+
+interface PageProps {
+  searchParams: Promise<{ place?: string }>
 }
 
-export default async function VenuePanelPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ slug?: string }>
-}) {
-  const user = await requireOwner(`${paths.admin}/venue`)
-  const { slug: requested } = await searchParams
+export default async function VenuePage({ searchParams }: PageProps) {
+  const { user, actor } = await getSession()
+  if (!user) redirect(authUrl(paths.ownerPanel))
+  if (user.role !== 'owner' && user.role !== 'admin') redirect(paths.profile)
 
-  /*
-    مالک فقط کافه‌ی خودش را می‌بیند و `?slug=` از او نادیده گرفته می‌شود —
-    وگرنه هر مالکی با دست‌کاری آدرس، پنل کافه‌ی دیگری را باز می‌کرد.
-    ادمین اجازه دارد، چون سؤال «مالک الان چه می‌بیند؟» بخشِ کارِ پشتیبانی است.
+  const params = await searchParams
+  const requestedId = params.place ? Number.parseInt(params.place, 10) : null
 
-    فعلاً اولین کافه‌ی مالک. وقتی زنجیره‌ای‌ها آمدند، اینجا باید یک انتخابگر
-    کافه بنشیند نه یک `[0]`.
-  */
-  const slug =
-    (user.role === 'admin' && requested ? requested : null) ?? user.ownedPlaceSlugs[0] ?? null
+  const account = await findUserById(user.id)
+  const owned = account?.ownedPlaces ?? []
+  const isAdmin = user.role === 'admin'
 
-  const [place, districts] = await Promise.all([
-    slug ? loadPlaceView(slug) : null,
-    loadDistricts(),
+  // ── انتخاب مکان
+  let placeId: number | null = null
+  if (requestedId && Number.isFinite(requestedId)) {
+    // ادمین به هر مکانی دسترسی دارد؛ مالک فقط به مکان‌های خودش.
+    if (isAdmin || owned.some((place) => place.id === requestedId)) placeId = requestedId
+  } else if (owned.length > 0) {
+    placeId = owned[0]!.id
+  }
+
+  if (!placeId) {
+    // ادمینِ بدون انتخاب، یا مالکی که هیچ کافه‌ای ندارد.
+    const candidates = isAdmin
+      ? await listPlaceCards({ limit: 40, sort: 'quality', publishedOnly: false })
+      : []
+
+    return (
+      <div className={styles.panel}>
+        <h1 className={styles.title}>پنل کافه</h1>
+        {isAdmin ? (
+          <>
+            <p className={styles.hint}>
+              یک مجموعه را انتخاب کنید. به‌عنوان مدیر، به همه‌ی مجموعه‌ها دسترسی دارید.
+            </p>
+            <ul className={styles.menuList}>
+              {candidates.map((card) => (
+                <li key={card.id}>
+                  <Link
+                    href={`${paths.ownerPanel}?place=${card.id}`}
+                    className={styles.itemSave}
+                  >
+                    {card.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : (
+          <div className={styles.todoBox}>
+            <h2 className={styles.boxTitle}>هنوز مجموعه‌ای به حساب شما وصل نیست</h2>
+            <p className={styles.hint}>
+              اگر صاحب یک کافه هستید، از مدیر بخواهید مجموعه‌تان را به این حساب وصل کند.
+              بعد از آن، اطلاعات، ساعت کاری، منو و قیمت‌ها را از همین‌جا مدیریت می‌کنید.
+            </p>
+            <p className={styles.hint}>
+              <Link href={paths.submitPlace}>ثبت کافه‌ی جدید</Link> ·{' '}
+              <Link href={paths.profile}>بازگشت به پنل من</Link>
+            </p>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  const [place, reviews] = await Promise.all([
+    loadOwnerPlace(placeId),
+    loadPlaceReviewsForOwner(placeId),
   ])
+  if (!place) redirect(paths.ownerPanel)
 
-  // مالکیتی که به هیچ کافه‌ای نمی‌رسد (کافه حذف شده یا slug عوض شده) همان‌طور
-  // رفتار می‌کند که «هنوز کافه‌ای ندارم» — کرش، جوابِ درستی برای مالک نیست.
-  const venue: OwnerVenue | null = place
-    ? {
-        slug: place.slug,
-        name: place.name,
-        districtName: districts.find((d) => d.id === place.districtId)?.name ?? '',
-        photo: place.photos[0]?.url,
-        rating: place.rawRating,
-        reviewCount: place.ratingCount,
-        qualityScore: place.qualityScore,
-        isOpenNow: place.isOpenNow,
-        contact: {
-          phone: place.phone ?? '',
-          address: place.address,
-          instagram: place.instagram ?? '',
-        },
-        hours: toAdminHours(place.hours),
-      }
-    : null
-
-  return <AdminPanel venue={venue} />
+  return (
+    <VenuePanel
+      place={place}
+      reviews={reviews}
+      otherPlaces={owned.filter((item) => item.id !== placeId)}
+      // در حالت «مشاهده به‌عنوان»، پنل فقط‌خواندنی است — همان قاعده‌ای که
+      // اکشن‌ها هم اعمالش می‌کنند. نمایشِ دکمه‌ای که کار نمی‌کند بدتر است.
+      readOnly={!!actor}
+    />
+  )
 }

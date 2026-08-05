@@ -1,6 +1,7 @@
 .header {
   position: sticky;
-  top: 0;
+  /* در حالت «مشاهده به‌عنوان»، زیر نوار می‌ایستد نه پشتش. */
+  top: var(--view-as-h, 0px);
   z-index: 50;
   background: rgb(255 255 255 / 92%);
   backdrop-filter: blur(10px);

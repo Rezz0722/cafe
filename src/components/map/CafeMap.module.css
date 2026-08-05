@@ -1,0 +1,224 @@
+/* نقشه‌ی کافه‌ها. رنگ‌ها از توکن‌های سایت می‌آیند تا نقشه بخشی از صفحه
+   به‌نظر برسد، نه یک ویجت چسبانده‌شده. */
+
+.wrap {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: var(--r-lg, 16px);
+  border: 1px solid var(--c-border);
+  background: var(--c-surface-2);
+}
+
+.canvas {
+  position: absolute;
+  inset: 0;
+}
+
+.loading,
+.empty,
+.fallback {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  gap: 6px;
+  text-align: center;
+  color: var(--c-muted);
+  font-size: 0.9rem;
+  background: var(--c-surface-2);
+}
+
+.empty {
+  inset: auto 0 0 0;
+  padding: 10px 14px;
+  background: color-mix(in srgb, var(--c-surface) 92%, transparent);
+  border-top: 1px solid var(--c-border);
+  font-size: 0.85rem;
+}
+
+.fallbackTitle {
+  margin: 0;
+  font-weight: 700;
+  color: var(--c-ink-2);
+}
+
+.fallbackNote {
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+/* ── نشانگر کافه ─────────────────────────────────────────────────────
+   ساختار دو تکه‌ای است: یک دایره‌ی همیشه‌دیده و یک برچسب که فقط در زوم
+   نزدیک اضافه می‌شود. اگر برچسب همیشه بود، در زوم شهری نام‌ها روی هم
+   می‌افتادند و هیچ‌کدام خوانده نمی‌شد. */
+
+.pin {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-decoration: none;
+  cursor: pointer;
+  /* نشانگرها روی هم می‌افتند؛ آن که ماوس رویش است باید بالا بیاید. */
+  transition: transform 0.12s ease;
+}
+
+.pin:hover,
+.pin:focus-visible {
+  transform: translateY(-2px);
+  z-index: 3;
+}
+
+.pinDot {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--c-surface);
+  border: 2px solid var(--c-primary);
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.22);
+  font-size: 15px;
+  line-height: 1;
+  overflow: hidden;
+}
+
+.pinDot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pinFocus .pinDot {
+  width: 38px;
+  height: 38px;
+  border-color: var(--c-accent);
+  border-width: 3px;
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--c-accent) 28%, transparent);
+}
+
+.pinLabel {
+  max-width: 130px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--c-surface) 94%, transparent);
+  border: 1px solid var(--c-border);
+  color: var(--c-ink);
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1.5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.12);
+}
+
+/* ── خوشه ──────────────────────────────────────────────────────────── */
+
+.cluster {
+  display: grid;
+  place-items: center;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 8px;
+  border: 2px solid var(--c-surface);
+  border-radius: 999px;
+  background: var(--c-primary);
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.25);
+}
+
+.cluster:hover {
+  background: var(--c-primary-strong);
+}
+
+/* ── برچسب محله و نقاط شاخص ─────────────────────────────────────────
+   تایل‌ها لایه‌ی متنی ندارند (گلیف SDF فارسی وابستگی بومی می‌خواست)، پس
+   جهت‌یابی با همین برچسب‌ها انجام می‌شود. عمداً کم‌رنگ‌اند تا با نام
+   کافه‌ها رقابت نکنند. */
+
+.areaLabel {
+  color: var(--c-ink-3);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  pointer-events: none;
+  /* هاله‌ی متنی، تا روی هر رنگی از نقشه خوانا بماند. */
+  text-shadow:
+    0 0 3px var(--c-surface),
+    0 0 3px var(--c-surface),
+    0 0 6px var(--c-surface);
+}
+
+.area_city {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--c-ink-2);
+}
+
+.area_suburb,
+.area_town {
+  font-size: 0.8rem;
+}
+
+.area_neighbourhood,
+.area_quarter {
+  font-size: 0.72rem;
+  color: var(--c-muted);
+  font-weight: 600;
+}
+
+/* ── موقعیت کاربر ──────────────────────────────────────────────────── */
+
+.userDot {
+  display: block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--c-primary-strong);
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--c-primary) 22%, transparent);
+}
+
+/* ── دکمه‌ی موقعیت من ──────────────────────────────────────────────── */
+
+.locate {
+  position: absolute;
+  inset-block-end: 12px;
+  inset-inline-end: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid var(--c-border);
+  border-radius: 999px;
+  background: var(--c-surface);
+  color: var(--c-ink);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.14);
+}
+
+.locate:hover {
+  border-color: var(--c-primary);
+  color: var(--c-primary-strong);
+}
+
+/* کنترل‌های خودِ MapLibre را با ظاهر سایت هماهنگ می‌کنیم. */
+.wrap :global(.maplibregl-ctrl-group) {
+  border-radius: 12px;
+  border: 1px solid var(--c-border);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
+}
+
+.wrap :global(.maplibregl-ctrl-attrib) {
+  font-size: 0.68rem;
+  border-radius: 8px 0 0 0;
+}

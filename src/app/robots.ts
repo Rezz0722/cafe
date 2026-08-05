@@ -8,8 +8,8 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       /**
        * `/search` بی‌نهایت ترکیب فیلتر دارد؛ ایندکس‌شدنش یعنی هزاران صفحه‌ی
-       * تکراری. صفحاتی که باید ایندکس شوند، صفحات ساخت‌یافته‌ی
-       * `/mashhad/[district]/[intent]` هستند.
+       * تکراری. صفحات کانونی که باید ایندکس شوند، صفحات محله
+       * (`/mashhad/[district]`) و صفحات کافه هستند.
        */
       disallow: ['/search', '/admin', '/profile', '/auth', '/api/'],
     },

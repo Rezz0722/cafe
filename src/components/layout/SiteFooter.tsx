@@ -1,16 +1,20 @@
 import Link from 'next/link'
-import { paths, searchByIntents } from '@/routes'
+import { searchPath } from '@/core/search/filters'
+import { paths } from '@/routes'
 import styles from './SiteFooter.module.css'
 
 const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
   {
+    // لینک‌ها با سازنده‌ی فیلتر ساخته می‌شوند نه با رشته‌ی دستی، تا اگر شکل
+    // پارامترهای جست‌وجو عوض شد، همه‌جا یک‌جا اصلاح شود.
     title: 'کشف',
     links: [
-      { label: 'کافه‌های منتخب', href: paths.search },
-      { label: 'باز الان', href: paths.search },
-      // نیت با شناسه پاس داده می‌شود نه با برچسب فارسی، تا لینک به تطبیق متن وابسته نباشد.
-      { label: 'مناسب کار', href: searchByIntents(['laptop_friendly']) },
-      { label: 'روی نقشه', href: paths.search },
+      { label: 'کامل‌ترین اطلاعات', href: searchPath({ sort: 'quality' }) },
+      { label: 'الان باز است', href: searchPath({ openNow: true }) },
+      { label: 'نزدیک من', href: searchPath({ nearMe: true, sort: 'distance' }) },
+      { label: 'روی نقشه', href: searchPath({ view: 'map' }) },
+      { label: 'قهوه دمی', href: searchPath({ facets: ['brewed_coffee'] }) },
+      { label: 'صبحانه', href: searchPath({ facets: ['breakfast'] }) },
     ],
   },
   {

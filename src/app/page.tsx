@@ -1,262 +1,204 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
-import { CafeCard } from '@/components/cafe/CafeCard'
-import { HeroSearch } from '@/components/home/HeroSearch'
-import { SiteFooter } from '@/components/layout/SiteFooter'
-import { SiteHeader } from '@/components/layout/SiteHeader'
-import { ChipLink } from '@/components/ui/Chip'
-import { INTENT_CARDS, POPULAR_FILTERS } from '@/data/home'
-import { loadDistricts, loadPublishedViews } from '@/core/places/repository'
-import { fa } from '@/lib/format'
+import { PlaceCardView } from '@/components/cafe/PlaceCardView'
+import { HomeSearch } from '@/components/home/HomeSearch'
+import {
+  getSiteStats,
+  listDistricts,
+  listFilterFacets,
+  listPlaceCards,
+  listPopularDishes,
+} from '@/core/places/queries'
+import { searchPath } from '@/core/search/filters'
+import { fa, faCount, toman } from '@/lib/format'
 import { paths } from '@/routes'
-import styles from '@/components/home/Home.module.css'
+import styles from './page.module.css'
 
 /**
- * صفحه‌ی اصلی — server component.
+ * صفحه‌ی اول.
  *
- * کافه‌های منتخب و شمارش نیت‌ها روی سرور محاسبه و داخل HTML رندر می‌شوند.
- * فقط `HeroSearch` سمت کلاینت است.
+ * ═══ چه چیزی اینجاست و چرا ═══
+ *
+ * صفحه‌ی اول یک راهنمای شهری باید به یک سؤال جواب بدهد: «الان کجا برم؟»
+ * پس ساختارش سه لایه است، از عام به خاص:
+ *
+ *   ۱. جست‌وجو + «نزدیک من»          — کاربری که می‌داند چه می‌خواهد
+ *   ۲. «بهترین X نزدیک من»           — کاربری که هوس چیزی کرده
+ *   ۳. دسته‌ها و محله‌ها               — کاربری که می‌خواهد بگردد
+ *
+ * همه‌ی اعداد از دیتابیس می‌آیند، هیچ‌کدام دستی نوشته نشده‌اند: «۱۰۹ کافه پاستا
+ * دارند» یک واقعیت است و اگر داده عوض شود، عدد هم عوض می‌شود.
  */
 
-const FEATURED_COUNT = 6
+export const metadata: Metadata = {
+  title: 'کافه‌گرد — راهنمای کافه‌ها و رستوران‌های مشهد',
+  description:
+    'قیمت واقعی منو، ساعت کاری، نقشه و مسیریابی برای کافه‌ها و رستوران‌های مشهد. فیلتر بر اساس قیمت، محله و منو.',
+  alternates: { canonical: '/' },
+}
 
 export default async function HomePage() {
-  const [places, districts] = await Promise.all([loadPublishedViews(), loadDistricts()])
+  const [stats, facets, dishes, districts, topRated, cheapest] = await Promise.all([
+    getSiteStats(),
+    listFilterFacets(),
+    listPopularDishes(16),
+    listDistricts(),
+    listPlaceCards({ limit: 6, sort: 'quality' }),
+    listPlaceCards({ limit: 6, sort: 'price_asc' }),
+  ])
 
-  const districtName = (id: string) => districts.find((d) => d.id === id)?.name ?? ''
-
-  // منتخب‌ها: امتیاز بیزی، نه میانگین خام — تا کافه‌ی ۴٫۹ با ۳ نظر بالای
-  // کافه‌ی ۴٫۶ با ۵۰۰ نظر ننشیند.
-  const featured = [...places].sort((a, b) => b.rating - a.rating).slice(0, FEATURED_COUNT)
-
-  /**
-   * شمارش واقعی برای هر نیت. در ماکاپ این‌ها متن ثابت بودند («۲۱۰ کافه») —
-   * عدد ساختگی روی صفحه‌ی اول، اولین چیزی است که وقتی کاربر کلیک می‌کند و
-   * ۴ نتیجه می‌بیند اعتمادش را می‌شکند.
-   */
-  const intentCount = (intentId: string) =>
-    places.filter((p) => p.activeAttributeIds.includes(intentId)).length
+  const popularFacets = facets.filter((facet) => facet.isPopular).slice(0, 12)
+  const activeDistricts = districts
+    .filter((district) => district.placeCount > 0)
+    .sort((a, b) => b.placeCount - a.placeCount)
 
   return (
-    <div className="page">
-      <SiteHeader />
+    <div className={styles.page}>
+      <section className={styles.hero}>
+        <h1 className={styles.title}>کافه‌های مشهد، با قیمت واقعی منو</h1>
+        <p className={styles.lead}>
+          {faCount(stats.publishedPlaces)} مجموعه · {faCount(stats.menuItems)} آیتم منو با قیمت ·{' '}
+          {faCount(stats.itemsWithImage)} عکس · روی نقشه‌ی آفلاین
+        </p>
 
-      <main>
-        {/* ===== hero ===== */}
-        <section className={`container ${styles.hero}`}>
-          <div className={styles.heroGrid}>
-            <div className={styles.heroCopy}>
-              <div className={styles.badge}>راهنمای کافه‌های مشهد ✦</div>
-              <h1 className={styles.title}>
-                امروز کجا بریم؟
-                <br />
-                <span className={styles.titleAccent}>کافهٔ خودت</span> رو پیدا کن.
-              </h1>
-              <p className={styles.lede}>
-                اسم جایی رو نگو، <b>حالت رو بگو</b>. بگو دنبال چی می‌گردی تا بهترین کافه و
-                رستوران مشهد رو برات پیدا کنیم.
-              </p>
+        <HomeSearch />
 
-              <HeroSearch />
-            </div>
+        <div className={styles.heroLinks}>
+          <Link href={searchPath({ nearMe: true, sort: 'distance' })} className={styles.heroPrimary}>
+            نزدیک من
+          </Link>
+          <Link href={searchPath({ openNow: true })} className={styles.heroSecondary}>
+            الان باز است
+          </Link>
+          <Link href={searchPath({ view: 'map' })} className={styles.heroSecondary}>
+            نمای نقشه
+          </Link>
+          <Link href={searchPath({ maxPrice: 200_000 })} className={styles.heroSecondary}>
+            تا ۲۰۰ هزار تومان
+          </Link>
+        </div>
+      </section>
 
-            <div className={styles.heroArt}>
-              <div className={styles.heroFrame}>
-                <img
-                  src="/cafe-photo.webp"
-                  alt="فضای گرم و پرگیاه یک کافه در مشهد"
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                  width={1200}
-                  height={800}
-                />
-              </div>
-              <div className={styles.statCard}>
-                <div className={styles.statIcon} aria-hidden="true">
-                  ☕
-                </div>
-                <div>
-                  <div className={styles.statLabel}>تا حالا معرفی‌شده</div>
-                  {/* شمارش واقعی، نه عدد تبلیغاتی */}
-                  <div className={styles.statValue}>{fa(places.length)} کافه در مشهد</div>
-                </div>
-              </div>
-              <div className={styles.ratingTag}>امتیاز واقعی محلی‌ها ★</div>
-            </div>
-          </div>
-        </section>
-
-        {/* ===== popular filters ===== */}
-        <section className={styles.filterBar} aria-label="فیلترهای پرکاربرد">
-          <div className={`container ${styles.filterBarInner}`}>
-            <div className={styles.filterBarTitle}>فیلترهای پرکاربرد:</div>
-            <div className={styles.filterChips}>
-              {POPULAR_FILTERS.map((filter) => (
-                <ChipLink
-                  key={filter.label}
-                  label={filter.label}
-                  href={filter.to}
-                  variant="solid"
-                />
-              ))}
-            </div>
-            <div className={styles.priceNote}>قیمت‌ها به تومان</div>
-          </div>
-        </section>
-
-        {/* ===== featured ===== */}
-        <section className={`container ${styles.section}`}>
+      {/* ── بهترین X نزدیک من ─────────────────────────────────────── */}
+      {dishes.length > 0 && (
+        <section className={styles.section}>
           <div className={styles.sectionHead}>
-            <div className={styles.sectionHeadCopy}>
-              <h2 className={styles.h2}>کافه‌های منتخب</h2>
-              <p className={styles.sectionSub}>
-                دست‌چین‌شده توسط آدم‌هایی که واقعاً این‌جا زندگی می‌کنن.
-              </p>
-              <div className={styles.editorNote}>✎ نه تبلیغاتی، نه اسپانسری</div>
-            </div>
-            <Link href={paths.search} className={styles.seeAll}>
-              دیدن همه ←
-            </Link>
-          </div>
-
-          <div className={styles.featuredGrid}>
-            {featured.map((place) => (
-              <CafeCard
-                key={place.id}
-                place={place}
-                districtName={districtName(place.districtId)}
-              />
-            ))}
-          </div>
-        </section>
-
-        {/* ===== intents ===== */}
-        <section className={`container ${styles.intentSection}`}>
-          <div className={styles.intentHead}>
-            <h2 className={styles.h2}>بگو حالت چطوره، جاشو پیدا می‌کنیم</h2>
-            <p className={styles.intentHeadSub}>
-              هر موقعیتی، یک کافهٔ درست دارد. تو فقط انتخاب کن.
+            <h2>بهترین … نزدیک من</h2>
+            <p>
+              از {faCount(stats.menuItems)} آیتم منو ساخته شده — روی هرکدام بزنید، نزدیک‌ترین‌ها
+              مرتب می‌شوند.
             </p>
           </div>
-
-          <div className={styles.intentGrid}>
-            {INTENT_CARDS.map((card) => (
+          <div className={styles.dishGrid}>
+            {dishes.map((dish) => (
               <Link
-                key={card.title}
-                href={card.to}
-                className={styles.intentCard}
-                style={{ background: card.bg }}
+                key={dish.slug}
+                href={searchPath({ dish: dish.slug, nearMe: true, sort: 'distance' })}
+                className={styles.dishCard}
               >
-                <div className={styles.intentEmoji} aria-hidden="true">
-                  {card.emoji}
-                </div>
-                <div className={styles.intentTitle}>{card.title}</div>
-                <p className={styles.intentText} style={{ color: card.textColor }}>
-                  {card.text}
-                </p>
-                <span className={styles.intentCount} style={{ color: card.countColor }}>
-                  {fa(intentCount(card.intentId))} کافه ←
+                <span className={styles.dishName}>{dish.nameFa}</span>
+                <span className={styles.dishMeta}>
+                  {fa(dish.placeCount)} مجموعه
+                  {dish.minPrice ? ` · از ${toman(dish.minPrice)}` : ''}
                 </span>
               </Link>
             ))}
           </div>
         </section>
+      )}
 
-        {/* ===== districts — صفحات محلی، پایه‌ی رشد ارگانیک ===== */}
-        <section className={`container ${styles.section}`}>
+      {/* ── دسته‌های پرمصرف ───────────────────────────────────────── */}
+      {popularFacets.length > 0 && (
+        <section className={styles.section}>
           <div className={styles.sectionHead}>
-            <div className={styles.sectionHeadCopy}>
-              <h2 className={styles.h2}>محله‌های مشهد</h2>
-              <p className={styles.sectionSub}>کافه‌های هر محله را جداگانه ببین.</p>
-            </div>
+            <h2>دنبال چه هستید؟</h2>
+            <p>
+              این دسته‌ها از منوی واقعی مجموعه‌ها استخراج شده‌اند. عددها تعداد مجموعه‌اند.
+            </p>
           </div>
-          <div className={styles.filterChips}>
-            {/*
-              محله‌های خالی نمایش داده نمی‌شوند. «قاسم‌آباد (۰)» هم کاربر را
-              به صفحه‌ی خالی می‌فرستد، هم سایت را ناقص نشان می‌دهد — در حالی
-              که فقط هنوز داده‌اش جمع نشده. با آمدن اولین کافه خودش برمی‌گردد.
-            */}
-            {districts
-              .map((d) => ({
-                district: d,
-                count: places.filter((p) => p.districtId === d.id).length,
-              }))
-              .filter(({ count }) => count > 0)
-              .sort((a, b) => b.count - a.count)
-              .map(({ district, count }) => (
-                <ChipLink
-                  key={district.id}
-                  label={`${district.name} (${fa(count)})`}
-                  href={paths.district(district.slug)}
-                  variant="outline"
-                  size="lg"
-                />
-              ))}
+          <div className={styles.facetGrid}>
+            {popularFacets.map((facet) => (
+              <Link
+                key={facet.id}
+                href={searchPath({ facets: [facet.id] })}
+                className={styles.facetCard}
+              >
+                <span className={styles.facetIcon} aria-hidden="true">
+                  {facet.icon}
+                </span>
+                <span className={styles.facetName}>{facet.labelFa}</span>
+                <span className={styles.facetCount}>{fa(facet.placeCount)}</span>
+              </Link>
+            ))}
           </div>
         </section>
+      )}
 
-        {/* ===== map invite ===== */}
-        <section className={`container ${styles.mapSection}`}>
-          <div className={styles.mapCard}>
-            <div className={styles.mapCopy}>
-              <div className={styles.mapIcon} aria-hidden="true">
-                ◍
-              </div>
-              <div>
-                <div className={styles.mapTitle}>ترجیح می‌دی روی نقشه ببینی؟</div>
-                <div className={styles.mapSub}>
-                  همهٔ کافه‌های مشهد را روی نقشه کنار هم ببین.
-                </div>
-              </div>
-            </div>
-            <Link href={`${paths.search}?view=map`} className={styles.mapButton}>
-              نمایش روی نقشه
+      {/* ── کامل‌ترین پروفایل‌ها ──────────────────────────────────── */}
+      <section className={styles.section}>
+        <div className={styles.sectionHead}>
+          <h2>کامل‌ترین اطلاعات</h2>
+          <p>
+            مجموعه‌هایی که منو، ساعت کاری، مختصات و تماسشان ثبت شده — یعنی می‌توانید
+            رویشان حساب کنید.
+          </p>
+        </div>
+        <ul className={styles.cardList}>
+          {topRated.map((card) => (
+            <li key={card.id}>
+              <PlaceCardView card={card} />
+            </li>
+          ))}
+        </ul>
+        <Link href={searchPath({ sort: 'quality' })} className={styles.more}>
+          دیدن همه
+        </Link>
+      </section>
+
+      {/* ── ارزان‌ترین‌ها ─────────────────────────────────────────── */}
+      <section className={styles.section}>
+        <div className={styles.sectionHead}>
+          <h2>اقتصادی‌ترین منوها</h2>
+          <p>بر اساس میانه‌ی قیمت منو، نه یک آیتم انتخابی.</p>
+        </div>
+        <ul className={styles.cardList}>
+          {cheapest.map((card) => (
+            <li key={card.id}>
+              <PlaceCardView card={card} />
+            </li>
+          ))}
+        </ul>
+        <Link href={searchPath({ sort: 'price_asc' })} className={styles.more}>
+          دیدن همه
+        </Link>
+      </section>
+
+      {/* ── محله‌ها ───────────────────────────────────────────────── */}
+      <section className={styles.section}>
+        <div className={styles.sectionHead}>
+          <h2>محله‌ها</h2>
+          <p>{fa(activeDistricts.length)} محله‌ی مشهد و حومه، با تعداد مجموعه.</p>
+        </div>
+        <div className={styles.districtGrid}>
+          {activeDistricts.map((district) => (
+            <Link
+              key={district.id}
+              href={paths.district(district.slug)}
+              className={styles.districtCard}
+            >
+              <span>{district.name}</span>
+              <span className={styles.districtCount}>{fa(district.placeCount)}</span>
             </Link>
-          </div>
-        </section>
+          ))}
+        </div>
+      </section>
 
-        {/* ===== participation ===== */}
-        <section className={styles.partSection}>
-          <div className={`container ${styles.partGrid}`}>
-            <div>
-              <div className={styles.partBadge}>یک پروژهٔ مردمی 🌿</div>
-              <h2 className={styles.partTitle}>
-                این‌جا رو <span className={styles.partTitleAccent}>جوون‌های مشهد</span> با هم
-                می‌سازن
-              </h2>
-              <p className={styles.partText}>
-                یک کافهٔ خوب پیدا کردی که هنوز این‌جا نیست؟ معرفی‌اش کن تا بقیه هم پیداش کنن.
-                بدون تبلیغ، بدون اسپانسر — فقط پیشنهاد آدم‌های واقعی.
-              </p>
-              <div className={styles.partActions}>
-                {/*
-                  به /admin نمی‌رود: آن پنل مدیر است و بازدیدکننده‌ی عادی را
-                  بیرون می‌اندازد. پنل مالک مقصد درست است — و اگر کاربر هنوز
-                  کافه‌ای ندارد، همان‌جا می‌گوید قدم بعدی چیست.
-                */}
-                <Link href={paths.ownerPanel} className={styles.partPrimary}>
-                  کافه‌ات رو معرفی کن
-                </Link>
-                <Link href={paths.home} className={styles.partSecondary}>
-                  دربارهٔ پروژه
-                </Link>
-              </div>
-            </div>
-
-            <div className={styles.partArt}>
-              <div className={styles.partFrame}>
-                <img
-                  className={styles.partMascot}
-                  src="/logo.png"
-                  alt=""
-                  width={280}
-                  height={280}
-                />
-              </div>
-            </div>
-          </div>
-        </section>
-      </main>
-
-      <SiteFooter />
+      <footer className={styles.dataFoot}>
+        <p>
+          داده‌ی منو و قیمت از منوی رسمی مجموعه‌ها گرفته شده و ممکن است تغییر کرده باشد.
+          نقشه بر پایه‌ی OpenStreetMap است و کاملاً لوکال سرو می‌شود.
+        </p>
+      </footer>
     </div>
   )
 }

@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
   passwordLoginAction,
+  registerAction,
   requestCodeAction,
   setNameAction,
   verifyCodeAction,
@@ -13,6 +14,7 @@ import {
 import {
   EMPTY_NAME_STATE,
   EMPTY_PASSWORD_STATE,
+  EMPTY_REGISTER_STATE,
   EMPTY_REQUEST_STATE,
   EMPTY_VERIFY_STATE,
 } from '@/app/auth/state'
@@ -22,7 +24,7 @@ import { fa } from '@/lib/format'
 import { paths } from '@/routes'
 import styles from './AuthScreen.module.css'
 
-type Step = 'phone' | 'code' | 'name' | 'password'
+type Step = 'phone' | 'code' | 'name' | 'password' | 'register'
 
 function SubmitButton({ label, pendingLabel }: { label: string; pendingLabel: string }) {
   const { pending } = useFormStatus()
@@ -56,6 +58,7 @@ export function AuthScreen() {
   const [verState, verifyAction] = useActionState(verifyCodeAction, EMPTY_VERIFY_STATE)
   const [nameState, nameAction] = useActionState(setNameAction, EMPTY_NAME_STATE)
   const [pwState, pwAction] = useActionState(passwordLoginAction, EMPTY_PASSWORD_STATE)
+  const [regState, regAction] = useActionState(registerAction, EMPTY_REGISTER_STATE)
 
   // ── گام ۱ → ۲ ──
   useEffect(() => {
@@ -86,13 +89,25 @@ export function AuthScreen() {
     }
   }, [nameState, router, redirectTo])
 
-  // ── ورود با رمز → پایان ──
+  // ── ورود با رمز → پایان، یا اجبار به تغییر رمز ──
   useEffect(() => {
-    if (pwState.ok) {
+    if (!pwState.ok) return
+    /*
+      رمزِ موقتی که ادمین صادر کرده باید عوض شود، وگرنه رمزی که در واتساپ
+      فرستاده شده تا ابد معتبر می‌ماند. کاربر به صفحه‌ی تغییر رمز می‌رود،
+      نه به مقصد اصلی.
+    */
+    router.replace(pwState.mustChangePassword ? paths.changePassword : redirectTo)
+    router.refresh()
+  }, [pwState, router, redirectTo])
+
+  // ── ثبت‌نام با رمز → پایان ──
+  useEffect(() => {
+    if (regState.ok) {
       router.replace(redirectTo)
       router.refresh()
     }
-  }, [pwState, router, redirectTo])
+  }, [regState, router, redirectTo])
 
   useEffect(() => {
     if (cooldown <= 0) return
@@ -144,13 +159,22 @@ export function AuthScreen() {
               که تمام شود یا سرویس که قطع شود، مدیر از پنل خودش بیرون می‌ماند.
               فقط حساب‌هایی که رمز دارند از این راه وارد می‌شوند.
             */}
-            <button
-              type="button"
-              className={styles.altButton}
-              onClick={() => setStep('password')}
-            >
-              ورود با رمز عبور
-            </button>
+            <div className={styles.actionsRow}>
+              <button
+                type="button"
+                className={styles.linkButton}
+                onClick={() => setStep('password')}
+              >
+                ورود با رمز عبور
+              </button>
+              <button
+                type="button"
+                className={styles.linkButton}
+                onClick={() => setStep('register')}
+              >
+                ساخت حساب با رمز
+              </button>
+            </div>
           </form>
         )}
 
@@ -159,16 +183,19 @@ export function AuthScreen() {
           <form action={pwAction} className={styles.form}>
             <h1 className={styles.title}>ورود با رمز عبور</h1>
             <p className={styles.lede}>
-              برای حساب‌های مدیر و مالک کافه. کاربر عادی با کد پیامکی وارد می‌شود.
+              با شماره موبایل یا یوزرنیم. اگر پنل کافه دارید، یوزرنیم را مدیر
+              برایتان ساخته است.
             </p>
 
+            {/*
+              یک فیلد برای هر دو شکل شناسه. کاربر نمی‌داند حسابش با شماره ساخته
+              شده یا با یوزرنیمِ صادرشده از پنل ادمین — و لازم هم نیست بداند.
+            */}
             <label className={styles.field}>
-              <span className={styles.label}>شماره موبایل</span>
+              <span className={styles.label}>شماره موبایل یا یوزرنیم</span>
               <input
-                name="phone"
+                name="identifier"
                 className={styles.input}
-                type="tel"
-                inputMode="numeric"
                 autoComplete="username"
                 placeholder="09151234567"
                 dir="ltr"
@@ -193,13 +220,117 @@ export function AuthScreen() {
 
             <SubmitButton label="ورود" pendingLabel="در حال بررسی…" />
 
-            <button
-              type="button"
-              className={styles.altButton}
-              onClick={() => setStep('phone')}
-            >
-              ورود با کد پیامکی
-            </button>
+            <div className={styles.actionsRow}>
+              <button
+                type="button"
+                className={styles.linkButton}
+                onClick={() => setStep('phone')}
+              >
+                ورود با کد پیامکی
+              </button>
+              <button
+                type="button"
+                className={styles.linkButton}
+                onClick={() => setStep('register')}
+              >
+                ساخت حساب با رمز
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* ═══ ثبت‌نام با رمز دائمی ═══ */}
+        {step === 'register' && (
+          <form action={regAction} className={styles.form}>
+            <h1 className={styles.title}>ساخت حساب</h1>
+            <p className={styles.lede}>
+              با شماره و رمز عبور. بعداً با کد پیامکی هم می‌توانید وارد شوید.
+            </p>
+
+            <label className={styles.field}>
+              <span className={styles.label}>شماره موبایل</span>
+              <input
+                name="phone"
+                className={styles.input}
+                type="tel"
+                inputMode="numeric"
+                autoComplete="tel"
+                placeholder="09151234567"
+                dir="ltr"
+                required
+                autoFocus
+              />
+            </label>
+
+            <label className={styles.field}>
+              <span className={styles.label}>نام</span>
+              <input
+                name="name"
+                className={styles.input}
+                maxLength={60}
+                placeholder="مثلاً نگار احمدی"
+                autoComplete="name"
+              />
+            </label>
+
+            <label className={styles.field}>
+              <span className={styles.label}>یوزرنیم (اختیاری)</span>
+              <input
+                name="username"
+                className={styles.input}
+                autoComplete="off"
+                placeholder="negar_a"
+                dir="ltr"
+                pattern="[a-zA-Z0-9_.]{3,32}"
+              />
+            </label>
+
+            <label className={styles.field}>
+              <span className={styles.label}>رمز عبور</span>
+              <input
+                name="password"
+                className={styles.input}
+                type="password"
+                autoComplete="new-password"
+                dir="ltr"
+                minLength={8}
+                required
+              />
+            </label>
+
+            <label className={styles.field}>
+              <span className={styles.label}>تکرار رمز عبور</span>
+              <input
+                name="passwordConfirm"
+                className={styles.input}
+                type="password"
+                autoComplete="new-password"
+                dir="ltr"
+                minLength={8}
+                required
+              />
+            </label>
+
+            {regState.error && <div className={styles.error}>{regState.error}</div>}
+
+            <SubmitButton label="ساخت حساب" pendingLabel="در حال ساخت…" />
+
+            <div className={styles.actionsRow}>
+              <button
+                type="button"
+                className={styles.linkButton}
+                onClick={() => setStep('password')}
+              >
+                حساب دارم
+              </button>
+              <button
+                type="button"
+                className={styles.linkButton}
+                onClick={() => setStep('phone')}
+              >
+                ورود با کد پیامکی
+              </button>
+            </div>
           </form>
         )}
 

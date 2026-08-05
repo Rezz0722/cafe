@@ -1,0 +1,433 @@
+.wrap {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 18px 16px 56px;
+}
+
+.head {
+  margin-bottom: 14px;
+}
+
+.heading {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--c-ink);
+}
+
+.subheading {
+  margin: 4px 0 0;
+  font-size: 0.87rem;
+  color: var(--c-muted);
+}
+
+.pending {
+  color: var(--c-primary-strong);
+}
+
+/* ── نوار ابزار ─────────────────────────────────────────────────────── */
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.searchForm {
+  display: flex;
+  gap: 6px;
+  flex: 1 1 260px;
+}
+
+.searchForm input {
+  flex: 1;
+  min-width: 0;
+  padding: 9px 14px;
+  border: 1px solid var(--c-border);
+  border-radius: 999px;
+  background: var(--c-surface);
+  color: var(--c-ink);
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.searchForm input:focus {
+  outline: none;
+  border-color: var(--c-primary);
+  box-shadow: 0 0 0 3px var(--c-primary-soft);
+}
+
+.searchForm button {
+  padding: 9px 16px;
+  border: none;
+  border-radius: 999px;
+  background: var(--c-primary);
+  color: #fff;
+  font: inherit;
+  font-size: 0.87rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.toolbarActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+}
+
+.toggle,
+.filterButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 13px;
+  border: 1px solid var(--c-border);
+  border-radius: 999px;
+  background: var(--c-surface);
+  color: var(--c-ink-2);
+  font: inherit;
+  font-size: 0.83rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.toggle:hover,
+.filterButton:hover {
+  border-color: var(--c-primary);
+  color: var(--c-primary-strong);
+}
+
+.toggleOn {
+  background: var(--c-primary);
+  border-color: var(--c-primary);
+  color: #fff;
+}
+
+.filterCount {
+  display: grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--c-primary);
+  color: #fff;
+  font-size: 0.68rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.sortWrap select {
+  padding: 8px 12px;
+  border: 1px solid var(--c-border);
+  border-radius: 999px;
+  background: var(--c-surface);
+  color: var(--c-ink-2);
+  font: inherit;
+  font-size: 0.83rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.viewSwitch {
+  display: inline-flex;
+  border: 1px solid var(--c-border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.viewOn,
+.viewOff {
+  padding: 8px 14px;
+  border: none;
+  background: var(--c-surface);
+  color: var(--c-ink-2);
+  font: inherit;
+  font-size: 0.83rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.viewOn {
+  background: var(--c-primary);
+  color: #fff;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.locationError {
+  margin: 10px 0 0;
+  padding: 9px 13px;
+  border-radius: var(--r-md, 12px);
+  background: var(--c-accent-soft);
+  color: var(--c-accent-text-strong);
+  font-size: 0.82rem;
+}
+
+.locationError button {
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 800;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ── فیلترهای سریع ──────────────────────────────────────────────────── */
+
+.quickFilters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 14px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 12px;
+  border: 1px solid var(--c-border);
+  border-radius: 999px;
+  background: var(--c-surface);
+  color: var(--c-ink-2);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.chip:hover {
+  border-color: var(--c-primary);
+}
+
+.chipOn {
+  background: var(--c-primary);
+  border-color: var(--c-primary);
+  color: #fff;
+}
+
+.chipCount {
+  font-size: 0.7rem;
+  opacity: 0.72;
+  font-variant-numeric: tabular-nums;
+}
+
+.dishRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: var(--r-md, 12px);
+  background: var(--c-pastel-lime, var(--c-surface-3));
+}
+
+.dishLabel {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--c-pastel-lime-strong, var(--c-ink-2));
+}
+
+.dishChip {
+  padding: 5px 11px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: var(--c-surface);
+  color: var(--c-ink-2);
+  font: inherit;
+  font-size: 0.79rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.dishChip:hover {
+  border-color: var(--c-primary);
+  color: var(--c-primary-strong);
+}
+
+.dishChipOn {
+  background: var(--c-ink);
+  color: #fff;
+}
+
+/* ── پنل فیلتر ──────────────────────────────────────────────────────── */
+
+.filterPanel {
+  margin-top: 14px;
+  padding: 15px 16px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg, 16px);
+  background: var(--c-surface);
+  display: grid;
+  gap: 16px;
+}
+
+.filterPanel fieldset {
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+.filterPanel legend {
+  padding: 0 0 7px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--c-ink);
+}
+
+.filterOptions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.option,
+.optionOn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 11px;
+  border: 1px solid var(--c-border);
+  border-radius: 999px;
+  background: var(--c-surface);
+  color: var(--c-ink-2);
+  font: inherit;
+  font-size: 0.79rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.option:hover {
+  border-color: var(--c-primary);
+}
+
+.optionOn {
+  background: var(--c-primary-soft);
+  border-color: var(--c-primary);
+  color: var(--c-primary-strong);
+  font-weight: 800;
+}
+
+.filterNote {
+  margin: 8px 0 0;
+  font-size: 0.74rem;
+  color: var(--c-muted-3);
+  line-height: 1.7;
+}
+
+.clearAll {
+  justify-self: start;
+  padding: 8px 14px;
+  border: 1px solid var(--c-border);
+  border-radius: 999px;
+  background: var(--c-surface);
+  color: var(--c-ink-2);
+  font: inherit;
+  font-size: 0.83rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ── نتیجه ──────────────────────────────────────────────────────────── */
+
+.results {
+  list-style: none;
+  margin: 18px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 9px;
+}
+
+.mapView {
+  margin-top: 18px;
+}
+
+.mapNote {
+  margin: 9px 0 0;
+  font-size: 0.79rem;
+  color: var(--c-muted);
+}
+
+.empty {
+  margin-top: 24px;
+  padding: 28px 20px;
+  border: 1px dashed var(--c-disabled);
+  border-radius: var(--r-lg, 16px);
+  text-align: center;
+}
+
+.emptyTitle {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--c-ink);
+}
+
+.emptyNote {
+  margin: 7px 0 14px;
+  font-size: 0.86rem;
+  line-height: 1.8;
+  color: var(--c-muted);
+}
+
+.empty button {
+  padding: 9px 16px;
+  border: none;
+  border-radius: 999px;
+  background: var(--c-primary);
+  color: #fff;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 22px;
+  font-size: 0.85rem;
+  color: var(--c-ink-2);
+}
+
+.pager button {
+  padding: 8px 15px;
+  border: 1px solid var(--c-border);
+  border-radius: 999px;
+  background: var(--c-surface);
+  color: var(--c-ink-2);
+  font: inherit;
+  font-size: 0.83rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pager button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.footNote {
+  margin: 30px 0 0;
+  font-size: 0.77rem;
+  color: var(--c-muted-3);
+  text-align: center;
+}
+
+.footNote a {
+  color: var(--c-primary-strong);
+}

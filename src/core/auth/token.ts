@@ -12,12 +12,16 @@ import type { Role } from './types'
  * کند، امضا نمی‌خواند و توکن رد می‌شود.
  */
 
-export interface SessionPayload {
+/** هر چیزی که امضا می‌شود باید تاریخ انقضا داشته باشد. */
+export interface TokenClaims {
+  /** ثانیه از epoch. */
+  exp: number
+}
+
+export interface SessionPayload extends TokenClaims {
   userId: string
   phone: string
   role: Role
-  /** ثانیه از epoch. */
-  exp: number
 }
 
 function b64url(buf: Buffer): string {
@@ -40,17 +44,24 @@ function safeEqual(a: string, b: string): boolean {
   return timingSafeEqual(ba, bb)
 }
 
-export function signToken(payload: SessionPayload, secret: string): string {
-  const body = b64url(Buffer.from(JSON.stringify(payload), 'utf8'))
+/**
+ * امضای هر بار داده‌ی منقضی‌شونده — نشست، و «مشاهده به‌عنوان».
+ *
+ * جنریک است چون کوکی دوم (impersonation) همین خاصیت‌ها را لازم دارد —
+ * دستکاری‌ناپذیری و انقضا — ولی محتوایش نشست نیست. یک پیاده‌سازیِ امضا برای
+ * هر دو، بهتر از دو پیاده‌سازی است که فقط یکی‌شان تست دارد.
+ */
+export function signClaims<T extends TokenClaims>(claims: T, secret: string): string {
+  const body = b64url(Buffer.from(JSON.stringify(claims), 'utf8'))
   return `${body}.${sign(body, secret)}`
 }
 
 /** `null` یعنی نامعتبر، دستکاری‌شده، یا منقضی. */
-export function verifyToken(
+export function verifyClaims<T extends TokenClaims>(
   token: string | undefined,
   secret: string,
   now = Date.now(),
-): SessionPayload | null {
+): T | null {
   if (!token || !secret) return null
 
   const dot = token.lastIndexOf('.')
@@ -62,11 +73,25 @@ export function verifyToken(
   if (!safeEqual(signature, sign(body, secret))) return null
 
   try {
-    const payload = JSON.parse(fromB64url(body).toString('utf8')) as SessionPayload
-    if (!payload?.userId || typeof payload.exp !== 'number') return null
-    if (payload.exp < Math.floor(now / 1000)) return null
-    return payload
+    const claims = JSON.parse(fromB64url(body).toString('utf8')) as T
+    if (typeof claims?.exp !== 'number') return null
+    if (claims.exp < Math.floor(now / 1000)) return null
+    return claims
   } catch {
     return null
   }
+}
+
+export function signToken(payload: SessionPayload, secret: string): string {
+  return signClaims(payload, secret)
+}
+
+/** `null` یعنی نامعتبر، دستکاری‌شده، یا منقضی. */
+export function verifyToken(
+  token: string | undefined,
+  secret: string,
+  now = Date.now(),
+): SessionPayload | null {
+  const payload = verifyClaims<SessionPayload>(token, secret, now)
+  return payload?.userId ? payload : null
 }

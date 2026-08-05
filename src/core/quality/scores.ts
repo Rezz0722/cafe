@@ -29,23 +29,57 @@ const COMPLETENESS_WEIGHTS = {
 const ATTRIBUTE_TARGET = 6
 const PHOTO_TARGET = 3
 
+/**
+ * واقعیت‌های خامِ کامل‌بودن — بدون وابستگی به شکل رکورد.
+ *
+ * ایمپورت با ردیف‌های دیتابیس کار می‌کند و اپ با مدل دامنه؛ هر دو باید به
+ * **یک** تعریف از کیفیت برسند. اگر هرکدام محاسبه‌ی خودش را داشت، عددِ پنل
+ * ادمین با عددِ سورت سایت فرق می‌کرد و هیچ‌کس نمی‌فهمید کدام درست است.
+ */
+export interface CompletenessFacts {
+  hasCoords: boolean
+  hasHours: boolean
+  hasAddress: boolean
+  hasPhone: boolean
+  hasInstagram: boolean
+  hasDescription: boolean
+  hasMenu: boolean
+  photoCount: number
+  attributeCount: number
+}
+
 /** ۰..۱۰۰ — چقدر از پروفایل پر است. */
-export function computeQualityScore(place: Place): number {
+export function computeQualityFromFacts(facts: CompletenessFacts): number {
   let score = 0
   const w = COMPLETENESS_WEIGHTS
 
-  if (place.coords) score += w.coords
-  if (place.hours.some((h) => !h.closed)) score += w.hours
-  if (place.address?.trim()) score += w.address
-  if (place.phone?.trim()) score += w.phone
-  if (place.instagram?.trim()) score += w.instagram
-  if (place.description?.trim()) score += w.description
-  if (place.menu.some((s) => s.items.length > 0)) score += w.menu
+  if (facts.hasCoords) score += w.coords
+  if (facts.hasHours) score += w.hours
+  if (facts.hasAddress) score += w.address
+  if (facts.hasPhone) score += w.phone
+  if (facts.hasInstagram) score += w.instagram
+  if (facts.hasDescription) score += w.description
+  if (facts.hasMenu) score += w.menu
 
-  score += Math.min(place.photos.length / PHOTO_TARGET, 1) * w.photos
-  score += Math.min(place.attributes.length / ATTRIBUTE_TARGET, 1) * w.attributes
+  score += Math.min(facts.photoCount / PHOTO_TARGET, 1) * w.photos
+  score += Math.min(facts.attributeCount / ATTRIBUTE_TARGET, 1) * w.attributes
 
   return Math.round(Math.min(score, 100))
+}
+
+/** ۰..۱۰۰ — چقدر از پروفایل پر است. */
+export function computeQualityScore(place: Place): number {
+  return computeQualityFromFacts({
+    hasCoords: !!place.coords,
+    hasHours: place.hours.some((h) => !h.closed),
+    hasAddress: !!place.address?.trim(),
+    hasPhone: !!place.phone?.trim(),
+    hasInstagram: !!place.instagram?.trim(),
+    hasDescription: !!place.description?.trim(),
+    hasMenu: place.menu.some((s) => s.items.length > 0),
+    photoCount: place.photos.length,
+    attributeCount: place.attributes.length,
+  })
 }
 
 /**

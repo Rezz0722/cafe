@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from 'next'
 import type { ReactNode } from 'react'
 import { Providers } from '@/components/Providers'
-import { getCurrentUser } from '@/core/auth/currentUser'
+import { ViewAsBanner } from '@/components/admin/ViewAsBanner'
+import { PageViewTracker } from '@/components/analytics/PageViewTracker'
+import { getSession } from '@/core/auth/currentUser'
 import { SITE_URL } from '@/routes'
 import './global.css'
 
@@ -46,12 +48,27 @@ export const viewport: Viewport = {
  * درست‌ترین کار این است که فقط `SiteHeader` داخل مرز داینامیک برود.
  */
 export default async function RootLayout({ children }: { children: ReactNode }) {
-  const user = await getCurrentUser()
+  /*
+    `actor` فقط در حالت «مشاهده به‌عنوان» پر است. کلاسِ روی body، ارتفاع نوار
+    را به CSS می‌دهد تا هم بالای صفحه جا باز شود و هم هدرهای sticky زیر نوار
+    بایستند نه پشتش.
+  */
+  const { user, actor } = await getSession()
 
   return (
     <html lang="fa" dir="rtl">
-      <body>
+      <body className={actor ? 'viewing-as' : undefined}>
+        {actor && user && (
+          <ViewAsBanner
+            targetName={user.name}
+            targetPhone={user.phone}
+            targetRole={user.role}
+            actorName={actor.name || 'ادمین'}
+          />
+        )}
         <Providers user={user}>{children}</Providers>
+        {/* ثبت بازدید — بی‌صدا، بدون هیچ اثری روی رندر. */}
+        <PageViewTracker />
       </body>
     </html>
   )

@@ -1,0 +1,125 @@
+.form {
+  display: grid;
+  gap: 22px;
+}
+
+.question {
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  padding: 0 0 10px;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--c-ink);
+}
+
+.hint {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--c-muted);
+}
+
+.options {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 8px;
+}
+
+.option {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 11px 13px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md, 12px);
+  background: var(--c-surface);
+  cursor: pointer;
+}
+
+.option:hover {
+  border-color: var(--c-primary);
+}
+
+/* حالت انتخاب‌شده با `:has` — بدون جاوااسکریپت اضافه. */
+.option:has(input:checked) {
+  border-color: var(--c-primary);
+  background: var(--c-primary-soft);
+}
+
+.option input {
+  margin-top: 2px;
+  accent-color: var(--c-primary);
+  flex: 0 0 auto;
+}
+
+.optionBody {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.optionLabel {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--c-ink);
+}
+
+.optionHint {
+  font-size: 0.74rem;
+  color: var(--c-muted);
+}
+
+.note {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.8;
+  color: var(--c-muted);
+}
+
+.error,
+.success {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: var(--r-md, 12px);
+  font-size: 0.86rem;
+}
+
+.error {
+  background: var(--c-danger-bg, #fdeaea);
+  color: var(--c-danger, #a32020);
+}
+
+.success {
+  background: var(--c-open-bg, #daf9de);
+  color: var(--c-open, #1f6e2c);
+}
+
+.save {
+  justify-self: start;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 999px;
+  background: var(--c-primary);
+  color: #fff;
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.save:hover:not(:disabled) {
+  background: var(--c-primary-strong);
+}
+
+.save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

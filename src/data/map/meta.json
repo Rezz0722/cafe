@@ -1,0 +1,64 @@
+{
+  "source": "iran-260804.osm.pbf",
+  "bbox": {
+    "minLat": 36.05,
+    "maxLat": 36.62,
+    "minLng": 59.1,
+    "maxLng": 59.95
+  },
+  "extractedAt": "2026-08-05T19:03:38.182Z",
+  "layers": [
+    {
+      "layer": "road_minor",
+      "features": 35551
+    },
+    {
+      "layer": "building",
+      "features": 17319
+    },
+    {
+      "layer": "road_path",
+      "features": 9640
+    },
+    {
+      "layer": "road_service",
+      "features": 5327
+    },
+    {
+      "layer": "road_mid",
+      "features": 4172
+    },
+    {
+      "layer": "green",
+      "features": 2123
+    },
+    {
+      "layer": "road_major",
+      "features": 1747
+    },
+    {
+      "layer": "road_link",
+      "features": 1642
+    },
+    {
+      "layer": "poi",
+      "features": 1131
+    },
+    {
+      "layer": "place_label",
+      "features": 513
+    },
+    {
+      "layer": "waterway",
+      "features": 270
+    },
+    {
+      "layer": "water",
+      "features": 160
+    },
+    {
+      "layer": "aeroway",
+      "features": 2
+    }
+  ]
+}

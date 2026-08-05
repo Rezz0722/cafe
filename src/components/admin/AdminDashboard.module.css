@@ -1,0 +1,596 @@
+.panel {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 18px 16px 56px;
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--c-border-3);
+}
+
+.title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--c-ink);
+}
+
+.sub {
+  margin: 4px 0 0;
+  font-size: 0.83rem;
+  color: var(--c-muted);
+}
+
+.headActions {
+  display: flex;
+  gap: 7px;
+}
+
+.headLink {
+  padding: 8px 14px;
+  border: 1px solid var(--c-border);
+  border-radius: 999px;
+  background: var(--c-surface);
+  color: var(--c-ink-2);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.headLink:hover {
+  border-color: var(--c-primary);
+  color: var(--c-primary-strong);
+}
+
+.warnBox {
+  margin-top: 14px;
+  padding: 12px 15px;
+  border: 1px solid var(--c-danger, #a32020);
+  border-radius: var(--r-md, 12px);
+  background: var(--c-danger-bg, #fdeaea);
+  color: var(--c-danger, #a32020);
+}
+
+.warnBox p {
+  margin: 0 0 5px;
+  font-size: 0.85rem;
+  line-height: 1.7;
+}
+
+.warnBox p:last-child {
+  margin-bottom: 0;
+}
+
+/* ── تب ─────────────────────────────────────────────────────────────── */
+
+.tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  margin: 16px 0 20px;
+}
+
+.tab,
+.tabOn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  padding: 9px 15px;
+  border: 1px solid var(--c-border);
+  border-radius: 999px;
+  background: var(--c-surface);
+  color: var(--c-ink-2);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tab:hover {
+  border-color: var(--c-primary);
+}
+
+.tabOn {
+  background: var(--c-ink);
+  border-color: var(--c-ink);
+  color: #fff;
+}
+
+.badge {
+  display: grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--c-accent);
+  color: #3a2c00;
+  font-size: 0.68rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.section {
+  display: grid;
+  gap: 16px;
+}
+
+.h2 {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 8px 0 0;
+  font-size: 1.02rem;
+  font-weight: 800;
+  color: var(--c-ink);
+}
+
+.count {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--c-surface-4);
+  color: var(--c-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.dim {
+  color: var(--c-muted);
+  font-size: 0.8rem;
+  line-height: 1.7;
+}
+
+.danger {
+  color: var(--c-danger, #a32020);
+  font-weight: 700;
+}
+
+.mono {
+  font-family: ui-monospace, monospace;
+  font-size: 0.76rem;
+}
+
+.empty {
+  padding: 16px;
+  border: 1px dashed var(--c-disabled);
+  border-radius: var(--r-md, 12px);
+  color: var(--c-muted);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+/* ── آمار ───────────────────────────────────────────────────────────── */
+
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+  gap: 1px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg, 16px);
+  background: var(--c-border-3);
+  overflow: hidden;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 13px 14px;
+  background: var(--c-surface);
+}
+
+.statValue {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--c-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.statLabel {
+  font-size: 0.72rem;
+  color: var(--c-muted);
+}
+
+/* ── نمودار ─────────────────────────────────────────────────────────── */
+
+.chartBox,
+.insightBox,
+.formBox {
+  padding: 15px 17px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg, 16px);
+  background: var(--c-surface);
+}
+
+.chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 110px;
+  margin: 12px 0 8px;
+}
+
+.bar {
+  flex: 1;
+  min-width: 3px;
+  border-radius: 3px 3px 0 0;
+  background: var(--c-primary);
+  opacity: 0.85;
+}
+
+.bar:hover {
+  opacity: 1;
+  background: var(--c-primary-strong);
+}
+
+/* ── فهرست ──────────────────────────────────────────────────────────── */
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 9px;
+}
+
+.card,
+.rowCard {
+  padding: 12px 14px;
+  border: 1px solid var(--c-border-3);
+  border-radius: var(--r-md, 12px);
+  background: var(--c-surface);
+}
+
+.rowCard {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+}
+
+.rowName {
+  flex: 1 1 200px;
+  min-width: 0;
+  font-size: 0.88rem;
+}
+
+.rowName a {
+  color: var(--c-ink);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.rowName a:hover {
+  color: var(--c-primary-strong);
+}
+
+.cardHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 5px;
+  font-size: 0.87rem;
+}
+
+.cardHead a,
+.cardHead strong {
+  color: var(--c-ink);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.cardHead a:hover {
+  color: var(--c-primary-strong);
+}
+
+.cardText {
+  margin: 0 0 8px;
+  font-size: 0.85rem;
+  line-height: 1.8;
+  color: var(--c-ink-2);
+}
+
+.cardActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+}
+
+.payload {
+  margin: 0 0 8px;
+  padding: 9px 11px;
+  border-radius: 9px;
+  background: var(--c-surface-3);
+  color: var(--c-ink-3);
+  font-size: 0.72rem;
+  line-height: 1.6;
+  overflow-x: auto;
+  direction: ltr;
+  text-align: start;
+}
+
+.rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1px;
+  border: 1px solid var(--c-border-3);
+  border-radius: var(--r-md, 12px);
+  background: var(--c-border-3);
+  overflow: hidden;
+}
+
+.rows li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 13px;
+  background: var(--c-surface);
+  font-size: 0.83rem;
+  color: var(--c-ink-2);
+}
+
+.rows li a {
+  color: var(--c-ink);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.rows li a:hover {
+  color: var(--c-primary-strong);
+}
+
+.twoCol {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  align-items: start;
+}
+
+/* ── فرم و دکمه ─────────────────────────────────────────────────────── */
+
+.form {
+  display: grid;
+  gap: 11px;
+  margin-top: 12px;
+  max-width: 460px;
+}
+
+.field {
+  display: grid;
+  gap: 4px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--c-ink-2);
+}
+
+.input,
+.select,
+.search,
+.inlineInput {
+  padding: 9px 12px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md, 12px);
+  background: var(--c-surface);
+  color: var(--c-ink);
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 400;
+}
+
+.select {
+  cursor: pointer;
+}
+
+.search {
+  width: 100%;
+  max-width: 380px;
+}
+
+.inlineInput {
+  min-width: 150px;
+  flex: 1 1 auto;
+}
+
+.input:focus,
+.select:focus,
+.search:focus,
+.inlineInput:focus {
+  outline: none;
+  border-color: var(--c-primary);
+  box-shadow: 0 0 0 3px var(--c-primary-soft);
+}
+
+.inlineForm {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.btn,
+.btnDanger,
+.btnGhost {
+  padding: 8px 15px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.btn {
+  background: var(--c-primary);
+  color: #fff;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--c-primary-strong);
+}
+
+.btnDanger {
+  background: var(--c-surface);
+  border-color: var(--c-danger, #a32020);
+  color: var(--c-danger, #a32020);
+}
+
+.btnDanger:hover:not(:disabled) {
+  background: var(--c-danger-bg, #fdeaea);
+}
+
+.btnGhost {
+  background: var(--c-surface);
+  border-color: var(--c-border);
+  color: var(--c-ink-2);
+}
+
+.btnGhost:hover {
+  border-color: var(--c-primary);
+  color: var(--c-primary-strong);
+}
+
+.btn:disabled,
+.btnDanger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── برچسب ──────────────────────────────────────────────────────────── */
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--c-surface-4);
+  color: var(--c-ink-3);
+  font-size: 0.71rem;
+  font-weight: 700;
+}
+
+.tagForm {
+  display: inline;
+}
+
+.tagForm button {
+  border: none;
+  background: none;
+  color: var(--c-danger, #a32020);
+  font: inherit;
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 0 0 2px;
+}
+
+.warnBadge {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--c-accent-soft);
+  color: var(--c-accent-text-strong);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.stars {
+  color: var(--c-accent);
+  letter-spacing: 1px;
+  font-size: 0.82rem;
+}
+
+/* ── پیام ───────────────────────────────────────────────────────────── */
+
+.error,
+.success {
+  margin: 0;
+  padding: 11px 14px;
+  border-radius: var(--r-md, 12px);
+  font-size: 0.85rem;
+  line-height: 1.7;
+}
+
+.error {
+  background: var(--c-danger-bg, #fdeaea);
+  color: var(--c-danger, #a32020);
+}
+
+.success {
+  background: var(--c-open-bg, #daf9de);
+  color: var(--c-open, #1f6e2c);
+}
+
+.success p {
+  margin: 0;
+}
+
+.credBox {
+  margin-top: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--c-open, #1f6e2c);
+  border-radius: var(--r-md, 12px);
+  background: var(--c-surface);
+}
+
+.credBox strong {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.87rem;
+  color: var(--c-ink);
+}
+
+.credBox dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  margin: 0 0 8px;
+  font-size: 0.87rem;
+}
+
+.credBox dt {
+  color: var(--c-muted);
+}
+
+.credBox dd {
+  margin: 0;
+  color: var(--c-ink);
+  font-weight: 700;
+}
+
+.credBox code {
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: var(--c-surface-4);
+  font-family: ui-monospace, monospace;
+  font-size: 0.92rem;
+  user-select: all;
+}
+
+.credBox p {
+  margin: 0;
+  font-size: 0.77rem;
+  line-height: 1.75;
+  color: var(--c-muted);
+}
+
+@media (max-width: 720px) {
+  .twoCol {
+    grid-template-columns: 1fr;
+  }
+}

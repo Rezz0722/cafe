@@ -1,54 +1,104 @@
 'use server'
 
-import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
-import { normalizePhone } from '@/core/auth/phone'
+import { cookies } from 'next/headers'
+import { getSession } from '@/core/auth/currentUser'
+import { stopViewAs, VIEW_AS_READONLY } from '@/core/auth/impersonation'
 import {
   canRequestCode,
   createOtpRecord,
   generateCode,
+  hashCode,
   isGlobalLimitReached,
+  OTP_TTL_SEC,
   pruneGlobal,
   verifyCode,
+  type OtpRecord,
 } from '@/core/auth/otp'
-import {
-  SESSION_COOKIE,
-  SESSION_MAX_AGE_SEC,
-  createSessionToken,
-} from '@/core/auth/session'
-import { sendVerificationCode } from '@/core/sms/smsir'
-import { isLockedOut, pruneFailed, verifyPassword } from '@/core/auth/password'
+import { hashPassword, verifyPassword } from '@/core/auth/password'
+import { normalizePhone } from '@/core/auth/phone'
+import { createSessionToken, SESSION_COOKIE, SESSION_MAX_AGE_SEC } from '@/core/auth/session'
 import {
   bumpOtpAttempts,
   clearFailedLogins,
-  deleteOtp,
+  consumeOtp,
+  createUser,
   findOrCreateUser,
+  findUserByLogin,
+  findUserById,
   findUserByPhone,
+  getActiveOtp,
+  getLockState,
+  isUsernameTaken,
+  listRecentOtpTimes,
+  listRecentOtpTimesGlobal,
   recordFailedLogin,
-  getGlobalOtpRequests,
-  getOtp,
-  recordGlobalOtpRequest,
   saveOtp,
+  setCredentials,
   updateUser,
-} from '@/data/userStore'
-import { getCurrentUser } from '@/core/auth/currentUser'
+} from '@/core/auth/userRepo'
 import { SESSION_SECRET } from '@/core/config/env'
-import type { PasswordLoginState, RequestCodeState, VerifyCodeState } from './state'
+import { sendVerificationCode } from '@/core/sms/smsir'
+import type {
+  ChangePasswordState,
+  PasswordLoginState,
+  RegisterState,
+  RequestCodeState,
+  VerifyCodeState,
+} from './state'
 
 /**
  * اکشن‌های احراز هویت.
  *
- * قاعده‌ی امنیتی در کل این فایل: **پیام خطا نباید بگوید کاربر وجود دارد یا
- * نه.** «کد فرستاده شد» برای شماره‌ی ثبت‌نشده هم همان است — وگرنه این
- * endpoint تبدیل می‌شود به ابزار فهرست‌برداری از شماره‌های ثبت‌شده.
+ * ═══ دو مسیر ورود، هر دو کامل ═══
+ *
+ * ۱. **کد پیامکی** — مسیر پیش‌فرض کاربر عادی.
+ * ۲. **یوزرنیم/شماره + رمز دائمی** — مسیر دوم، نه راه فرار.
+ *
+ * دلیل وجود مسیر دوم: ورود فقط با پیامک یک نقطه‌ی شکست تک‌نقطه‌ای می‌سازد.
+ * اعتبار پیامک که تمام شود یا سرویس که قطع شود، همه از پنل‌هایشان بیرون
+ * می‌مانند. رمز دائمی یعنی سایت بدون پیامک هم کار می‌کند.
+ *
+ * ═══ قاعده‌ی امنیتی در کل فایل ═══
+ *
+ * **پیام خطا نباید بگوید حساب وجود دارد یا نه.** «کد فرستاده شد» برای
+ * شماره‌ی ثبت‌نشده هم همان است، و شکستِ ورود با رمز یک پیام دارد — وگرنه این
+ * فرم‌ها ابزار فهرست‌برداری از شماره‌ها و یوزرنیم‌ها می‌شوند.
  */
 
 function str(form: FormData, key: string): string {
-  const v = form.get(key)
-  return typeof v === 'string' ? v.trim() : ''
+  const value = form.get(key)
+  return typeof value === 'string' ? value.trim() : ''
 }
 
-// ── گام ۱: درخواست کد ────────────────────────────────────────────────
+const COOKIE_OPTIONS = {
+  httpOnly: true, // جاوااسکریپت نمی‌بیندش — XSS نمی‌تواند بدزددش
+  sameSite: 'lax' as const, // جلوی CSRF پایه
+  secure: process.env.NODE_ENV === 'production',
+  path: '/',
+  maxAge: SESSION_MAX_AGE_SEC,
+}
+
+async function startSession(user: {
+  id: string
+  phone: string
+  role: 'customer' | 'owner' | 'admin'
+}): Promise<void> {
+  const store = await cookies()
+  store.set(
+    SESSION_COOKIE,
+    createSessionToken({ userId: user.id, phone: user.phone, role: user.role }),
+    COOKIE_OPTIONS,
+  )
+  revalidatePath('/', 'layout')
+}
+
+/** یک ساعت — پنجره‌ی سقف درخواست کد. */
+const HOUR_SEC = 3600
+
+// ═══════════════════════════════════════════════════════════════════════
+// مسیر ۱: کد پیامکی
+// ═══════════════════════════════════════════════════════════════════════
 
 export async function requestCodeAction(
   _prev: RequestCodeState,
@@ -63,7 +113,33 @@ export async function requestCodeAction(
     return { ok: false, error: 'شماره موبایل معتبر نیست. مثال: ۰۹۱۵۱۲۳۴۵۶۷' }
   }
 
-  const existing = await getOtp(phone)
+  /*
+    منطق محدودیت نرخ در `otp.ts` است و تست دارد. اینجا فقط ورودی‌اش از
+    دیتابیس ساخته می‌شود: رکورد فعلی به‌علاوه‌ی زمان درخواست‌های اخیر.
+    بازنویسی آن منطق روی SQL یعنی دو پیاده‌سازی از یک قاعده.
+  */
+  const active = await getActiveOtp(phone)
+  const recentRequests = await listRecentOtpTimes(phone, HOUR_SEC)
+  const existing: OtpRecord | null = active
+    ? {
+        phone,
+        codeHash: active.codeHash,
+        expiresAt: active.expiresAt.getTime(),
+        attempts: active.attempts,
+        createdAt: active.createdAt.getTime(),
+        recentRequests,
+      }
+    : recentRequests.length > 0
+      ? {
+          phone,
+          codeHash: '',
+          expiresAt: 0,
+          attempts: 0,
+          createdAt: recentRequests[recentRequests.length - 1]!,
+          recentRequests,
+        }
+      : null
+
   const decision = canRequestCode(existing)
   if (!decision.allowed) {
     return { ok: false, error: decision.reason, retryAfterSec: decision.retryAfterSec }
@@ -72,34 +148,26 @@ export async function requestCodeAction(
   /**
    * سقف سراسری — لایه‌ای که سقف per-phone نمی‌پوشاند.
    *
-   * مهاجم می‌تواند شماره عوض کند و سهمیه‌ی تازه بگیرد؛ این بند جلوی
-   * سوزاندن کل اعتبار پیامک با چند ده شماره را می‌گیرد.
+   * مهاجم می‌تواند شماره عوض کند و سهمیه‌ی تازه بگیرد؛ این بند جلوی سوزاندن
+   * کل اعتبار پیامک با چند ده شماره را می‌گیرد.
    */
-  const globalRequests = pruneGlobal(await getGlobalOtpRequests())
+  const globalRequests = pruneGlobal(await listRecentOtpTimesGlobal(HOUR_SEC))
   if (isGlobalLimitReached(globalRequests)) {
     console.warn('[auth] global OTP rate limit hit — possible abuse')
-    return {
-      ok: false,
-      error: 'سرویس ورود موقتاً شلوغ است. چند دقیقه بعد دوباره تلاش کنید.',
-    }
+    return { ok: false, error: 'سرویس ورود موقتاً شلوغ است. چند دقیقه بعد دوباره تلاش کنید.' }
   }
 
   const code = generateCode()
   const sent = await sendVerificationCode(phone, code)
-
   if (!sent.ok) {
     // لاگ سرور جزئیات را دارد؛ کاربر فقط پیام عمومی می‌بیند.
     console.error('[auth] SMS send failed', sent.detail ?? sent.error)
     return { ok: false, error: sent.error ?? 'ارسال پیامک ناموفق بود.' }
   }
 
-  await saveOtp(createOtpRecord(phone, code, decision.recentRequests))
-  await recordGlobalOtpRequest(globalRequests)
-
+  await saveOtp({ phone, codeHash: hashCode(phone, code), ttlSec: OTP_TTL_SEC })
   return { ok: true, phone, devMode: sent.method === 'dev' }
 }
-
-// ── گام ۲: تأیید کد ──────────────────────────────────────────────────
 
 export async function verifyCodeAction(
   _prev: VerifyCodeState,
@@ -111,61 +179,43 @@ export async function verifyCodeAction(
   if (!phone) return { ok: false, error: 'شماره نامعتبر است.' }
   if (!code) return { ok: false, error: 'کد را وارد کنید.' }
 
-  const record = await getOtp(phone)
-  const result = verifyCode(record, phone, code)
+  const active = await getActiveOtp(phone)
+  const record: OtpRecord | null = active
+    ? {
+        phone,
+        codeHash: active.codeHash,
+        expiresAt: active.expiresAt.getTime(),
+        attempts: active.attempts,
+        createdAt: active.createdAt.getTime(),
+        recentRequests: [],
+      }
+    : null
 
+  const result = verifyCode(record, phone, code)
   if (!result.ok) {
-    if (result.burned) await deleteOtp(phone)
-    else await bumpOtpAttempts(phone)
+    if (active) {
+      // `burned` یعنی رکورد دیگر قابل استفاده نیست — مصرفش کن تا تلاش
+      // بعدی روی همان کد بی‌فایده باشد.
+      if (result.burned) await consumeOtp(active.id)
+      else await bumpOtpAttempts(active.id)
+    }
     return { ok: false, error: result.reason }
   }
 
-  // کد مصرف شد — بلافاصله بسوزانش تا دوبار قابل استفاده نباشد.
-  await deleteOtp(phone)
+  // کد درست بود — بلافاصله بسوزانش تا دوبار قابل استفاده نباشد.
+  if (active) await consumeOtp(active.id)
 
   const user = await findOrCreateUser(phone)
-  if (user.blocked) {
-    return { ok: false, error: 'دسترسی این حساب مسدود شده است.' }
-  }
+  if (user.blocked) return { ok: false, error: 'دسترسی این حساب مسدود شده است.' }
 
-  const token = createSessionToken({
-    userId: user.id,
-    phone: user.phone,
-    role: user.role,
-  })
-
-  const store = await cookies()
-  store.set(SESSION_COOKIE, token, {
-    httpOnly: true, // جاوااسکریپت نمی‌بیندش — XSS نمی‌تواند بدزددش
-    sameSite: 'lax', // جلوی CSRF پایه
-    secure: process.env.NODE_ENV === 'production',
-    path: '/',
-    maxAge: SESSION_MAX_AGE_SEC,
-  })
-
-  revalidatePath('/', 'layout')
-
-  return {
-    ok: true,
-    needsName: !user.name,
-    role: user.role,
-  }
+  await startSession(user)
+  return { ok: true, needsName: !user.name, role: user.role }
 }
 
-// ── ورود با رمز عبور ─────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════
+// مسیر ۲: یوزرنیم/شماره + رمز
+// ═══════════════════════════════════════════════════════════════════════
 
-/**
- * ورود با رمز — مسیر دوم، نه جایگزین کد پیامکی.
- *
- * ═══ چرا لازم است ═══
- *
- * ورود فقط با پیامک یک نقطه‌ی شکست تک‌نقطه‌ای می‌سازد: اعتبار پیامک که تمام
- * شود، سرویس که قطع شود، یا شماره که در دسترس نباشد، مدیر از پنل خودش
- * بیرون می‌ماند و راهی برای برگشتن ندارد.
- *
- * رمز فقط برای حساب‌هایی فعال است که `passwordHash` دارند — کاربر عادی
- * همچنان فقط با کد پیامکی وارد می‌شود و رمزی ندارد که لو برود.
- */
 export async function passwordLoginAction(
   _prev: PasswordLoginState,
   form: FormData,
@@ -174,64 +224,195 @@ export async function passwordLoginAction(
     return { ok: false, error: 'سرویس ورود تنظیم نشده است. (SESSION_SECRET)' }
   }
 
-  const phone = normalizePhone(str(form, 'phone'))
+  const identifier = str(form, 'identifier') || str(form, 'phone')
   const password = str(form, 'password')
 
   /*
-    یک پیام برای همه‌ی حالت‌های شکست: کاربر ناموجود، بدون رمز، رمز غلط.
-    پیام‌های متفاوت، این فرم را به ابزار فهرست‌برداری تبدیل می‌کند —
-    مهاجم می‌فهمد کدام شماره ثبت شده و کدام رمز دارد.
+    یک پیام برای همه‌ی حالت‌های شکست: حساب ناموجود، بدون رمز، رمز غلط.
+    پیام‌های متفاوت، این فرم را به ابزار فهرست‌برداری تبدیل می‌کند.
   */
-  const GENERIC = 'شماره یا رمز عبور درست نیست.'
+  const GENERIC = 'شناسه یا رمز عبور درست نیست.'
+  if (!identifier || !password) return { ok: false, error: GENERIC }
 
-  if (!phone || !password) return { ok: false, error: GENERIC }
-
-  const user = await findUserByPhone(phone)
-  if (!user || !user.passwordHash || user.blocked) {
-    return { ok: false, error: GENERIC }
-  }
+  const user = await findUserByLogin(identifier)
+  if (!user || !user.passwordHash || user.blocked) return { ok: false, error: GENERIC }
 
   // رمز عبور منقضی نمی‌شود، پس brute-force رویش ارزش دارد.
-  const failed = pruneFailed(user.failedLogins ?? [])
-  if (isLockedOut(failed)) {
+  const lock = await getLockState(user.id)
+  if (lock.locked) {
+    const minutes = Math.ceil(lock.retryAfterSec / 60)
     return {
       ok: false,
-      error: 'تعداد تلاش‌های ناموفق زیاد بود. ۱۵ دقیقه دیگر دوباره تلاش کنید.',
+      error: `تعداد تلاش‌های ناموفق زیاد بود. حدود ${minutes} دقیقه دیگر دوباره تلاش کنید.`,
     }
   }
 
   if (!verifyPassword(password, user.passwordHash)) {
-    await recordFailedLogin(user.id, failed)
+    await recordFailedLogin(user.id)
     return { ok: false, error: GENERIC }
   }
 
   await clearFailedLogins(user.id)
+  await startSession(user)
 
-  const store = await cookies()
-  store.set(
-    SESSION_COOKIE,
-    createSessionToken({ userId: user.id, phone: user.phone, role: user.role }),
-    {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
-      path: '/',
-      maxAge: SESSION_MAX_AGE_SEC,
-    },
-  )
+  return {
+    ok: true,
+    role: user.role,
+    // رمزِ موقتِ صادرشده از پنل ادمین باید عوض شود، وگرنه رمزی که در
+    // پیام‌رسان فرستاده شده تا ابد معتبر می‌ماند.
+    mustChangePassword: user.mustChangePassword,
+  }
+}
 
-  revalidatePath('/', 'layout')
+// ═══════════════════════════════════════════════════════════════════════
+// ثبت‌نام با رمز دائمی
+// ═══════════════════════════════════════════════════════════════════════
+
+const MIN_PASSWORD = 8
+
+/**
+ * ساخت حساب با شماره و رمز — بدون نیاز به پیامک.
+ *
+ * ═══ چرا بدون تأیید شماره ═══
+ *
+ * تا وقتی سرویس پیامک در دسترس نیست، اصرار بر تأیید شماره یعنی هیچ‌کس
+ * نمی‌تواند ثبت‌نام کند. شماره به‌عنوان **شناسه‌ی ورود** ثبت می‌شود نه
+ * شماره‌ی تأییدشده؛ هر جایی که به شماره‌ی تأییدشده نیاز باشد (مثل تصاحب
+ * صفحه‌ی کافه) جداگانه تأیید می‌خواهد.
+ *
+ * اگر شماره از قبل حسابِ بی‌رمز داشته باشد (با کد پیامکی ساخته شده)، همان
+ * حساب رمز می‌گیرد — نه حساب دوم. حساب دوم با همان شماره، کاربر را از
+ * سابقه‌ی خودش جدا می‌کند.
+ */
+export async function registerAction(
+  _prev: RegisterState,
+  form: FormData,
+): Promise<RegisterState> {
+  if (!SESSION_SECRET) {
+    return { ok: false, error: 'سرویس ورود تنظیم نشده است. (SESSION_SECRET)' }
+  }
+
+  const phone = normalizePhone(str(form, 'phone'))
+  const name = str(form, 'name').slice(0, 60)
+  const password = str(form, 'password')
+  const confirm = str(form, 'passwordConfirm')
+  const username = str(form, 'username').toLowerCase()
+
+  if (!phone) return { ok: false, error: 'شماره موبایل معتبر نیست. مثال: ۰۹۱۵۱۲۳۴۵۶۷' }
+  if (password.length < MIN_PASSWORD) {
+    return { ok: false, error: `رمز عبور باید حداقل ${MIN_PASSWORD} کاراکتر باشد.` }
+  }
+  if (password !== confirm) return { ok: false, error: 'دو رمز یکسان نیستند.' }
+
+  if (username) {
+    if (!/^[a-z0-9_.]{3,32}$/.test(username)) {
+      return {
+        ok: false,
+        error: 'یوزرنیم باید ۳ تا ۳۲ کاراکتر و فقط حروف لاتین کوچک، رقم، نقطه و زیرخط باشد.',
+      }
+    }
+    if (await isUsernameTaken(username)) {
+      return { ok: false, error: 'این یوزرنیم گرفته شده است.' }
+    }
+  }
+
+  const existing = await findUserByPhone(phone)
+
+  if (existing) {
+    if (existing.blocked) return { ok: false, error: 'دسترسی این حساب مسدود شده است.' }
+    if (existing.passwordHash) {
+      // حساب از قبل رمز دارد → این «ثبت‌نام» نیست، «ورود» است.
+      return {
+        ok: false,
+        error: 'این شماره از قبل حساب دارد. از بخش ورود با رمز استفاده کنید.',
+      }
+    }
+    // حسابِ ساخته‌شده با کد پیامکی، الان رمز می‌گیرد.
+    await setCredentials(existing.id, {
+      passwordHash: hashPassword(password),
+      username: username || existing.username,
+      mustChangePassword: false,
+    })
+    if (name && !existing.name) await updateUser(existing.id, { name })
+    const updated = (await findUserById(existing.id))!
+    await startSession(updated)
+    return { ok: true, role: updated.role, linkedExisting: true }
+  }
+
+  const user = await createUser({
+    phone,
+    username: username || null,
+    name,
+    passwordHash: hashPassword(password),
+    role: 'customer',
+  })
+
+  await startSession(user)
   return { ok: true, role: user.role }
 }
 
-// ── تکمیل نام ────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════
+// تغییر رمز
+// ═══════════════════════════════════════════════════════════════════════
+
+/**
+ * تغییر رمز توسط خودِ کاربر.
+ *
+ * دو حالت را پوشش می‌دهد:
+ *   • کاربری که رمز دارد و می‌خواهد عوضش کند → رمز فعلی لازم است
+ *   • کاربری که ادمین رمز موقت داده و `mustChangePassword` دارد → همان رمز
+ *     موقت به‌عنوان «رمز فعلی» پذیرفته می‌شود
+ *   • کاربری که با کد پیامکی وارد شده و رمز ندارد → رمز فعلی لازم نیست
+ */
+export async function changePasswordAction(
+  _prev: ChangePasswordState,
+  form: FormData,
+): Promise<ChangePasswordState> {
+  const { user, actor } = await getSession()
+  if (!user) return { ok: false, error: 'ابتدا وارد شوید.' }
+  // ادمینی که پنل کسی را «مشاهده» می‌کند، نباید رمز او را عوض کند.
+  if (actor) return { ok: false, error: VIEW_AS_READONLY }
+
+  const account = await findUserById(user.id)
+  if (!account) return { ok: false, error: 'حساب پیدا نشد.' }
+
+  const current = str(form, 'currentPassword')
+  const next = str(form, 'newPassword')
+  const confirm = str(form, 'newPasswordConfirm')
+
+  if (next.length < MIN_PASSWORD) {
+    return { ok: false, error: `رمز عبور باید حداقل ${MIN_PASSWORD} کاراکتر باشد.` }
+  }
+  if (next !== confirm) return { ok: false, error: 'دو رمز یکسان نیستند.' }
+
+  if (account.passwordHash) {
+    if (!verifyPassword(current, account.passwordHash)) {
+      return { ok: false, error: 'رمز فعلی درست نیست.' }
+    }
+    if (verifyPassword(next, account.passwordHash)) {
+      return { ok: false, error: 'رمز جدید با رمز فعلی یکی است.' }
+    }
+  }
+
+  await setCredentials(account.id, {
+    passwordHash: hashPassword(next),
+    mustChangePassword: false,
+  })
+  revalidatePath('/', 'layout')
+  return { ok: true }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// نام و خروج
+// ═══════════════════════════════════════════════════════════════════════
 
 export async function setNameAction(
   _prev: { ok: boolean; error?: string },
   form: FormData,
 ): Promise<{ ok: boolean; error?: string }> {
-  const user = await getCurrentUser()
+  const { user, actor } = await getSession()
   if (!user) return { ok: false, error: 'ابتدا وارد شوید.' }
+  if (actor) return { ok: false, error: VIEW_AS_READONLY }
 
   const name = str(form, 'name').slice(0, 60)
   if (!name) return { ok: false, error: 'نام را وارد کنید.' }
@@ -241,10 +422,19 @@ export async function setNameAction(
   return { ok: true }
 }
 
-// ── خروج ─────────────────────────────────────────────────────────────
-
 export async function signOutAction(): Promise<void> {
-  const store = await cookies()
-  store.delete(SESSION_COOKIE)
+  /*
+    در حالت «مشاهده به‌عنوان»، «خروج» یعنی خروج از همان حالت — نه از حساب
+    ادمین. بدون این شرط، ادمینی که در پروفایلِ عاریتی دکمه‌ی خروج را می‌زد
+    نشست واقعی خودش را پاک می‌کرد.
+  */
+  const { actor } = await getSession()
+  await stopViewAs()
+
+  if (!actor) {
+    const store = await cookies()
+    store.delete(SESSION_COOKIE)
+  }
+
   revalidatePath('/', 'layout')
 }

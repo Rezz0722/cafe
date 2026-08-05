@@ -1,61 +1,44 @@
 import type { MetadataRoute } from 'next'
-import { loadDistricts, loadPublishedViews } from '@/core/places/repository'
-import { INTENT_ATTRIBUTES } from '@/core/taxonomy/attributes'
-import { isIndexable } from '@/core/seo/indexability'
+import { listDistricts, listPublishedSlugs } from '@/core/places/queries'
 import { absoluteUrl, paths } from '@/routes'
 
 /**
  * sitemap تولیدشده از دیتابیس.
  *
- * نکته‌ی مهم: همان قانون thin content که `robots` صفحات را تعیین می‌کند،
- * اینجا هم اعمال می‌شود. اگر صفحه‌ای `noindex` باشد ولی در sitemap بیاید،
- * سیگنال متناقضی به گوگل می‌دهیم — «ایندکسش نکن ولی حتماً ببینش».
+ * ═══ قاعده‌ی سازگاری با robots ═══
+ *
+ * هر آدرسی که اینجا می‌آید **باید** ایندکس‌پذیر باشد. اگر صفحه‌ای `noindex`
+ * باشد ولی در sitemap بیاید، سیگنال متناقضی به گوگل می‌دهیم: «ایندکسش نکن
+ * ولی حتماً ببینش». به همین دلیل `/search` اینجا نیست — نه خودش و نه هیچ
+ * ترکیب فیلتری از آن.
+ *
+ * صفحات کانونی سه‌تا هستند: خانه، محله، کافه.
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [places, districts] = await Promise.all([loadPublishedViews(), loadDistricts()])
+  const [slugs, districts] = await Promise.all([listPublishedSlugs(), listDistricts()])
 
   const entries: MetadataRoute.Sitemap = [
-    {
-      url: absoluteUrl(paths.home),
-      changeFrequency: 'daily',
-      priority: 1,
-    },
+    { url: absoluteUrl(paths.home), changeFrequency: 'daily', priority: 1 },
   ]
 
-  // صفحات کافه — همیشه ایندکس‌پذیر
-  for (const place of places) {
+  // محله‌ها — صفحات جمع‌کننده، بالاترین ارزش SEO بعد از خانه
+  for (const district of districts) {
+    // محله‌ی خالی نمی‌آید چون صفحه‌اش ۴۰۴ می‌دهد.
+    if (district.placeCount === 0) continue
     entries.push({
-      url: absoluteUrl(paths.cafe(place.slug)),
-      lastModified: place.updatedAt,
+      url: absoluteUrl(paths.district(district.slug)),
       changeFrequency: 'weekly',
       priority: 0.8,
     })
   }
 
-  // صفحات محله
-  for (const district of districts) {
-    const count = places.filter((p) => p.districtId === district.id).length
-    if (!isIndexable(count)) continue
+  for (const place of slugs) {
     entries.push({
-      url: absoluteUrl(paths.district(district.slug)),
+      url: absoluteUrl(paths.cafe(place.slug)),
+      lastModified: place.updatedAt,
       changeFrequency: 'weekly',
       priority: 0.7,
     })
-  }
-
-  // صفحات تقاطع محله × نیت — فقط آن‌هایی که به حد نصاب رسیده‌اند
-  for (const district of districts) {
-    for (const attr of INTENT_ATTRIBUTES) {
-      const count = places.filter(
-        (p) => p.districtId === district.id && p.activeAttributeIds.includes(attr.id),
-      ).length
-      if (!isIndexable(count)) continue
-      entries.push({
-        url: absoluteUrl(paths.districtIntent(district.slug, attr.id)),
-        changeFrequency: 'weekly',
-        priority: 0.6,
-      })
-    }
   }
 
   return entries

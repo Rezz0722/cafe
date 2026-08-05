@@ -1,0 +1,429 @@
+/* پنل کاربر — و صفحات فرزندش (سلیقه، نظرها، ثبت کافه، رمز).
+   یک فایل مشترک، چون همه‌ی این صفحات یک چیدمان دارند. */
+
+.page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 18px 16px 56px;
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--c-border-3);
+}
+
+.title {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--c-ink);
+}
+
+.sub {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 5px 0 0;
+  font-size: 0.83rem;
+  color: var(--c-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.headActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+}
+
+.headLink {
+  padding: 8px 15px;
+  border: 1px solid var(--c-border);
+  border-radius: 999px;
+  background: var(--c-surface);
+  color: var(--c-ink-2);
+  font-size: 0.83rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.headLink:hover {
+  border-color: var(--c-primary);
+  color: var(--c-primary-strong);
+}
+
+/* ── بخش ────────────────────────────────────────────────────────────── */
+
+.section {
+  margin-top: 30px;
+}
+
+.sectionHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.sectionHead h2 {
+  margin: 0;
+  font-size: 1.12rem;
+  font-weight: 800;
+  color: var(--c-ink);
+}
+
+.sectionLink {
+  font-size: 0.83rem;
+  font-weight: 700;
+  color: var(--c-primary-strong);
+  text-decoration: none;
+}
+
+.sectionLink:hover {
+  text-decoration: underline;
+}
+
+.sectionNote {
+  margin: -4px 0 12px;
+  font-size: 0.8rem;
+  color: var(--c-muted);
+}
+
+.count {
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--c-surface-4);
+  color: var(--c-muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── حالت خالی ──────────────────────────────────────────────────────── */
+
+.emptyCard {
+  padding: 22px 20px;
+  border: 1px dashed var(--c-disabled);
+  border-radius: var(--r-lg, 16px);
+  background: var(--c-surface);
+}
+
+.emptyTitle {
+  margin: 0 0 6px;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--c-ink);
+}
+
+.emptyNote {
+  margin: 0;
+  font-size: 0.87rem;
+  line-height: 1.85;
+  color: var(--c-muted);
+}
+
+.emptyNote a {
+  color: var(--c-primary-strong);
+}
+
+.primaryLink {
+  display: inline-block;
+  margin-top: 14px;
+  padding: 10px 20px;
+  border-radius: 999px;
+  background: var(--c-primary);
+  color: #fff;
+  font-size: 0.87rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.primaryLink:hover {
+  background: var(--c-primary-strong);
+}
+
+/* ── فهرست کارت ─────────────────────────────────────────────────────── */
+
+.cardList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 9px;
+}
+
+.reasons {
+  margin: 4px 0 0 8px;
+  font-size: 0.76rem;
+  color: var(--c-pastel-green-strong, var(--c-open));
+  font-weight: 700;
+}
+
+/* ── ذخیره‌شده‌ها ────────────────────────────────────────────────────── */
+
+.savedList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 7px;
+}
+
+.savedItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px;
+  border: 1px solid var(--c-border-3);
+  border-radius: var(--r-md, 12px);
+  background: var(--c-surface);
+  text-decoration: none;
+}
+
+.savedItem:hover {
+  border-color: var(--c-primary);
+}
+
+.savedItem img,
+.savedEmpty {
+  width: 44px;
+  height: 44px;
+  border-radius: 11px;
+  object-fit: cover;
+  background: var(--c-surface-3);
+  flex: 0 0 auto;
+}
+
+.savedEmpty {
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+}
+
+.savedBody {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.savedBody strong {
+  font-size: 0.87rem;
+  color: var(--c-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.savedBody span {
+  font-size: 0.74rem;
+  color: var(--c-muted);
+}
+
+/* ── مشارکت ─────────────────────────────────────────────────────────── */
+
+.contribGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 9px;
+}
+
+.contribCard {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 16px 17px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg, 16px);
+  background: var(--c-surface);
+  text-decoration: none;
+}
+
+.contribCard:hover {
+  border-color: var(--c-primary);
+}
+
+.contribValue {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--c-ink);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.contribLabel {
+  font-size: 0.82rem;
+  color: var(--c-muted);
+}
+
+.contribAction {
+  margin-top: 4px;
+  font-size: 0.79rem;
+  font-weight: 700;
+  color: var(--c-primary-strong);
+}
+
+.pendingBadge {
+  margin-top: 5px;
+  align-self: flex-start;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--c-accent-soft);
+  color: var(--c-accent-text-strong);
+  font-size: 0.71rem;
+  font-weight: 700;
+}
+
+/* ── حساب ───────────────────────────────────────────────────────────── */
+
+.accountRows {
+  display: grid;
+  gap: 7px;
+}
+
+.accountRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 13px 15px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md, 12px);
+  background: var(--c-surface);
+  color: var(--c-ink);
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.accountRow:hover {
+  border-color: var(--c-primary);
+}
+
+.accountValue {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--c-primary-strong);
+}
+
+.warnRow {
+  margin: 0 0 10px;
+  padding: 11px 14px;
+  border-radius: var(--r-md, 12px);
+  background: var(--c-accent-soft);
+  color: var(--c-accent-text-strong);
+  font-size: 0.84rem;
+  line-height: 1.8;
+}
+
+/* ── صفحات فرزند ────────────────────────────────────────────────────── */
+
+.backLink {
+  display: inline-block;
+  margin-bottom: 12px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--c-primary-strong);
+  text-decoration: none;
+}
+
+.lede {
+  margin: 6px 0 20px;
+  font-size: 0.9rem;
+  line-height: 1.85;
+  color: var(--c-muted);
+}
+
+.itemList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 9px;
+}
+
+.item {
+  padding: 13px 15px;
+  border: 1px solid var(--c-border-3);
+  border-radius: var(--r-md, 12px);
+  background: var(--c-surface);
+}
+
+.itemHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+
+.itemHead a {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--c-ink);
+  text-decoration: none;
+}
+
+.itemHead a:hover {
+  color: var(--c-primary-strong);
+}
+
+.itemText {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.85;
+  color: var(--c-ink-2);
+}
+
+.stars {
+  color: var(--c-accent);
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+}
+
+.statusPending,
+.statusApproved,
+.statusRejected {
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.statusPending {
+  background: var(--c-accent-soft);
+  color: var(--c-accent-text-strong);
+}
+
+.statusApproved {
+  background: var(--c-open-bg, #daf9de);
+  color: var(--c-open, #1f6e2c);
+}
+
+.statusRejected {
+  background: var(--c-surface-4);
+  color: var(--c-ink-3);
+}
+
+.rejectNote {
+  margin: 6px 0 0;
+  font-size: 0.79rem;
+  color: var(--c-muted);
+}
+
+@media (max-width: 520px) {
+  .page {
+    padding: 12px 12px 48px;
+  }
+
+  .savedList {
+    grid-template-columns: 1fr;
+  }
+}

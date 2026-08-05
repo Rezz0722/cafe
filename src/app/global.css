@@ -26,6 +26,18 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* ارتفاع نوار «مشاهده به‌عنوان». صفر است تا نوار واقعاً وجود داشته باشد؛
+   هدرهای sticky از همین متغیر برای offset خودشان استفاده می‌کنند، پس یک عدد
+   عوض شود، همه با هم جابه‌جا می‌شوند. */
+:root {
+  --view-as-h: 0px;
+}
+
+body.viewing-as {
+  --view-as-h: 46px;
+  padding-top: var(--view-as-h);
+}
+
 a {
   color: inherit;
   text-decoration: none;

@@ -1,0 +1,78 @@
+/* ثابت بالای صفحه، نه sticky: sticky با هدرهای sticht خودِ صفحات جا عوض
+   می‌کرد. ارتفاعش را global.css به‌عنوان --view-as-h می‌شناسد و هم فضای بالای
+   body و هم offsetِ هدرهای sticky از همان یک عدد می‌آید. */
+.banner {
+  position: fixed;
+  top: 0;
+  inset-inline: 0;
+  z-index: 300;
+  min-height: var(--view-as-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 16px;
+  background: var(--c-accent-soft);
+  border-bottom: 1.5px solid var(--c-accent-border);
+  color: var(--c-accent-text-strong);
+}
+
+.body {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+}
+
+.badge {
+  flex: none;
+  padding: 2px 9px;
+  border-radius: var(--r-pill);
+  background: var(--c-accent);
+  color: #fff;
+  font-size: var(--fs-xs);
+  font-weight: 800;
+}
+
+.who {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  font-weight: 700;
+}
+
+.dim {
+  font-weight: 600;
+  opacity: 0.75;
+}
+
+.note {
+  font-size: var(--fs-xs);
+  opacity: 0.8;
+}
+
+.exit {
+  flex: none;
+  padding: 7px 14px;
+  border-radius: var(--r-pill);
+  background: var(--c-ink);
+  color: #fff;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.exit:hover {
+  background: #000;
+}
+
+/* روی موبایل، «فقط‌خواندنی» اولین چیزی است که جا کم می‌آورد و کم‌ضررترین
+   حذف هم هست — دکمه‌ی خروج باید بماند. */
+@media (max-width: 560px) {
+  .note {
+    display: none;
+  }
+}

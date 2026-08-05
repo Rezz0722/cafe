@@ -1,0 +1,258 @@
+.page {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 18px 16px 60px;
+}
+
+/* ── سرصفحه ─────────────────────────────────────────────────────────── */
+
+.hero {
+  padding: 28px 24px 26px;
+  border-radius: var(--r-lg, 16px);
+  background: var(--grad-tint, var(--c-primary-soft));
+  border: 1px solid var(--c-border-3);
+}
+
+.title {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 800;
+  line-height: 1.4;
+  color: var(--c-ink);
+}
+
+.lead {
+  margin: 8px 0 0;
+  font-size: 0.9rem;
+  line-height: 1.8;
+  color: var(--c-ink-2);
+}
+
+.heroLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.heroPrimary,
+.heroSecondary {
+  padding: 9px 16px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.heroPrimary {
+  background: var(--c-primary);
+  color: #fff;
+}
+
+.heroPrimary:hover {
+  background: var(--c-primary-strong);
+}
+
+.heroSecondary {
+  background: var(--c-surface);
+  color: var(--c-ink-2);
+  border: 1px solid var(--c-border);
+}
+
+.heroSecondary:hover {
+  border-color: var(--c-primary);
+  color: var(--c-primary-strong);
+}
+
+/* ── بخش‌ها ─────────────────────────────────────────────────────────── */
+
+.section {
+  margin-top: 38px;
+}
+
+.sectionHead h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--c-ink);
+}
+
+.sectionHead p {
+  margin: 5px 0 14px;
+  font-size: 0.85rem;
+  line-height: 1.75;
+  color: var(--c-muted);
+}
+
+.more {
+  display: inline-block;
+  margin-top: 12px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--c-primary-strong);
+  text-decoration: none;
+}
+
+.more:hover {
+  text-decoration: underline;
+}
+
+/* ── «بهترین X» ─────────────────────────────────────────────────────── */
+
+.dishGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 9px;
+}
+
+.dishCard {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 13px 14px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md, 12px);
+  background: var(--c-surface);
+  text-decoration: none;
+}
+
+.dishCard:hover {
+  border-color: var(--c-primary);
+  background: var(--c-primary-soft);
+}
+
+.dishName {
+  font-size: 0.93rem;
+  font-weight: 800;
+  color: var(--c-ink);
+}
+
+.dishMeta {
+  font-size: 0.73rem;
+  color: var(--c-muted);
+}
+
+/* ── دسته‌ها ────────────────────────────────────────────────────────── */
+
+.facetGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 9px;
+}
+
+.facetCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 16px 10px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md, 12px);
+  background: var(--c-surface);
+  text-decoration: none;
+  text-align: center;
+}
+
+.facetCard:hover {
+  border-color: var(--c-primary);
+  transform: translateY(-1px);
+}
+
+.facetIcon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.facetName {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--c-ink);
+}
+
+.facetCount {
+  font-size: 0.72rem;
+  color: var(--c-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── فهرست کارت ─────────────────────────────────────────────────────── */
+
+.cardList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 9px;
+}
+
+/* ── محله‌ها ────────────────────────────────────────────────────────── */
+
+.districtGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 7px;
+}
+
+.districtCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 11px 13px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md, 12px);
+  background: var(--c-surface);
+  color: var(--c-ink);
+  font-size: 0.86rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.districtCard:hover {
+  border-color: var(--c-primary);
+  color: var(--c-primary-strong);
+}
+
+.districtCount {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--c-surface-4);
+  color: var(--c-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── پانویس داده ────────────────────────────────────────────────────── */
+
+.dataFoot {
+  margin-top: 44px;
+  padding-top: 18px;
+  border-top: 1px solid var(--c-border-3);
+}
+
+.dataFoot p {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.9;
+  color: var(--c-muted-3);
+}
+
+@media (max-width: 520px) {
+  .page {
+    padding: 12px 12px 48px;
+  }
+
+  .hero {
+    padding: 22px 16px;
+  }
+
+  .title {
+    font-size: 1.4rem;
+  }
+
+  .cardList {
+    grid-template-columns: 1fr;
+  }
+}

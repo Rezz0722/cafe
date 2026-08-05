@@ -1,0 +1,437 @@
+.wrap {
+  margin-block: 32px;
+}
+
+.head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--c-ink);
+}
+
+.subtitle {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  color: var(--c-muted);
+}
+
+/* ── کنترل‌ها ────────────────────────────────────────────────────────── */
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.searchBox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 260px;
+  padding: 9px 13px;
+  border: 1px solid var(--c-border);
+  border-radius: 999px;
+  background: var(--c-surface);
+  color: var(--c-muted);
+}
+
+.searchBox:focus-within {
+  border-color: var(--c-primary);
+  box-shadow: 0 0 0 3px var(--c-primary-soft);
+}
+
+.searchBox input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: none;
+  color: var(--c-ink);
+  font: inherit;
+  font-size: 0.92rem;
+  outline: none;
+}
+
+.searchBox input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.searchBox button {
+  border: none;
+  background: none;
+  color: var(--c-muted);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+}
+
+.photoToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 13px;
+  border: 1px solid var(--c-border);
+  border-radius: 999px;
+  background: var(--c-surface);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--c-ink-2);
+  cursor: pointer;
+  user-select: none;
+}
+
+.photoToggle:has(input:checked) {
+  border-color: var(--c-primary);
+  background: var(--c-primary-soft);
+  color: var(--c-primary-strong);
+}
+
+/* ── نوار دسته ───────────────────────────────────────────────────────
+   چسبان است چون در منوی ۲۸۷ آیتمی باید همیشه در دسترس بماند. */
+
+.sectionNav {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  gap: 7px;
+  overflow-x: auto;
+  padding: 10px 0;
+  margin-bottom: 6px;
+  background: color-mix(in srgb, var(--c-surface) 94%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--c-border-3);
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: 0 0 auto;
+  padding: 7px 12px;
+  border: 1px solid var(--c-border);
+  border-radius: 999px;
+  background: var(--c-surface);
+  color: var(--c-ink-2);
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.chip:hover {
+  border-color: var(--c-primary);
+  color: var(--c-primary-strong);
+}
+
+.chipActive {
+  background: var(--c-primary);
+  border-color: var(--c-primary);
+  color: #fff;
+}
+
+.chipCount {
+  font-size: 0.72rem;
+  font-weight: 600;
+  opacity: 0.75;
+  font-variant-numeric: tabular-nums;
+}
+
+.resultCount {
+  margin: 8px 0 0;
+  font-size: 0.85rem;
+  color: var(--c-muted);
+}
+
+/* ── دسته و آیتم ─────────────────────────────────────────────────────── */
+
+.sections {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+  margin-top: 18px;
+}
+
+.section {
+  scroll-margin-top: 70px;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  margin: 0 0 4px;
+  font-size: 1.02rem;
+  font-weight: 800;
+  color: var(--c-ink);
+}
+
+.sectionCount {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--c-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.sectionDesc {
+  margin: 0 0 10px;
+  font-size: 0.85rem;
+  color: var(--c-muted);
+  line-height: 1.7;
+}
+
+.items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border: 1px solid var(--c-border-3);
+  border-radius: var(--r-md, 12px);
+  background: var(--c-surface);
+}
+
+.item:hover {
+  border-color: var(--c-border-5);
+}
+
+.itemUnavailable {
+  opacity: 0.62;
+}
+
+.thumbButton {
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: zoom-in;
+  border-radius: 10px;
+  overflow: hidden;
+  line-height: 0;
+}
+
+.thumb {
+  display: block;
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  background: var(--c-surface-3);
+}
+
+.thumbEmpty {
+  display: block;
+  width: 64px;
+  height: 64px;
+  border-radius: 10px;
+  background: var(--grad-tint, var(--c-surface-3));
+}
+
+.itemBody {
+  min-width: 0;
+}
+
+.itemHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 7px;
+}
+
+.itemName {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--c-ink);
+  line-height: 1.5;
+}
+
+.featured {
+  color: var(--c-accent);
+  font-size: 0.85rem;
+}
+
+.itemNameEn {
+  font-size: 0.74rem;
+  color: var(--c-muted-3);
+  direction: ltr;
+}
+
+.itemDesc {
+  margin: 3px 0 0;
+  font-size: 0.8rem;
+  color: var(--c-muted);
+  line-height: 1.65;
+  /* توضیحات بعضی آیتم‌ها بلند است؛ دو خط برای فهم کافی است. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.soldOut {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--c-surface-4);
+  color: var(--c-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.itemPrice {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  min-width: 74px;
+  text-align: end;
+}
+
+.priceValue {
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: var(--c-ink);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.priceUnit {
+  font-size: 0.68rem;
+  color: var(--c-muted-3);
+}
+
+.priceUnknown {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--c-muted);
+}
+
+/* ── نمای بزرگ ───────────────────────────────────────────────────────── */
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgb(0 0 0 / 0.82);
+  cursor: zoom-out;
+}
+
+.lightboxClose {
+  position: absolute;
+  inset-block-start: 16px;
+  inset-inline-end: 18px;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.16);
+  color: #fff;
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.lightboxFigure {
+  margin: 0;
+  max-width: min(560px, 100%);
+  cursor: default;
+  background: var(--c-surface);
+  border-radius: var(--r-lg, 16px);
+  overflow: hidden;
+}
+
+.lightboxFigure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 62vh;
+  object-fit: contain;
+  background: #000;
+}
+
+.lightboxFigure figcaption {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 14px 16px 16px;
+}
+
+.lightboxFigure figcaption strong {
+  font-size: 1.05rem;
+  color: var(--c-ink);
+}
+
+.lightboxFigure figcaption span {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--c-primary-strong);
+}
+
+.lightboxFigure figcaption p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--c-muted);
+  line-height: 1.7;
+}
+
+/* ── حالت خالی و پانویس ─────────────────────────────────────────────── */
+
+.emptyMenu {
+  margin-block: 28px;
+  padding: 22px;
+  border: 1px dashed var(--c-disabled);
+  border-radius: var(--r-md, 12px);
+  text-align: center;
+  color: var(--c-muted);
+  font-size: 0.9rem;
+}
+
+.emptyMenu p {
+  margin: 0 0 8px;
+}
+
+.sourceNote {
+  margin: 18px 0 0;
+  font-size: 0.78rem;
+  color: var(--c-muted-3);
+}
+
+@media (max-width: 520px) {
+  .item {
+    gap: 9px;
+    padding: 9px;
+  }
+
+  .thumb,
+  .thumbEmpty {
+    width: 54px;
+    height: 54px;
+  }
+
+  .itemPrice {
+    min-width: 62px;
+  }
+}

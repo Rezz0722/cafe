@@ -5,6 +5,16 @@ export function fa(value: string | number): string {
   return String(value).replace(/[0-9]/g, (d) => FA_DIGITS[Number(d)])
 }
 
+/**
+ * Count with a Persian thousands mark — «۱۹٬۳۸۶».
+ *
+ * `fa` alone only swaps digits, so `fa(19386)` gives «۱۹۳۸۶»: readable, but a
+ * five-digit run is hard to scan. Counts shown to users go through this.
+ */
+export function faCount(value: number): string {
+  return fa(value.toLocaleString('en-US')).replace(/,/g, '٬')
+}
+
 /** Inverse of `fa` — Persian digits back to ASCII, other characters untouched. */
 export function toEnDigits(value: string): string {
   return String(value).replace(/[۰-۹]/g, (d) => String(FA_DIGITS.indexOf(d)))

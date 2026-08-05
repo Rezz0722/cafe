@@ -1,5 +1,10 @@
 import 'server-only'
 
+import { ensureEnvLoaded } from './loadEnv'
+
+// در اسکریپت‌های CLI، Next.js وجود ندارد که `.env.local` را بار کند.
+ensureEnvLoaded()
+
 /**
  * خواندن و اعتبارسنجی تنظیمات محیط.
  *
@@ -29,6 +34,15 @@ function bool(name: string, fallback = false): boolean {
 export const AUTH_DEV_MODE = bool('AUTH_DEV_MODE', true)
 
 export const SESSION_SECRET = optional('SESSION_SECRET')
+
+/**
+ * اتصال MySQL. شکل: `mysql://user:pass@host:3306/dbname`
+ *
+ * تنها منبع داده‌ی سایت است — بدون آن سایت بالا نمی‌آید. عمداً هیچ
+ * fallback فایلی ندارد: fallbackِ بی‌صدا یعنی روزی که دیتابیس قطع شود،
+ * سایت با داده‌ی بیات و بدون هیچ هشداری سرو می‌شود.
+ */
+export const DATABASE_URL = optional('DATABASE_URL')
 
 export const SMSIR = {
   apiKey: optional('SMSIR_API_KEY'),

@@ -1,0 +1,600 @@
+/* صفحه‌ی کافه.
+   چیدمان دوستونی روی دسکتاپ، تک‌ستون روی موبایل. ستون کنار روی موبایل
+   **بعد از** منو نمی‌آید بلکه قبلش — چون «الان باز است؟» و «کجاست؟» را
+   کاربر موبایل زودتر از منو می‌خواهد. با `order` انجام می‌شود. */
+
+.page {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 18px 16px 56px;
+}
+
+/* ── سرصفحه ─────────────────────────────────────────────────────────── */
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg, 16px);
+  background: var(--c-surface);
+}
+
+.heroMain {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.logo,
+.logoEmpty {
+  flex: 0 0 auto;
+  width: 76px;
+  height: 76px;
+  border-radius: 16px;
+  object-fit: cover;
+  background: var(--c-surface-3);
+  border: 1px solid var(--c-border-3);
+}
+
+.logoEmpty {
+  display: grid;
+  place-items: center;
+  font-size: 30px;
+  background: var(--grad-tint, var(--c-surface-3));
+}
+
+.heroText {
+  min-width: 0;
+  flex: 1;
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.kind,
+.district,
+.ribbon {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.kind {
+  background: var(--c-surface-4);
+  color: var(--c-ink-2);
+}
+
+.district {
+  background: var(--c-primary-soft);
+  color: var(--c-primary-strong);
+}
+
+.district:hover {
+  background: var(--c-primary);
+  color: #fff;
+}
+
+.ribbon {
+  background: var(--c-accent-soft);
+  color: var(--c-accent-text-strong);
+}
+
+.name {
+  margin: 0;
+  font-size: 1.65rem;
+  font-weight: 800;
+  line-height: 1.3;
+  color: var(--c-ink);
+}
+
+.nameEn {
+  margin: 2px 0 0;
+  font-size: 0.85rem;
+  color: var(--c-muted-3);
+  direction: ltr;
+  text-align: start;
+}
+
+.metaRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 9px;
+}
+
+/* وضعیت باز/بسته با رنگ *و* متن منتقل می‌شود، نه فقط رنگ — کاربر
+   کوررنگ هم باید بفهمد. */
+.openBadge {
+  display: inline-block;
+  padding: 4px 11px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.openNow {
+  background: var(--c-open-bg, #daf9de);
+  color: var(--c-open, #1f6e2c);
+}
+
+.closedNow {
+  background: var(--c-surface-4);
+  color: var(--c-ink-3);
+}
+
+.unknownNow {
+  background: var(--c-accent-soft);
+  color: var(--c-accent-text-strong);
+}
+
+.openSub {
+  font-size: 0.8rem;
+  color: var(--c-muted);
+}
+
+.address {
+  margin: 9px 0 0;
+  font-size: 0.87rem;
+  line-height: 1.75;
+  color: var(--c-ink-2);
+}
+
+/* ── نوار آمار ──────────────────────────────────────────────────────── */
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: 1px;
+  margin-top: 14px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg, 16px);
+  background: var(--c-border-3);
+  overflow: hidden;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 13px 14px;
+  background: var(--c-surface);
+}
+
+.statValue {
+  font-size: 0.97rem;
+  font-weight: 800;
+  color: var(--c-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.statLabel {
+  font-size: 0.73rem;
+  color: var(--c-muted);
+}
+
+.dataNote {
+  margin: 12px 0 0;
+  padding: 9px 13px;
+  border-radius: var(--r-md, 12px);
+  background: var(--c-accent-soft);
+  color: var(--c-accent-text-strong);
+  font-size: 0.8rem;
+  line-height: 1.7;
+}
+
+/* ── شبکه ───────────────────────────────────────────────────────────── */
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 26px;
+  margin-top: 22px;
+  align-items: start;
+}
+
+.main {
+  min-width: 0;
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: sticky;
+  top: 14px;
+}
+
+.sectionHeading {
+  margin: 0 0 8px;
+  font-size: 1.12rem;
+  font-weight: 800;
+  color: var(--c-ink);
+}
+
+.sideHeading {
+  margin: 0 0 10px;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--c-ink);
+}
+
+/* ── درباره ─────────────────────────────────────────────────────────── */
+
+.about {
+  margin-bottom: 26px;
+}
+
+.about p {
+  margin: 0 0 8px;
+  font-size: 0.92rem;
+  line-height: 1.9;
+  color: var(--c-ink-2);
+}
+
+/* ── facetها ────────────────────────────────────────────────────────── */
+
+.facets {
+  margin-bottom: 26px;
+}
+
+.facetsNote {
+  margin: -4px 0 10px;
+  font-size: 0.78rem;
+  color: var(--c-muted-3);
+}
+
+.facetList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.facetChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border: 1px solid var(--c-border);
+  border-radius: 999px;
+  background: var(--c-surface);
+  font-size: 0.8rem;
+}
+
+.facetIcon {
+  font-size: 0.95rem;
+}
+
+.facetLabel {
+  font-weight: 700;
+  color: var(--c-ink);
+}
+
+.facetCount {
+  color: var(--c-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.facetPrice {
+  color: var(--c-primary-strong);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* ── ارزان‌تر از شهر ────────────────────────────────────────────────── */
+
+.value {
+  margin-bottom: 26px;
+  padding: 15px 16px;
+  border: 1px solid var(--c-pastel-green);
+  border-radius: var(--r-lg, 16px);
+  background: color-mix(in srgb, var(--c-pastel-green) 26%, var(--c-surface));
+}
+
+.valueList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.valueList li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 0.87rem;
+}
+
+.valueList strong {
+  color: var(--c-pastel-green-text, var(--c-ink));
+}
+
+.valuePrice {
+  font-weight: 800;
+  color: var(--c-pastel-green-strong, var(--c-open));
+  font-variant-numeric: tabular-nums;
+}
+
+.valueCity {
+  font-size: 0.76rem;
+  color: var(--c-muted);
+}
+
+/* ── نظرها ──────────────────────────────────────────────────────────── */
+
+.reviews {
+  margin-top: 34px;
+}
+
+.noReviews {
+  margin: 0;
+  padding: 18px;
+  border: 1px dashed var(--c-disabled);
+  border-radius: var(--r-md, 12px);
+  color: var(--c-muted);
+  font-size: 0.88rem;
+  text-align: center;
+}
+
+.reviewList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.review {
+  padding: 13px 15px;
+  border: 1px solid var(--c-border-3);
+  border-radius: var(--r-md, 12px);
+  background: var(--c-surface);
+}
+
+.reviewHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 5px;
+}
+
+.reviewHead strong {
+  font-size: 0.9rem;
+  color: var(--c-ink);
+}
+
+.reviewStars {
+  color: var(--c-accent);
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+}
+
+.starsDim {
+  color: var(--c-disabled);
+}
+
+.reviewText {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.85;
+  color: var(--c-ink-2);
+}
+
+/* ── کارت‌های ستون کنار ─────────────────────────────────────────────── */
+
+.card {
+  padding: 15px 16px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg, 16px);
+  background: var(--c-surface);
+}
+
+.mapMissing {
+  margin: 0;
+  font-size: 0.83rem;
+  line-height: 1.8;
+  color: var(--c-muted);
+}
+
+.hoursTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+}
+
+.hoursTable th {
+  padding: 5px 0;
+  text-align: start;
+  font-weight: 600;
+  color: var(--c-ink-2);
+  white-space: nowrap;
+}
+
+.hoursTable td {
+  padding: 5px 0;
+  text-align: end;
+  color: var(--c-ink);
+}
+
+.today th,
+.today td {
+  font-weight: 800;
+  color: var(--c-primary-strong);
+}
+
+.hoursRange {
+  display: block;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.hoursClosed {
+  color: var(--c-muted-3);
+}
+
+.hoursUnknown {
+  color: var(--c-muted-4);
+  font-size: 0.78rem;
+}
+
+.contactList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 7px;
+  font-size: 0.87rem;
+}
+
+.contactList li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.contactList a {
+  color: var(--c-primary-strong);
+  text-decoration: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.contactList a:hover {
+  text-decoration: underline;
+}
+
+.contactTag {
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--c-surface-4);
+  color: var(--c-muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.nearbyList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.nearbyItem {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px;
+  border-radius: 10px;
+  text-decoration: none;
+}
+
+.nearbyItem:hover {
+  background: var(--c-surface-3);
+}
+
+.nearbyItem img,
+.nearbyEmpty {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  object-fit: cover;
+  background: var(--c-surface-3);
+  flex: 0 0 auto;
+}
+
+.nearbyEmpty {
+  display: grid;
+  place-items: center;
+  font-size: 16px;
+}
+
+.nearbyBody {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.nearbyBody strong {
+  font-size: 0.85rem;
+  color: var(--c-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nearbyBody span {
+  font-size: 0.73rem;
+  color: var(--c-muted);
+}
+
+/* ── موبایل ─────────────────────────────────────────────────────────── */
+
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .side {
+    position: static;
+    /* روی موبایل، نقشه و ساعت کاری **قبل** از منو می‌آیند: کاربر موبایل
+       معمولاً وسط شهر ایستاده و اول می‌خواهد بداند باز است و کجاست. */
+    order: -1;
+  }
+
+  .name {
+    font-size: 1.4rem;
+  }
+
+  .logo,
+  .logoEmpty {
+    width: 62px;
+    height: 62px;
+  }
+}
+
+@media (max-width: 520px) {
+  .page {
+    padding: 12px 12px 44px;
+  }
+
+  .hero {
+    padding: 14px;
+  }
+}
+
+/* ── نوار اکشن: مسیریابی + ذخیره ────────────────────────────────────── */
+
+.actionRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.reviewFormWrap {
+  margin-top: 20px;
+}
+
+.reviewFormTitle {
+  margin: 0 0 10px;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--c-ink);
+}

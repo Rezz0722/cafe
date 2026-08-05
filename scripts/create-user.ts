@@ -1,103 +1,155 @@
 /**
- * ساخت یا به‌روزرسانی حساب کاری با رمز عبور.
+ * ساخت یا به‌روزرسانی حساب با رمز عبور — روی MySQL.
  *
- *   npm run user:create -- --phone 09151234567 --name "علیرضا" --role admin
- *   npm run user:create -- --phone 09151234567 --password "دلخواه"
- *   npm run user:create -- --phone 09121112222 --role owner --venue vien-cafe
+ *   npm run user:create -- --phone 09151234567 --role admin --name "نگار"
+ *   npm run user:create -- --username shayer_cafe --role owner --place shayer
+ *   npm run user:create -- --phone 09151234567 --password "..."   (رمز دلخواه)
+ *   npm run user:create -- --username x --temp                    (رمز موقت)
  *
- * بدون `--password`، یک رمز قوی تصادفی ساخته و **یک‌بار** چاپ می‌شود.
- * رمز فقط به‌صورت هش (scrypt) ذخیره می‌شود، پس اگر گمش کنی باید دوباره
- * بسازی — قابل بازیابی نیست، و همین درست است.
+ * ═══ چرا این اسکریپت لازم است ═══
+ *
+ * اولین ادمین را نمی‌شود از داخل سایت ساخت — هیچ ادمینی وجود ندارد که
+ * بسازدش. `ADMIN_PHONES` هم فقط با ورود پیامکی کار می‌کند و اگر سرویس پیامک
+ * در دسترس نباشد بی‌فایده است. این اسکریپت آن گره را باز می‌کند.
+ *
+ * بعد از اولین ادمین، ساختن حساب و صدور اعتبارنامه از پنل ادمین انجام
+ * می‌شود؛ این اسکریپت فقط برای bootstrap و کار عملیاتی است.
+ *
+ * ⚠️  رمز **یک‌بار** در ترمینال چاپ می‌شود و هیچ‌جا ذخیره نمی‌شود (فقط هشش).
  */
 
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs'
+import { eq } from 'drizzle-orm'
+import { generatePassword, hashPassword } from '../src/core/auth/password'
+import { normalizePhone } from '../src/core/auth/phone'
+import { closeDb, getDb } from '../src/db/connection'
+import { appUser, place as placeTable, userPlaceRole } from '../src/db/schema'
 import { randomUUID } from 'node:crypto'
-import { resolve, dirname } from 'node:path'
-import { generatePassword, hashPassword } from '../src/core/auth/password.ts'
-import { normalizePhone } from '../src/core/auth/phone.ts'
 
-const ROOT = resolve(import.meta.dirname, '..')
-const USERS = resolve(ROOT, 'src/data/users.json')
+type Role = 'customer' | 'owner' | 'admin'
 
 function arg(name: string): string | undefined {
-  const i = process.argv.indexOf(`--${name}`)
-  return i > -1 ? process.argv[i + 1] : undefined
+  const index = process.argv.indexOf(`--${name}`)
+  if (index === -1) return undefined
+  const value = process.argv[index + 1]
+  return value && !value.startsWith('--') ? value : undefined
 }
 
-const phoneRaw = arg('phone')
-if (!phoneRaw) {
-  console.error('✗ --phone لازم است')
-  console.error('  مثال: npm run user:create -- --phone 09151234567 --role admin')
-  process.exit(1)
+function flag(name: string): boolean {
+  return process.argv.includes(`--${name}`)
 }
 
-const phone = normalizePhone(phoneRaw)
-if (!phone) {
-  console.error(`✗ شماره نامعتبر: ${phoneRaw}`)
-  process.exit(1)
-}
+async function main() {
+  const db = getDb()
 
-const role = (arg('role') ?? 'admin') as 'admin' | 'owner' | 'customer'
-if (!['admin', 'owner', 'customer'].includes(role)) {
-  console.error(`✗ نقش نامعتبر: ${role} (admin | owner | customer)`)
-  process.exit(1)
-}
+  const phoneRaw = arg('phone')
+  const username = arg('username')?.trim().toLowerCase()
+  const name = arg('name') ?? ''
+  const roleArg = (arg('role') ?? 'admin') as Role
+  const placeSlug = arg('place')
+  const explicitPassword = arg('password')
+  const temporary = flag('temp')
 
-const name = arg('name') ?? ''
-const venue = arg('venue')
-const password = arg('password') ?? generatePassword(16)
-
-interface StoredUser {
-  id: string
-  phone: string
-  name: string
-  role: string
-  ownedPlaceSlugs: string[]
-  createdAt: string
-  lastLoginAt: string | null
-  passwordHash?: string | null
-  failedLogins?: number[]
-}
-
-const users: StoredUser[] = existsSync(USERS)
-  ? JSON.parse(readFileSync(USERS, 'utf8'))
-  : []
-
-const now = new Date().toISOString()
-const existing = users.find((u) => u.phone === phone)
-
-if (existing) {
-  existing.role = role
-  existing.passwordHash = hashPassword(password)
-  existing.failedLogins = [] // قفلِ احتمالی باز شود
-  if (name) existing.name = name
-  if (venue && !existing.ownedPlaceSlugs.includes(venue)) {
-    existing.ownedPlaceSlugs.push(venue)
+  if (!['customer', 'owner', 'admin'].includes(roleArg)) {
+    throw new Error(`نقش نامعتبر: ${roleArg}. یکی از customer | owner | admin`)
   }
-} else {
-  users.push({
-    id: randomUUID(),
-    phone,
-    name: name || 'کاربر',
-    role,
-    ownedPlaceSlugs: venue ? [venue] : [],
-    createdAt: now,
-    lastLoginAt: null,
-    passwordHash: hashPassword(password),
-    failedLogins: [],
-  })
+
+  const phone = phoneRaw ? normalizePhone(phoneRaw) : null
+  if (phoneRaw && !phone) {
+    throw new Error(`شماره نامعتبر: ${phoneRaw}`)
+  }
+  if (!phone && !username) {
+    throw new Error('حداقل یکی از --phone یا --username لازم است.')
+  }
+
+  const password = explicitPassword ?? generatePassword(14)
+  const passwordHash = hashPassword(password)
+
+  // ── کاربر موجود؟ (با شماره یا یوزرنیم)
+  let existingId: string | null = null
+  if (phone) {
+    const [row] = await db
+      .select({ id: appUser.id })
+      .from(appUser)
+      .where(eq(appUser.phone, phone))
+      .limit(1)
+    existingId = row?.id ?? null
+  }
+  if (!existingId && username) {
+    const [row] = await db
+      .select({ id: appUser.id })
+      .from(appUser)
+      .where(eq(appUser.username, username))
+      .limit(1)
+    existingId = row?.id ?? null
+  }
+
+  let userId: string
+  if (existingId) {
+    userId = existingId
+    await db
+      .update(appUser)
+      .set({
+        role: roleArg,
+        passwordHash,
+        passwordUpdatedAt: new Date(),
+        mustChangePassword: temporary,
+        status: 'active',
+        failedLogins: 0,
+        lockedUntil: null,
+        ...(username ? { username } : {}),
+        ...(phone ? { phone } : {}),
+        ...(name ? { name } : {}),
+      })
+      .where(eq(appUser.id, userId))
+    console.log('حساب موجود به‌روزرسانی شد.')
+  } else {
+    userId = randomUUID()
+    await db.insert(appUser).values({
+      id: userId,
+      phone,
+      username: username ?? null,
+      name,
+      role: roleArg,
+      passwordHash,
+      passwordUpdatedAt: new Date(),
+      mustChangePassword: temporary,
+    })
+    console.log('حساب تازه ساخته شد.')
+  }
+
+  // ── انتساب کافه، اگر خواسته شده
+  if (placeSlug) {
+    const [target] = await db
+      .select({ id: placeTable.id, name: placeTable.name })
+      .from(placeTable)
+      .where(eq(placeTable.slug, placeSlug))
+      .limit(1)
+
+    if (!target) {
+      console.warn(`⚠️  کافه با slug «${placeSlug}» پیدا نشد — انتساب انجام نشد.`)
+    } else {
+      await db
+        .insert(userPlaceRole)
+        .values({ userId, placeId: target.id, role: 'owner', status: 'active' })
+        .onDuplicateKeyUpdate({ set: { status: 'active', role: 'owner' } })
+      console.log(`کافه «${target.name}» به این حساب متصل شد.`)
+    }
+  }
+
+  console.log('\n── اعتبارنامه ──')
+  if (phone) console.log(`شماره:    ${phone}`)
+  if (username) console.log(`یوزرنیم:  ${username}`)
+  console.log(`رمز:      ${password}`)
+  console.log(`نقش:      ${roleArg}`)
+  if (temporary) console.log('حالت:     رمز موقت — کاربر باید در ورود اول عوضش کند')
+  console.log('\n⚠️  این رمز جای دیگری ذخیره نشده. همین حالا جایی امن نگهش دارید.')
+  console.log('ورود از /auth → «ورود با رمز عبور»')
+
+  await closeDb()
 }
 
-mkdirSync(dirname(USERS), { recursive: true })
-writeFileSync(USERS, `${JSON.stringify(users, null, 2)}\n`, 'utf8')
-
-console.log('')
-console.log(existing ? '✓ حساب به‌روز شد' : '✓ حساب ساخته شد')
-console.log(`  شماره : ${phone}`)
-console.log(`  نقش   : ${role}`)
-if (venue) console.log(`  کافه  : ${venue}`)
-console.log(`  رمز   : ${password}`)
-console.log('')
-console.log('  ورود:  /auth  →  «ورود با رمز عبور»')
-console.log('  رمز فقط هش‌شده ذخیره شد و دیگر قابل نمایش نیست.')
-console.log('')
+main().catch(async (error) => {
+  console.error(`\n✗ ${error instanceof Error ? error.message : error}`)
+  await closeDb()
+  process.exit(1)
+})

@@ -16,10 +16,16 @@ export const paths = {
   search: '/search',
   cafe: (slug: string) => `/cafe/${slug}`,
   district: (districtSlug: string) => `/mashhad/${districtSlug}`,
-  districtIntent: (districtSlug: string, intentId: string) =>
-    `/mashhad/${districtSlug}/${intentId}`,
   auth: '/auth',
   profile: '/profile',
+  /** تغییر رمز — مقصد اجباریِ کسی که رمز موقت گرفته. */
+  changePassword: '/profile/password',
+  /** سلیقه‌سنجی کاربر. */
+  taste: '/profile/taste',
+  /** ثبت کافه‌ی جدید توسط کاربر. */
+  submitPlace: '/profile/submit',
+  /** نظرهای کاربر. */
+  myReviews: '/profile/reviews',
   admin: '/admin',
   /** پنل مالک کافه — جدا از پنل مدیر. */
   ownerPanel: '/admin/venue',
@@ -31,11 +37,6 @@ export function searchUrl(query?: string): string {
   return q ? `${paths.search}?q=${encodeURIComponent(q)}` : paths.search
 }
 
-/** `/search?intents=id1,id2` — شناسه‌محور، نه برچسب فارسی. */
-export function searchByIntents(intentIds: string[]): string {
-  if (!intentIds.length) return paths.search
-  return `${paths.search}?intents=${intentIds.join(',')}`
-}
 
 export function authUrl(redirectTo?: string): string {
   return redirectTo ? `${paths.auth}?redirect=${encodeURIComponent(redirectTo)}` : paths.auth
