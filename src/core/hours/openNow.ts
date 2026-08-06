@@ -43,7 +43,13 @@ export interface OpenState {
   minutesToClose: number | null
 }
 
-const TEHRAN_TZ = 'Asia/Tehran'
+/**
+ * منطقه‌ی زمانی پیش‌فرض.
+ *
+ * تزریق‌شدنی است چون از تنظیمات پنل ادمین می‌آید، ولی پیش‌فرض دارد تا این
+ * ماژول **خالص و بدون وابستگی به دیتابیس** بماند و مستقیم قابل تست باشد.
+ */
+export const DEFAULT_TIME_ZONE = 'Asia/Tehran'
 const MINUTES_PER_DAY = 24 * 60
 
 /** «HH:MM» → دقیقه از نیمه‌شب. */
@@ -74,9 +80,9 @@ export interface TehranNow {
  * ساعت تابستانی را در ۱۴۰۱ لغو کرد ولی اگر روزی برگردد، `Intl` خودش
  * درست می‌ماند و این کد نه.
  */
-export function tehranNow(at: Date = new Date()): TehranNow {
+export function tehranNow(at: Date = new Date(), timeZone = DEFAULT_TIME_ZONE): TehranNow {
   const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone: TEHRAN_TZ,
+    timeZone,
     weekday: 'short',
     hour: '2-digit',
     minute: '2-digit',
@@ -182,7 +188,11 @@ const DAY_LABEL = (dow: number) => WEEKDAY_NAMES[dow] ?? ''
  * `at` برای تست تزریق می‌شود — بدون آن، تستِ «نیمه‌شب باز است» فقط نیمه‌شب
  * قابل اجرا بود.
  */
-export function computeOpenState(shifts: HourShift[], at: Date = new Date()): OpenState {
+export function computeOpenState(
+  shifts: HourShift[],
+  at: Date = new Date(),
+  timeZone = DEFAULT_TIME_ZONE,
+): OpenState {
   if (shifts.length === 0) {
     return {
       status: 'unknown',
@@ -192,7 +202,7 @@ export function computeOpenState(shifts: HourShift[], at: Date = new Date()): Op
     }
   }
 
-  const now = tehranNow(at)
+  const now = tehranNow(at, timeZone)
   const resolved = resolveShifts(shifts, now)
   const current = resolved.find((shift) => now.minutes >= shift.start && now.minutes < shift.end)
 
@@ -269,8 +279,12 @@ export interface DaySchedule {
  * از شنبه شروع می‌شود و **روز جاری علامت می‌خورد** — کاربر تقریباً همیشه
  * دنبال همان یک سطر است.
  */
-export function weekSchedule(shifts: HourShift[], at: Date = new Date()): DaySchedule[] {
-  const now = tehranNow(at)
+export function weekSchedule(
+  shifts: HourShift[],
+  at: Date = new Date(),
+  timeZone = DEFAULT_TIME_ZONE,
+): DaySchedule[] {
+  const now = tehranNow(at, timeZone)
   const byDay = new Map<number, HourShift[]>()
   for (const shift of shifts) {
     const list = byDay.get(shift.dow)

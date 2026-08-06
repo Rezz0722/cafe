@@ -9,8 +9,14 @@
 
 import { buildMapStyle } from '@/core/map/style'
 import { isMapReady } from '@/core/map/tiles'
+import { getMapPolicy } from '@/core/settings/policies'
 
-export const dynamic = 'force-static'
+/*
+  قبلاً `force-static` بود. حالا که «زومِ نمایش ساختمان» از دیتابیس می‌آید،
+  استایلِ استاتیک یعنی تغییرِ آن تنظیم تا ری‌دیپلوی بعدی دیده نمی‌شود. کش یک
+  ساعته‌ی HTTP همان صرفه را دارد بدون آن تله.
+*/
+export const dynamic = 'force-dynamic'
 
 export async function GET(request: Request): Promise<Response> {
   if (!isMapReady()) {
@@ -21,7 +27,8 @@ export async function GET(request: Request): Promise<Response> {
   }
 
   const theme = new URL(request.url).searchParams.get('theme') === 'dark' ? 'dark' : 'light'
-  const style = buildMapStyle({ theme })
+  const map = await getMapPolicy()
+  const style = buildMapStyle({ theme, buildingsFromZoom: map.showBuildingsFromZoom })
 
   return Response.json(style, {
     headers: { 'Cache-Control': 'public, max-age=3600' },

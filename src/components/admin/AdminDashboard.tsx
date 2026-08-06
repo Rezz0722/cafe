@@ -25,11 +25,21 @@ import {
   startViewAsAction,
 } from '@/app/admin/actions'
 import { EMPTY_ADMIN_STATE, type AdminActionState } from '@/app/admin/state'
+import { OperationsPanel } from '@/components/admin/OperationsPanel'
+import { SettingsPanel, type SettingsPanelProps } from '@/components/admin/SettingsPanel'
 import { fa, faCount } from '@/lib/format'
 import { paths } from '@/routes'
 import styles from './AdminDashboard.module.css'
 
-type Tab = 'queue' | 'traffic' | 'places' | 'users' | 'credentials' | 'health'
+type Tab =
+  | 'queue'
+  | 'traffic'
+  | 'places'
+  | 'users'
+  | 'credentials'
+  | 'health'
+  | 'settings'
+  | 'operations'
 
 function Submit({ label, danger }: { label: string; danger?: boolean }) {
   const { pending } = useFormStatus()
@@ -130,6 +140,8 @@ export interface AdminData {
   configProblems: { key: string; message: string; fatal: boolean }[]
   dbOk: boolean
   mapReady: boolean
+  /** تنظیمات سایت — مقدار فعلی، کلیدهای تغییریافته و زمان آخرین تغییر. */
+  settings: SettingsPanelProps
 }
 
 const DEVICE_LABELS: Record<string, string> = {
@@ -170,6 +182,8 @@ export function AdminDashboard({ data }: { data: AdminData }) {
     { id: 'users', label: 'کاربران' },
     { id: 'credentials', label: 'اعتبارنامه' },
     { id: 'health', label: 'سلامت داده' },
+    { id: 'settings', label: 'تنظیمات' },
+    { id: 'operations', label: 'عملیات' },
   ]
 
   const filteredUsers = userQuery.trim()
@@ -726,7 +740,7 @@ export function AdminDashboard({ data }: { data: AdminData }) {
               ['بدون محله', data.health.noDistrict],
               ['قیمت اصلاح‌واحد‌شده', data.health.priceUnitFixed],
               ['تصویر ناموفق', data.health.mediaFailed],
-              ['قیمت بیات (>۳ ماه)', data.health.stalePrices],
+              [`قیمت بیات (>${fa(Number(data.settings.values.stalePriceDays ?? 90))} روز)`, data.health.stalePrices],
             ].map(([label, value]) => (
               <div key={String(label)} className={styles.stat}>
                 <span className={styles.statValue}>{faCount(Number(value ?? 0))}</span>
@@ -777,6 +791,20 @@ export function AdminDashboard({ data }: { data: AdminData }) {
               </ul>
             </>
           )}
+        </section>
+      )}
+
+      {/* ── تنظیمات ──────────────────────────────────────────────── */}
+      {tab === 'settings' && (
+        <section className={styles.section}>
+          <SettingsPanel {...data.settings} />
+        </section>
+      )}
+
+      {/* ── عملیات ───────────────────────────────────────────────── */}
+      {tab === 'operations' && (
+        <section className={styles.section}>
+          <OperationsPanel />
         </section>
       )}
     </div>

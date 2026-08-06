@@ -31,7 +31,7 @@ import {
   userPlaceRole,
 } from '@/db/schema'
 import { ADMIN_PHONES } from '@/core/config/env'
-import { LOGIN_LOCKOUT_MIN, LOGIN_MAX_ATTEMPTS } from './password'
+import { DEFAULT_LOCKOUT, type LockoutPolicy } from './password'
 import type { AppUser, Role } from './types'
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -406,15 +406,18 @@ export async function getLockState(id: string): Promise<LockState> {
  * موقع خواندن **۳ ساعت و ۴۵ دقیقه** به‌نظر می‌رسید (۱۳٬۵۰۰ ثانیه به‌جای
  * ۹۰۰). زمان در جاوااسکریپت حساب و به‌عنوان پارامتر فرستاده می‌شود.
  */
-export async function recordFailedLogin(id: string): Promise<LockState> {
+export async function recordFailedLogin(
+  id: string,
+  policy: LockoutPolicy = DEFAULT_LOCKOUT,
+): Promise<LockState> {
   const db = getDb()
-  const lockedUntil = new Date(Date.now() + LOGIN_LOCKOUT_MIN * 60 * 1000)
+  const lockedUntil = new Date(Date.now() + policy.lockoutMinutes * 60 * 1000)
 
   await db.execute(sql`
     UPDATE app_user
     SET
       locked_until = CASE
-        WHEN failed_logins + 1 >= ${LOGIN_MAX_ATTEMPTS}
+        WHEN failed_logins + 1 >= ${policy.maxAttempts}
         THEN ${lockedUntil}
         ELSE locked_until
       END,

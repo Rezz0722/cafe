@@ -29,8 +29,12 @@ import {
   setUserBlocked,
   setUserRole,
 } from '@/core/auth/userRepo'
+import { purgeOldPageViews, rollupDay } from '@/core/analytics/track'
 import { recordAudit, refreshPlaceDerived, type Actor } from '@/core/places/manage'
-import { invalidateReferenceCache } from '@/core/places/queries'
+import { invalidateReferenceCache, invalidateSiteMean } from '@/core/places/queries'
+import { getAuthPolicy } from '@/core/settings/policies'
+import { SETTING_DEFS } from '@/core/settings/registry'
+import { getSettings, invalidateSettings, resetSettings, saveSettings } from '@/core/settings/store'
 import { recalcPlaceRating } from '@/core/user/userData'
 import { getDb } from '@/db/client'
 import {
@@ -548,11 +552,181 @@ export async function startViewAsAction(
     return { ok: false, error: 'پنل یک مدیر دیگر را نمی‌شود به نام او دید.' }
   }
 
-  await startViewAs(guard.actor.userId, target.id)
+  await startViewAs(guard.actor.userId, target.id, (await getAuthPolicy()).viewAsMaxAgeSec)
   await recordAudit(guard.actor, 'view_as.start', 'app_user', target.id, null, null)
   revalidatePath('/', 'layout')
 
   // مالک به پنل کافه می‌رود، کاربر عادی به پنل خودش — همان جایی که خودش
   // بعد از ورود می‌دید.
   redirect(target.role === 'owner' ? paths.ownerPanel : paths.profile)
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// تنظیمات سایت
+// ═══════════════════════════════════════════════════════════════════════
+
+/**
+ * ذخیره‌ی یک گروه تنظیم.
+ *
+ * ═══ چرا گروه‌به‌گروه و نه همه با هم ═══
+ *
+ * یک فرم با ۷۰ فیلد یعنی هر ذخیره، همه‌ی تنظیمات را دوباره می‌نویسد و
+ * `audit_log` نمی‌گوید ادمین **چه چیزی** را عوض کرد. با فرمِ هر گروه، ردیفِ
+ * لاگ دقیقاً همان چند کلیدِ تغییریافته را دارد.
+ *
+ * ═══ نکته‌ی مهمِ چک‌باکس ═══
+ *
+ * چک‌باکسِ خاموش در `FormData` **وجود ندارد**. پس فرم برای هر فیلد بولی یک
+ * `input hidden` با نام `__bool.<key>` می‌فرستد تا این تابع بداند آن کلید در
+ * این فرم بوده و مقدارش `false` است. بدون آن، خاموش‌کردن هیچ سوئیچی ذخیره
+ * نمی‌شد — یک باگِ ساکت که فقط با تست دستی پیدا می‌شود.
+ */
+export async function saveSettingsAction(
+  _prev: AdminActionState,
+  form: FormData,
+): Promise<AdminActionState> {
+  const guard = await requireAdminActor()
+  if (!guard.ok) return { ok: false, error: guard.error }
+
+  const patch: Record<string, unknown> = {}
+
+  // فیلدهای بولی: از فهرست اعلام‌شده‌ی فرم، نه از کلیدهای موجود.
+  for (const key of form.getAll('__bool')) {
+    if (typeof key === 'string') patch[key] = false
+  }
+
+  for (const [key, value] of form.entries()) {
+    if (key === '__bool' || key === '__group') continue
+    if (typeof value !== 'string') continue
+    patch[key] = value
+  }
+
+  const result = await saveSettings(patch, {
+    userId: guard.actor.userId,
+    label: guard.actor.label,
+  })
+
+  if (!result.ok) {
+    return {
+      ok: false,
+      error:
+        result.errors.length === 1
+          ? result.errors[0]!.message
+          : 'بعضی مقادیر ذخیره نشدند — پیام هر فیلد را ببینید.',
+      fieldErrors: Object.fromEntries(result.errors.map((item) => [item.key, item.message])),
+    }
+  }
+
+  // تنظیمات روی متادیتا، هدر و همه‌ی صفحه‌ها اثر دارند.
+  revalidatePath('/', 'layout')
+
+  return {
+    ok: true,
+    message:
+      result.saved.length === 0
+        ? 'چیزی تغییر نکرده بود.'
+        : `${result.saved.length} تنظیم ذخیره شد.`,
+    savedKeys: result.saved,
+  }
+}
+
+/** برگرداندن یک گروه به پیش‌فرض‌های کد. */
+export async function resetSettingsAction(
+  _prev: AdminActionState,
+  form: FormData,
+): Promise<AdminActionState> {
+  const guard = await requireAdminActor()
+  if (!guard.ok) return { ok: false, error: guard.error }
+
+  const group = str(form, 'group')
+  const keys = SETTING_DEFS.filter((def) => def.group === group).map((def) => def.key)
+  if (keys.length === 0) return { ok: false, error: 'گروه ناشناس.' }
+
+  await resetSettings(keys, { userId: guard.actor.userId, label: guard.actor.label })
+  revalidatePath('/', 'layout')
+  return { ok: true, message: 'به پیش‌فرض برگشت.' }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// عملیات
+// ═══════════════════════════════════════════════════════════════════════
+
+/**
+ * کارهای نگه‌داری که تا امروز فقط با اجرای دستیِ اسکریپت انجام می‌شدند.
+ *
+ * هر کدام **idempotent** است: اجرای دوباره ضرری ندارد. این شرط لازمِ گذاشتن
+ * یک دکمه در پنل است — دکمه‌ای که دو بار زدنش داده را خراب کند، نباید وجود
+ * داشته باشد.
+ */
+export async function runOperationAction(
+  _prev: AdminActionState,
+  form: FormData,
+): Promise<AdminActionState> {
+  const guard = await requireAdminActor()
+  if (!guard.ok) return { ok: false, error: guard.error }
+
+  const operation = str(form, 'operation')
+  const settings = await getSettings()
+
+  try {
+    switch (operation) {
+      case 'rollup': {
+        // امروز و دیروز: رول‌آپِ دیروز ممکن است وقتی اجرا شده که روز تمام نشده بود.
+        const today = new Date()
+        const yesterday = new Date(today.getTime() - 86_400_000)
+        await rollupDay(yesterday)
+        await rollupDay(today)
+        return { ok: true, message: 'آمار امروز و دیروز بازمحاسبه شد.' }
+      }
+
+      case 'purge_views': {
+        await purgeOldPageViews(settings.pageViewRetentionDays)
+        return {
+          ok: true,
+          message: `بازدیدهای قدیمی‌تر از ${settings.pageViewRetentionDays} روز پاک شدند.`,
+        }
+      }
+
+      case 'recompute_derived': {
+        /*
+          رده‌ی قیمت و امتیاز کیفیت از تنظیمات ساخته می‌شوند، پس بعد از
+          عوض‌کردن مرزهای قیمت باید بازمحاسبه شوند — وگرنه فیلترِ «اقتصادی»
+          با مرزِ تازه نمی‌خواند.
+        */
+        const db = getDb()
+        const rows = await db.select({ id: placeTable.id }).from(placeTable)
+        for (const row of rows) await refreshPlaceDerived(row.id)
+        invalidateReferenceCache()
+        revalidatePath('/', 'layout')
+        return { ok: true, message: `مقادیر مشتقِ ${rows.length} مجموعه بازمحاسبه شد.` }
+      }
+
+      case 'recalc_ratings': {
+        const db = getDb()
+        const rows = await db.select({ id: placeTable.id }).from(placeTable)
+        for (const row of rows) await recalcPlaceRating(row.id)
+        revalidatePath('/', 'layout')
+        return { ok: true, message: `امتیاز ${rows.length} مجموعه از نظرهای تأییدشده ساخته شد.` }
+      }
+
+      case 'clear_caches': {
+        invalidateSettings()
+        invalidateReferenceCache()
+        invalidateSiteMean()
+        revalidatePath('/', 'layout')
+        return { ok: true, message: 'کش‌های درون‌حافظه‌ای خالی شد.' }
+      }
+
+      default:
+        return { ok: false, error: 'این عملیات را نمی‌شناسم.' }
+    }
+  } catch (error) {
+    console.error('[admin] operation failed', operation, error)
+    return {
+      ok: false,
+      error: `اجرای «${operation}» شکست خورد. جزئیات در لاگ سرور است.`,
+    }
+  } finally {
+    await recordAudit(guard.actor, `operation.${operation}`, 'setting', operation, null, null)
+  }
 }

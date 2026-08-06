@@ -28,6 +28,7 @@ import {
   matchDish,
   matchFacet,
 } from '../src/core/taxonomy/menuTaxonomy'
+import { getDataPolicy } from '../src/core/settings/policies'
 import { closeDb, getDb } from '../src/db/connection'
 import {
   dish as dishTable,
@@ -49,10 +50,13 @@ const CHUNK = 500
  * سوشی دارند، عملاً همان ۳ کافه را نشان می‌دهد و کاربر حس می‌کند فیلتر
  * کار نمی‌کند.
  */
-const POPULAR_DISH_MIN_PLACES = 15
+const POPULAR_DISH_MIN_PLACES_DEFAULT = 15
 
 /** حداقل تعداد کافه برای اینکه facet روی نوار فیلترِ صفحه‌ی اول بیاید. */
-const POPULAR_FACET_MIN_PLACES = 30
+const POPULAR_FACET_MIN_PLACES_DEFAULT = 30
+
+/** پیش‌فرضِ نسبتِ تشخیص قیمتِ پرت — شرحش پایین‌تر، سر جای استفاده. */
+const OUTLIER_RATIO_DEFAULT = 0.05
 
 function median(values: number[]): number | null {
   if (values.length === 0) return null
@@ -63,6 +67,18 @@ function median(values: number[]): number | null {
 async function main() {
   const db = getDb()
   const started = Date.now()
+
+  /*
+    این سه عدد از تنظیمات پنل ادمین می‌آیند. اگر جدول `setting` ردیفی نداشته
+    باشد، همان پیش‌فرض‌های بالا برمی‌گردند — پس این اسکریپت روی دیتابیس تازه
+    هم کار می‌کند.
+  */
+  const policy = await getDataPolicy().catch(() => null)
+  const POPULAR_FACET_MIN_PLACES =
+    policy?.popularFacetMinPlaces ?? POPULAR_FACET_MIN_PLACES_DEFAULT
+  const POPULAR_DISH_MIN_PLACES =
+    policy?.popularDishMinPlaces ?? POPULAR_DISH_MIN_PLACES_DEFAULT
+  const OUTLIER_RATIO = policy?.priceOutlierRatio ?? OUTLIER_RATIO_DEFAULT
 
   // ── ۱. واژگان
   console.log('نوشتن facetها…')
@@ -247,7 +263,6 @@ async function main() {
    * ۲۴۴ هزار (۸٪) رد نمی‌شود — ممکن است واقعاً ارزان باشد. ولی ۸۰۵ تومان
    * در برابر ۷۳۵ هزار (۰٫۱٪) قطعاً غلط است.
    */
-  const OUTLIER_RATIO = 0.05
   const outliers: { itemId: number; slug: string; price: number; dishMedian: number }[] = []
   const isOutlier = (slug: string, price: number): boolean => {
     const dishMedian = dishMedianPrice.get(slug)

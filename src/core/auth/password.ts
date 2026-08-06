@@ -75,15 +75,39 @@ export const LOGIN_MAX_ATTEMPTS = 5
 export const LOGIN_LOCKOUT_MIN = 15
 
 /**
+ * سیاست قفل ورود.
+ *
+ * از تنظیمات پنل ادمین می‌آید ولی پیش‌فرض دارد، تا این ماژول بدون دیتابیس
+ * قابل تست بماند و اگر جدول تنظیمات در دسترس نبود، سقف تلاش **از بین نرود**.
+ */
+export interface LockoutPolicy {
+  maxAttempts: number
+  lockoutMinutes: number
+}
+
+export const DEFAULT_LOCKOUT: LockoutPolicy = {
+  maxAttempts: LOGIN_MAX_ATTEMPTS,
+  lockoutMinutes: LOGIN_LOCKOUT_MIN,
+}
+
+/**
  * رمز عبور برخلاف OTP منقضی نمی‌شود، پس brute-force روی آن ارزش دارد.
  * بدون این سقف، مهاجم بی‌نهایت حدس می‌زند.
  */
-export function isLockedOut(failedAt: number[], now = Date.now()): boolean {
-  const windowStart = now - LOGIN_LOCKOUT_MIN * 60_000
-  return failedAt.filter((t) => t > windowStart).length >= LOGIN_MAX_ATTEMPTS
+export function isLockedOut(
+  failedAt: number[],
+  now = Date.now(),
+  policy: LockoutPolicy = DEFAULT_LOCKOUT,
+): boolean {
+  const windowStart = now - policy.lockoutMinutes * 60_000
+  return failedAt.filter((t) => t > windowStart).length >= policy.maxAttempts
 }
 
-export function pruneFailed(failedAt: number[], now = Date.now()): number[] {
-  const windowStart = now - LOGIN_LOCKOUT_MIN * 60_000
+export function pruneFailed(
+  failedAt: number[],
+  now = Date.now(),
+  policy: LockoutPolicy = DEFAULT_LOCKOUT,
+): number[] {
+  const windowStart = now - policy.lockoutMinutes * 60_000
   return failedAt.filter((t) => t > windowStart)
 }

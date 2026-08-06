@@ -26,6 +26,7 @@ import {
   type Actor,
   type HourShiftInput,
 } from '@/core/places/manage'
+import { getModerationPolicy } from '@/core/settings/policies'
 import { getDb } from '@/db/client'
 import { menuItem as menuItemTable, place as placeTable, review as reviewTable } from '@/db/schema'
 import { eq } from 'drizzle-orm'
@@ -240,7 +241,13 @@ export async function replyReviewAction(
   const access = await requirePlaceAccess(review.placeId)
   if (!access.ok) return { ok: false, error: access.error }
 
-  const result = await replyToReview(reviewId, str(form, 'text'), access.actor)
+  const { ownerRepliesRequireApproval } = await getModerationPolicy()
+  const result = await replyToReview(
+    reviewId,
+    str(form, 'text'),
+    access.actor,
+    ownerRepliesRequireApproval,
+  )
   if (!result.ok) return { ok: false, error: result.error }
 
   await revalidateBoth(access.placeId)

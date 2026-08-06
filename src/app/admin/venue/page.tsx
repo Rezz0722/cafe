@@ -7,6 +7,7 @@ import { findUserById } from '@/core/auth/userRepo'
 import { loadOwnerPlace, loadPlaceReviewsForOwner } from '@/core/places/manage'
 import { listPlaceCards } from '@/core/places/queries'
 import { authUrl, paths } from '@/routes'
+import { getSettings } from '@/core/settings/store'
 import styles from '@/components/venue/VenuePanel.module.css'
 
 /**
@@ -111,6 +112,7 @@ export default async function VenuePage({ searchParams }: PageProps) {
       // در حالت «مشاهده به‌عنوان»، پنل فقط‌خواندنی است — همان قاعده‌ای که
       // اکشن‌ها هم اعمالش می‌کنند. نمایشِ دکمه‌ای که کار نمی‌کند بدتر است.
       readOnly={!!actor}
+      stalePriceDays={(await getSettings()).stalePriceDays}
     />
   )
 }

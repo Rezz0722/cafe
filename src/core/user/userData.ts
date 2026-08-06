@@ -212,8 +212,30 @@ function toDateOrNull(value: string | null | undefined): Date | null {
 }
 
 export type SubmitReviewResult =
-  | { ok: true; status: 'pending' }
+  | { ok: true; status: 'pending' | 'approved' }
   | { ok: false; error: string }
+
+/**
+ * سیاست بازبینی — از تنظیمات پنل ادمین.
+ *
+ * پیش‌فرض‌ها **محافظه‌کارانه**اند: اگر جدول تنظیمات خوانده نشد، نظرها به صف
+ * بازبینی می‌روند نه به صفحه‌ی کافه. خطای خواندن تنظیمات نباید در انتشارِ
+ * بی‌بازبینی ترجمه شود.
+ */
+export interface ReviewModeration {
+  requireApproval: boolean
+  minTextLength: number
+  maxTextLength: number
+  /** واژه‌های ممنوعِ کوچک‌شده — حضورشان نظر را در صف نگه می‌دارد. */
+  blocklist: string[]
+}
+
+const DEFAULT_REVIEW_MODERATION: ReviewModeration = {
+  requireApproval: true,
+  minTextLength: 0,
+  maxTextLength: 4000,
+  blocklist: [],
+}
 
 /**
  * ثبت نظر.
@@ -228,10 +250,31 @@ export type SubmitReviewResult =
  * بدون این قاعده، یک نفر می‌تواند ده نظر پنج‌ستاره بگذارد و رتبه‌بندی را
  * بی‌معنی کند. ویرایش نظر قبلی جایگزین ثبت دوباره است.
  */
-export async function submitReview(input: ReviewInput): Promise<SubmitReviewResult> {
+export async function submitReview(
+  input: ReviewInput,
+  moderation: ReviewModeration = DEFAULT_REVIEW_MODERATION,
+): Promise<SubmitReviewResult> {
   if (!Number.isInteger(input.stars) || input.stars < 1 || input.stars > 5) {
     return { ok: false, error: 'امتیاز باید بین ۱ تا ۵ ستاره باشد.' }
   }
+
+  const text = input.text?.trim() ?? ''
+  if (moderation.minTextLength > 0 && text.length < moderation.minTextLength) {
+    return {
+      ok: false,
+      error: `متن نظر باید حداقل ${moderation.minTextLength} کاراکتر باشد.`,
+    }
+  }
+
+  /*
+    واژه‌ی ممنوع نظر را **رد نمی‌کند**، در صف نگه می‌دارد. رد کردن یعنی به
+    نویسنده می‌گوییم کدام واژه فیلتر است و او دور می‌زند؛ نگه‌داشتن در صف
+    یعنی یک انسان می‌بیند و تصمیم می‌گیرد.
+  */
+  const haystack = `${text} ${input.authorName}`.toLowerCase()
+  const flagged = moderation.blocklist.some((word) => word && haystack.includes(word))
+  const status: 'pending' | 'approved' =
+    moderation.requireApproval || flagged ? 'pending' : 'approved'
 
   const db = getDb()
   const [existing] = await db
@@ -245,26 +288,32 @@ export async function submitReview(input: ReviewInput): Promise<SubmitReviewResu
     userId: input.userId,
     authorName: input.authorName.slice(0, 120),
     stars: input.stars,
-    text: input.text?.slice(0, 4000) || null,
+    text: text.slice(0, moderation.maxTextLength) || null,
     ratingCoffee: input.ratingCoffee ?? null,
     ratingFood: input.ratingFood ?? null,
     ratingVibe: input.ratingVibe ?? null,
     ratingService: input.ratingService ?? null,
     ratingValue: input.ratingValue ?? null,
     visitDate: toDateOrNull(input.visitDate),
-    status: 'pending' as const,
+    status,
   }
 
   if (existing) {
     await db.update(reviewTable).set(values).where(eq(reviewTable.id, existing.id))
-    // نظری که قبلاً تأیید شده بود و حالا ویرایش شد، باید دوباره تأیید شود.
-    // اگر امتیاز مکان از آن نظر ساخته شده بود، باید از رول‌آپ کم شود.
-    if (existing.status === 'approved') await recalcPlaceRating(input.placeId)
-    return { ok: true, status: 'pending' }
+    /*
+      رول‌آپ امتیاز باید بازمحاسبه شود اگر وضعیتِ **قبلی یا جدید** تأییدشده
+      باشد: نظرِ تأییدشده‌ای که به صف برگشت باید از میانگین کم شود، و نظری
+      که تازه تأیید خودکار گرفت باید اضافه شود.
+    */
+    if (existing.status === 'approved' || status === 'approved') {
+      await recalcPlaceRating(input.placeId)
+    }
+    return { ok: true, status }
   }
 
   await db.insert(reviewTable).values(values)
-  return { ok: true, status: 'pending' }
+  if (status === 'approved') await recalcPlaceRating(input.placeId)
+  return { ok: true, status }
 }
 
 /**

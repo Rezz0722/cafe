@@ -17,6 +17,14 @@ import {
   listNearbyPlaces,
   listPlaceReviews,
 } from '@/core/places/queries'
+import { MaintenanceScreen } from '@/components/site/MaintenanceScreen'
+import { maintenanceState } from '@/core/settings/maintenance'
+import {
+  getDiscoveryPolicy,
+  getLocalePolicy,
+  getMapPolicy,
+  getModerationPolicy,
+} from '@/core/settings/policies'
 import { getMyReviewFor, listSavedPlaceIds } from '@/core/user/userData'
 import { fa, toman } from '@/lib/format'
 import { authUrl, paths } from '@/routes'
@@ -80,10 +88,12 @@ const SOCIAL_LABELS: Record<string, string> = {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params
-  const place = await getPlaceDetail(slug)
+  const [place, locale] = await Promise.all([getPlaceDetail(slug), getLocalePolicy()])
   if (!place) return { title: 'پیدا نشد' }
 
-  const where = place.districtName ? `${place.districtName}، مشهد` : 'مشهد'
+  const where = place.districtName
+    ? `${place.districtName}، ${locale.cityName}`
+    : locale.cityName
   const title = `${place.name} — ${KIND_LABELS[place.kind] ?? 'کافه'} در ${where}`
 
   // توضیحات از داده‌ی واقعی ساخته می‌شود نه از یک قالب ثابت: عددِ منو و
@@ -112,18 +122,34 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function CafePage({ params }: PageProps) {
+  const gate = await maintenanceState()
+  if (gate.closed) {
+    return <MaintenanceScreen siteName={gate.siteName} message={gate.message} />
+  }
+
   const { slug } = await params
   const place = await getPlaceDetail(slug)
   if (!place) notFound()
 
   const { user } = await getSession()
 
+  const [locale, map, discovery, moderation] = await Promise.all([
+    getLocalePolicy(),
+    getMapPolicy(),
+    getDiscoveryPolicy(),
+    getModerationPolicy(),
+  ])
+
   const [facets, dishes, reviews, nearby] = await Promise.all([
     getPlaceFacetSummary(place.id),
     getPlaceDishes(place.id),
     listPlaceReviews(place.id),
     place.coords && place.geoStatus === 'ok'
-      ? listNearbyPlaces(place.coords, { excludePlaceId: place.id, limit: 6 })
+      ? listNearbyPlaces(place.coords, {
+          excludePlaceId: place.id,
+          limit: 6,
+          radiusKm: discovery.nearbyRadiusKm,
+        })
       : Promise.resolve([]),
   ])
 
@@ -133,8 +159,8 @@ export default async function CafePage({ params }: PageProps) {
     : [[], null]
   const isSaved = savedIds.includes(place.id)
 
-  const open = computeOpenState(place.hours)
-  const week = weekSchedule(place.hours)
+  const open = computeOpenState(place.hours, new Date(), locale.timeZone)
+  const week = weekSchedule(place.hours, new Date(), locale.timeZone)
   const labels = getMapLabels({ zoom: 14, limit: 24 })
   const kindLabel = KIND_LABELS[place.kind] ?? 'کافه'
 
@@ -156,6 +182,11 @@ export default async function CafePage({ params }: PageProps) {
   return (
     <>
       <PlaceJsonLd
+        locale={{
+          cityName: locale.cityName,
+          regionName: locale.regionName,
+          countryCode: locale.countryCode,
+        }}
         place={{
           name: place.name,
           slug: place.slug,
@@ -251,6 +282,7 @@ export default async function CafePage({ params }: PageProps) {
               phones={place.phones}
               instagram={place.instagram}
               geoStatus={place.geoStatus}
+              services={map.routingServices}
             />
             <SavePlaceButton
               placeId={place.id}
@@ -383,19 +415,24 @@ export default async function CafePage({ params }: PageProps) {
                 </ul>
               )}
 
-              <div className={styles.reviewFormWrap}>
-                <h3 className={styles.reviewFormTitle}>
-                  {myReview ? 'ویرایش نظر تو' : 'نظرت را بنویس'}
-                </h3>
-                <ReviewForm
-                  placeId={place.id}
-                  slug={place.slug}
-                  placeName={place.name}
-                  signedIn={!!user}
-                  existing={myReview}
-                  authHref={authUrl(`${paths.cafe(place.slug)}#reviews`)}
-                />
-              </div>
+              {/* فرمی که مطمئنیم خطا می‌دهد نباید نمایش داده شود. */}
+              {moderation.reviewsEnabled && (
+                <div className={styles.reviewFormWrap}>
+                  <h3 className={styles.reviewFormTitle}>
+                    {myReview ? 'ویرایش نظر تو' : 'نظرت را بنویس'}
+                  </h3>
+                  <ReviewForm
+                    placeId={place.id}
+                    slug={place.slug}
+                    placeName={place.name}
+                    signedIn={!!user}
+                    existing={myReview}
+                    authHref={authUrl(`${paths.cafe(place.slug)}#reviews`)}
+                    minTextLength={moderation.reviewMinTextLength}
+                    maxTextLength={moderation.reviewMaxTextLength}
+                  />
+                </div>
+              )}
             </section>
           </div>
 
@@ -417,7 +454,7 @@ export default async function CafePage({ params }: PageProps) {
                   labels={labels}
                   focusSlug={place.slug}
                   center={place.coords}
-                  zoom={16}
+                  zoom={Math.min(16, map.maxZoom)}
                   height="240px"
                   showLocate={false}
                 />

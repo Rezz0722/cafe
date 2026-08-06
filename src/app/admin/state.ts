@@ -17,6 +17,15 @@ export interface AdminActionState {
    * شد، رمز تازه صادر می‌شود.
    */
   credentials?: { username: string | null; password: string }
+  /**
+   * خطاهای فیلدی فرم تنظیمات — کلیدِ تنظیم به پیام.
+   *
+   * جدا از `error` است چون یک فرم تنظیمات ۱۵ فیلد دارد و نمایش «یکی از
+   * فیلدها اشتباه است» بی‌فایده است؛ کاربر باید بداند کدام.
+   */
+  fieldErrors?: Record<string, string>
+  /** کلیدهایی که ذخیره شدند — برای نشان‌دادن «همین‌ها عوض شد». */
+  savedKeys?: string[]
 }
 
 export const EMPTY_ADMIN_STATE: AdminActionState = { ok: false }

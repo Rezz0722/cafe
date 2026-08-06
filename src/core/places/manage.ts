@@ -27,6 +27,7 @@ import {
 } from '@/db/schema'
 import { computeQualityFromFacts } from '@/core/quality/scores'
 import { classifyGeo, median, parsePhones, priceTierFromMedian } from '@/core/import/normalize'
+import { getDataPolicy } from '@/core/settings/policies'
 import { normalizeFa } from '@/core/text/normalize'
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -107,6 +108,9 @@ export async function refreshPlaceDerived(placeId: number): Promise<void> {
     .where(eq(menuItemTable.placeId, placeId))
 
   const priceMedian = median(prices)
+  // مرزهای رده‌ی قیمت از تنظیمات می‌آیند؛ همان‌جایی که ایمپورت هم از آن
+  // می‌خواند، تا رده‌ای که ادمین می‌بیند با رده‌ای که ایمپورت می‌سازد یکی باشد.
+  const { priceTierBounds } = await getDataPolicy()
 
   await db
     .update(placeTable)
@@ -114,7 +118,7 @@ export async function refreshPlaceDerived(placeId: number): Promise<void> {
       priceMin: prices.length ? Math.min(...prices) : null,
       priceMedian,
       priceMax: prices.length ? Math.max(...prices) : null,
-      priceTier: priceTierFromMedian(priceMedian),
+      priceTier: priceTierFromMedian(priceMedian, priceTierBounds),
       qualityScore: computeQualityFromFacts({
         hasCoords: place.geoStatus !== 'missing',
         hasHours: Number(openShifts) > 0,
@@ -176,7 +180,7 @@ export async function updatePlaceInfo(
   if (patch.lat !== undefined || patch.lng !== undefined) {
     const lat = patch.lat ?? (before.lat ? Number(before.lat) : null)
     const lng = patch.lng ?? (before.lng ? Number(before.lng) : null)
-    const geoStatus = classifyGeo(lat, lng)
+    const geoStatus = classifyGeo(lat, lng, (await getDataPolicy()).bbox)
     update.lat = geoStatus === 'missing' ? null : lat!.toFixed(7)
     update.lng = geoStatus === 'missing' ? null : lng!.toFixed(7)
     update.geoStatus = geoStatus
@@ -370,6 +374,7 @@ export async function replyToReview(
   reviewId: number,
   text: string,
   actor: Actor,
+  requireApproval = false,
 ): Promise<{ ok: boolean; error?: string }> {
   const trimmed = text.trim()
   if (trimmed.length < 2) return { ok: false, error: 'پاسخ خالی است.' }
@@ -386,9 +391,10 @@ export async function replyToReview(
     reviewId,
     userId: actor.userId,
     text: trimmed.slice(0, 2000),
-    // پاسخ کافه‌دار بلافاصله منتشر می‌شود: او صاحب کسب‌وکار است و پاسخ
-    // دادنش به یک نظر عمومی، حقِ طبیعی‌اش است. تخلف با گزارش پیگیری می‌شود.
-    status: 'approved',
+    // پیش‌فرض این است که پاسخ کافه‌دار بلافاصله منتشر شود: او صاحب کسب‌وکار
+    // است و پاسخ دادنش به یک نظر عمومی حقِ طبیعی‌اش است. اگر مدیر سایت
+    // تجربه‌ی تلخی داشت، از تنظیمات می‌تواند بازبینی را روشن کند.
+    status: requireApproval ? 'pending' : 'approved',
   })
 
   await recordAudit(actor, 'review.reply', 'review', reviewId, null, { length: trimmed.length })

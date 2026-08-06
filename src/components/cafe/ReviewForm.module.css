@@ -18,6 +18,12 @@
   color: var(--c-ink-2);
 }
 
+/* راهنمای زیر فیلد — مثل «حداقل ۲۰ کاراکتر»، که از تنظیمات می‌آید. */
+.note {
+  font-size: 0.76rem;
+  color: var(--c-ink-3, var(--c-ink-2));
+}
+
 .required {
   color: var(--c-danger, #a32020);
 }

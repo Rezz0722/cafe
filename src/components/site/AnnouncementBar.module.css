@@ -1,0 +1,10 @@
+.bar {
+  padding: 9px 16px;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.7;
+  background: var(--c-accent-soft, #fff4d6);
+  color: var(--c-ink, #222);
+  border-bottom: 1px solid var(--c-border, #e5d9b8);
+}

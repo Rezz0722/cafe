@@ -3,6 +3,7 @@ import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import { AuthScreen } from '@/components/auth/AuthScreen'
 import { getCurrentUser } from '@/core/auth/currentUser'
+import { getAuthPolicy } from '@/core/settings/policies'
 import { paths } from '@/routes'
 
 /**
@@ -32,9 +33,20 @@ export default async function AuthPage({ searchParams }: PageProps) {
     redirect(target.startsWith('/') && !target.startsWith('//') ? target : paths.profile)
   }
 
+  const policy = await getAuthPolicy()
+
   return (
     <Suspense fallback={null}>
-      <AuthScreen />
+      <AuthScreen
+        config={{
+          otpLength: policy.otp.length,
+          resendCooldownSeconds: policy.otp.resendCooldownSeconds,
+          passwordMinLength: policy.passwordMinLength,
+          allowRegistration: policy.allowRegistration,
+          allowPasswordLogin: policy.allowPasswordLogin,
+          allowOtpLogin: policy.allowOtpLogin,
+        }}
+      />
     </Suspense>
   )
 }

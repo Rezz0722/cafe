@@ -54,6 +54,12 @@
   font-weight: 700;
 }
 
+/* راهنمای زیر فیلد — مثل «حداقل ۸ کاراکتر»، که از تنظیمات می‌آید. */
+.hint {
+  font-size: 12px;
+  color: var(--muted, #6b7280);
+}
+
 .input {
   font: inherit;
   font-size: 15px;

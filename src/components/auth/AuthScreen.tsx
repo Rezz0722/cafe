@@ -19,12 +19,28 @@ import {
   EMPTY_VERIFY_STATE,
 } from '@/app/auth/state'
 import { maskPhone } from '@/core/auth/phone'
-import { OTP_LENGTH, OTP_RESEND_COOLDOWN_SEC } from '@/core/auth/otpConfig'
 import { fa } from '@/lib/format'
 import { paths } from '@/routes'
 import styles from './AuthScreen.module.css'
 
 type Step = 'phone' | 'code' | 'name' | 'password' | 'register'
+
+/**
+ * پیکربندی از سرور می‌آید، نه از ثابت‌های ماژول.
+ *
+ * قبلاً `OTP_LENGTH` و `OTP_RESEND_COOLDOWN_SEC` را مستقیم از `otpConfig`
+ * می‌خواند. حالا این اعداد در پنل ادمین قابل تغییرند و اگر کلاینت ثابتِ
+ * build-time را نگه دارد، شمارش معکوسِ ۹۰ ثانیه‌ای روی سروری که ۶۰ ثانیه
+ * تنظیم شده، کاربر را ۳۰ ثانیه بی‌دلیل منتظر می‌گذارد.
+ */
+export interface AuthConfig {
+  otpLength: number
+  resendCooldownSeconds: number
+  passwordMinLength: number
+  allowRegistration: boolean
+  allowPasswordLogin: boolean
+  allowOtpLogin: boolean
+}
 
 function SubmitButton({ label, pendingLabel }: { label: string; pendingLabel: string }) {
   const { pending } = useFormStatus()
@@ -44,12 +60,17 @@ function SubmitButton({ label, pendingLabel }: { label: string; pendingLabel: st
  * کلاینت. کلاینت نمی‌داند این شماره قبلاً ثبت شده یا نه — و نباید بداند،
  * وگرنه صفحه‌ی ورود تبدیل می‌شود به ابزار فهرست‌برداری از کاربران ثبت‌شده.
  */
-export function AuthScreen() {
+export function AuthScreen({ config }: { config: AuthConfig }) {
   const router = useRouter()
   const params = useSearchParams()
   const redirectTo = params?.get('redirect') || paths.profile
 
-  const [step, setStep] = useState<Step>('phone')
+  /*
+    اگر ورود با پیامک بسته است، گام «شماره» بی‌فایده است — فرم از همان اول
+    روی ورود با رمز باز می‌شود. نمایش فرمی که مطمئنیم خطا می‌دهد، بدترین
+    نوع تنظیم است.
+  */
+  const [step, setStep] = useState<Step>(config.allowOtpLogin ? 'phone' : 'password')
   const [phone, setPhone] = useState('')
   const [cooldown, setCooldown] = useState(0)
   const codeRef = useRef<HTMLInputElement>(null)
@@ -65,9 +86,9 @@ export function AuthScreen() {
     if (reqState.ok && reqState.phone) {
       setPhone(reqState.phone)
       setStep('code')
-      setCooldown(OTP_RESEND_COOLDOWN_SEC)
+      setCooldown(config.resendCooldownSeconds)
     }
-  }, [reqState])
+  }, [reqState, config.resendCooldownSeconds])
 
   // ── گام ۲ → ۳ یا پایان ──
   useEffect(() => {
@@ -160,20 +181,24 @@ export function AuthScreen() {
               فقط حساب‌هایی که رمز دارند از این راه وارد می‌شوند.
             */}
             <div className={styles.actionsRow}>
-              <button
-                type="button"
-                className={styles.linkButton}
-                onClick={() => setStep('password')}
-              >
-                ورود با رمز عبور
-              </button>
-              <button
-                type="button"
-                className={styles.linkButton}
-                onClick={() => setStep('register')}
-              >
-                ساخت حساب با رمز
-              </button>
+              {config.allowPasswordLogin && (
+                <button
+                  type="button"
+                  className={styles.linkButton}
+                  onClick={() => setStep('password')}
+                >
+                  ورود با رمز عبور
+                </button>
+              )}
+              {config.allowRegistration && (
+                <button
+                  type="button"
+                  className={styles.linkButton}
+                  onClick={() => setStep('register')}
+                >
+                  ساخت حساب با رمز
+                </button>
+              )}
             </div>
           </form>
         )}
@@ -221,20 +246,24 @@ export function AuthScreen() {
             <SubmitButton label="ورود" pendingLabel="در حال بررسی…" />
 
             <div className={styles.actionsRow}>
-              <button
-                type="button"
-                className={styles.linkButton}
-                onClick={() => setStep('phone')}
-              >
-                ورود با کد پیامکی
-              </button>
-              <button
-                type="button"
-                className={styles.linkButton}
-                onClick={() => setStep('register')}
-              >
-                ساخت حساب با رمز
-              </button>
+              {config.allowOtpLogin && (
+                <button
+                  type="button"
+                  className={styles.linkButton}
+                  onClick={() => setStep('phone')}
+                >
+                  ورود با کد پیامکی
+                </button>
+              )}
+              {config.allowRegistration && (
+                <button
+                  type="button"
+                  className={styles.linkButton}
+                  onClick={() => setStep('register')}
+                >
+                  ساخت حساب با رمز
+                </button>
+              )}
             </div>
           </form>
         )}
@@ -293,9 +322,12 @@ export function AuthScreen() {
                 type="password"
                 autoComplete="new-password"
                 dir="ltr"
-                minLength={8}
+                minLength={config.passwordMinLength}
                 required
               />
+              <span className={styles.hint}>
+                حداقل {fa(config.passwordMinLength)} کاراکتر
+              </span>
             </label>
 
             <label className={styles.field}>
@@ -306,7 +338,7 @@ export function AuthScreen() {
                 type="password"
                 autoComplete="new-password"
                 dir="ltr"
-                minLength={8}
+                minLength={config.passwordMinLength}
                 required
               />
             </label>
@@ -341,7 +373,7 @@ export function AuthScreen() {
 
             <h1 className={styles.title}>کد را وارد کن</h1>
             <p className={styles.lede}>
-              کد {fa(OTP_LENGTH)} رقمی به <b dir="ltr">{maskPhone(phone)}</b> فرستاده شد.
+              کد {fa(config.otpLength)} رقمی به <b dir="ltr">{maskPhone(phone)}</b> فرستاده شد.
             </p>
 
             {/*
@@ -362,7 +394,7 @@ export function AuthScreen() {
                 className={`${styles.input} ${styles.codeInput}`}
                 inputMode="numeric"
                 autoComplete="one-time-code"
-                maxLength={OTP_LENGTH}
+                maxLength={config.otpLength}
                 dir="ltr"
                 required
               />

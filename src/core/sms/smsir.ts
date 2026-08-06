@@ -70,16 +70,33 @@ export function toSmsirMobile(phone: string): string {
  * هرگز throw نمی‌کند — خطای شبکه‌ی پیامک نباید ۵۰۰ بدهد؛ کاربر باید پیام
  * قابل‌فهم ببیند و بتواند دوباره تلاش کند.
  */
-export async function sendVerificationCode(phone: string, code: string): Promise<SendResult> {
+export interface SendOptions {
+  /**
+   * حالت توسعه از تنظیمات پنل ادمین می‌آید و بر `AUTH_DEV_MODE` مقدم است:
+   * بیرون‌آوردن سایت از حالت توسعه نباید به ری‌دیپلوی نیاز داشته باشد.
+   * وقتی داده نشود، همان پیش‌فرض env عمل می‌کند.
+   */
+  devMode?: boolean
+  /** نام سایت در متن پیامکِ خط عادی. */
+  siteName?: string
+}
+
+export async function sendVerificationCode(
+  phone: string,
+  code: string,
+  options: SendOptions = {},
+): Promise<SendResult> {
   const mobile = toSmsirMobile(phone)
+  const devMode = options.devMode ?? AUTH_DEV_MODE
+  const siteName = options.siteName?.trim() || 'کافه‌گرد'
 
   // ── حالت توسعه ──
-  if (AUTH_DEV_MODE) {
+  if (devMode) {
     console.log('')
     console.log('  ┌─────────────────────────────────────────┐')
     console.log(`  │  کد تأیید برای ${mobile.padEnd(13)}      │`)
     console.log(`  │            ${code}                        │`)
-    console.log('  │  (AUTH_DEV_MODE — پیامکی ارسال نشد)     │')
+    console.log('  │  (حالت توسعه — پیامکی ارسال نشد)        │')
     console.log('  └─────────────────────────────────────────┘')
     console.log('')
     return { ok: true, method: 'dev' }
@@ -110,7 +127,7 @@ export async function sendVerificationCode(phone: string, code: string): Promise
     if (SMSIR.lineNumber) {
       const { ok, json } = await post('/v1/send/bulk', {
         lineNumber: Number(SMSIR.lineNumber),
-        messageText: `کافه‌گرد\nکد ورود شما: ${code}\nاین کد را در اختیار کسی قرار ندهید.`,
+        messageText: `${siteName}\nکد ورود شما: ${code}\nاین کد را در اختیار کسی قرار ندهید.`,
         mobiles: [mobile],
       })
       if (ok) return { ok: true, method: 'bulk' }

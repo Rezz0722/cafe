@@ -62,6 +62,9 @@ export interface CafeMapProps {
   focusSlug?: string | null
   center?: { lat: number; lng: number }
   zoom?: number
+  /** کمینه و بیشینه‌ی زوم — از تنظیمات پنل ادمین. */
+  minZoom?: number
+  maxZoom?: number
   height?: string
   theme?: 'light' | 'dark'
   /** با کلیک روی نشانگر چه شود. بدون این، لینک به صفحه‌ی کافه باز می‌شود. */
@@ -123,6 +126,8 @@ export function CafeMap({
   focusSlug,
   center,
   zoom,
+  minZoom = 9,
+  maxZoom = 18.5,
   height = '420px',
   theme = 'light',
   onSelect,
@@ -164,8 +169,8 @@ export function CafeMap({
           style,
           center: [initialCenter.lng, initialCenter.lat],
           zoom: initialZoom,
-          minZoom: 9,
-          maxZoom: 18.5,
+          minZoom,
+          maxZoom,
           maxBounds: MASHHAD_BOUNDS,
           attributionControl: { compact: true },
           // چرخش نقشه در یک راهنمای کافه کاربردی ندارد و فقط باعث

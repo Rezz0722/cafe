@@ -49,11 +49,8 @@ import {
   review as reviewTable,
 } from '@/db/schema'
 import { mediaFullUrl, mediaPublicUrl } from '@/core/media/store'
-import {
-  bayesianAverage,
-  DEFAULT_SITE_MEAN,
-  RATING_PRIOR_COUNT,
-} from '@/core/rating/bayesian'
+import { bayesianAverage } from '@/core/rating/bayesian'
+import { getDiscoveryPolicy } from '@/core/settings/policies'
 
 // ═══════════════════════════════════════════════════════════════════════
 // شکل خروجی
@@ -207,6 +204,7 @@ const SITE_MEAN_TTL_MS = 60_000
  * نمی‌شود. بدون کش، هر صفحه یک `AVG` روی جدول نظرها می‌زند.
  */
 async function getSiteMean(): Promise<number> {
+  const { defaultSiteMean } = await getDiscoveryPolicy()
   const now = Date.now()
   if (siteMeanCache && now - siteMeanCache.at < SITE_MEAN_TTL_MS)
     return siteMeanCache.value
@@ -220,7 +218,7 @@ async function getSiteMean(): Promise<number> {
     .from(placeTable)
 
   const value =
-    row && Number(row.count) > 0 ? Number(row.sum) / Number(row.count) : DEFAULT_SITE_MEAN
+    row && Number(row.count) > 0 ? Number(row.sum) / Number(row.count) : defaultSiteMean
   siteMeanCache = { value, at: now }
   return value
 }
@@ -382,11 +380,11 @@ export async function listPlaceCards(filters: ListFilters = {}): Promise<PlaceCa
   // میانگین بیزی **در SQL** حساب می‌شود، نه بعد از گرفتن نتایج: مرتب‌سازی در
   // حافظه فقط صفحه‌ی جاری را مرتب می‌کند و با `LIMIT` نتیجه‌ی غلط می‌دهد.
   // فرمول همان `bayesianAverage` است تا عددِ سورت و عددِ نمایش یکی باشد.
-  const siteMean = await getSiteMean()
+  const [siteMean, { ratingPriorCount }] = await Promise.all([getSiteMean(), getDiscoveryPolicy()])
   const bayesian = sql`
-    (${placeTable.ratingCount} / (${placeTable.ratingCount} + ${RATING_PRIOR_COUNT}))
+    (${placeTable.ratingCount} / (${placeTable.ratingCount} + ${ratingPriorCount}))
       * (${placeTable.ratingSum} / GREATEST(${placeTable.ratingCount}, 1))
-    + (${RATING_PRIOR_COUNT} / (${placeTable.ratingCount} + ${RATING_PRIOR_COUNT})) * ${siteMean}
+    + (${ratingPriorCount} / (${placeTable.ratingCount} + ${ratingPriorCount})) * ${siteMean}
   `
 
   const orderBy = {
@@ -455,7 +453,7 @@ export async function listPlaceCards(filters: ListFilters = {}): Promise<PlaceCa
     signatureItem: row.signatureItem,
     logo: toMediaRef(row.logoPath, row.logoWidth, row.logoHeight),
     ratingCount: row.ratingCount,
-    rating: bayesianAverage(row.ratingSum, row.ratingCount, siteMean),
+    rating: bayesianAverage(row.ratingSum, row.ratingCount, siteMean, ratingPriorCount),
     qualityScore: row.qualityScore,
     facetIds: facetMap.get(row.id) ?? [],
   }))
@@ -559,7 +557,7 @@ export async function getPlaceDetail(
 
   if (!row) return null
 
-  const [phones, socials, hours, sections, items, facets, siteMean] = await Promise.all([
+  const [phones, socials, hours, sections, items, facets, siteMean, discovery] = await Promise.all([
     db
       .select({ phone: placePhoneTable.phone, kind: placePhoneTable.kind })
       .from(placePhoneTable)
@@ -619,7 +617,9 @@ export async function getPlaceDetail(
       .from(placeFacetTable)
       .where(eq(placeFacetTable.placeId, row.id)),
     getSiteMean(),
+    getDiscoveryPolicy(),
   ])
+  const { ratingPriorCount } = discovery
 
   const itemsBySection = new Map<number, MenuItemView[]>()
   for (const item of items) {
@@ -665,7 +665,7 @@ export async function getPlaceDetail(
     instagram: row.instagram,
     logo: toMediaRef(row.logoPath, row.logoWidth, row.logoHeight),
     ratingCount: row.ratingCount,
-    rating: bayesianAverage(row.ratingSum, row.ratingCount, siteMean),
+    rating: bayesianAverage(row.ratingSum, row.ratingCount, siteMean, ratingPriorCount),
     qualityScore: row.qualityScore,
     facetIds: facets.map((f) => f.facetId),
     phones,

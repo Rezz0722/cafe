@@ -1,0 +1,134 @@
+.wrap {
+  display: grid;
+  gap: 16px;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 15px 18px;
+  border: 1px solid var(--c-border, #e5e5e5);
+  border-radius: 14px;
+  background: var(--c-surface, #fbfbfb);
+  flex-wrap: wrap;
+}
+
+.cardBody {
+  flex: 1 1 320px;
+  display: grid;
+  gap: 5px;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.cardDesc {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.9;
+  color: var(--c-ink-2, #666);
+}
+
+.cardForm {
+  flex: none;
+}
+
+.run,
+.runHeavy {
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 700;
+  padding: 9px 18px;
+  border-radius: 10px;
+  cursor: pointer;
+  border: 1px solid var(--c-ink, #222);
+  background: transparent;
+  color: var(--c-ink, #222);
+  white-space: nowrap;
+}
+
+/* عملیات سنگین ظاهر متفاوت دارد — کلیک بی‌فکر رویشان گران‌تر است. */
+.runHeavy {
+  border-color: #a5670a;
+  color: #a5670a;
+}
+
+.run:disabled,
+.runHeavy:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.manual {
+  padding: 16px 18px;
+  border: 1px dashed var(--c-border, #d8d8d8);
+  border-radius: 14px;
+  display: grid;
+  gap: 8px;
+}
+
+.manualTitle {
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.manualNote {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.9;
+  color: var(--c-ink-2, #666);
+}
+
+.manualList {
+  margin: 0;
+  display: grid;
+  gap: 9px;
+}
+
+.manualList dt {
+  font-size: 0.8rem;
+}
+
+.manualList dt code {
+  background: var(--c-surface-2, #f0f0f0);
+  padding: 2px 7px;
+  border-radius: 6px;
+}
+
+.manualList dd {
+  margin: 3px 0 0;
+  font-size: 0.78rem;
+  line-height: 1.85;
+  color: var(--c-ink-2, #666);
+}
+
+.error,
+.success {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 10px 13px;
+  border-radius: 10px;
+}
+
+.error {
+  background: #fdecea;
+  color: #a5281b;
+}
+
+.success {
+  background: #eaf7ee;
+  color: #1e6b35;
+}

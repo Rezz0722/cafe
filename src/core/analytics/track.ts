@@ -65,8 +65,28 @@ export interface TrackInput {
  * کافه‌دار نشان داده می‌شود و شمردنِ خزنده‌ی گوگل در آن، عددی می‌سازد که با
  * واقعیت نمی‌خواند.
  */
-export async function trackPageView(input: TrackInput): Promise<void> {
+export interface TrackOptions {
+  /** خاموش = هیچ ردیفی نوشته نمی‌شود. */
+  enabled?: boolean
+  /** روشن = ردیفِ ربات هم نوشته می‌شود. پیش‌فرض: نه. */
+  countBots?: boolean
+}
+
+export async function trackPageView(
+  input: TrackInput,
+  options: TrackOptions = {},
+): Promise<void> {
+  if (options.enabled === false) return
+
   const device = detectDevice(input.userAgent ?? null)
+  /*
+    ربات‌ها به‌صورت پیش‌فرض ثبت **نمی‌شوند**. قبلاً ردیفشان نوشته می‌شد و فقط
+    از `place.view_count` بیرون می‌ماند؛ نتیجه این بود که جدولِ خام با
+    خزنده‌های گوگل پر می‌شد و هر پرس‌وجوی آماری باید `device <> 'bot'` را
+    یادش می‌ماند — یک شرط که جا افتادنش خطای خاموش می‌سازد.
+  */
+  if (device === 'bot' && !options.countBots) return
+
   const db = getDb()
 
   let placeId: number | null = null
@@ -173,7 +193,7 @@ export async function rollupDay(day: Date = new Date()): Promise<void> {
 }
 
 /** پاک‌سازی بازدیدهای قدیمی — جدول خام لازم نیست تا ابد بماند. */
-export async function purgeOldPageViews(keepDays = 180): Promise<void> {
+export async function purgeOldPageViews(keepDays: number): Promise<void> {
   const db = getDb()
   await db.execute(sql`
     DELETE FROM page_view WHERE created_at < DATE_SUB(UTC_TIMESTAMP(), INTERVAL ${keepDays} DAY)

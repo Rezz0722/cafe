@@ -24,6 +24,13 @@ export interface MapStyleOptions {
   /** ریشه‌ی آدرس تایل — معمولاً همان دامنه. */
   tileUrl?: string
   theme?: 'light' | 'dark'
+  /**
+   * زومی که ساختمان‌ها از آن به بعد دیده می‌شوند — از تنظیمات پنل ادمین.
+   *
+   * پایین‌تر بردنش نقشه را در زوم شهری شلوغ و کند می‌کند؛ بالاتر بردنش
+   * ساختمان‌ها را عملاً حذف می‌کند. پس تنظیم است، نه ثابت.
+   */
+  buildingsFromZoom?: number
 }
 
 interface Palette {
@@ -92,7 +99,11 @@ function width(stops: [number, number][]): unknown {
 }
 
 export function buildMapStyle(options: MapStyleOptions = {}): Record<string, unknown> {
-  const { tileUrl = '/api/map/tiles/{z}/{x}/{y}', theme = 'light' } = options
+  const {
+    tileUrl = '/api/map/tiles/{z}/{x}/{y}',
+    theme = 'light',
+    buildingsFromZoom = 15.5,
+  } = options
   const color = theme === 'dark' ? DARK : LIGHT
 
   return {
@@ -147,12 +158,12 @@ export function buildMapStyle(options: MapStyleOptions = {}): Record<string, unk
         type: 'fill',
         source: 'mashhad',
         'source-layer': 'building',
-        minzoom: 15.5,
+        minzoom: buildingsFromZoom,
         paint: {
           'fill-color': color.building,
           'fill-outline-color': color.buildingOutline,
           // محوشدن تدریجی، تا ساختمان‌ها یک‌باره ظاهر نشوند.
-          'fill-opacity': { stops: [[15.5, 0], [16.5, 1]] },
+          'fill-opacity': { stops: [[buildingsFromZoom, 0], [buildingsFromZoom + 1, 1]] },
         },
       },
 

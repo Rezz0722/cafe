@@ -63,7 +63,31 @@ export interface PlaceJsonLdProps {
   menu?: JsonLdMenuSection[]
 }
 
-export function PlaceJsonLd({ place }: { place: PlaceJsonLdProps }) {
+/**
+ * شهر و استان از تنظیمات می‌آیند.
+ *
+ * قبلاً «مشهد» و «خراسان رضوی» در همین فایل هاردکد بودند. برای راه‌اندازی
+ * سایت در شهر دیگر، این یعنی ویرایش کد — دقیقاً چیزی که قرار است لازم نباشد.
+ */
+export interface JsonLdLocale {
+  cityName: string
+  regionName: string
+  countryCode: string
+}
+
+const DEFAULT_LOCALE: JsonLdLocale = {
+  cityName: 'مشهد',
+  regionName: 'خراسان رضوی',
+  countryCode: 'IR',
+}
+
+export function PlaceJsonLd({
+  place,
+  locale = DEFAULT_LOCALE,
+}: {
+  place: PlaceJsonLdProps
+  locale?: JsonLdLocale
+}) {
   const url = absoluteUrl(paths.cafe(place.slug))
 
   /**
@@ -94,9 +118,9 @@ export function PlaceJsonLd({ place }: { place: PlaceJsonLdProps }) {
     address: {
       '@type': 'PostalAddress',
       streetAddress: place.address,
-      addressLocality: 'مشهد',
-      addressRegion: 'خراسان رضوی',
-      addressCountry: 'IR',
+      addressLocality: locale.cityName,
+      addressRegion: locale.regionName,
+      addressCountry: locale.countryCode,
     },
     priceRange: PRICE_RANGE[place.priceTier ?? 2] ?? '$$',
   }

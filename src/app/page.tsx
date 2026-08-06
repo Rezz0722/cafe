@@ -10,6 +10,10 @@ import {
   listPopularDishes,
 } from '@/core/places/queries'
 import { searchPath } from '@/core/search/filters'
+import { getDiscoveryPolicy, getLocalePolicy } from '@/core/settings/policies'
+import { maintenanceState } from '@/core/settings/maintenance'
+import { MaintenanceScreen } from '@/components/site/MaintenanceScreen'
+import { getSettings } from '@/core/settings/store'
 import { fa, faCount, toman } from '@/lib/format'
 import { paths } from '@/routes'
 import styles from './page.module.css'
@@ -30,21 +34,31 @@ import styles from './page.module.css'
  * دارند» یک واقعیت است و اگر داده عوض شود، عدد هم عوض می‌شود.
  */
 
-export const metadata: Metadata = {
-  title: 'کافه‌گرد — راهنمای کافه‌ها و رستوران‌های مشهد',
-  description:
-    'قیمت واقعی منو، ساعت کاری، نقشه و مسیریابی برای کافه‌ها و رستوران‌های مشهد. فیلتر بر اساس قیمت، محله و منو.',
-  alternates: { canonical: '/' },
+export async function generateMetadata(): Promise<Metadata> {
+  const s = await getSettings()
+  return {
+    title: s.siteTagline ? `${s.siteName} — ${s.siteTagline}` : s.siteName,
+    description: s.siteDescription,
+    alternates: { canonical: '/' },
+  }
 }
 
 export default async function HomePage() {
+  const gate = await maintenanceState()
+  if (gate.closed) {
+    return <MaintenanceScreen siteName={gate.siteName} message={gate.message} />
+  }
+
+  const [discovery, locale] = await Promise.all([getDiscoveryPolicy(), getLocalePolicy()])
+  const cardCount = discovery.homeCardCount
+
   const [stats, facets, dishes, districts, topRated, cheapest] = await Promise.all([
     getSiteStats(),
     listFilterFacets(),
     listPopularDishes(16),
     listDistricts(),
-    listPlaceCards({ limit: 6, sort: 'quality' }),
-    listPlaceCards({ limit: 6, sort: 'price_asc' }),
+    listPlaceCards({ limit: cardCount, sort: 'quality' }),
+    listPlaceCards({ limit: cardCount, sort: 'price_asc' }),
   ])
 
   const popularFacets = facets.filter((facet) => facet.isPopular).slice(0, 12)
@@ -73,9 +87,15 @@ export default async function HomePage() {
           <Link href={searchPath({ view: 'map' })} className={styles.heroSecondary}>
             نمای نقشه
           </Link>
-          <Link href={searchPath({ maxPrice: 200_000 })} className={styles.heroSecondary}>
-            تا ۲۰۰ هزار تومان
-          </Link>
+          {/* اولین سقفِ قیمتِ تنظیم‌شده — همان که در نوار فیلتر هم اول است. */}
+          {discovery.priceCaps[0] !== undefined && (
+            <Link
+              href={searchPath({ maxPrice: discovery.priceCaps[0] })}
+              className={styles.heroSecondary}
+            >
+              تا {toman(discovery.priceCaps[0])}
+            </Link>
+          )}
         </div>
       </section>
 
@@ -177,7 +197,9 @@ export default async function HomePage() {
       <section className={styles.section}>
         <div className={styles.sectionHead}>
           <h2>محله‌ها</h2>
-          <p>{fa(activeDistricts.length)} محله‌ی مشهد و حومه، با تعداد مجموعه.</p>
+          <p>
+            {fa(activeDistricts.length)} محله‌ی {locale.cityName} و حومه، با تعداد مجموعه.
+          </p>
         </div>
         <div className={styles.districtGrid}>
           {activeDistricts.map((district) => (

@@ -13,6 +13,9 @@ import {
 } from '@/core/places/queries'
 import { searchPath } from '@/core/search/filters'
 import { fa, toman } from '@/lib/format'
+import { MaintenanceScreen } from '@/components/site/MaintenanceScreen'
+import { maintenanceState } from '@/core/settings/maintenance'
+import { getLocalePolicy, getMapPolicy } from '@/core/settings/policies'
 import { paths } from '@/routes'
 import styles from './page.module.css'
 
@@ -40,25 +43,33 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { district: slug } = await params
-  const district = await getDistrictBySlug(slug)
+  const [district, locale] = await Promise.all([getDistrictBySlug(slug), getLocalePolicy()])
   if (!district) return { title: 'محله پیدا نشد' }
 
   return {
-    title: `کافه‌ها و رستوران‌های ${district.name}، مشهد`,
+    title: `کافه‌ها و رستوران‌های ${district.name}، ${locale.cityName}`,
     description: `${fa(district.placeCount)} مجموعه در ${district.name}. قیمت واقعی منو، ساعت کاری، نقشه و مسیریابی.`,
     alternates: { canonical: paths.district(district.slug) },
   }
 }
 
 export default async function DistrictPage({ params }: PageProps) {
+  const gate = await maintenanceState()
+  if (gate.closed) {
+    return <MaintenanceScreen siteName={gate.siteName} message={gate.message} />
+  }
+
   const { district: slug } = await params
   const district = await getDistrictBySlug(slug)
   if (!district || district.placeCount === 0) notFound()
 
-  const [cards, facets, allDistricts] = await Promise.all([
-    listPlaceCards({ districtId: district.id, limit: 60, sort: 'quality' }),
+  const [cards, facets, allDistricts, map] = await Promise.all([
+    // یک محله همیشه در یک صفحه جا می‌شود (بزرگ‌ترین ۳۹ مجموعه دارد)، ولی
+    // سقف باید از تنظیمات بیاید تا اگر داده رشد کرد، عددِ ثابت گمراه نکند.
+    listPlaceCards({ districtId: district.id, limit: 200, sort: 'quality' }),
     listFilterFacets(),
     listDistricts(),
+    getMapPolicy(),
   ])
 
   const mapPlaces = cards
@@ -139,7 +150,7 @@ export default async function DistrictPage({ params }: PageProps) {
               places={mapPlaces}
               labels={getMapLabels({ zoom: 14, limit: 24 })}
               center={district.center}
-              zoom={14}
+              zoom={Math.min(14, map.maxZoom)}
               height="320px"
             />
           </section>

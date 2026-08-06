@@ -1,12 +1,5 @@
 import { createHash, randomInt, timingSafeEqual } from 'node:crypto'
-import {
-  OTP_LENGTH,
-  OTP_MAX_ATTEMPTS,
-  OTP_MAX_GLOBAL_PER_HOUR,
-  OTP_MAX_PER_HOUR,
-  OTP_RESEND_COOLDOWN_SEC,
-  OTP_TTL_SEC,
-} from './otpConfig'
+import { DEFAULT_OTP_POLICY, type OtpPolicy } from './otpConfig'
 
 export * from './otpConfig'
 
@@ -42,10 +35,10 @@ export interface OtpRecord {
   recentRequests: number[]
 }
 
-export function generateCode(): string {
+export function generateCode(length = DEFAULT_OTP_POLICY.length): string {
   // randomInt امن است؛ Math.random برای کد ورود قابل قبول نیست.
-  const max = 10 ** OTP_LENGTH
-  return String(randomInt(0, max)).padStart(OTP_LENGTH, '0')
+  const max = 10 ** length
+  return String(randomInt(0, max)).padStart(length, '0')
 }
 
 export function hashCode(phone: string, code: string): string {
@@ -66,6 +59,7 @@ export type RequestDecision =
 export function canRequestCode(
   existing: OtpRecord | null,
   now = Date.now(),
+  policy: OtpPolicy = DEFAULT_OTP_POLICY,
 ): RequestDecision {
   const hourAgo = now - 3600_000
   const recent = (existing?.recentRequests ?? []).filter((t) => t > hourAgo)
@@ -74,8 +68,8 @@ export function canRequestCode(
   if (existing && recent.length > 0) {
     const last = Math.max(...recent)
     const elapsed = (now - last) / 1000
-    if (elapsed < OTP_RESEND_COOLDOWN_SEC) {
-      const wait = Math.ceil(OTP_RESEND_COOLDOWN_SEC - elapsed)
+    if (elapsed < policy.resendCooldownSeconds) {
+      const wait = Math.ceil(policy.resendCooldownSeconds - elapsed)
       return {
         allowed: false,
         reason: `تا ارسال دوباره ${wait} ثانیه صبر کنید.`,
@@ -85,7 +79,7 @@ export function canRequestCode(
   }
 
   // لایه ۲ — سقف ساعتی
-  if (recent.length >= OTP_MAX_PER_HOUR) {
+  if (recent.length >= policy.maxPerHour) {
     const oldest = Math.min(...recent)
     const wait = Math.ceil((oldest + 3600_000 - now) / 1000)
     return {
@@ -103,11 +97,12 @@ export function createOtpRecord(
   code: string,
   recentRequests: number[],
   now = Date.now(),
+  ttlSeconds = DEFAULT_OTP_POLICY.ttlSeconds,
 ): OtpRecord {
   return {
     phone,
     codeHash: hashCode(phone, code),
-    expiresAt: now + OTP_TTL_SEC * 1000,
+    expiresAt: now + ttlSeconds * 1000,
     attempts: 0,
     createdAt: now,
     recentRequests,
@@ -128,6 +123,7 @@ export function verifyCode(
   phone: string,
   code: string,
   now = Date.now(),
+  maxAttempts = DEFAULT_OTP_POLICY.maxAttempts,
 ): VerifyResult {
   if (!record) {
     return { ok: false, reason: 'کدی برای این شماره درخواست نشده.', burned: false }
@@ -137,7 +133,7 @@ export function verifyCode(
     return { ok: false, reason: 'کد منقضی شده. کد جدید بگیرید.', burned: true }
   }
 
-  if (record.attempts >= OTP_MAX_ATTEMPTS) {
+  if (record.attempts >= maxAttempts) {
     return {
       ok: false,
       reason: 'تعداد تلاش‌های ناموفق زیاد بود. کد جدید بگیرید.',
@@ -147,7 +143,7 @@ export function verifyCode(
 
   const given = hashCode(phone, code.replace(/\D/g, ''))
   if (!safeEqualHex(given, record.codeHash)) {
-    const left = OTP_MAX_ATTEMPTS - record.attempts - 1
+    const left = maxAttempts - record.attempts - 1
     return {
       ok: false,
       reason: left > 0 ? `کد اشتباه است. ${left} تلاش باقی مانده.` : 'کد اشتباه است.',
@@ -164,9 +160,10 @@ export function verifyCode(
 export function isGlobalLimitReached(
   globalRequests: number[],
   now = Date.now(),
+  maxGlobalPerHour = DEFAULT_OTP_POLICY.maxGlobalPerHour,
 ): boolean {
   const hourAgo = now - 3600_000
-  return globalRequests.filter((t) => t > hourAgo).length >= OTP_MAX_GLOBAL_PER_HOUR
+  return globalRequests.filter((t) => t > hourAgo).length >= maxGlobalPerHour
 }
 
 export function pruneGlobal(globalRequests: number[], now = Date.now()): number[] {

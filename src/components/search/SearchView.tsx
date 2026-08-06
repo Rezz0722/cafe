@@ -67,6 +67,20 @@ interface Props {
   /** توضیح زیر عنوان — مثلاً «۱۰۹ کافه پاستا دارند». */
   subheading?: string
   pageSize: number
+  /**
+   * سقف‌های نوار قیمت — از تنظیمات پنل ادمین.
+   *
+   * `PRICE_CAPS` در `filters.ts` پیش‌فرض است و اگر این prop نیاید همان
+   * استفاده می‌شود، تا این کامپوننت در جای دیگری هم قابل استفاده بماند.
+   */
+  priceCaps?: readonly number[]
+  /** مرکز، زوم و حدود زوم نقشه — از تنظیمات پنل ادمین. */
+  mapConfig?: {
+    center: { lat: number; lng: number }
+    zoom: number
+    minZoom: number
+    maxZoom: number
+  }
 }
 
 const STORAGE_KEY = 'cafegard:lastLocation'
@@ -88,6 +102,8 @@ export function SearchView({
   heading,
   subheading,
   pageSize,
+  priceCaps = PRICE_CAPS,
+  mapConfig,
 }: Props) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
@@ -398,7 +414,7 @@ export function SearchView({
           <fieldset>
             <legend>میانگین قیمت منو، حداکثر</legend>
             <div className={styles.filterOptions}>
-              {PRICE_CAPS.map((cap) => (
+              {priceCaps.map((cap) => (
                 <button
                   key={cap}
                   type="button"
@@ -462,6 +478,10 @@ export function SearchView({
             places={mapPlaces}
             labels={labels}
             userLocation={location}
+            center={mapConfig?.center}
+            zoom={mapConfig?.zoom}
+            minZoom={mapConfig?.minZoom}
+            maxZoom={mapConfig?.maxZoom}
             height="min(70vh, 620px)"
           />
           <p className={styles.mapNote}>

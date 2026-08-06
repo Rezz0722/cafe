@@ -75,9 +75,17 @@ interface Props {
   otherPlaces: { id: number; name: string }[]
   onSelectPlace?: (id: number) => void
   readOnly: boolean
+  /** بعد از چند روز قیمت «بیات» شمرده می‌شود — از تنظیمات پنل ادمین. */
+  stalePriceDays?: number
 }
 
-export function VenuePanel({ place, reviews, otherPlaces, readOnly }: Props) {
+export function VenuePanel({
+  place,
+  reviews,
+  otherPlaces,
+  readOnly,
+  stalePriceDays = 90,
+}: Props) {
   const [tab, setTab] = useState<Tab>('overview')
 
   const [infoState, infoAction] = useActionState(saveVenueInfoAction, EMPTY_VENUE_STATE)
@@ -98,7 +106,8 @@ export function VenuePanel({ place, reviews, otherPlaces, readOnly }: Props) {
         (item) =>
           item.price !== null &&
           (!item.priceUpdatedAt ||
-            Date.now() - new Date(item.priceUpdatedAt).getTime() > 90 * 24 * 3600 * 1000),
+            Date.now() - new Date(item.priceUpdatedAt).getTime() >
+              stalePriceDays * 24 * 3600 * 1000),
       ).length,
     0,
   )
@@ -245,7 +254,7 @@ export function VenuePanel({ place, reviews, otherPlaces, readOnly }: Props) {
               )}
               {staleCount > 0 && (
                 <li>
-                  قیمت {fa(staleCount)} آیتم بیش از سه ماه به‌روز نشده.{' '}
+                  قیمت {fa(staleCount)} آیتم بیش از {fa(stalePriceDays)} روز به‌روز نشده.{' '}
                   <button type="button" onClick={() => setTab('menu')}>
                     به‌روزرسانی
                   </button>

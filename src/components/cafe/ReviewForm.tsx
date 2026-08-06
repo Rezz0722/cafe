@@ -78,6 +78,14 @@ interface Props {
   signedIn: boolean
   existing: { stars: number; text: string | null; status: string } | null
   authHref: string
+  /**
+   * حد پایین و بالای متن — از تنظیمات پنل ادمین.
+   *
+   * سرور هم همین‌ها را بررسی می‌کند؛ اینجا فقط برای این است که کاربر خطا را
+   * **قبل** از ارسال ببیند. اعتبارسنجی سمت کلاینت هرگز جایگزین سرور نیست.
+   */
+  minTextLength?: number
+  maxTextLength?: number
 }
 
 export function ReviewForm({
@@ -87,6 +95,8 @@ export function ReviewForm({
   signedIn,
   existing,
   authHref,
+  minTextLength = 0,
+  maxTextLength = 4000,
 }: Props) {
   const [state, action] = useActionState(submitReviewAction, EMPTY_ACTION_STATE)
   const [stars, setStars] = useState(existing?.stars ?? 0)
@@ -152,10 +162,15 @@ export function ReviewForm({
           name="text"
           className={styles.textarea}
           rows={4}
-          maxLength={4000}
+          minLength={minTextLength || undefined}
+          maxLength={maxTextLength}
+          required={minTextLength > 0}
           defaultValue={existing?.text ?? ''}
           placeholder="چه چیزی خوب بود؟ چه چیزی می‌توانست بهتر باشد؟"
         />
+        {minTextLength > 0 && (
+          <span className={styles.note}>حداقل {minTextLength} کاراکتر</span>
+        )}
       </label>
 
       <label className={styles.field}>

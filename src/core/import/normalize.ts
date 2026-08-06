@@ -459,15 +459,13 @@ export type GeoStatus = 'ok' | 'out_of_area' | 'missing'
 export function classifyGeo(
   lat: number | null | undefined,
   lng: number | null | undefined,
+  bbox: { minLat: number; maxLat: number; minLng: number; maxLng: number } = MASHHAD_BBOX,
 ): GeoStatus {
   if (typeof lat !== 'number' || typeof lng !== 'number') return 'missing'
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) return 'missing'
   if (lat === 0 || lng === 0) return 'missing'
   const inside =
-    lat >= MASHHAD_BBOX.minLat &&
-    lat <= MASHHAD_BBOX.maxLat &&
-    lng >= MASHHAD_BBOX.minLng &&
-    lng <= MASHHAD_BBOX.maxLng
+    lat >= bbox.minLat && lat <= bbox.maxLat && lng >= bbox.minLng && lng <= bbox.maxLng
   return inside ? 'ok' : 'out_of_area'
 }
 
@@ -486,6 +484,7 @@ export function pickDistrict(
   address: string | null | undefined,
   lat: number | null | undefined,
   lng: number | null | undefined,
+  maxKm = 4,
 ): string | null {
   const squashedAddress = squashFa(address ?? '')
 
@@ -506,7 +505,7 @@ export function pickDistrict(
       const km = distanceKm({ lat: lat as number, lng: lng as number }, district.center)
       if (!best || km < best.km) best = { id: district.id, km }
     }
-    if (best && best.km <= 4) return best.id
+    if (best && best.km <= maxKm) return best.id
   }
 
   return null
@@ -533,6 +532,8 @@ function isPlaceholderPrice(price: number): boolean {
 export interface PriceContext {
   /** آیا قیمت‌های این مجموعه به «هزار تومان» نوشته شده‌اند؟ */
   thousandUnit: boolean
+  /** آستانه‌ای که این تشخیص با آن انجام شد — همان که در ضرب هم به‌کار می‌رود. */
+  threshold?: number
 }
 
 /**
@@ -542,12 +543,15 @@ export interface PriceContext {
  * تشخیص در سطح آیتم غلط است: «آب معدنی ۳۰» و «آب معدنی ۳۰۰۰۰» هر دو معتبرند
  * و از خودِ عدد نمی‌شود فهمید. ولی *میانه‌ی* منو سیگنال قاطع می‌دهد.
  */
-export function detectPriceContext(prices: number[]): PriceContext {
+export function detectPriceContext(
+  prices: number[],
+  threshold = THOUSAND_UNIT_THRESHOLD,
+): PriceContext {
   const real = prices.filter((p) => p > 1)
-  if (real.length < 3) return { thousandUnit: false }
+  if (real.length < 3) return { thousandUnit: false, threshold }
   const sorted = [...real].sort((a, b) => a - b)
   const median = sorted[Math.floor(sorted.length / 2)]!
-  return { thousandUnit: median < THOUSAND_UNIT_THRESHOLD }
+  return { thousandUnit: median < threshold, threshold }
 }
 
 export interface NormalizedPrice {
@@ -579,8 +583,9 @@ export function normalizePrice(
     return { price: null, priceUnknown: true }
   }
 
+  const threshold = context.threshold ?? THOUSAND_UNIT_THRESHOLD
   const price =
-    context.thousandUnit && raw < THOUSAND_UNIT_THRESHOLD ? Math.round(raw * 1000) : Math.round(raw)
+    context.thousandUnit && raw < threshold ? Math.round(raw * 1000) : Math.round(raw)
 
   // قیمت‌های نامعقولِ بزرگ (بالای ۲۰۰ میلیون) داده‌ی خراب‌اند، نه غذا.
   if (price > 200_000_000) return { price: null, priceUnknown: true }
@@ -597,10 +602,19 @@ export function normalizePrice(
  */
 export const PRICE_TIER_BOUNDS = { cheap: 250_000, mid: 400_000 } as const
 
-export function priceTierFromMedian(median: number | null): 1 | 2 | 3 {
+/**
+ * مرزها از تنظیمات پنل ادمین می‌آیند، ولی پیش‌فرض دارند.
+ *
+ * تزریق به‌جای خواندنِ مستقیم، چون این ماژول خالص است و باید بدون دیتابیس
+ * قابل تست بماند.
+ */
+export function priceTierFromMedian(
+  median: number | null,
+  bounds: { cheap: number; mid: number } = PRICE_TIER_BOUNDS,
+): 1 | 2 | 3 {
   if (median === null) return 2
-  if (median <= PRICE_TIER_BOUNDS.cheap) return 1
-  if (median <= PRICE_TIER_BOUNDS.mid) return 2
+  if (median <= bounds.cheap) return 1
+  if (median <= bounds.mid) return 2
   return 3
 }
 

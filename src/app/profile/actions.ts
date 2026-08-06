@@ -15,6 +15,7 @@ import { revalidatePath } from 'next/cache'
 import { getSession } from '@/core/auth/currentUser'
 import { VIEW_AS_READONLY } from '@/core/auth/impersonation'
 import { findUserById } from '@/core/auth/userRepo'
+import { getModerationPolicy } from '@/core/settings/policies'
 import { sanitizeAnswers } from '@/core/taste/quiz'
 import {
   saveTasteProfile,
@@ -108,6 +109,11 @@ export async function submitReviewAction(
   const guard = await requireWritableUser()
   if (!guard.ok) return { ok: false, error: guard.error }
 
+  const moderation = await getModerationPolicy()
+  if (!moderation.reviewsEnabled) {
+    return { ok: false, error: 'ثبت نظر موقتاً غیرفعال است.' }
+  }
+
   const placeId = num(form, 'placeId')
   const stars = num(form, 'stars')
   if (!placeId) return { ok: false, error: 'کافه مشخص نیست.' }
@@ -118,19 +124,27 @@ export async function submitReviewAction(
   const account = await findUserById(guard.userId)
   const authorName = account?.name || 'کاربر کافه‌گرد'
 
-  const result = await submitReview({
-    placeId,
-    userId: guard.userId,
-    authorName,
-    stars,
-    text: str(form, 'text') || null,
-    ratingCoffee: num(form, 'ratingCoffee'),
-    ratingFood: num(form, 'ratingFood'),
-    ratingVibe: num(form, 'ratingVibe'),
-    ratingService: num(form, 'ratingService'),
-    ratingValue: num(form, 'ratingValue'),
-    visitDate: str(form, 'visitDate') || null,
-  })
+  const result = await submitReview(
+    {
+      placeId,
+      userId: guard.userId,
+      authorName,
+      stars,
+      text: str(form, 'text') || null,
+      ratingCoffee: num(form, 'ratingCoffee'),
+      ratingFood: num(form, 'ratingFood'),
+      ratingVibe: num(form, 'ratingVibe'),
+      ratingService: num(form, 'ratingService'),
+      ratingValue: num(form, 'ratingValue'),
+      visitDate: str(form, 'visitDate') || null,
+    },
+    {
+      requireApproval: moderation.reviewsRequireApproval,
+      minTextLength: moderation.reviewMinTextLength,
+      maxTextLength: moderation.reviewMaxTextLength,
+      blocklist: moderation.blocklist,
+    },
+  )
 
   if (!result.ok) return { ok: false, error: result.error }
 
@@ -138,9 +152,14 @@ export async function submitReviewAction(
   if (slug) revalidatePath(paths.cafe(slug))
   revalidatePath(paths.myReviews)
 
+  // پیام باید با واقعیت بخواند: اگر تأیید خودکار روشن است، «بعد از بررسی»
+  // دروغ است و کاربر بی‌دلیل منتظر می‌ماند.
   return {
     ok: true,
-    message: 'نظرت ثبت شد و بعد از بررسی منتشر می‌شود.',
+    message:
+      result.status === 'approved'
+        ? 'نظرت ثبت و منتشر شد.'
+        : 'نظرت ثبت شد و بعد از بررسی منتشر می‌شود.',
   }
 }
 
@@ -154,6 +173,11 @@ export async function submitPlaceAction(
 ): Promise<ActionState> {
   const guard = await requireWritableUser()
   if (!guard.ok) return { ok: false, error: guard.error }
+
+  const { submissionsEnabled } = await getModerationPolicy()
+  if (!submissionsEnabled) {
+    return { ok: false, error: 'ثبت کافه‌ی جدید موقتاً بسته است.' }
+  }
 
   const result = await submitPlace({
     userId: guard.userId,

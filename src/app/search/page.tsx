@@ -13,6 +13,9 @@ import {
   listPopularDishes,
 } from '@/core/places/queries'
 import { describeFilters, parseFilters } from '@/core/search/filters'
+import { MaintenanceScreen } from '@/components/site/MaintenanceScreen'
+import { maintenanceState } from '@/core/settings/maintenance'
+import { getDiscoveryPolicy, getLocalePolicy, getMapPolicy } from '@/core/settings/policies'
 import { getDb } from '@/db/client'
 import { placeHours } from '@/db/schema'
 
@@ -31,8 +34,6 @@ import { placeHours } from '@/db/schema'
  * موقعیت کاربر فقط در مرورگر هست. سرور نتایج را با رتبه‌بندی معمول می‌دهد و
  * `SearchView` بعد از گرفتن اجازه‌ی موقعیت، همان‌ها را با فاصله مرتب می‌کند.
  */
-
-const PAGE_SIZE = 24
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>
 
@@ -64,13 +65,23 @@ export async function generateMetadata({
 }
 
 export default async function SearchPage({ searchParams }: { searchParams: SearchParams }) {
+  const gate = await maintenanceState()
+  if (gate.closed) {
+    return <MaintenanceScreen siteName={gate.siteName} message={gate.message} />
+  }
+
   const filters = parseFilters(await searchParams)
 
-  const [facets, popularDishes, districts] = await Promise.all([
+  const [facets, popularDishes, districts, discovery, locale, map] = await Promise.all([
     listFilterFacets(),
     listPopularDishes(),
     listDistricts(),
+    getDiscoveryPolicy(),
+    getLocalePolicy(),
+    getMapPolicy(),
   ])
+
+  const pageSize = discovery.pageSize
 
   const dish = filters.dish ? await getDishBySlug(filters.dish) : null
 
@@ -86,8 +97,8 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
     sort: filters.sort === 'distance' ? ('rating' as const) : filters.sort,
     // فیلتر «باز است» بعد از پرس‌وجو اعمال می‌شود، پس باید بیشتر بگیریم و
     // صفحه‌بندی را خودمان انجام دهیم.
-    limit: filters.openNow ? 400 : PAGE_SIZE,
-    offset: filters.openNow ? 0 : (filters.page - 1) * PAGE_SIZE,
+    limit: filters.openNow ? 400 : pageSize,
+    offset: filters.openNow ? 0 : (filters.page - 1) * pageSize,
   }
 
   let cards: Awaited<ReturnType<typeof listCardsWithDishPrice>> | Awaited<
@@ -132,13 +143,15 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
             crossesMidnight: shift.crossesMidnight,
             closed: shift.closed,
           })),
+          new Date(),
+          locale.timeZone,
         ).status === 'open'
       )
     })
 
     total = cards.length
-    const start = (filters.page - 1) * PAGE_SIZE
-    cards = cards.slice(start, start + PAGE_SIZE)
+    const start = (filters.page - 1) * pageSize
+    cards = cards.slice(start, start + pageSize)
   }
 
   const heading = describeFilters(filters, {
@@ -157,7 +170,8 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
       filters={filters}
       cards={cards}
       total={total}
-      pageSize={PAGE_SIZE}
+      pageSize={pageSize}
+      priceCaps={discovery.priceCaps}
       heading={heading}
       subheading={subheading}
       facets={facets.map((facet) => ({
@@ -176,7 +190,13 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
         name: district.name,
         placeCount: district.placeCount,
       }))}
-      labels={getMapLabels({ zoom: 12, limit: 30 })}
+      labels={getMapLabels({ zoom: map.defaultZoom, limit: 30 })}
+      mapConfig={{
+        center: map.center,
+        zoom: map.defaultZoom,
+        minZoom: map.minZoom,
+        maxZoom: map.maxZoom,
+      }}
     />
   )
 }

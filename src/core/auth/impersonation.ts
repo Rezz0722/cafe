@@ -50,12 +50,16 @@ export function readViewAsClaims(raw: string | undefined): ViewAsClaims | null {
   return claims
 }
 
-export async function startViewAs(actorId: string, targetId: string): Promise<void> {
+export async function startViewAs(
+  actorId: string,
+  targetId: string,
+  maxAgeSec = VIEW_AS_MAX_AGE_SEC,
+): Promise<void> {
   const token = signClaims<ViewAsClaims>(
     {
       actorId,
       targetId,
-      exp: Math.floor(Date.now() / 1000) + VIEW_AS_MAX_AGE_SEC,
+      exp: Math.floor(Date.now() / 1000) + maxAgeSec,
     },
     SESSION_SECRET,
   )
@@ -66,7 +70,7 @@ export async function startViewAs(actorId: string, targetId: string): Promise<vo
     sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',
     path: '/',
-    maxAge: VIEW_AS_MAX_AGE_SEC,
+    maxAge: maxAgeSec,
   })
 }
 

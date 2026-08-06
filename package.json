@@ -28,6 +28,8 @@
     "pages:smoke": "node scripts/pages-smoke.mjs",
     "manage:smoke": "tsx --conditions=react-server scripts/manage-smoke.ts",
     "admin:smoke": "tsx --conditions=react-server scripts/admin-smoke.ts",
+    "settings:smoke": "tsx --conditions=react-server scripts/settings-smoke.ts",
+    "settings:effect": "tsx --conditions=react-server scripts/settings-effect-smoke.ts",
     "db:verify": "node scripts/db-verify.mjs"
   },
   "dependencies": {

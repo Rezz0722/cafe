@@ -16,6 +16,7 @@ import 'server-only'
  */
 
 import { and, desc, eq, gte, isNull, sql } from 'drizzle-orm'
+import { getSettings } from '@/core/settings/store'
 import { getDb } from '@/db/client'
 import {
   appUser,
@@ -241,6 +242,8 @@ export interface DataHealth
  */
 export async function getDataHealth(): Promise<DataHealth> {
   const db = getDb()
+  // «چند روز قیمت بیات است» یک تصمیم سلیقه‌ای است، پس از تنظیمات می‌آید.
+  const { stalePriceDays } = await getSettings()
   const [row] = (
     await db.execute(sql`
       SELECT
@@ -261,7 +264,8 @@ export async function getDataHealth(): Promise<DataHealth> {
         (SELECT COUNT(*) FROM place WHERE price_unit_fixed = 1) AS price_unit_fixed,
         (SELECT COUNT(*) FROM media WHERE status = 'failed') AS media_failed,
         (SELECT COUNT(*) FROM menu_item WHERE price IS NOT NULL AND
-          (price_updated_at IS NULL OR price_updated_at < DATE_SUB(UTC_TIMESTAMP(), INTERVAL 90 DAY))
+          (price_updated_at IS NULL OR
+            price_updated_at < DATE_SUB(UTC_TIMESTAMP(), INTERVAL ${stalePriceDays} DAY))
         ) AS stale_prices
     `)
   )[0] as unknown as Record<string, number>[]

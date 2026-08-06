@@ -33,6 +33,9 @@ import { hashUrl } from '@/core/media/store'
 import {
   cleanLine,
   classifyGeo,
+  MASHHAD_BBOX,
+  PRICE_TIER_BOUNDS,
+  THOUSAND_UNIT_THRESHOLD,
   detectKind,
   detectPriceContext,
   makeSlug,
@@ -87,12 +90,35 @@ function statusFor(kind: PlaceKind): 'published' | 'draft' {
   return kind === 'shop' ? 'draft' : 'published'
 }
 
+/**
+ * پیکربندی داده‌محورِ ایمپورت.
+ *
+ * از تنظیمات پنل ادمین می‌آید ولی به‌عنوان **پارامتر** گرفته می‌شود، نه با
+ * `getSettings()` درون این ماژول: این تابع از اسکریپت CLI هم اجرا می‌شود و
+ * باید بدون وابستگی به `server-only` کار کند.
+ */
+export interface ImportPolicy {
+  priceTierBounds: { cheap: number; mid: number }
+  thousandUnitThreshold: number
+  districtMatchMaxKm: number
+  bbox: { minLat: number; maxLat: number; minLng: number; maxLng: number }
+}
+
 export async function importCafes(
   db: Db,
-  options: { sourcePath?: string; log?: (message: string) => void } = {},
+  options: {
+    sourcePath?: string
+    log?: (message: string) => void
+    policy?: Partial<ImportPolicy>
+  } = {},
 ): Promise<ImportReport> {
   const log = options.log ?? (() => {})
   const cafes = readSourceCafes(options.sourcePath)
+
+  const priceTierBounds = options.policy?.priceTierBounds ?? PRICE_TIER_BOUNDS
+  const thousandUnitThreshold = options.policy?.thousandUnitThreshold ?? THOUSAND_UNIT_THRESHOLD
+  const districtMatchMaxKm = options.policy?.districtMatchMaxKm ?? 4
+  const bbox = options.policy?.bbox ?? MASHHAD_BBOX
 
   const report: ImportReport = {
     places: 0,
@@ -174,7 +200,7 @@ export async function importCafes(
         if (typeof price === 'number' && price > 0) rawPrices.push(price)
       }
     }
-    const priceContext = detectPriceContext(rawPrices)
+    const priceContext = detectPriceContext(rawPrices, thousandUnitThreshold)
     if (priceContext.thousandUnit) report.unitFixed.push(name)
 
     // ── نوع مجموعه
@@ -187,9 +213,9 @@ export async function importCafes(
     // ── مختصات و محله
     const lat = cafe['عرض جغرافیایی (lat)']
     const lng = cafe['طول جغرافیایی (lng)']
-    const geoStatus = classifyGeo(lat, lng)
+    const geoStatus = classifyGeo(lat, lng, bbox)
     const address = cleanLine(cafe['آدرس متنی'])
-    const districtId = pickDistrict(address, lat, lng)
+    const districtId = pickDistrict(address, lat, lng, districtMatchMaxKm)
     if (!districtId) report.withoutDistrict.push(name)
 
     // ── ساعت کاری
@@ -216,7 +242,7 @@ export async function importCafes(
       }
     }
     const priceMedian = median(normalizedPrices)
-    const priceTier = priceTierFromMedian(priceMedian)
+    const priceTier = priceTierFromMedian(priceMedian, priceTierBounds)
 
     // ── آیتم شاخص: گران‌ترین آیتمِ «ویژه»، وگرنه اولین ویژه، وگرنه هیچ
     let signatureItem: string | null = null

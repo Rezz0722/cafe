@@ -22,9 +22,16 @@ export const SESSION_MAX_AGE_SEC = 60 * 60 * 24 * 30 // ۳۰ روز
 
 export type { SessionPayload }
 
-export function createSessionToken(payload: Omit<SessionPayload, 'exp'>): string {
+/**
+ * `maxAgeSec` از تنظیمات پنل ادمین می‌آید (روز × ۸۶۴۰۰) ولی پیش‌فرض دارد:
+ * اگر جدول تنظیمات خوانده نشد، نشست باید همان‌طور کار کند، نه بی‌انقضا شود.
+ */
+export function createSessionToken(
+  payload: Omit<SessionPayload, 'exp'>,
+  maxAgeSec = SESSION_MAX_AGE_SEC,
+): string {
   return signToken(
-    { ...payload, exp: Math.floor(Date.now() / 1000) + SESSION_MAX_AGE_SEC },
+    { ...payload, exp: Math.floor(Date.now() / 1000) + maxAgeSec },
     SESSION_SECRET,
   )
 }

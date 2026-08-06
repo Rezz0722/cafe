@@ -56,6 +56,26 @@ const CHECKS = [
   { path: '/profile/password', needs: ['رمز جدید'], auth: true },
   { path: '/profile/reviews', needs: ['نظرهای من'], auth: true },
   { path: '/cafe/jan-majnoon-lounge', needs: ['امتیاز کلی', 'امتیاز تفکیکی'], auth: true },
+
+  /*
+    پنل ادمین. تب‌ها در کلاینت عوض می‌شوند، پس *محتوای* تب تنظیمات در HTML
+    اولیه نیست — ولی propهایش هست (در payload RSC). این بررسی همان را می‌سنجد:
+    اینکه سرور کل شیء تنظیمات را با کلیدهای درست فرستاده. صحتِ ذخیره و
+    اعتبارسنجی در `npm run settings:smoke` سنجیده می‌شود.
+  */
+  {
+    path: '/admin',
+    needs: [
+      'پنل مدیریت',
+      'تنظیمات',
+      'عملیات',
+      'Asia/Tehran',
+      'siteName',
+      'stalePriceDays',
+      'overriddenKeys',
+    ],
+    auth: true,
+  },
 ]
 
 let failures = 0

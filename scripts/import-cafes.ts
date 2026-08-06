@@ -13,6 +13,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { importCafes, summarizeHoursWarnings } from '../src/core/import/importCafes'
+import { getDataPolicy } from '../src/core/settings/policies'
 import { closeDb, getDb } from '../src/db/connection'
 
 const OUT_DIR = resolve(process.cwd(), 'task/04-import')
@@ -25,7 +26,16 @@ async function main() {
   const started = Date.now()
   const db = getDb()
 
-  const report = await importCafes(db, { log: (message) => console.log(`  ${message}`) })
+  /*
+    سیاست از جدول `setting` خوانده می‌شود، نه از ثابت‌های کد: اگر مدیر مرزهای
+    رده‌ی قیمت یا کادر شهر را در پنل عوض کرده باشد، ایمپورت بعدی باید همان را
+    ببیند — وگرنه رده‌ای که ایمپورت می‌نویسد با آنچه پنل نشان می‌دهد نمی‌خواند.
+  */
+  const policy = await getDataPolicy()
+  const report = await importCafes(db, {
+    log: (message) => console.log(`  ${message}`),
+    policy,
+  })
   const seconds = ((Date.now() - started) / 1000).toFixed(1)
 
   console.log('\n══ خلاصه ══')

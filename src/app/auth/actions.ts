@@ -6,18 +6,16 @@ import { getSession } from '@/core/auth/currentUser'
 import { stopViewAs, VIEW_AS_READONLY } from '@/core/auth/impersonation'
 import {
   canRequestCode,
-  createOtpRecord,
   generateCode,
   hashCode,
   isGlobalLimitReached,
-  OTP_TTL_SEC,
   pruneGlobal,
   verifyCode,
   type OtpRecord,
 } from '@/core/auth/otp'
 import { hashPassword, verifyPassword } from '@/core/auth/password'
 import { normalizePhone } from '@/core/auth/phone'
-import { createSessionToken, SESSION_COOKIE, SESSION_MAX_AGE_SEC } from '@/core/auth/session'
+import { createSessionToken, SESSION_COOKIE } from '@/core/auth/session'
 import {
   bumpOtpAttempts,
   clearFailedLogins,
@@ -38,6 +36,7 @@ import {
   updateUser,
 } from '@/core/auth/userRepo'
 import { SESSION_SECRET } from '@/core/config/env'
+import { getAuthPolicy } from '@/core/settings/policies'
 import { sendVerificationCode } from '@/core/sms/smsir'
 import type {
   ChangePasswordState,
@@ -71,24 +70,28 @@ function str(form: FormData, key: string): string {
   return typeof value === 'string' ? value.trim() : ''
 }
 
-const COOKIE_OPTIONS = {
+const COOKIE_BASE = {
   httpOnly: true, // جاوااسکریپت نمی‌بیندش — XSS نمی‌تواند بدزددش
   sameSite: 'lax' as const, // جلوی CSRF پایه
   secure: process.env.NODE_ENV === 'production',
   path: '/',
-  maxAge: SESSION_MAX_AGE_SEC,
 }
 
-async function startSession(user: {
-  id: string
-  phone: string
-  role: 'customer' | 'owner' | 'admin'
-}): Promise<void> {
+/**
+ * مدت نشست از تنظیمات پنل ادمین می‌آید و در **دو جا** اعمال می‌شود: انقضای
+ * داخل توکن امضاشده و `maxAge` کوکی. اگر فقط یکی عوض شود، یا کوکی زودتر
+ * می‌رود (کاربر بی‌دلیل بیرون می‌افتد) یا توکنِ منقضی در مرورگر می‌ماند و هر
+ * درخواست یک بار اضافه رد می‌شود.
+ */
+async function startSession(
+  user: { id: string; phone: string; role: 'customer' | 'owner' | 'admin' },
+  maxAgeSec: number,
+): Promise<void> {
   const store = await cookies()
   store.set(
     SESSION_COOKIE,
-    createSessionToken({ userId: user.id, phone: user.phone, role: user.role }),
-    COOKIE_OPTIONS,
+    createSessionToken({ userId: user.id, phone: user.phone, role: user.role }, maxAgeSec),
+    { ...COOKIE_BASE, maxAge: maxAgeSec },
   )
   revalidatePath('/', 'layout')
 }
@@ -106,6 +109,11 @@ export async function requestCodeAction(
 ): Promise<RequestCodeState> {
   if (!SESSION_SECRET) {
     return { ok: false, error: 'سرویس ورود تنظیم نشده است. (SESSION_SECRET)' }
+  }
+
+  const policy = await getAuthPolicy()
+  if (!policy.allowOtpLogin) {
+    return { ok: false, error: 'ورود با کد پیامکی موقتاً غیرفعال است. با رمز عبور وارد شوید.' }
   }
 
   const phone = normalizePhone(str(form, 'phone'))
@@ -140,7 +148,7 @@ export async function requestCodeAction(
         }
       : null
 
-  const decision = canRequestCode(existing)
+  const decision = canRequestCode(existing, Date.now(), policy.otp)
   if (!decision.allowed) {
     return { ok: false, error: decision.reason, retryAfterSec: decision.retryAfterSec }
   }
@@ -152,20 +160,23 @@ export async function requestCodeAction(
    * کل اعتبار پیامک با چند ده شماره را می‌گیرد.
    */
   const globalRequests = pruneGlobal(await listRecentOtpTimesGlobal(HOUR_SEC))
-  if (isGlobalLimitReached(globalRequests)) {
+  if (isGlobalLimitReached(globalRequests, Date.now(), policy.otp.maxGlobalPerHour)) {
     console.warn('[auth] global OTP rate limit hit — possible abuse')
     return { ok: false, error: 'سرویس ورود موقتاً شلوغ است. چند دقیقه بعد دوباره تلاش کنید.' }
   }
 
-  const code = generateCode()
-  const sent = await sendVerificationCode(phone, code)
+  const code = generateCode(policy.otp.length)
+  const sent = await sendVerificationCode(phone, code, {
+    devMode: policy.smsDevMode,
+    siteName: policy.siteName,
+  })
   if (!sent.ok) {
     // لاگ سرور جزئیات را دارد؛ کاربر فقط پیام عمومی می‌بیند.
     console.error('[auth] SMS send failed', sent.detail ?? sent.error)
     return { ok: false, error: sent.error ?? 'ارسال پیامک ناموفق بود.' }
   }
 
-  await saveOtp({ phone, codeHash: hashCode(phone, code), ttlSec: OTP_TTL_SEC })
+  await saveOtp({ phone, codeHash: hashCode(phone, code), ttlSec: policy.otp.ttlSeconds })
   return { ok: true, phone, devMode: sent.method === 'dev' }
 }
 
@@ -173,6 +184,11 @@ export async function verifyCodeAction(
   _prev: VerifyCodeState,
   form: FormData,
 ): Promise<VerifyCodeState> {
+  const policy = await getAuthPolicy()
+  if (!policy.allowOtpLogin) {
+    return { ok: false, error: 'ورود با کد پیامکی موقتاً غیرفعال است.' }
+  }
+
   const phone = normalizePhone(str(form, 'phone'))
   const code = str(form, 'code').replace(/\D/g, '')
 
@@ -191,7 +207,7 @@ export async function verifyCodeAction(
       }
     : null
 
-  const result = verifyCode(record, phone, code)
+  const result = verifyCode(record, phone, code, Date.now(), policy.otp.maxAttempts)
   if (!result.ok) {
     if (active) {
       // `burned` یعنی رکورد دیگر قابل استفاده نیست — مصرفش کن تا تلاش
@@ -208,7 +224,7 @@ export async function verifyCodeAction(
   const user = await findOrCreateUser(phone)
   if (user.blocked) return { ok: false, error: 'دسترسی این حساب مسدود شده است.' }
 
-  await startSession(user)
+  await startSession(user, policy.sessionMaxAgeSec)
   return { ok: true, needsName: !user.name, role: user.role }
 }
 
@@ -222,6 +238,11 @@ export async function passwordLoginAction(
 ): Promise<PasswordLoginState> {
   if (!SESSION_SECRET) {
     return { ok: false, error: 'سرویس ورود تنظیم نشده است. (SESSION_SECRET)' }
+  }
+
+  const policy = await getAuthPolicy()
+  if (!policy.allowPasswordLogin) {
+    return { ok: false, error: 'ورود با رمز موقتاً غیرفعال است. با کد پیامکی وارد شوید.' }
   }
 
   const identifier = str(form, 'identifier') || str(form, 'phone')
@@ -248,12 +269,12 @@ export async function passwordLoginAction(
   }
 
   if (!verifyPassword(password, user.passwordHash)) {
-    await recordFailedLogin(user.id)
+    await recordFailedLogin(user.id, policy.lockout)
     return { ok: false, error: GENERIC }
   }
 
   await clearFailedLogins(user.id)
-  await startSession(user)
+  await startSession(user, policy.sessionMaxAgeSec)
 
   return {
     ok: true,
@@ -267,8 +288,6 @@ export async function passwordLoginAction(
 // ═══════════════════════════════════════════════════════════════════════
 // ثبت‌نام با رمز دائمی
 // ═══════════════════════════════════════════════════════════════════════
-
-const MIN_PASSWORD = 8
 
 /**
  * ساخت حساب با شماره و رمز — بدون نیاز به پیامک.
@@ -292,6 +311,11 @@ export async function registerAction(
     return { ok: false, error: 'سرویس ورود تنظیم نشده است. (SESSION_SECRET)' }
   }
 
+  const policy = await getAuthPolicy()
+  if (!policy.allowRegistration) {
+    return { ok: false, error: 'ثبت‌نام موقتاً بسته است.' }
+  }
+
   const phone = normalizePhone(str(form, 'phone'))
   const name = str(form, 'name').slice(0, 60)
   const password = str(form, 'password')
@@ -299,8 +323,8 @@ export async function registerAction(
   const username = str(form, 'username').toLowerCase()
 
   if (!phone) return { ok: false, error: 'شماره موبایل معتبر نیست. مثال: ۰۹۱۵۱۲۳۴۵۶۷' }
-  if (password.length < MIN_PASSWORD) {
-    return { ok: false, error: `رمز عبور باید حداقل ${MIN_PASSWORD} کاراکتر باشد.` }
+  if (password.length < policy.passwordMinLength) {
+    return { ok: false, error: `رمز عبور باید حداقل ${policy.passwordMinLength} کاراکتر باشد.` }
   }
   if (password !== confirm) return { ok: false, error: 'دو رمز یکسان نیستند.' }
 
@@ -335,7 +359,7 @@ export async function registerAction(
     })
     if (name && !existing.name) await updateUser(existing.id, { name })
     const updated = (await findUserById(existing.id))!
-    await startSession(updated)
+    await startSession(updated, policy.sessionMaxAgeSec)
     return { ok: true, role: updated.role, linkedExisting: true }
   }
 
@@ -347,7 +371,7 @@ export async function registerAction(
     role: 'customer',
   })
 
-  await startSession(user)
+  await startSession(user, policy.sessionMaxAgeSec)
   return { ok: true, role: user.role }
 }
 
@@ -376,12 +400,13 @@ export async function changePasswordAction(
   const account = await findUserById(user.id)
   if (!account) return { ok: false, error: 'حساب پیدا نشد.' }
 
+  const { passwordMinLength } = await getAuthPolicy()
   const current = str(form, 'currentPassword')
   const next = str(form, 'newPassword')
   const confirm = str(form, 'newPasswordConfirm')
 
-  if (next.length < MIN_PASSWORD) {
-    return { ok: false, error: `رمز عبور باید حداقل ${MIN_PASSWORD} کاراکتر باشد.` }
+  if (next.length < passwordMinLength) {
+    return { ok: false, error: `رمز عبور باید حداقل ${passwordMinLength} کاراکتر باشد.` }
   }
   if (next !== confirm) return { ok: false, error: 'دو رمز یکسان نیستند.' }
 

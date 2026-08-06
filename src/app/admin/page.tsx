@@ -19,6 +19,7 @@ import { listUsers } from '@/core/auth/userRepo'
 import { checkConfig } from '@/core/config/env'
 import { isMapReady } from '@/core/map/tiles'
 import { listPlaceCards } from '@/core/places/queries'
+import { getSettings, getSettingsUpdatedAt, listOverriddenKeys } from '@/core/settings/store'
 import { pingDb } from '@/db/client'
 import { authUrl, paths } from '@/routes'
 
@@ -33,7 +34,8 @@ import { authUrl, paths } from '@/routes'
  */
 
 export const metadata: Metadata = {
-  title: 'پنل مدیریت — کافه‌گرد',
+  // نام سایت را قالبِ `layout` اضافه می‌کند و آن از تنظیمات می‌آید.
+  title: 'پنل مدیریت',
   robots: { index: false, follow: false },
 }
 
@@ -65,6 +67,9 @@ export default async function AdminPage() {
     userSummary,
     places,
     db,
+    settings,
+    overriddenKeys,
+    settingsUpdatedAt,
   ] = await Promise.all([
     getTrafficSummary(),
     getDailyViews(30),
@@ -80,6 +85,9 @@ export default async function AdminPage() {
     getUserSummary(),
     listPlaceCards({ publishedOnly: false, limit: 400, sort: 'name' }),
     pingDb(),
+    getSettings(),
+    listOverriddenKeys(),
+    getSettingsUpdatedAt(),
   ])
 
   const data: AdminData = {
@@ -137,6 +145,20 @@ export default async function AdminPage() {
     configProblems: checkConfig(),
     dbOk: db.ok,
     mapReady: isMapReady(),
+    settings: {
+      // `Settings` تایپِ بسته‌ای دارد؛ پنل با کلید رشته‌ای کار می‌کند.
+      values: settings as unknown as Record<string, string | number | boolean>,
+      overriddenKeys,
+      // تاریخ در سرور به رشته تبدیل می‌شود: فرستادن `Date` به کامپوننت
+      // کلاینت یعنی سریال‌سازی، و قالبِ نمایش باید یک‌جا تعیین شود.
+      updatedAt: settingsUpdatedAt
+        ? new Intl.DateTimeFormat('fa-IR', {
+            dateStyle: 'medium',
+            timeStyle: 'short',
+            timeZone: settings.timeZone,
+          }).format(settingsUpdatedAt)
+        : null,
+    },
   }
 
   return <AdminDashboard data={data} />

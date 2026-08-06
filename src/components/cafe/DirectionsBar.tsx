@@ -29,7 +29,16 @@ interface Props {
   instagram?: string | null
   /** وقتی مختصات نداریم — پیام صادق، نه دکمه‌ی بی‌کار. */
   geoStatus?: string
+  /**
+   * سرویس‌های مسیریابی و **ترتیبشان** — از تنظیمات پنل ادمین.
+   *
+   * دو تای اول دکمه می‌شوند و بقیه در منوی «بیشتر». قبلاً «نشان و گوگل» در
+   * کد ثابت بود؛ اگر روزی بلد در مشهد بهتر شد، عوض‌کردنش نباید کامیت بخواهد.
+   */
+  services?: string[]
 }
+
+const DEFAULT_SERVICES = ['neshan', 'balad', 'google', 'waze', 'osm']
 
 export function DirectionsBar({
   lat,
@@ -39,6 +48,7 @@ export function DirectionsBar({
   phones = [],
   instagram,
   geoStatus,
+  services = DEFAULT_SERVICES,
 }: Props) {
   const [open, setOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -60,9 +70,18 @@ export function DirectionsBar({
   }, [open])
 
   const hasCoords = lat !== null && lng !== null && geoStatus !== 'missing'
-  const links = hasCoords ? buildDirectionLinks({ lat, lng, name }) : []
-  const primary = links.filter((link) => link.id === 'neshan' || link.id === 'google')
-  const rest = links.filter((link) => link.id !== 'neshan' && link.id !== 'google')
+  const all = hasCoords ? buildDirectionLinks({ lat, lng, name }) : []
+
+  /*
+    ترتیبِ تنظیمات حاکم است، نه ترتیبِ `buildDirectionLinks`. سرویسی که در
+    تنظیمات نیست، هیچ‌جا نمایش داده نمی‌شود — نه دکمه، نه منو.
+  */
+  const links = services
+    .map((id) => all.find((link) => link.id === id))
+    .filter((link): link is (typeof all)[number] => Boolean(link))
+
+  const primary = links.slice(0, 2)
+  const rest = links.slice(2)
   const callable = phones.find((phone) => phone.kind !== 'reservation') ?? phones[0]
 
   return (
