@@ -305,3 +305,78 @@ export function weekSchedule(
     }
   })
 }
+
+// ═══════════════════════════════════════════════════════════════════════
+// نمایش فشرده‌ی هفته
+// ═══════════════════════════════════════════════════════════════════════
+
+export interface DayGroup {
+  /** «شنبه تا چهارشنبه» · «پنجشنبه و جمعه» · «جمعه» */
+  label: string
+  /** روزهای این گروه، به ترتیب. */
+  dows: number[]
+  ranges: string[]
+  closed: boolean
+  unknown: boolean
+  /** امروز داخل این گروه است — سطر برجسته می‌شود. */
+  containsToday: boolean
+}
+
+/**
+ * چند روزِ **پشت‌سرهم** با ساعت یکسان را در یک سطر می‌آورد.
+ *
+ * ═══ چرا ═══
+ *
+ * جدول هفت‌سطری برای داده‌ی واقعی این کافه‌ها تقریباً همیشه هفت بار تکرارِ یک
+ * چیز است: اکثرشان شنبه تا چهارشنبه یک ساعت‌اند و فقط پنجشنبه و جمعه تفاوت
+ * دارند. هفت سطر برای دو واقعیت، نیم صفحه‌ی موبایل را می‌خورد و کاربر باید
+ * هفت بار مقایسه کند تا بفهمد فرقی نیست.
+ *
+ * ═══ چرا فقط روزهای پشت‌سرهم ═══
+ *
+ * ادغامِ روزهای پراکنده («شنبه، دوشنبه و پنجشنبه») تکنیکاً فشرده‌تر است ولی
+ * خواندنش سخت‌تر از خودِ جدول می‌شود. گروه‌بندی بر محور تقویم، همان چیزی است
+ * که کاربر در ذهنش دارد: یک بازه‌ی پیوسته از هفته.
+ *
+ * هفته دوری بسته نمی‌شود: «جمعه» به «شنبه» نمی‌چسبد، حتی اگر ساعتشان یکی
+ * باشد. جدول از شنبه شروع می‌شود و پایانش جمعه است؛ سطرِ «جمعه تا شنبه»
+ * ترتیب را می‌شکند.
+ */
+export function groupedWeekSchedule(
+  shifts: HourShift[],
+  at: Date = new Date(),
+  timeZone = DEFAULT_TIME_ZONE,
+): DayGroup[] {
+  const week = weekSchedule(shifts, at, timeZone)
+
+  /** دو روز «یکی» شمرده می‌شوند اگر هم وضعیت و هم همه‌ی شیفت‌هایشان یکی باشد. */
+  const signature = (day: DaySchedule) =>
+    day.unknown ? 'unknown' : day.closed ? 'closed' : day.ranges.join('|')
+
+  const runs: { signature: string; days: DaySchedule[] }[] = []
+  for (const day of week) {
+    const previous = runs[runs.length - 1]
+    if (previous && previous.signature === signature(day)) previous.days.push(day)
+    else runs.push({ signature: signature(day), days: [day] })
+  }
+
+  return runs.map(({ days }) => {
+    const first = days[0]
+    const last = days[days.length - 1]
+    const label =
+      days.length === 1
+        ? first.dayName
+        : days.length === 2
+          ? `${first.dayName} و ${last.dayName}`
+          : `${first.dayName} تا ${last.dayName}`
+
+    return {
+      label,
+      dows: days.map((day) => day.dow),
+      ranges: first.ranges,
+      closed: first.closed,
+      unknown: first.unknown,
+      containsToday: days.some((day) => day.isToday),
+    }
+  })
+}

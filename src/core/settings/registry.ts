@@ -158,7 +158,7 @@ export interface Settings {
 }
 
 export const SETTING_DEFAULTS: Settings = {
-  siteName: 'کافه‌گرد',
+  siteName: 'کو کافه',
   siteTagline: 'راهنمای کافه‌ها و رستوران‌های مشهد',
   siteDescription:
     'قیمت واقعی منو، ساعت کاری، نقشه و مسیریابی برای کافه‌ها و رستوران‌های مشهد.',

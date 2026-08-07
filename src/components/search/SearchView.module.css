@@ -25,6 +25,62 @@
   color: var(--c-primary-strong);
 }
 
+/* ── تشخیص منطقه از متن ─────────────────────────────────────────────── */
+
+.detected {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin: 10px 0 0;
+  padding: 9px 13px;
+  border: 1px solid var(--c-primary-soft);
+  border-radius: var(--r-md);
+  background: var(--c-primary-soft);
+  color: var(--c-primary-strong);
+  font-size: var(--fs-sm);
+  line-height: 1.7;
+}
+
+.detected svg {
+  flex: 0 0 auto;
+}
+
+.detected strong {
+  font-weight: 800;
+}
+
+.detectedUndo {
+  margin-inline-start: auto;
+  min-height: 32px;
+  padding: 4px 12px;
+  border: 1px solid currentColor;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.detectedUndo:hover {
+  background: var(--c-surface);
+}
+
+.detectedUndo:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--c-surface);
+}
+
+.ignored {
+  margin: 7px 0 0;
+  font-size: var(--fs-xs);
+  line-height: 1.7;
+  color: var(--c-muted);
+}
+
 /* ── نوار ابزار ─────────────────────────────────────────────────────── */
 
 .toolbar {

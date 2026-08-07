@@ -1,4 +1,57 @@
-/* Vazirmatn, self-hosted from /public/fonts so the app works offline. */
+/* Dana and Vazirmatn, self-hosted from /public/fonts so the app works offline.
+
+   Dana is the brand face; Vazirmatn stays as the fallback and covers the two
+   hairline weights Dana is not shipped with here. Only the six weights the
+   design actually uses are loaded — every extra face is a request that blocks
+   nothing but still costs bandwidth on a first visit. */
+
+@font-face {
+  font-family: 'Dana';
+  src: url('/fonts/Dana-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Dana';
+  src: url('/fonts/Dana-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Dana';
+  src: url('/fonts/Dana-DemiBold.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Dana';
+  src: url('/fonts/Dana-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Dana';
+  src: url('/fonts/Dana-ExtraBold.woff2') format('woff2');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Dana';
+  src: url('/fonts/Dana-Black.woff2') format('woff2');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
 
 @font-face {
   font-family: 'Vazirmatn';

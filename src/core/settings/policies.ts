@@ -80,3 +80,15 @@ export async function getMapPolicy(): Promise<MapPolicy> {
 export async function getLocalePolicy(): Promise<LocalePolicy> {
   return localePolicyFrom(await getSettings())
 }
+
+/**
+ * نام سایت.
+ *
+ * از تنظیمات می‌آید نه از یک ثابت در کد: نامِ برند در عنوان صفحه، OpenGraph،
+ * فوتر و صفحه‌ی تعمیرات تکرار می‌شود و اگر هر کدام جای خودش رشته‌ی ثابت داشته
+ * باشد، تغییر نام یعنی پیدا کردن همه‌ی آن‌ها — که همان کاری بود که هنگام
+ * تغییرِ نام به «کو کافه» لازم شد.
+ */
+export async function getSiteName(): Promise<string> {
+  return (await getSettings()).siteName
+}

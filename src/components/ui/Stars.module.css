@@ -1,0 +1,22 @@
+.row {
+  display: inline-flex;
+  align-items: center;
+}
+
+.icons {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+}
+
+/* ستاره‌ی پُر توپُر است، خالی فقط خط — تفاوت با شکل منتقل می‌شود نه فقط با
+   رنگ، تا کاربر کوررنگ هم بشمارد. */
+.on {
+  color: var(--c-accent);
+  fill: currentColor;
+}
+
+.off {
+  color: var(--c-disabled);
+  fill: none;
+}

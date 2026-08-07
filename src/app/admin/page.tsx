@@ -17,8 +17,9 @@ import {
 import { getSession } from '@/core/auth/currentUser'
 import { listUsers } from '@/core/auth/userRepo'
 import { checkConfig } from '@/core/config/env'
-import { isMapReady } from '@/core/map/tiles'
+import { isMapPublished } from '@/core/map/published'
 import { listPlaceCards } from '@/core/places/queries'
+import { listPendingSuggestions } from '@/core/places/suggestions'
 import { getSettings, getSettingsUpdatedAt, listOverriddenKeys } from '@/core/settings/store'
 import { pingDb } from '@/db/client'
 import { authUrl, paths } from '@/routes'
@@ -60,6 +61,7 @@ export default async function AdminPage() {
     queue,
     pendingReviews,
     submissions,
+    suggestions,
     health,
     incomplete,
     failedMedia,
@@ -78,6 +80,7 @@ export default async function AdminPage() {
     getModerationQueue(),
     listPendingReviews(40),
     listPendingSubmissions(40),
+    listPendingSuggestions(40),
     getDataHealth(),
     listIncompletePlaces(25),
     getFailedMedia(15),
@@ -119,6 +122,16 @@ export default async function AdminPage() {
       userPhone: submission.userPhone,
       payload: submission.payload,
     })),
+    suggestions: suggestions.map((suggestion) => ({
+      id: suggestion.id,
+      placeName: suggestion.placeName,
+      placeSlug: suggestion.placeSlug,
+      fieldLabel: suggestion.fieldLabel,
+      currentValue: suggestion.currentValue,
+      suggestedValue: suggestion.suggestedValue,
+      userName: suggestion.userName,
+      userPhone: suggestion.userPhone,
+    })),
     health: health as unknown as Record<string, number>,
     incomplete,
     failedMedia,
@@ -144,7 +157,7 @@ export default async function AdminPage() {
     })),
     configProblems: checkConfig(),
     dbOk: db.ok,
-    mapReady: isMapReady(),
+    mapReady: isMapPublished(),
     settings: {
       // `Settings` تایپِ بسته‌ای دارد؛ پنل با کلید رشته‌ای کار می‌کند.
       values: settings as unknown as Record<string, string | number | boolean>,

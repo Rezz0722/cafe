@@ -21,6 +21,27 @@
  *   گوگل مپس    lat,lng          — عرض اول
  *   OSM         mlat=…&mlon=…    — نام‌دار، بی‌ابهام
  *   Waze        ll=lat,lng       — عرض اول
+ *   بلد         latitude=&longitude= — نام‌دار
+ *
+ * ═══ چرا لینک `https` و نه اسکیمای اختصاصی اپ ═══
+ *
+ * وسوسه این است که `neshan://` و `waze://` بنویسیم تا «مستقیم اپ باز شود». ولی
+ * اسکیمای اختصاصی، اگر اپ نصب **نباشد**، بی‌صدا شکست می‌خورد: کاربر یک صفحه‌ی
+ * سفید یا خطای «آدرس ناشناس» می‌گیرد و هیچ راه برگشتی ندارد.
+ *
+ * لینک `https` هر دو کار را می‌کند: روی موبایل، اگر اپ نصب باشد سیستم‌عامل
+ * خودش لینک را به اپ تحویل می‌دهد (Android App Links / iOS Universal Links) —
+ * یعنی همان «یک کلیک، مستقیم در اپ». و اگر نصب نباشد، نسخه‌ی وبِ همان سرویس
+ * باز می‌شود. برای کسی که هر چهار اپ را ندارد — یعنی اکثر کاربران — این تفاوتِ
+ * بین «کار می‌کند» و «خراب است».
+ *
+ * برای کاربری که می‌خواهد اپِ **پیش‌فرضِ خودش** باز شود، `geoUri` پایین هست.
+ *
+ * ═══ چرا این لینک‌ها تست دارند ═══
+ *
+ * لینکِ بلد ۴۰۴ می‌داد و کسی متوجه نشده بود — چون دکمه رندر می‌شد، کلیک
+ * می‌خورد و مرورگر یک صفحه‌ی خطای *سرویسِ دیگر* نشان می‌داد. تستِ
+ * `directions.test.ts` شکلِ هر لینک را قفل می‌کند تا تغییرِ بعدی بی‌صدا نشکند.
  */
 
 export interface DirectionTarget {
@@ -73,7 +94,20 @@ export function buildDirectionLinks(target: DirectionTarget): DirectionLink[] {
     {
       id: 'balad',
       label: 'بلد',
-      href: `https://balad.ir/directions?destination=${lat},${lng}&origin=my-location`,
+      /*
+        ⚠️ اینجا عمداً «مسیریابی» نیست، بلکه «نمایش نقطه» است.
+
+        نسخه‌ی قبلی `balad.ir/directions?destination=…&origin=my-location`
+        بود که **۴۰۴ می‌دهد** — یعنی دکمه‌ی بلد روی هر ۳۳۱ صفحه‌ی کافه به
+        صفحه‌ی خطا می‌رفت. هر شکلِ دیگری هم امتحان شد و همه ۴۰۴ دادند:
+        `/routing`، `/direction`، `/navigation`، `/route`،
+        `/directions/car`. بلد آدرس وبِ عمومی برای مسیریابی ندارد.
+
+        تنها شکلی که واقعاً ۲۰۰ می‌دهد همین `/location` است. کاربر را روی
+        نقطه‌ی درست در بلد می‌گذارد و مسیریابی یک لمس بعدش است — که از
+        صفحه‌ی ۴۰۴ بی‌نهایت بهتر است.
+      */
+      href: `https://balad.ir/location?latitude=${lat}&longitude=${lng}&zoom=17`,
       viewHref: `https://balad.ir/location?latitude=${lat}&longitude=${lng}&zoom=17`,
       local: true,
     },
@@ -89,8 +123,10 @@ export function buildDirectionLinks(target: DirectionTarget): DirectionLink[] {
     {
       id: 'waze',
       label: 'ویز',
-      href: `https://waze.com/ul?ll=${lat},${lng}&navigate=yes`,
-      viewHref: `https://waze.com/ul?ll=${lat},${lng}`,
+      // `www.` صریح نوشته شده: `waze.com/ul` یک ۳۰۱ به `www` می‌خورد و آن
+      // یک پرشِ اضافه است که روی موبایل، تحویل لینک به اپ را کند می‌کند.
+      href: `https://www.waze.com/ul?ll=${lat},${lng}&navigate=yes`,
+      viewHref: `https://www.waze.com/ul?ll=${lat},${lng}`,
       local: false,
     },
     {

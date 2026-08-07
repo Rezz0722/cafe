@@ -6,9 +6,10 @@ import { getCurrentUser } from '@/core/auth/currentUser'
 import { getTasteProfile } from '@/core/user/userData'
 import { authUrl, paths } from '@/routes'
 import styles from '../page.module.css'
+import { ArrowLeft } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'سلیقه‌سنجی — کافه‌گرد',
+  title: 'سلیقه‌سنجی',
   robots: { index: false, follow: false },
 }
 
@@ -23,7 +24,7 @@ export default async function TastePage() {
   return (
     <div className={styles.page}>
       <Link href={paths.profile} className={styles.backLink}>
-        ← پنل من
+        <ArrowLeft size={15} aria-hidden="true" /> پنل من
       </Link>
       <h1 className={styles.title}>سلیقه‌ی تو</h1>
       <p className={styles.lede}>

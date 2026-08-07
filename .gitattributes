@@ -1,0 +1,20 @@
+# اسکریپت‌های شل و اجرایی باید همیشه LF بمانند — روی سرور لینوکسی با CRLF
+# با «bad interpreter: bash\r» می‌شکنند. این فارغ از تنظیم autocrlf کار می‌کند.
+*.sh    text eol=lf
+*.mjs   text eol=lf
+*.ts    text eol=lf
+*.tsx   text eol=lf
+*.js    text eol=lf
+*.cjs   text eol=lf
+*.json  text eol=lf
+*.css   text eol=lf
+*.sql   text eol=lf
+deploy.sh   text eol=lf
+
+# داده‌ی باینری — git دست نزند
+*.gz     binary
+*.woff2  binary
+*.png    binary
+*.jpg    binary
+*.webp   binary
+*.rar    binary

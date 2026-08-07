@@ -7,6 +7,28 @@
  * بخوانند. اگر استایل یک فایل JSON دستی بود، هر تغییر رنگِ سایت باید دستی در
  * آن هم تکرار می‌شد و بعد از دو بار، از هم می‌افتادند.
  *
+ * ═══ چرا منبع GeoJSON و نه تایل برداری ═══
+ *
+ * قبلاً یک منبع `vector` بود که از `/api/map/tiles/{z}/{x}/{y}` تغذیه می‌شد و
+ * تایل‌ها در Node ساخته می‌شدند. اندازه‌گیری‌شده:
+ *
+ *   • تایل z13 مرکز مشهد **۱۱۷ کیلوبایت** بود و یک کادر معمولی ۴ تا ۹ تایل
+ *     می‌خواهد — تا ~۱ مگابایت برای *یک* نما، و از نو برای نمای بعدی.
+ *   • ساختِ سردِ تایل روی این ماشین تا ۲۵ ثانیه دیده شده بود.
+ *   • هر پن و زوم، CPU سرور می‌خورد.
+ *
+ * حالا هر لایه یک منبع `geojson` است که یک‌بار از `public/map/` می‌آید
+ * (**۶۷۵ کیلوبایت gzip** برای کلِ لایه‌های پایه) و MapLibre خودش در worker
+ * مرورگر تایلش می‌کند. بعد از بارِ اول، پن و زوم هیچ درخواست شبکه‌ای ندارد.
+ *
+ * فایل‌ها استاتیک‌اند پس nginx مستقیم سروشان می‌کند و Node هیچ دخالتی در
+ * نقشه ندارد. `scripts/map-publish.mjs` تولیدشان می‌کند.
+ *
+ * ساختمان‌ها اینجا **نیستند**: لایه‌ی سنگینی است که فقط از زوم ۱۵.۵ به بالا
+ * دیده می‌شود، پس `CafeMap` آن را در همان لحظه با `addSource` اضافه می‌کند.
+ * `buildingLayerSpec` پایین، همان مشخصات را برای آن کار می‌دهد تا رنگ‌ها یک
+ * منبع داشته باشند.
+ *
  * ═══ چرا هیچ لایه‌ی `symbol` نیست ═══
  *
  * لایه‌ی متنی MapLibre به گلیف SDF نیاز دارد (`glyphs` در استایل) و تولید
@@ -21,17 +43,32 @@
  */
 
 export interface MapStyleOptions {
-  /** ریشه‌ی آدرس تایل — معمولاً همان دامنه. */
-  tileUrl?: string
+  /** ریشه‌ی فایل‌های منتشرشده‌ی نقشه. */
+  dataUrl?: string
   theme?: 'light' | 'dark'
   /**
    * زومی که ساختمان‌ها از آن به بعد دیده می‌شوند — از تنظیمات پنل ادمین.
    *
-   * پایین‌تر بردنش نقشه را در زوم شهری شلوغ و کند می‌کند؛ بالاتر بردنش
-   * ساختمان‌ها را عملاً حذف می‌کند. پس تنظیم است، نه ثابت.
+   * حالا **دو** کار می‌کند: هم آستانه‌ی رسم است، هم آستانه‌ی *دانلود*. لایه‌ی
+   * ساختمان تا اولین باری که کاربر از این زوم رد شود اصلاً گرفته نمی‌شود.
    */
   buildingsFromZoom?: number
 }
+
+/** شناسه‌ی منبع/لایه‌ی ساختمان — بین استایل و بارگذاریِ تنبل مشترک است. */
+export const BUILDING_SOURCE = 'building'
+
+/** لایه‌هایی که در بارِ اول می‌آیند. باید با `KEEP` در `map-publish.mjs` بخواند. */
+export const EAGER_LAYERS = [
+  'water',
+  'waterway',
+  'green',
+  'aeroway',
+  'road_major',
+  'road_mid',
+  'road_link',
+  'poi',
+] as const
 
 interface Palette {
   background: string
@@ -44,9 +81,8 @@ interface Palette {
   roadMajor: string
   roadMajorCasing: string
   roadMid: string
-  roadMinor: string
-  roadService: string
-  roadPath: string
+  /** قابِ خطوطِ جاده — همان رنگِ حاشیه‌ی ساختمان، ولی نقشِ جداگانه. */
+  casing: string
   poi: string
 }
 
@@ -61,9 +97,7 @@ const LIGHT: Palette = {
   roadMajor: '#ffffff',
   roadMajorCasing: '#e0b062',
   roadMid: '#ffffff',
-  roadMinor: '#ffffff',
-  roadService: '#f7f6f3',
-  roadPath: '#cfcabf',
+  casing: '#d6d1c7',
   poi: '#8a8578',
 }
 
@@ -78,9 +112,7 @@ const DARK: Palette = {
   roadMajor: '#3a3f48',
   roadMajorCasing: '#4a4033',
   roadMid: '#33373f',
-  roadMinor: '#2b2f36',
-  roadService: '#252930',
-  roadPath: '#33373f',
+  casing: '#2c3037',
   poi: '#6b7280',
 }
 
@@ -98,160 +130,184 @@ function width(stops: [number, number][]): unknown {
   }
 }
 
-export function buildMapStyle(options: MapStyleOptions = {}): Record<string, unknown> {
-  const {
-    tileUrl = '/api/map/tiles/{z}/{x}/{y}',
-    theme = 'light',
-    buildingsFromZoom = 15.5,
-  } = options
+/**
+ * منبع GeoJSON با تنظیماتِ تایل‌سازیِ سمتِ کلاینت.
+ *
+ * `tolerance` بالاتر از پیش‌فرض (۰.۳۷۵) است: ساده‌سازیِ سخت‌گیرانه‌تر یعنی
+ * چندضلعی‌های کمتر برای رسم، و در این مقیاس تفاوتش روی صفحه دیده نمی‌شود ولی
+ * روی نرخ فریمِ موبایل دیده می‌شود.
+ *
+ * `maxzoom` روی ۱۴ است نه ۱۸: از آن زوم به بالا MapLibre همان تایلِ z14 را
+ * بزرگ می‌کند، که برای هندسه‌ی برداری بی‌افت است و حافظه‌ی تایل‌سازی را
+ * چندبرابر کم می‌کند.
+ */
+function geojsonSource(url: string, options: { maxzoom?: number; tolerance?: number } = {}) {
+  return {
+    type: 'geojson',
+    data: url,
+    maxzoom: options.maxzoom ?? 14,
+    tolerance: options.tolerance ?? 0.6,
+    buffer: 32,
+    attribution: '© OpenStreetMap',
+  }
+}
+
+/**
+ * مشخصاتِ لایه‌ی ساختمان — برای افزودنِ تنبل در `CafeMap`.
+ *
+ * جدا از `buildMapStyle` است ولی از همان پالت می‌خواند، تا رنگِ ساختمان در دو
+ * جا تعریف نشود و با تغییر تم از هم نیفتند.
+ */
+export function buildingLayerSpec(
+  theme: 'light' | 'dark',
+  buildingsFromZoom: number,
+): {
+  source: Record<string, unknown>
+  layer: Record<string, unknown>
+  /** زومی که از آن به بعد باید دانلود شود. */
+  fromZoom: number
+  /**
+   * لایه‌ای که ساختمان باید **زیرِ** آن بنشیند.
+   *
+   * بدون این، `addLayer` ساختمان را روی همه‌چیز می‌گذارد و خیابان‌ها زیر
+   * پلیگون‌های خاکستری گم می‌شوند.
+   */
+  beforeId: string
+} {
   const color = theme === 'dark' ? DARK : LIGHT
+  return {
+    fromZoom: buildingsFromZoom,
+    beforeId: 'road_link',
+    source: geojsonSource(`/map/${BUILDING_SOURCE}.geojson`, { maxzoom: 15 }),
+    layer: {
+      id: 'building',
+      type: 'fill',
+      source: BUILDING_SOURCE,
+      minzoom: buildingsFromZoom,
+      paint: {
+        'fill-color': color.building,
+        'fill-outline-color': color.buildingOutline,
+        // محوشدن تدریجی، تا ساختمان‌ها یک‌باره ظاهر نشوند.
+        'fill-opacity': {
+          stops: [
+            [buildingsFromZoom, 0],
+            [buildingsFromZoom + 1, 1],
+          ],
+        },
+      },
+    },
+  }
+}
+
+/** کلیدِ متادیتا که `CafeMap` برای بارگذاری تنبل می‌خواند. */
+export const LAZY_BUILDINGS_KEY = 'kucafe:lazyBuildings'
+
+export function buildMapStyle(options: MapStyleOptions = {}): Record<string, unknown> {
+  const { dataUrl = '/map', theme = 'light', buildingsFromZoom = 15.5 } = options
+  const color = theme === 'dark' ? DARK : LIGHT
+  const src = (layer: string) => `${dataUrl}/${layer}.geojson`
 
   return {
     version: 8,
-    name: `کافه‌گرد — ${theme === 'dark' ? 'تیره' : 'روشن'}`,
+    name: `کو کافه — ${theme === 'dark' ? 'تیره' : 'روشن'}`,
+    /*
+      مشخصاتِ لایه‌ی تنبل داخل خودِ استایل سفر می‌کند.
+
+      جایگزینش این بود که کلاینت یک درخواست دوم برای گرفتن «زومِ ساختمان»
+      بزند، یا آن عدد در باندل کلاینت hard-code شود — اولی یک رفت‌وبرگشت
+      اضافه و دومی یعنی تغییرِ تنظیم در پنل تا ری‌بیلد بعدی دیده نمی‌شود.
+      `metadata` در اسپکِ MapLibre برای همین است و خودش نادیده‌اش می‌گیرد.
+    */
+    metadata: {
+      [LAZY_BUILDINGS_KEY]: buildingLayerSpec(theme, buildingsFromZoom),
+    },
     // هیچ glyph و sprite بیرونی — نقشه کاملاً آفلاین است.
     sources: {
-      mashhad: {
-        type: 'vector',
-        tiles: [tileUrl],
-        minzoom: 9,
-        maxzoom: 16,
-        attribution: '© OpenStreetMap',
-        bounds: [59.1, 36.05, 59.95, 36.62],
-      },
+      water: geojsonSource(src('water'), { maxzoom: 12 }),
+      waterway: geojsonSource(src('waterway')),
+      green: geojsonSource(src('green'), { maxzoom: 13 }),
+      aeroway: geojsonSource(src('aeroway'), { maxzoom: 12 }),
+      road_major: geojsonSource(src('road_major')),
+      road_mid: geojsonSource(src('road_mid')),
+      road_link: geojsonSource(src('road_link')),
+      poi: geojsonSource(src('poi'), { maxzoom: 15, tolerance: 0 }),
     },
     layers: [
       { id: 'background', type: 'background', paint: { 'background-color': color.background } },
       {
         id: 'green',
         type: 'fill',
-        source: 'mashhad',
-        'source-layer': 'green',
+        source: 'green',
         minzoom: 11,
         paint: { 'fill-color': color.green, 'fill-opacity': 0.85 },
       },
       {
         id: 'aeroway',
         type: 'fill',
-        source: 'mashhad',
-        'source-layer': 'aeroway',
+        source: 'aeroway',
         minzoom: 11,
         paint: { 'fill-color': color.aeroway },
       },
       {
         id: 'water',
         type: 'fill',
-        source: 'mashhad',
-        'source-layer': 'water',
+        source: 'water',
         paint: { 'fill-color': color.water },
       },
       {
         id: 'waterway',
         type: 'line',
-        source: 'mashhad',
-        'source-layer': 'waterway',
+        source: 'waterway',
         minzoom: 12,
         paint: { 'line-color': color.waterLine, 'line-width': width([[12, 0.6], [17, 3]]) },
       },
-      {
-        id: 'building',
-        type: 'fill',
-        source: 'mashhad',
-        'source-layer': 'building',
-        minzoom: buildingsFromZoom,
-        paint: {
-          'fill-color': color.building,
-          'fill-outline-color': color.buildingOutline,
-          // محوشدن تدریجی، تا ساختمان‌ها یک‌باره ظاهر نشوند.
-          'fill-opacity': { stops: [[buildingsFromZoom, 0], [buildingsFromZoom + 1, 1]] },
-        },
-      },
 
-      // ── جاده: هر رده اول با «قاب» (casing) بعد با بدنه، تا تقاطع‌ها
-      // درست دیده شوند. اگر همه در یک لایه باشند، خطوط از روی هم رد
-      // می‌شوند و شبکه‌ی جاده‌ها به‌هم‌ریخته به‌نظر می‌رسد.
-      {
-        id: 'road_path',
-        type: 'line',
-        source: 'mashhad',
-        'source-layer': 'road_path',
-        minzoom: 15,
-        paint: {
-          'line-color': color.roadPath,
-          'line-width': width([[15, 0.5], [19, 2]]),
-          'line-dasharray': [2, 2],
-        },
-      },
-      {
-        id: 'road_service',
-        type: 'line',
-        source: 'mashhad',
-        'source-layer': 'road_service',
-        minzoom: 15,
-        paint: { 'line-color': color.roadService, 'line-width': width([[15, 1], [19, 6]]) },
-      },
-      {
-        id: 'road_minor_casing',
-        type: 'line',
-        source: 'mashhad',
-        'source-layer': 'road_minor',
-        minzoom: 13,
-        paint: {
-          'line-color': color.buildingOutline,
-          'line-width': width([[13, 1.4], [19, 14]]),
-        },
-      },
-      {
-        id: 'road_minor',
-        type: 'line',
-        source: 'mashhad',
-        'source-layer': 'road_minor',
-        minzoom: 13,
-        paint: { 'line-color': color.roadMinor, 'line-width': width([[13, 0.6], [19, 11]]) },
-      },
+      /*
+        جاده: هر رده اول با «قاب» (casing) بعد با بدنه، تا تقاطع‌ها درست دیده
+        شوند. اگر همه در یک لایه باشند، خطوط از روی هم رد می‌شوند و شبکه‌ی
+        جاده‌ها به‌هم‌ریخته به‌نظر می‌رسد.
+
+        رده‌های `road_minor`، `road_path` و `road_service` حذف شدند — ۱۰
+        مگابایت از منبع بودند و در نقشه‌ای که کارش جهت‌یابی است نه ناوبری،
+        بلوارها و خیابان‌های اصلی کافی‌اند.
+      */
       {
         id: 'road_link',
         type: 'line',
-        source: 'mashhad',
-        'source-layer': 'road_link',
+        source: 'road_link',
         minzoom: 12,
         paint: { 'line-color': color.roadMid, 'line-width': width([[12, 1], [19, 8]]) },
       },
       {
         id: 'road_mid_casing',
         type: 'line',
-        source: 'mashhad',
-        'source-layer': 'road_mid',
+        source: 'road_mid',
         minzoom: 11,
-        paint: { 'line-color': color.buildingOutline, 'line-width': width([[11, 2], [19, 20]]) },
+        paint: { 'line-color': color.casing, 'line-width': width([[11, 2], [19, 20]]) },
       },
       {
         id: 'road_mid',
         type: 'line',
-        source: 'mashhad',
-        'source-layer': 'road_mid',
+        source: 'road_mid',
         minzoom: 11,
         paint: { 'line-color': color.roadMid, 'line-width': width([[11, 1], [19, 16]]) },
       },
       {
         id: 'road_major_casing',
         type: 'line',
-        source: 'mashhad',
-        'source-layer': 'road_major',
+        source: 'road_major',
         paint: { 'line-color': color.roadMajorCasing, 'line-width': width([[9, 2], [19, 26]]) },
       },
       {
         id: 'road_major',
         type: 'line',
-        source: 'mashhad',
-        'source-layer': 'road_major',
+        source: 'road_major',
         paint: { 'line-color': color.roadMajor, 'line-width': width([[9, 1], [19, 21]]) },
       },
       {
         id: 'poi',
         type: 'circle',
-        source: 'mashhad',
-        'source-layer': 'poi',
+        source: 'poi',
         minzoom: 15,
         paint: {
           'circle-radius': width([[15, 1.5], [18, 3.5]]),

@@ -6,9 +6,11 @@ import { listMyReviews } from '@/core/user/userData'
 import { fa } from '@/lib/format'
 import { authUrl, paths } from '@/routes'
 import styles from '../page.module.css'
+import { Stars } from '@/components/ui/Stars'
+import { ArrowLeft } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'نظرهای من — کافه‌گرد',
+  title: 'نظرهای من',
   robots: { index: false, follow: false },
 }
 
@@ -37,7 +39,7 @@ export default async function MyReviewsPage() {
   return (
     <div className={styles.page}>
       <Link href={paths.profile} className={styles.backLink}>
-        ← پنل من
+        <ArrowLeft size={15} aria-hidden="true" /> پنل من
       </Link>
       <h1 className={styles.title}>نظرهای من</h1>
       <p className={styles.lede}>
@@ -60,9 +62,8 @@ export default async function MyReviewsPage() {
                   {STATUS_LABEL[review.status] ?? review.status}
                 </span>
               </div>
-              <p className={styles.stars} aria-label={`${review.stars} از ۵`}>
-                {'★'.repeat(review.stars)}
-                {'☆'.repeat(5 - review.stars)}
+              <p className={styles.stars}>
+                <Stars count={review.stars} size={15} showEmpty />
               </p>
               {review.text && <p className={styles.itemText}>{review.text}</p>}
               {/* دلیل ردشدن به کاربر گفته می‌شود. نظری که بی‌توضیح رد شود،

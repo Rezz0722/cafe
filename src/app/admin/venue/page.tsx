@@ -23,7 +23,7 @@ import styles from '@/components/venue/VenuePanel.module.css'
  */
 
 export const metadata: Metadata = {
-  title: 'پنل کافه — کافه‌گرد',
+  title: 'پنل کافه',
   robots: { index: false, follow: false },
 }
 

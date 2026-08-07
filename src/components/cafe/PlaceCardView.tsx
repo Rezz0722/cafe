@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { fa, toman } from '@/lib/format'
 import { paths } from '@/routes'
 import styles from './PlaceCardView.module.css'
+import { Coffee, Star } from 'lucide-react'
 
 /**
  * کارت کافه در فهرست و نتیجه‌ی جست‌وجو.
@@ -115,7 +116,7 @@ export function PlaceCardView({
         />
       ) : (
         <span className={styles.logoEmpty} aria-hidden="true">
-          ☕
+          <Coffee size={24} strokeWidth={1.6} />
         </span>
       )}
 
@@ -133,7 +134,7 @@ export function PlaceCardView({
           )}
           {card.ratingCount > 0 && (
             <span className={styles.rating}>
-              · ★ {fa(card.rating.toFixed(1))} ({fa(card.ratingCount)})
+              · <Star size={12} className={styles.starIcon} aria-hidden="true" /> {fa(card.rating.toFixed(1))} ({fa(card.ratingCount)})
             </span>
           )}
         </p>

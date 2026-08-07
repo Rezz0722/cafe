@@ -10,7 +10,13 @@
 
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { computeOpenState, tehranNow, weekSchedule, type HourShift } from './openNow'
+import {
+  computeOpenState,
+  groupedWeekSchedule,
+  tehranNow,
+  weekSchedule,
+  type HourShift,
+} from './openNow'
 
 /** یک لحظه به وقت تهران. `iso` مثل `'2026-08-05T14:30'` */
 function tehran(iso: string): Date {
@@ -183,4 +189,83 @@ test('weekSchedule تعطیل و نامشخص را از هم جدا می‌کن�
   assert.equal(schedule[6]!.unknown, false)
   assert.equal(schedule[1]!.unknown, true, 'یکشنبه ثبت نشده')
   assert.equal(schedule[1]!.closed, false)
+})
+
+// ── نمایش فشرده
+
+test('groupedWeekSchedule الگوی رایج را در سه سطر می‌دهد', () => {
+  // شنبه تا چهارشنبه یکسان، پنجشنبه دیرتر، جمعه تعطیل — الگوی اکثر کافه‌ها.
+  const shifts = [
+    ...[0, 1, 2, 3, 4].map((dow) => shift(dow, '09:00', '23:00')),
+    shift(5, '10:00', '00:30', 0, true),
+    closedDay(6),
+  ]
+  const groups = groupedWeekSchedule(shifts, tehran('2026-08-05T14:00'))
+
+  assert.equal(groups.length, 3)
+  assert.equal(groups[0]!.label, 'شنبه تا چهارشنبه')
+  assert.deepEqual(groups[0]!.ranges, ['09:00–23:00'])
+  assert.equal(groups[1]!.label, 'پنجشنبه')
+  assert.equal(groups[2]!.label, 'جمعه')
+  assert.equal(groups[2]!.closed, true)
+})
+
+test('groupedWeekSchedule دو روزِ پشت‌سرهم را با «و» می‌نویسد', () => {
+  const shifts = [
+    ...[0, 1, 2, 3, 4].map((dow) => shift(dow, '09:00', '23:00')),
+    ...[5, 6].map((dow) => shift(dow, '11:00', '23:00')),
+  ]
+  const groups = groupedWeekSchedule(shifts, tehran('2026-08-05T14:00'))
+  assert.equal(groups.length, 2)
+  assert.equal(groups[1]!.label, 'پنجشنبه و جمعه')
+})
+
+test('groupedWeekSchedule روزهای غیرِپشت‌سرهم را ادغام نمی‌کند', () => {
+  // شنبه و دوشنبه ساعت یکی دارند ولی یکشنبه وسطشان است — سه سطر، نه دو.
+  const shifts = [
+    shift(0, '09:00', '23:00'),
+    shift(1, '10:00', '23:00'),
+    shift(2, '09:00', '23:00'),
+  ]
+  const groups = groupedWeekSchedule(shifts, tehran('2026-08-05T14:00'))
+  assert.deepEqual(
+    groups.map((group) => group.label),
+    ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه تا جمعه'],
+  )
+})
+
+test('groupedWeekSchedule شیفت شکسته را عین خودش نگه می‌دارد', () => {
+  const shifts = [0, 1, 2, 3, 4, 5, 6].flatMap((dow) => [
+    shift(dow, '12:00', '16:30', 0),
+    shift(dow, '20:00', '23:30', 1),
+  ])
+  const groups = groupedWeekSchedule(shifts, tehran('2026-08-05T14:00'))
+  assert.equal(groups.length, 1, 'کل هفته یکسان → یک سطر')
+  assert.equal(groups[0]!.label, 'شنبه تا جمعه')
+  assert.deepEqual(groups[0]!.ranges, ['12:00–16:30', '20:00–23:30'])
+})
+
+test('groupedWeekSchedule گروهِ امروز را علامت می‌زند', () => {
+  const shifts = [
+    ...[0, 1, 2, 3, 4].map((dow) => shift(dow, '09:00', '23:00')),
+    ...[5, 6].map((dow) => shift(dow, '11:00', '23:00')),
+  ]
+  // ۵ آگوست ۲۰۲۶ چهارشنبه است → داخل گروه اول.
+  const groups = groupedWeekSchedule(shifts, tehran('2026-08-05T14:00'))
+  assert.equal(groups[0]!.containsToday, true)
+  assert.equal(groups[1]!.containsToday, false)
+})
+
+test('groupedWeekSchedule هفته را دور نمی‌بندد', () => {
+  // جمعه و شنبه ساعت یکی دارند؛ نباید «جمعه تا شنبه» بسازد.
+  const shifts = [
+    shift(0, '09:00', '23:00'),
+    ...[1, 2, 3, 4, 5].map((dow) => shift(dow, '10:00', '23:00')),
+    shift(6, '09:00', '23:00'),
+  ]
+  const groups = groupedWeekSchedule(shifts, tehran('2026-08-05T14:00'))
+  assert.deepEqual(
+    groups.map((group) => group.label),
+    ['شنبه', 'یکشنبه تا پنجشنبه', 'جمعه'],
+  )
 })

@@ -21,8 +21,24 @@ export type SortKey = 'rating' | 'price_asc' | 'price_desc' | 'quality' | 'name'
 export interface SearchFilters {
   /** جست‌وجوی متنی روی نام کافه. */
   q: string
+  /**
+   * «متن را همان‌طور که نوشتم جست‌وجو کن.»
+   *
+   * به‌طور پیش‌فرض، `parseSearchQuery` نام منطقه را از متن بیرون می‌کشد و به
+   * فیلتر تبدیل می‌کند. برای «کافه‌ای در احمد آباد» این همان چیزی است که کاربر
+   * می‌خواهد — ولی برای کسی که دنبال کافه‌ای *به نام* «سجاد» است، نه. این
+   * پرچم تشخیص را خاموش می‌کند و راهِ برگشت از حدسِ ما است.
+   */
+  rawQuery: boolean
   /** شناسه‌ی facet — کافه باید همه‌ی این‌ها را داشته باشد. */
   facets: string[]
+  /**
+   * شناسه‌ی ویژگی — «مناسب کار»، «فضای باز». کافه باید همه‌ی این‌ها را داشته
+   * باشد. جدا از `facets` چون facet از منو اثبات می‌شود و ویژگی را آدم ثبت
+   * می‌کند؛ قاطی‌کردنشان یعنی فیلترِ اثبات‌پذیر و فیلترِ سلیقه‌ای یک اعتبار
+   * داشته باشند.
+   */
+  attributes: string[]
   /** slug دیش — «بهترین پاستا». */
   dish: string | null
   districtId: string | null
@@ -42,7 +58,9 @@ export interface SearchFilters {
 
 export const DEFAULT_FILTERS: SearchFilters = {
   q: '',
+  rawQuery: false,
   facets: [],
+  attributes: [],
   dish: null,
   districtId: null,
   tiers: [],
@@ -109,7 +127,9 @@ export function parseFilters(params: Params): SearchFilters {
 
   return {
     q: firstValue(params.q).slice(0, 80),
+    rawQuery: firstValue(params.raw) === '1',
     facets: parseList(params.f).slice(0, 6),
+    attributes: parseList(params.a).slice(0, 4),
     dish: firstValue(params.dish) || null,
     districtId: firstValue(params.d) || null,
     tiers: [...new Set(tiers)],
@@ -130,7 +150,10 @@ export function buildQuery(filters: Partial<SearchFilters>): string {
   const params = new URLSearchParams()
 
   if (merged.q.trim()) params.set('q', merged.q.trim())
+  // بدون متن، `raw` معنی ندارد و فقط آدرس را شلوغ می‌کند.
+  if (merged.rawQuery && merged.q.trim()) params.set('raw', '1')
   if (merged.facets.length) params.set('f', merged.facets.join(','))
+  if (merged.attributes.length) params.set('a', merged.attributes.join(','))
   if (merged.dish) params.set('dish', merged.dish)
   if (merged.districtId) params.set('d', merged.districtId)
   if (merged.tiers.length) params.set('tier', [...merged.tiers].sort().join(','))
@@ -157,6 +180,7 @@ export function hasActiveFilters(filters: SearchFilters): boolean {
   return (
     filters.q.trim() !== '' ||
     filters.facets.length > 0 ||
+    filters.attributes.length > 0 ||
     filters.dish !== null ||
     filters.districtId !== null ||
     filters.tiers.length > 0 ||
@@ -171,6 +195,7 @@ export function countActiveFilters(filters: SearchFilters): number {
   return (
     (filters.q.trim() ? 1 : 0) +
     filters.facets.length +
+    filters.attributes.length +
     (filters.dish ? 1 : 0) +
     (filters.districtId ? 1 : 0) +
     filters.tiers.length +
@@ -190,18 +215,28 @@ export function describeFilters(
   filters: SearchFilters,
   lookups: {
     facetLabel?: (id: string) => string | undefined
+    attributeLabel?: (id: string) => string | undefined
     dishLabel?: (slug: string) => string | undefined
     districtLabel?: (id: string) => string | undefined
   } = {},
 ): string {
   const parts: string[] = []
 
+  /*
+    facet و ویژگی در عنوان با هم می‌آیند: کاربری که «کافه‌های پاستادارِ مناسب
+    کار» را فیلتر کرده، عنوانی می‌خواهد که هر دو شرط را بگوید. تفکیکشان فقط
+    در لایه‌ی داده مهم است، نه در جمله‌ای که به آدم نشان داده می‌شود.
+  */
+  const tagLabels = [
+    ...filters.facets.map((id) => lookups.facetLabel?.(id) ?? id),
+    ...filters.attributes.map((id) => lookups.attributeLabel?.(id) ?? id),
+  ]
+
   if (filters.dish) {
     const label = lookups.dishLabel?.(filters.dish) ?? filters.dish
     parts.push(filters.nearMe ? `بهترین ${label} نزدیک من` : `بهترین ${label}`)
-  } else if (filters.facets.length > 0) {
-    const labels = filters.facets.map((id) => lookups.facetLabel?.(id) ?? id)
-    parts.push(`کافه‌های ${labels.join(' و ')}`)
+  } else if (tagLabels.length > 0) {
+    parts.push(`کافه‌های ${tagLabels.join(' و ')}`)
   } else if (filters.q.trim()) {
     parts.push(`جست‌وجوی «${filters.q.trim()}»`)
   } else {

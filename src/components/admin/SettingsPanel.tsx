@@ -36,6 +36,7 @@ import {
   type SettingGroup,
 } from '@/core/settings/registry'
 import styles from './SettingsPanel.module.css'
+import { TriangleAlert } from 'lucide-react'
 
 const GROUP_ORDER: SettingGroup[] = [
   'identity',
@@ -154,7 +155,10 @@ function Field({
 
       {def.hint && <p className={styles.hint}>{def.hint}</p>}
       {def.needsRecompute && (
-        <p className={styles.recompute}>⚠ {RECOMPUTE_NOTE[def.needsRecompute]}</p>
+        <p className={styles.recompute}>
+                  <TriangleAlert size={14} aria-hidden="true" />{' '}
+                  {RECOMPUTE_NOTE[def.needsRecompute]}
+                </p>
       )}
       {error && <p className={styles.fieldError}>{error}</p>}
     </div>

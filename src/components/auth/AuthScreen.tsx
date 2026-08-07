@@ -22,6 +22,7 @@ import { maskPhone } from '@/core/auth/phone'
 import { fa } from '@/lib/format'
 import { paths } from '@/routes'
 import styles from './AuthScreen.module.css'
+import { Hand } from 'lucide-react'
 
 type Step = 'phone' | 'code' | 'name' | 'password' | 'register'
 
@@ -145,7 +146,7 @@ export function AuthScreen({ config }: { config: AuthConfig }) {
       <div className={styles.card}>
         <Link href={paths.home} className={styles.brand}>
           <img src="/logo-sm.webp" alt="" width={40} height={40} />
-          <span>کافه‌گرد</span>
+          <span>کو کافه</span>
         </Link>
 
         {/* ═══ گام ۱ — شماره ═══ */}
@@ -435,7 +436,9 @@ export function AuthScreen({ config }: { config: AuthConfig }) {
         {/* ═══ گام ۳ — نام (فقط کاربر تازه) ═══ */}
         {step === 'name' && (
           <form action={nameAction} className={styles.form}>
-            <h1 className={styles.title}>خوش آمدی 👋</h1>
+            <h1 className={styles.title}>
+              خوش آمدی <Hand size={20} aria-hidden="true" />
+            </h1>
             <p className={styles.lede}>اسمت را بنویس تا پروفایلت کامل شود.</p>
 
             <label className={styles.field}>

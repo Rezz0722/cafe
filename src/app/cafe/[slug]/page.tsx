@@ -3,17 +3,20 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { CafeMap } from '@/components/map/CafeMap'
 import { DirectionsBar } from '@/components/cafe/DirectionsBar'
+import { HoursCard } from '@/components/cafe/HoursCard'
 import { MenuBrowser } from '@/components/cafe/MenuBrowser'
 import { ReviewForm } from '@/components/cafe/ReviewForm'
 import { SavePlaceButton } from '@/components/cafe/SavePlaceButton'
+import { SuggestEdit } from '@/components/cafe/SuggestEdit'
+import { Stars } from '@/components/ui/Stars'
+import { Coffee } from 'lucide-react'
 import { BreadcrumbJsonLd, PlaceJsonLd } from '@/components/seo/PlaceJsonLd'
 import { getSession } from '@/core/auth/currentUser'
-import { computeOpenState, weekSchedule } from '@/core/hours/openNow'
+import { computeOpenState, groupedWeekSchedule, weekSchedule } from '@/core/hours/openNow'
 import { getMapLabels } from '@/core/map/labels'
 import {
   getPlaceDetail,
   getPlaceDishes,
-  getPlaceFacetSummary,
   listNearbyPlaces,
   listPlaceReviews,
 } from '@/core/places/queries'
@@ -24,6 +27,7 @@ import {
   getLocalePolicy,
   getMapPolicy,
   getModerationPolicy,
+  getSiteName,
 } from '@/core/settings/policies'
 import { getMyReviewFor, listSavedPlaceIds } from '@/core/user/userData'
 import { fa, toman } from '@/lib/format'
@@ -42,10 +46,26 @@ import styles from './page.module.css'
  *
  * چیدمان جدید بر ترتیب سؤال‌های واقعی کاربر بنا شده:
  *   ۱. الان باز است؟   → نشانِ وضعیت در سرصفحه، اولین چیز بعد از نام
- *   ۲. چطور بروم؟      → دکمه‌ی مسیریابی، بلافاصله زیر نام
+ *   ۲. چطور بروم؟      → **یک** دکمه‌ی مسیریابی، بلافاصله زیر نام
  *   ۳. چه دارد و چند؟  → منو با جست‌وجو و پرش دسته
  *   ۴. کجاست؟          → نقشه‌ی آفلاین با پین
  *   ۵. چه کسی رفته؟    → نظرها
+ *
+ * ═══ سه چیزی که در بازبینی دوم عوض شد ═══
+ *
+ * ۱. **«اینجا چه پیدا می‌کنید» حذف شد.** از `place_facet` ساخته می‌شد و
+ *    تکنیکاً درست بود، ولی همان چیزی را می‌گفت که نوار دسته‌ی خودِ منو
+ *    چند سانتی‌متر پایین‌تر بهتر می‌گوید — با این تفاوت که به‌شکل چیپ‌های
+ *    پراکنده روی موبایل سه چهار خط می‌شد و صفحه را جلوی منو سد می‌کرد.
+ *    داده‌اش سر جایش است؛ فقط دیگر اینجا رندر نمی‌شود، و کوئری‌اش هم دیگر
+ *    اجرا نمی‌شود.
+ * ۲. **ساعت کاری از جدول هفت‌سطری به سطرهای گروهی رفت** و از ستون کنار
+ *    به سرصفحه آمد. اکثر کافه‌ها شنبه–چهارشنبه یک ساعت‌اند؛ هفت سطر برای
+ *    دو واقعیت، ولخرجیِ فضاست.
+ * ۳. **ستون کنار روی موبایل دیگر بالای منو نمی‌آید.** نقشه + تماس +
+ *    «نزدیک همین‌جا» با هم حدود یک صفحه‌ی موبایل بودند که کاربر باید قبل از
+ *    رسیدن به منو رد می‌کرد. حالا آدرس و وضعیت و دکمه‌ی مسیریابی در سرصفحه
+ *    همان کار را می‌کنند و منو بلافاصله بعد از اطلاعات می‌آید.
  */
 
 interface PageProps {
@@ -133,15 +153,15 @@ export default async function CafePage({ params }: PageProps) {
 
   const { user } = await getSession()
 
-  const [locale, map, discovery, moderation] = await Promise.all([
+  const [locale, map, discovery, moderation, siteName] = await Promise.all([
     getLocalePolicy(),
     getMapPolicy(),
     getDiscoveryPolicy(),
     getModerationPolicy(),
+    getSiteName(),
   ])
 
-  const [facets, dishes, reviews, nearby] = await Promise.all([
-    getPlaceFacetSummary(place.id),
+  const [dishes, reviews, nearby] = await Promise.all([
     getPlaceDishes(place.id),
     listPlaceReviews(place.id),
     place.coords && place.geoStatus === 'ok'
@@ -160,7 +180,10 @@ export default async function CafePage({ params }: PageProps) {
   const isSaved = savedIds.includes(place.id)
 
   const open = computeOpenState(place.hours, new Date(), locale.timeZone)
+  /* `week` فقط برای JSON-LD می‌ماند — گوگل ساعت را روزبه‌روز می‌خواهد.
+     چیزی که کاربر می‌بیند `hourGroups` است. */
   const week = weekSchedule(place.hours, new Date(), locale.timeZone)
+  const hourGroups = groupedWeekSchedule(place.hours, new Date(), locale.timeZone)
   const labels = getMapLabels({ zoom: 14, limit: 24 })
   const kindLabel = KIND_LABELS[place.kind] ?? 'کافه'
 
@@ -212,7 +235,7 @@ export default async function CafePage({ params }: PageProps) {
       />
       <BreadcrumbJsonLd
         items={[
-          { name: 'کافه‌گرد', path: paths.home },
+          { name: siteName, path: paths.home },
           ...(place.districtName && place.districtId
             ? [{ name: place.districtName, path: paths.district(place.districtSlug ?? place.districtId) }]
             : []),
@@ -233,7 +256,7 @@ export default async function CafePage({ params }: PageProps) {
               />
             ) : (
               <span className={styles.logoEmpty} aria-hidden="true">
-                ☕
+                <Coffee size={30} strokeWidth={1.6} />
               </span>
             )}
 
@@ -272,6 +295,8 @@ export default async function CafePage({ params }: PageProps) {
               {place.address && <p className={styles.address}>{place.address}</p>}
             </div>
           </div>
+
+          <HoursCard groups={hourGroups} />
 
           <div className={styles.actionRow}>
             <DirectionsBar
@@ -352,27 +377,6 @@ export default async function CafePage({ params }: PageProps) {
               </section>
             )}
 
-            {facets.length > 0 && (
-              <section className={styles.facets}>
-                <h2 className={styles.sectionHeading}>اینجا چه پیدا می‌کنید</h2>
-                <p className={styles.facetsNote}>از منوی واقعی استخراج شده — نه برچسبِ دستی.</p>
-                <ul className={styles.facetList}>
-                  {facets.map((facet) => (
-                    <li key={facet.facetId} className={styles.facetChip}>
-                      <span className={styles.facetIcon} aria-hidden="true">
-                        {facet.icon}
-                      </span>
-                      <span className={styles.facetLabel}>{facet.labelFa}</span>
-                      <span className={styles.facetCount}>{fa(facet.itemCount)} آیتم</span>
-                      {facet.minPrice !== null && (
-                        <span className={styles.facetPrice}>از {toman(facet.minPrice)}</span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
-
             {goodValue.length > 0 && (
               <section className={styles.value}>
                 <h2 className={styles.sectionHeading}>ارزان‌تر از میانگین شهر</h2>
@@ -390,7 +394,14 @@ export default async function CafePage({ params }: PageProps) {
               </section>
             )}
 
-            <MenuBrowser sections={place.menu} placeName={place.name} sourceUrl={place.menuUrl} />
+            <MenuBrowser
+              sections={place.menu}
+              placeName={place.name}
+              // جایگزینِ تصویرِ آیتم‌هایی که عکس اختصاصی ندارند — به‌جای مربعِ
+              // خالی، لوگوی همین مجموعه با شفافیت.
+              logoUrl={place.logo?.url ?? null}
+              sourceUrl={place.menuUrl}
+            />
 
             <section className={styles.reviews} id="reviews">
               <h2 className={styles.sectionHeading}>نظرها</h2>
@@ -403,11 +414,8 @@ export default async function CafePage({ params }: PageProps) {
                   {reviews.map((review) => (
                     <li key={review.id} className={styles.review}>
                       <div className={styles.reviewHead}>
-                        <strong>{review.authorName || 'کاربر کافه‌گرد'}</strong>
-                        <span className={styles.reviewStars} aria-label={`${review.stars} از ۵`}>
-                          {'★'.repeat(review.stars)}
-                          <span className={styles.starsDim}>{'★'.repeat(5 - review.stars)}</span>
-                        </span>
+                        <strong>{review.authorName || 'کاربر کو کافه'}</strong>
+                        <Stars count={review.stars} size={15} showEmpty />
                       </div>
                       {review.text && <p className={styles.reviewText}>{review.text}</p>}
                     </li>
@@ -467,35 +475,6 @@ export default async function CafePage({ params }: PageProps) {
               )}
             </section>
 
-            <section className={styles.card}>
-              <h2 className={styles.sideHeading}>ساعت کاری</h2>
-              <table className={styles.hoursTable}>
-                <tbody>
-                  {week.map((day) => (
-                    <tr key={day.dow} className={day.isToday ? styles.today : undefined}>
-                      <th scope="row">{day.dayName}</th>
-                      <td>
-                        {day.unknown ? (
-                          <span className={styles.hoursUnknown}>نامشخص</span>
-                        ) : day.closed ? (
-                          <span className={styles.hoursClosed}>تعطیل</span>
-                        ) : (
-                          /* هر شیفت جدا نمایش داده می‌شود. ادغام «۱۲–۱۶:۳۰» و
-                             «۲۰–۲۳:۳۰» در یک بازه، ساعت ۱۸ را «باز» نشان
-                             می‌داد که نیست. */
-                          day.ranges.map((range) => (
-                            <span key={range} className={styles.hoursRange}>
-                              {fa(range)}
-                            </span>
-                          ))
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </section>
-
             {(place.phones.length > 0 || place.socials.length > 0) && (
               <section className={styles.card}>
                 <h2 className={styles.sideHeading}>تماس و شبکه‌ها</h2>
@@ -530,7 +509,7 @@ export default async function CafePage({ params }: PageProps) {
                           <img src={card.logo.url} alt="" width={38} height={38} loading="lazy" />
                         ) : (
                           <span className={styles.nearbyEmpty} aria-hidden="true">
-                            ☕
+                            <Coffee size={17} strokeWidth={1.7} />
                           </span>
                         )}
                         <span className={styles.nearbyBody}>
@@ -547,6 +526,32 @@ export default async function CafePage({ params }: PageProps) {
                 </ul>
               </section>
             )}
+
+            {/*
+              «مشارکت» — تا امروز آیتمی در منوی بالا بود که به صفحه‌ی اصلی
+              می‌رفت. جای واقعی‌اش همین‌جاست: کاربر دقیقاً وقتی می‌فهمد ساعت
+              کاری غلط است که آن را روی همین صفحه دیده.
+            */}
+            <SuggestEdit
+              placeId={place.id}
+              placeName={place.name}
+              signedIn={!!user}
+              authHref={authUrl(paths.cafe(place.slug))}
+              currentValues={{
+                hours: hourGroups
+                  .filter((group) => !group.unknown)
+                  .map(
+                    (group) =>
+                      `${group.label}: ${group.closed ? 'تعطیل' : group.ranges.join('، ')}`,
+                  )
+                  .join(' · '),
+                address: place.address,
+                phone: place.phones.map((phone) => phone.phone).join('، '),
+                coords: place.coords ? `${place.coords.lat},${place.coords.lng}` : null,
+                instagram: place.instagram,
+                name: place.name,
+              }}
+            />
           </aside>
         </div>
       </article>

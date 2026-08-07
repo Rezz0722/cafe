@@ -15,9 +15,10 @@ import { searchPath } from '@/core/search/filters'
 import { fa, toman } from '@/lib/format'
 import { MaintenanceScreen } from '@/components/site/MaintenanceScreen'
 import { maintenanceState } from '@/core/settings/maintenance'
-import { getLocalePolicy, getMapPolicy } from '@/core/settings/policies'
+import { getLocalePolicy, getMapPolicy, getSiteName } from '@/core/settings/policies'
 import { paths } from '@/routes'
 import styles from './page.module.css'
+import { FacetIcon } from '@/components/ui/FacetIcon'
 
 /**
  * صفحه‌ی محله — مسیر کانونیِ SEO.
@@ -63,13 +64,14 @@ export default async function DistrictPage({ params }: PageProps) {
   const district = await getDistrictBySlug(slug)
   if (!district || district.placeCount === 0) notFound()
 
-  const [cards, facets, allDistricts, map] = await Promise.all([
+  const [cards, facets, allDistricts, map, siteName] = await Promise.all([
     // یک محله همیشه در یک صفحه جا می‌شود (بزرگ‌ترین ۳۹ مجموعه دارد)، ولی
     // سقف باید از تنظیمات بیاید تا اگر داده رشد کرد، عددِ ثابت گمراه نکند.
     listPlaceCards({ districtId: district.id, limit: 200, sort: 'quality' }),
     listFilterFacets(),
     listDistricts(),
     getMapPolicy(),
+    getSiteName(),
   ])
 
   const mapPlaces = cards
@@ -114,7 +116,7 @@ export default async function DistrictPage({ params }: PageProps) {
     <>
       <BreadcrumbJsonLd
         items={[
-          { name: 'کافه‌گرد', path: paths.home },
+          { name: siteName, path: paths.home },
           { name: district.name, path: paths.district(district.slug) },
         ]}
       />
@@ -136,7 +138,7 @@ export default async function DistrictPage({ params }: PageProps) {
                   href={searchPath({ districtId: district.id, facets: [facet.id] })}
                   className={styles.chip}
                 >
-                  <span aria-hidden="true">{facet.icon}</span> {facet.labelFa}
+                  <FacetIcon id={facet.id} size={14} /> {facet.labelFa}
                   <span className={styles.chipCount}>{fa(facet.localCount)}</span>
                 </Link>
               ))}

@@ -258,6 +258,21 @@
   gap: 10px;
 }
 
+/* ── امکانات و فضا ──────────────────────────────────────────────────── */
+
+/* ۲۷ ویژگی در دو ستون. `auto-fit` با کمینه‌ی ۲۱۰px یعنی روی موبایل خودش یک
+   ستون می‌شود، بدون media query جدا. */
+.attrGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px 14px;
+}
+
+.attrField {
+  display: grid;
+  gap: 5px;
+}
+
 .label {
   font-size: 0.83rem;
   font-weight: 700;

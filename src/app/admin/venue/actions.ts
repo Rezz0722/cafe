@@ -19,13 +19,17 @@ import { VIEW_AS_READONLY } from '@/core/auth/impersonation'
 import { canManagePlace } from '@/core/auth/userRepo'
 import {
   bulkAdjustPrices,
+  replacePlaceAttributes,
   replacePlaceHours,
   replyToReview,
   updateMenuItem,
   updatePlaceInfo,
   type Actor,
+  type AttributeInput,
   type HourShiftInput,
 } from '@/core/places/manage'
+import { FILTER_ATTRIBUTES } from '@/core/taxonomy/attributes'
+import { invalidateReferenceCache } from '@/core/places/queries'
 import { getModerationPolicy } from '@/core/settings/policies'
 import { getDb } from '@/db/client'
 import { menuItem as menuItemTable, place as placeTable, review as reviewTable } from '@/db/schema'
@@ -156,6 +160,57 @@ export async function saveVenueHoursAction(
   if (!result.ok) return { ok: false, error: result.error }
   await revalidateBoth(access.placeId)
   return { ok: true, message: 'ساعت کاری ذخیره شد.' }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// ویژگی‌ها
+// ═══════════════════════════════════════════════════════════════════════
+
+export async function saveVenueAttributesAction(
+  _prev: VenueActionState,
+  form: FormData,
+): Promise<VenueActionState> {
+  const access = await requirePlaceAccess(num(form, 'placeId'))
+  if (!access.ok) return { ok: false, error: access.error }
+
+  /*
+    فرم برای هر ویژگی یک `attr_<id>` می‌فرستد با یکی از مقادیر
+    `''` (ثبت‌نشده) · `0` · `1` · `2`. رشته‌ی خالی ردیف نمی‌سازد — «نپرسیدیم»
+    با «نه» یکی نیست، و ذخیره‌ی صفر برای هر ویژگیِ دست‌نخورده یعنی ۲۷ ادعای
+    نادرست به‌ازای هر کافه.
+
+    فهرست از `FILTER_ATTRIBUTES` می‌آید نه از کلیدهای فرم: کاربر می‌تواند هر
+    کلیدی بفرستد، و `replacePlaceAttributes` هم دوباره اعتبارسنجی می‌کند.
+  */
+  const inputs: AttributeInput[] = []
+  for (const def of FILTER_ATTRIBUTES) {
+    const raw = str(form, `attr_${def.id}`)
+    if (raw === '') continue
+    const value = Number(raw)
+    if (value !== 0 && value !== 1 && value !== 2) continue
+    inputs.push({ attributeId: def.id, value })
+  }
+
+  const result = await replacePlaceAttributes(access.placeId, inputs, access.actor)
+  if (!result.ok) return { ok: false, error: result.error }
+
+  /*
+    کشِ داده‌ی مرجع باید بشکند، وگرنه شمارشِ کارت‌های نیت روی صفحه‌ی اول تا یک
+    دقیقه عددِ قبلی را نشان می‌دهد — و کافه‌داری که همین حالا ویژگی ثبت کرده،
+    صفحه‌ی اول را باز می‌کند و فکر می‌کند ذخیره نشده.
+  */
+  invalidateReferenceCache()
+  await revalidateBoth(access.placeId)
+  revalidatePath(paths.home)
+  revalidatePath(paths.search)
+
+  const yes = inputs.filter((input) => input.value > 0).length
+  return {
+    ok: true,
+    message: yes > 0
+      ? `${yes.toLocaleString('fa-IR')} ویژگی ثبت شد.`
+      : 'ویژگی‌ها ذخیره شد.',
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════

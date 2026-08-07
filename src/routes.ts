@@ -15,8 +15,22 @@ export const paths = {
   home: '/',
   search: '/search',
   cafe: (slug: string) => `/cafe/${slug}`,
+  /**
+   * لندینگ محله‌ها — بالای سرِ صفحات `/mashhad/[district]`.
+   *
+   * تا امروز این صفحه وجود نداشت و دکمه‌ی «محله‌ها» در هدر به صفحه‌ی اصلی
+   * می‌رفت، یعنی عملاً کار نمی‌کرد.
+   */
+  districtHub: '/mashhad',
   district: (districtSlug: string) => `/mashhad/${districtSlug}`,
   auth: '/auth',
+  /**
+   * «مشارکت» — صفحه‌ای که می‌گوید کاربر چطور می‌تواند داده را بهتر کند.
+   *
+   * قبلاً این آیتمِ منو به صفحه‌ی اصلی می‌رفت، یعنی عملاً کار نمی‌کرد. هدفش
+   * از اول این بود که کاربر بتواند اطلاعات غلطِ کافه‌ها را برای ما اصلاح کند.
+   */
+  contribute: '/contribute',
   profile: '/profile',
   /** تغییر رمز — مقصد اجباریِ کسی که رمز موقت گرفته. */
   changePassword: '/profile/password',
@@ -43,7 +57,7 @@ export function authUrl(redirectTo?: string): string {
 }
 
 /** آدرس کانونی سایت — برای متادیتا، sitemap و JSON-LD. */
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://cafegard.ir'
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://kucafe.ir'
 
 export function absoluteUrl(path: string): string {
   return new URL(path, SITE_URL).toString()

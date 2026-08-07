@@ -23,15 +23,19 @@ import {
   bulkPriceAction,
   replyReviewAction,
   saveMenuItemAction,
+  saveVenueAttributesAction,
   saveVenueHoursAction,
   saveVenueInfoAction,
 } from '@/app/admin/venue/actions'
 import { EMPTY_VENUE_STATE } from '@/app/admin/venue/state'
 import { WEEKDAY_NAMES } from '@/core/import/normalize'
+import { FILTER_ATTRIBUTES } from '@/core/taxonomy/attributes'
 import type { OwnerPlaceData } from '@/core/places/manage'
 import { fa, toman } from '@/lib/format'
+import { Stars } from '@/components/ui/Stars'
 import { paths } from '@/routes'
 import styles from './VenuePanel.module.css'
+import { Check, Coffee, ExternalLink } from 'lucide-react'
 
 type Tab = 'overview' | 'info' | 'hours' | 'menu' | 'reviews'
 
@@ -90,6 +94,10 @@ export function VenuePanel({
 
   const [infoState, infoAction] = useActionState(saveVenueInfoAction, EMPTY_VENUE_STATE)
   const [hoursState, hoursAction] = useActionState(saveVenueHoursAction, EMPTY_VENUE_STATE)
+  const [attributesState, attributesAction] = useActionState(
+    saveVenueAttributesAction,
+    EMPTY_VENUE_STATE,
+  )
   const [bulkState, bulkAction] = useActionState(bulkPriceAction, EMPTY_VENUE_STATE)
   const [itemState, itemAction] = useActionState(saveMenuItemAction, EMPTY_VENUE_STATE)
   const [replyState, replyAction] = useActionState(replyReviewAction, EMPTY_VENUE_STATE)
@@ -128,14 +136,14 @@ export function VenuePanel({
             <img src={place.logoUrl} alt="" width={52} height={52} className={styles.logo} />
           ) : (
             <span className={styles.logoEmpty} aria-hidden="true">
-              ☕
+              <Coffee size={22} strokeWidth={1.7} />
             </span>
           )}
           <div>
             <h1 className={styles.title}>{place.name}</h1>
             <p className={styles.sub}>
               <a href={paths.cafe(place.slug)} target="_blank" rel="noreferrer">
-                دیدن صفحه‌ی عمومی ↗
+                دیدن صفحه‌ی عمومی <ExternalLink size={13} aria-hidden="true" />
               </a>
               {place.status !== 'published' && (
                 <span className={styles.draftBadge}>منتشر نشده</span>
@@ -264,7 +272,9 @@ export function VenuePanel({
                 place.hours.length > 0 &&
                 place.about &&
                 place.phones.length > 0 &&
-                staleCount === 0 && <li className={styles.allDone}>پروفایل کامل است. ✓</li>}
+                staleCount === 0 && <li className={styles.allDone}>
+                    <Check size={15} aria-hidden="true" /> پروفایل کامل است.
+                  </li>}
             </ul>
           </div>
         </section>
@@ -361,6 +371,51 @@ export function VenuePanel({
             </p>
 
             {!readOnly && <SaveButton />}
+          </form>
+
+          {/*
+            ویژگی‌ها فرم جداست، نه بخشی از فرم اطلاعات.
+
+            دلیلش ذخیره‌ی مستقل است: کافه‌داری که فقط می‌خواهد «پریز کنار میز»
+            را تیک بزند، نباید ریسک کند که نام و آدرس و مختصاتش هم دوباره
+            نوشته شوند. تبِ جدا هم نساختیم — این‌ها واقعیت‌های پایه‌ی مجموعه‌اند
+            و جایشان همین‌جاست.
+          */}
+          <form action={attributesAction} className={styles.form}>
+            <input type="hidden" name="placeId" value={place.id} />
+            <Feedback state={attributesState} />
+
+            <h2 className={styles.boxTitle}>امکانات و فضا</h2>
+            <p className={styles.hint}>
+              این‌ها از منو قابل استخراج نیستند — فقط شما می‌دانید. هرچه ثبت کنید، مجموعه‌تان
+              در فیلترهای «مناسب کار»، «فضای باز» و مثل این‌ها پیدا می‌شود. چیزی که مطمئن
+              نیستید را روی «ثبت‌نشده» بگذارید؛ برچسب اشتباه بدتر از نبودنش است، چون کاربر
+              می‌آید و آن‌طور نمی‌بیند.
+            </p>
+
+            <div className={styles.attrGrid}>
+              {FILTER_ATTRIBUTES.map((def) => {
+                const current = place.attributes[def.id]
+                return (
+                  <label key={def.id} className={styles.attrField}>
+                    <span className={styles.label}>{def.labelFa}</span>
+                    <select
+                      name={`attr_${def.id}`}
+                      className={styles.input}
+                      defaultValue={current === undefined ? '' : String(current)}
+                      disabled={readOnly}
+                    >
+                      <option value="">ثبت‌نشده</option>
+                      <option value="2">بله</option>
+                      <option value="1">تاحدی</option>
+                      <option value="0">نه</option>
+                    </select>
+                  </label>
+                )
+              })}
+            </div>
+
+            {!readOnly && <SaveButton label="ذخیره‌ی امکانات" />}
           </form>
         </section>
       )}
@@ -542,11 +597,8 @@ export function VenuePanel({
               {reviews.map((review) => (
                 <li key={review.id} className={styles.reviewItem}>
                   <div className={styles.reviewHead}>
-                    <strong>{review.authorName || 'کاربر کافه‌گرد'}</strong>
-                    <span className={styles.reviewStars}>
-                      {'★'.repeat(review.stars)}
-                      <span className={styles.starsDim}>{'★'.repeat(5 - review.stars)}</span>
-                    </span>
+                    <strong>{review.authorName || 'کاربر کو کافه'}</strong>
+                    <Stars count={review.stars} size={14} showEmpty />
                     {review.status !== 'approved' && (
                       <span className={styles.pendingBadge}>
                         {review.status === 'pending' ? 'در انتظار تأیید' : 'منتشر نشده'}

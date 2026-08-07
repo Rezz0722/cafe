@@ -41,6 +41,7 @@ import {
   menuItem as menuItemTable,
   menuSection as menuSectionTable,
   place as placeTable,
+  placeAttribute as placeAttributeTable,
   placeDish as placeDishTable,
   placeFacet as placeFacetTable,
   placeHours as placeHoursTable,
@@ -233,18 +234,31 @@ export function invalidateSiteMean(): void {
 // ═══════════════════════════════════════════════════════════════════════
 
 /**
- * کشِ کوتاه برای داده‌ی مرجع (facet، دیش، محله).
+ * کشِ داده‌ی مرجع (facet، دیش، محله، آمار سایت).
  *
  * ═══ چرا لازم است ═══
  *
  * Next.js `generateMetadata` و خودِ کامپوننت صفحه را **جدا** اجرا می‌کند، پس
- * هر صفحه‌ی جست‌وجو این سه پرس‌وجو را دو بار می‌زند. `listDistricts` هم ۲۷
- * زیرپرس‌وجوی همبسته دارد. این داده فقط با ایمپورت عوض می‌شود، پس کش کردنش
- * بی‌خطر است.
+ * هر صفحه‌ی جست‌وجو این پرس‌وجوها را دو بار می‌زند. این داده فقط با ایمپورت یا
+ * ویرایش در پنل عوض می‌شود، پس کش کردنش بی‌خطر است.
  *
- * TTL کوتاه است تا بعد از ایمپورت لازم نباشد سرور ری‌استارت شود.
+ * ═══ چرا TTL از ۶۰ ثانیه به ۱۵ دقیقه رفت ═══
+ *
+ * TTL کوتاه برای این بود که «بعد از ایمپورت لازم نباشد سرور ری‌استارت شود» —
+ * ولی آن نگرانی از وقتی که `invalidateReferenceCache()` به اکشن‌های پنل وصل
+ * شد بی‌مورد است: هر تغییرِ واقعی خودش کش را می‌ریزد.
+ *
+ * هزینه‌ی TTL کوتاه اندازه‌گیری شد: `listDistricts` سرد **۸۳۶ میلی‌ثانیه** بود
+ * (زیرپرس‌وجوی همبسته به‌ازای هر محله) و `getSiteStats` ۲۸۷ میلی‌ثانیه. با
+ * ۶۰ ثانیه، هر دقیقه یک بازدیدکننده این جریمه را می‌پرداخت — و زیر PM2 با چند
+ * worker، هر worker جداگانه.
+ *
+ * ⚠️ این کش **درون‌فرآیندی** است. زیر PM2 در حالت `cluster` با چند instance،
+ * `invalidateReferenceCache()` فقط کشِ همان worker را می‌ریزد و بقیه تا پایان
+ * TTL داده‌ی بیات می‌دهند. `ecosystem.config.js` عمداً `fork` با یک instance
+ * است؛ دلیلش همان‌جا نوشته شده.
  */
-const REFERENCE_TTL_MS = 60_000
+const REFERENCE_TTL_MS = Number(process.env.REFERENCE_CACHE_TTL_MS ?? 15 * 60_000)
 
 interface CacheEntry<T> {
   value: T
@@ -276,6 +290,14 @@ export interface ListFilters {
   districtId?: string | null
   /** شناسه‌ی facet — مکان باید **همه‌ی** آن‌ها را داشته باشد. */
   facetIds?: string[]
+  /**
+   * شناسه‌ی ویژگی — «مناسب کار»، «فضای باز». مکان باید **همه‌ی** آن‌ها را
+   * داشته باشد، مثل facet.
+   *
+   * جدا از `facetIds` است چون منشأشان فرق دارد و اسکیما هم جدایشان کرده:
+   * facet از منوی واقعی استخراج می‌شود، ویژگی را آدم ثبت می‌کند.
+   */
+  attributeIds?: string[]
   /** شناسه‌ی دیش — «کجا پاستا دارد». */
   dishId?: number | null
   priceTiers?: number[]
@@ -309,6 +331,7 @@ function buildPlaceConditions(filters: ListFilters): SQL[] {
     publishedOnly = true,
     districtId,
     facetIds = [],
+    attributeIds = [],
     dishId,
     priceTiers,
     maxPrice,
@@ -354,6 +377,20 @@ function buildPlaceConditions(filters: ListFilters): SQL[] {
   if (facetIds.length > 0) {
     conditions.push(
       sql`(SELECT COUNT(DISTINCT pf.facet_id) FROM place_facet pf WHERE pf.place_id = place.id AND pf.facet_id IN ${facetIds}) = ${facetIds.length}`,
+    )
+  }
+  /*
+    ویژگی‌ها همان الگوی facet را دارند، با یک تفاوت: `value`.
+
+    `place_attribute.value` سه‌حالته است (۰ نه · ۱ تاحدی · ۲ بله) و اینجا
+    `>= 1` قبول می‌شود. یعنی «تاحدی مناسب کار» در نتیجه‌ی فیلترِ «مناسب کار»
+    می‌آید. سخت‌گیری روی `= 2` نتیجه را به مکان‌هایی محدود می‌کرد که کسی
+    قطعیتِ کامل ثبت کرده باشد، و ردیف‌های `۰` هم — که صریحاً «نه» یعنی —
+    باید بیرون بمانند، پس شرط نمی‌تواند فقط «وجود ردیف» باشد.
+  */
+  if (attributeIds.length > 0) {
+    conditions.push(
+      sql`(SELECT COUNT(DISTINCT pa.attribute_id) FROM place_attribute pa WHERE pa.place_id = place.id AND pa.attribute_id IN ${attributeIds} AND pa.value >= 1) = ${attributeIds.length}`,
     )
   }
   if (dishId) {
@@ -714,7 +751,23 @@ export interface DistrictView {
   placeCount: number
 }
 
-/** محله‌ها با تعداد مکانِ منتشرشده — محله‌ی خالی در UI نشان داده نمی‌شود. */
+/**
+ * محله‌ها با تعداد مکانِ منتشرشده — محله‌ی خالی در UI نشان داده نمی‌شود.
+ *
+ * ═══ چرا `LEFT JOIN` و نه زیرپرس‌وجوی همبسته ═══
+ *
+ * نسخه‌ی قبلی به‌ازای **هر محله** یک `(SELECT COUNT(*) FROM place WHERE …)`
+ * اجرا می‌کرد — ۲۹ اسکنِ جدا روی `place`. اندازه‌گیری‌شده: **۸۳۶ میلی‌ثانیه**
+ * در حالت سرد.
+ *
+ * حالا یک `LEFT JOIN` با `GROUP BY` است: یک اسکن، و شمارش‌ها با هم درمی‌آیند.
+ * `LEFT` عمدی است — محله‌ی بی‌کافه باید با شمارِ صفر برگردد، نه اینکه از
+ * نتیجه بیفتد. `getDistrictBySlug` و صفحه‌ی محله روی همین صفر تصمیم می‌گیرند.
+ *
+ * ⚠️ شرطِ `status` در `ON` است نه در `WHERE`. اگر در `WHERE` باشد،
+ * `LEFT JOIN` عملاً به `INNER JOIN` تبدیل می‌شود و محله‌های خالی حذف می‌شوند —
+ * همان تله‌ای که این کامنت برای بستنش هست.
+ */
 export async function listDistricts(): Promise<DistrictView[]> {
   return cached('districts', async () => {
     const db = getDb()
@@ -725,15 +778,22 @@ export async function listDistricts(): Promise<DistrictView[]> {
         name: districtTable.name,
         lat: districtTable.centerLat,
         lng: districtTable.centerLng,
-        // `district.id` صریح نوشته شده — درج شیء ستون drizzle اینجا نام جدول را
-        // حذف می‌کند و شرط به `place.district_id = place.id` تبدیل می‌شود که
-        // همیشه false است. با آن باگ، همه‌ی محله‌ها صفر کافه نشان می‌دادند.
-        placeCount: sql<number>`(
-        SELECT COUNT(*) FROM place
-        WHERE place.district_id = district.id AND place.status = 'published'
-      )`,
+        sortOrder: districtTable.sortOrder,
+        placeCount: sql<number>`COUNT(${placeTable.id})`,
       })
       .from(districtTable)
+      .leftJoin(
+        placeTable,
+        and(eq(placeTable.districtId, districtTable.id), eq(placeTable.status, 'published')),
+      )
+      .groupBy(
+        districtTable.id,
+        districtTable.slug,
+        districtTable.name,
+        districtTable.centerLat,
+        districtTable.centerLng,
+        districtTable.sortOrder,
+      )
       .orderBy(asc(districtTable.sortOrder), asc(districtTable.name))
 
     return rows.map((row) => ({
@@ -811,7 +871,14 @@ export interface SiteStats {
   reviews: number
 }
 
+/**
+ * آمار سایت برای صفحه‌ی اصلی.
+ *
+ * کش‌شده: شش `COUNT(*)` روی جدول‌های بزرگ است و اندازه‌گیری‌شده ۲۸۷
+ * میلی‌ثانیه می‌برد — برای عددهایی که فقط با ایمپورت یا ثبت نظر عوض می‌شوند.
+ */
 export async function getSiteStats(): Promise<SiteStats> {
+  return cached('siteStats', async () => {
   const db = getDb()
   const [row] = await db
     .select({
@@ -832,6 +899,7 @@ export async function getSiteStats(): Promise<SiteStats> {
     districts: Number(row?.districts ?? 0),
     reviews: Number(row?.reviews ?? 0),
   }
+  })
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -994,6 +1062,42 @@ export async function listFilterFacets(): Promise<FilterFacet[]> {
       .from(facetTable)
       .where(and(eq(facetTable.isFilter, true), sql`${facetTable.placeCount} > 0`))
       .orderBy(desc(facetTable.placeCount))
+  })
+}
+
+/**
+ * تعداد مکانِ منتشرشده برای هر ویژگی — «مناسب کار: ۴۲».
+ *
+ * ═══ چرا یک پرس‌وجو برای همه ═══
+ *
+ * صفحه‌ی اول چهار کارت نیت دارد و صفحه‌ی جست‌وجو کل فهرست ویژگی‌ها را نشان
+ * می‌دهد. یک `countPlaces` به‌ازای هر ویژگی یعنی ۳۰ پرس‌وجوی جدا برای رندر
+ * یک صفحه. این یکی همه را با هم می‌شمارد.
+ *
+ * `attribute` برخلاف `facet` ستون `place_count` ندارد — عمدی است: ویژگی را
+ * آدم ثبت می‌کند و هر لحظه عوض می‌شود، پس عددِ کش‌شده‌ی روی جدول زود کهنه
+ * می‌شد. کشِ ۶۰ ثانیه‌ای همین فایل کافی است.
+ *
+ * ویژگی‌ای که هیچ مکانی ندارد **در خروجی هست، با صفر** — برخلاف
+ * `listFilterFacets` که صفرها را حذف می‌کند. صفحه‌ی اول باید بتواند بگوید
+ * «هنوز هیچ کافه‌ای برای این حالت ثبت نشده» و برای آن به عددِ صفر نیاز دارد.
+ */
+export async function listAttributeCounts(): Promise<Record<string, number>> {
+  return cached('attributeCounts', async () => {
+    const db = getDb()
+    const rows = await db
+      .select({
+        attributeId: placeAttributeTable.attributeId,
+        placeCount: sql<number>`COUNT(DISTINCT ${placeAttributeTable.placeId})`,
+      })
+      .from(placeAttributeTable)
+      .innerJoin(placeTable, eq(placeTable.id, placeAttributeTable.placeId))
+      .where(and(eq(placeTable.status, 'published'), sql`${placeAttributeTable.value} >= 1`))
+      .groupBy(placeAttributeTable.attributeId)
+
+    const counts: Record<string, number> = {}
+    for (const row of rows) counts[row.attributeId] = Number(row.placeCount)
+    return counts
   })
 }
 

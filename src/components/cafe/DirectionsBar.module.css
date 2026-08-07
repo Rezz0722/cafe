@@ -10,16 +10,19 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 10px 15px;
+  /* ۴۴px ارتفاع مؤثر — کمتر از این روی موبایل خطای لمس می‌سازد. */
+  min-height: 44px;
+  padding: 10px 16px;
   border: 1px solid var(--c-border);
-  border-radius: 999px;
+  border-radius: var(--r-pill);
   background: var(--c-surface);
   color: var(--c-ink);
-  font-size: 0.87rem;
+  font-size: var(--fs-sm);
   font-weight: 700;
   text-decoration: none;
   cursor: pointer;
   white-space: nowrap;
+  transition: border-color var(--t-fast), color var(--t-fast), background var(--t-fast);
 }
 
 .action:hover {
@@ -27,62 +30,221 @@
   color: var(--c-primary-strong);
 }
 
-/* مسیریابی مهم‌ترین کارِ این صفحه است، پس تنها دکمه‌ی پُررنگ است. */
+.action:focus-visible,
+.primaryAction:focus-visible {
+  outline: none;
+  border-color: var(--c-primary);
+  box-shadow: 0 0 0 3px var(--c-primary-soft);
+}
+
+/* مسیریابی مهم‌ترین کارِ این صفحه است، پس تنها دکمه‌ی پُررنگ است.
+   این یک `summary` است، نه `button` — مثلثِ پیش‌فرض باید برود. */
 .primaryAction {
+  padding-inline: 18px;
   background: var(--c-primary);
   border-color: var(--c-primary);
   color: #fff;
+  box-shadow: var(--sh-primary);
+  list-style: none;
+  user-select: none;
+}
+
+.primaryAction::-webkit-details-marker,
+.primaryAction::marker {
+  display: none;
+  content: '';
 }
 
 .primaryAction:hover {
   background: var(--c-primary-strong);
   border-color: var(--c-primary-strong);
-  color: #fff;
 }
 
-.menuWrap {
+.caret {
+  opacity: 0.85;
+  transition: transform var(--t-fast);
+}
+
+.pickerWrap[open] .caret {
+  transform: rotate(180deg);
+}
+
+/* ── انتخاب اپ ────────────────────────────────────────────────────────
+   بالای ۶۴۰px: popover چسبیده به دکمه. زیر آن: شیتِ پایین صفحه. */
+
+.pickerWrap {
   position: relative;
 }
 
-.menu {
-  position: absolute;
-  inset-block-start: calc(100% + 6px);
-  inset-inline-start: 0;
-  z-index: 20;
-  min-width: 190px;
-  display: flex;
-  flex-direction: column;
-  padding: 6px;
-  border: 1px solid var(--c-border);
-  border-radius: var(--r-md, 12px);
-  background: var(--c-surface);
-  box-shadow: 0 8px 24px rgb(0 0 0 / 0.14);
+.scrim {
+  display: none;
 }
 
-.menuItem {
-  padding: 9px 11px;
+.sheet {
+  position: absolute;
+  inset-block-start: calc(100% + 8px);
+  inset-inline-start: 0;
+  z-index: 30;
+  min-width: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  background: var(--c-surface);
+  box-shadow: var(--sh-raised);
+}
+
+.grip {
+  display: none;
+}
+
+.sheetTitle {
+  margin: 2px 8px 6px;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--c-muted);
+}
+
+.sheetItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 48px;
+  padding: 8px 10px;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--r-md);
   background: none;
-  color: var(--c-ink-2);
+  color: var(--c-ink);
   font: inherit;
-  font-size: 0.85rem;
+  font-size: var(--fs-base);
   text-align: start;
   text-decoration: none;
   cursor: pointer;
+  transition: background var(--t-fast);
 }
 
-.menuItem:hover {
+.sheetItem:hover {
   background: var(--c-surface-3);
-  color: var(--c-ink);
+}
+
+.sheetItem:focus-visible {
+  outline: none;
+  background: var(--c-primary-soft);
+  box-shadow: inset 0 0 0 2px var(--c-primary);
+}
+
+.sheetItem svg {
+  flex: 0 0 auto;
+}
+
+.sheetLabel {
+  flex: 1;
+  font-weight: 700;
+}
+
+.localTag {
+  flex: 0 0 auto;
+  padding: 2px 8px;
+  border-radius: var(--r-pill);
+  background: var(--c-success-soft);
+  color: var(--c-open);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+}
+
+.sheetDivider {
+  height: 1px;
+  margin: 5px 8px;
+  background: var(--c-border-3);
+}
+
+.copied {
+  padding: 6px 12px;
+  border-radius: var(--r-pill);
+  background: var(--c-success-soft);
+  color: var(--c-open);
+  font-size: var(--fs-xs);
+  font-weight: 700;
 }
 
 .noCoords {
   margin: 0;
-  padding: 9px 13px;
+  padding: 10px 14px;
   border: 1px dashed var(--c-disabled);
-  border-radius: var(--r-md, 12px);
+  border-radius: var(--r-md);
   color: var(--c-muted);
-  font-size: 0.82rem;
+  font-size: var(--fs-sm);
   line-height: 1.6;
+}
+
+/* ── شیت موبایل ─────────────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    background: rgb(0 0 0 / 0.42);
+  }
+
+  .sheet {
+    position: fixed;
+    z-index: 61;
+    inset-inline: 0;
+    inset-block: auto 0;
+    min-width: 0;
+    max-height: 82vh;
+    overflow-y: auto;
+    padding: 6px 12px calc(14px + env(safe-area-inset-bottom, 0px));
+    border: none;
+    border-start-start-radius: var(--r-xl);
+    border-start-end-radius: var(--r-xl);
+    box-shadow: var(--sh-hero);
+    animation: rise var(--t-base) ease-out;
+  }
+
+  .grip {
+    display: block;
+    width: 42px;
+    height: 4px;
+    margin: 8px auto 6px;
+    border-radius: var(--r-pill);
+    background: var(--c-border-5);
+  }
+
+  .sheetTitle {
+    margin: 0 4px 8px;
+    font-size: var(--fs-sm);
+  }
+
+  .sheetItem {
+    min-height: 54px;
+  }
+
+  /* دکمه‌ی مسیریابی روی موبایل تمام عرض می‌گیرد — تنها کارِ اصلی صفحه است. */
+  .pickerWrap {
+    flex: 1 1 100%;
+  }
+
+  .primaryAction {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(14px);
+    opacity: 0.4;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet {
+    animation: none;
+  }
 }

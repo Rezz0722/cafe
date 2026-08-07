@@ -29,7 +29,30 @@ if (!cookie) {
 /** @type {Check[]} */
 const CHECKS = [
   // ── عمومی
-  { path: '/', needs: ['قیمت واقعی منو', 'بهترین', 'وکیل‌آباد'] },
+  /*
+    صفحه‌ی اصلی: تیتر hero، هر شش بخش، و هدر و فوتر.
+
+    بررسی‌های قبلی («قیمت واقعی منو»، «بهترین») مربوط به نسخه‌ای بود که جای
+    صفحه‌ی اصلی نشسته بود — فهرست داده‌ای بدون هدر و فوتر. حالا ساختار خودِ
+    طراحی برگشته و assertها همان را می‌سنجند.
+  */
+  {
+    path: '/',
+    needs: [
+      'امروز کجا بریم؟',
+      'کافهٔ خودت',
+      'فیلترهای پرکاربرد',
+      'کافه‌های منتخب',
+      'مشاهده',
+      'بگو حالت چطوره',
+      'می‌خوای کار کنی؟',
+      'وکیل‌آباد',
+      'ترجیح می‌دی روی نقشه ببینی؟',
+      'یک پروژهٔ مردمی',
+      'ورود | ثبت‌نام',
+      'ساختهٔ جوون‌های مشهد',
+    ],
+  },
   { path: '/search', needs: ['کافه‌های مشهد', 'فیلترها'] },
   { path: '/search?f=pasta', needs: ['کافه‌های پاستا'] },
   { path: '/search?dish=alfredo-pasta', needs: ['بهترین پاستا آلفردو'] },
@@ -39,15 +62,38 @@ const CHECKS = [
   { path: '/mashhad/faramarz-abbasi', needs: ['فرامرز عباسی'] },
   {
     path: '/cafe/jan-majnoon-lounge',
-    needs: ['مجنون لانژ', 'ساعت کاری', '/media/item/', 'neshan.org/maps/routing'],
-    // هیچ ارجاعی به CDN بیرونی نباید در HTML باشد.
-    forbid: ['cdn.topmenumarket.com'],
+    needs: ['مجنون لانژ', 'ساعت کاری هفته', '/media/item/', 'neshan.org/maps/routing'],
+    forbid: [
+      // هیچ ارجاعی به CDN بیرونی نباید در HTML باشد.
+      'cdn.topmenumarket.com',
+      // «اینجا چه پیدا می‌کنید» برداشته شد — نه فقط از دید، از رندر.
+      'اینجا چه پیدا می‌کنید',
+    ],
   },
   { path: '/cafe/blackhorse-hall', needs: ['در منو بگرد'] },
+  {
+    path: '/contribute',
+    needs: ['مشارکت', 'ساعت کاری', 'ثبت کافه‌ی جدید'],
+  },
   { path: '/auth', needs: ['ورود یا ثبت‌نام', 'ساخت حساب با رمز'] },
   { path: '/sitemap.xml', needs: ['/mashhad/', '/cafe/'] },
   { path: '/robots.txt', needs: ['Disallow'] },
-  { path: '/api/map/style?theme=light', needs: ['mashhad', 'road_major'], forbid: ['https://'] },
+  /*
+    استایل نقشه.
+
+    `mashhad` از فهرست برداشته شد: آن نامِ منبعِ **تایل برداریِ** قدیمی بود.
+    حالا هر لایه منبعِ `geojson` خودش را دارد که از `/map/` می‌آید. بررسی‌های
+    زیر همان معماری را قفل می‌کنند:
+      • لایه‌های پایه واقعاً در استایل‌اند
+      • داده از مسیر نسبیِ `/map/` می‌آید، نه از یک دامنه‌ی بیرونی
+      • مشخصاتِ بارگذاری تنبلِ ساختمان همراه استایل می‌آید
+      • `/api/map/tiles` دیگر ساخته نمی‌شود
+  */
+  {
+    path: '/api/map/style?theme=light',
+    needs: ['road_major', '/map/road_major.geojson', 'kucafe:lazyBuildings', '"geojson"'],
+    forbid: ['https://', '/api/map/tiles'],
+  },
 
   // ── پشتِ ورود
   { path: '/profile', needs: ['مشارکت من', 'ذخیره‌شده‌ها'], auth: true },

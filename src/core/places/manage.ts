@@ -19,12 +19,14 @@ import {
   menuItem as menuItemTable,
   menuSection as menuSectionTable,
   place as placeTable,
+  placeAttribute as placeAttributeTable,
   placeHours as placeHoursTable,
   placePhone as placePhoneTable,
   placeSocial as placeSocialTable,
   review as reviewTable,
   reviewReply,
 } from '@/db/schema'
+import { isKnownAttribute } from '@/core/taxonomy/attributes'
 import { computeQualityFromFacts } from '@/core/quality/scores'
 import { classifyGeo, median, parsePhones, priceTierFromMedian } from '@/core/import/normalize'
 import { getDataPolicy } from '@/core/settings/policies'
@@ -278,6 +280,73 @@ export async function replacePlaceHours(
 }
 
 // ═══════════════════════════════════════════════════════════════════════
+// ویژگی‌ها
+// ═══════════════════════════════════════════════════════════════════════
+
+export interface AttributeInput {
+  attributeId: string
+  /** ۰ نه · ۱ تاحدی · ۲ بله */
+  value: number
+}
+
+/**
+ * ویژگی‌های یک مکان را جای می‌گذارد.
+ *
+ * ═══ چرا این داده از پنل می‌آید و نه از ایمپورت ═══
+ *
+ * ویژگی قضاوت است، نه واقعیتِ قابل استخراج. `build:facets` می‌تواند بگوید
+ * «۱۲ آیتم پاستا دارد» چون در منو نوشته شده؛ هیچ‌کس نمی‌تواند از منو دربیاورد
+ * که «پریز کنار میز دارد». داده‌ی منبع هم فیلدی برایش ندارد.
+ *
+ * پس فقط آدم ثبتش می‌کند — و `source`/`verified_at` همین را نگه می‌دارند تا
+ * بعداً بشود گفت این برچسب از کجا آمده و کِی تازه بوده.
+ *
+ * ═══ چرا ردیفِ «نه» هم ذخیره می‌شود ═══
+ *
+ * `value = 0` یعنی «پرسیدیم، ندارد» که با «نپرسیدیم» یکی نیست. ویژگی‌ای که
+ * کافه‌دار دستش نزده اصلاً ردیف نمی‌گیرد؛ فیلتر با `value >= 1` کار می‌کند، پس
+ * صفر از نتیجه بیرون می‌ماند ولی اطلاعاتش نمی‌سوزد.
+ */
+export async function replacePlaceAttributes(
+  placeId: number,
+  inputs: AttributeInput[],
+  actor: Actor,
+  source: 'owner' | 'field_visit' | 'user' | 'inferred' = 'owner',
+): Promise<{ ok: boolean; error?: string }> {
+  const db = getDb()
+
+  // شناسه‌ی ناشناس از فرم رد می‌شود: کلید خارجی `place_attribute` به
+  // `attribute` وصل است و ردیفِ بی‌مرجع خطای دیتابیس می‌دهد، نه خطای فرم.
+  const rows = inputs
+    .filter((input) => isKnownAttribute(input.attributeId))
+    .filter((input) => input.value === 0 || input.value === 1 || input.value === 2)
+    .map((input) => ({
+      placeId,
+      attributeId: input.attributeId,
+      value: input.value,
+      // کافه‌دار خودش گفته، پس اطمینان بالاست — ولی نه صد، چون هنوز کسی
+      // بازدید نکرده و ادعای صاحب کسب‌وکار در مورد کسب‌وکارش سوگیری دارد.
+      confidence: source === 'field_visit' ? 100 : 80,
+      source,
+      verifiedAt: new Date(),
+    }))
+
+  const [before] = await db
+    .select({ n: sql<number>`COUNT(*)` })
+    .from(placeAttributeTable)
+    .where(eq(placeAttributeTable.placeId, placeId))
+
+  await db.delete(placeAttributeTable).where(eq(placeAttributeTable.placeId, placeId))
+  if (rows.length > 0) await db.insert(placeAttributeTable).values(rows)
+
+  await recordAudit(actor, 'place.attributes', 'place', placeId, before, {
+    set: rows.length,
+    yes: rows.filter((row) => row.value === 2).length,
+  })
+  return { ok: true }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
 // منو
 // ═══════════════════════════════════════════════════════════════════════
 
@@ -427,6 +496,13 @@ export interface OwnerPlaceData {
   ratingCount: number
   logoUrl: string | null
   phones: string[]
+  /**
+   * ویژگی‌های ثبت‌شده: شناسه → مقدار (۰ نه · ۱ تاحدی · ۲ بله).
+   *
+   * ویژگیِ غایب یعنی «ثبت نشده»، که با «نه» یکی نیست — پنل هم همین سه‌حالت
+   * به‌علاوه‌ی «ثبت‌نشده» را نشان می‌دهد.
+   */
+  attributes: Record<string, number>
   socials: { kind: string; url: string }[]
   hours: {
     dow: number
@@ -483,7 +559,7 @@ export async function loadOwnerPlace(placeId: number): Promise<OwnerPlaceData | 
 
   if (!place) return null
 
-  const [phones, socials, hours, sections, items] = await Promise.all([
+  const [phones, socials, hours, sections, items, attributeRows] = await Promise.all([
     db
       .select({ phone: placePhoneTable.phone })
       .from(placePhoneTable)
@@ -519,6 +595,13 @@ export async function loadOwnerPlace(placeId: number): Promise<OwnerPlaceData | 
       .leftJoin(mediaTable, eq(mediaTable.id, menuItemTable.mediaId))
       .where(eq(menuItemTable.placeId, placeId))
       .orderBy(menuItemTable.sortOrder),
+    db
+      .select({
+        attributeId: placeAttributeTable.attributeId,
+        value: placeAttributeTable.value,
+      })
+      .from(placeAttributeTable)
+      .where(eq(placeAttributeTable.placeId, placeId)),
   ])
 
   const itemsBySection = new Map<number, OwnerPlaceData['sections'][number]['items']>()
@@ -538,12 +621,16 @@ export async function loadOwnerPlace(placeId: number): Promise<OwnerPlaceData | 
     else itemsBySection.set(item.sectionId, [view])
   }
 
+  const attributes: Record<string, number> = {}
+  for (const row of attributeRows) attributes[row.attributeId] = row.value
+
   return {
     ...place,
     lat: place.lat ? Number(place.lat) : null,
     lng: place.lng ? Number(place.lng) : null,
     logoUrl: place.logoPath ? `/${place.logoPath}` : null,
     phones: phones.map((row) => row.phone),
+    attributes,
     socials,
     hours: hours.map((row) => ({
       dow: row.dow,

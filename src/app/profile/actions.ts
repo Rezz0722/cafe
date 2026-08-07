@@ -15,6 +15,7 @@ import { revalidatePath } from 'next/cache'
 import { getSession } from '@/core/auth/currentUser'
 import { VIEW_AS_READONLY } from '@/core/auth/impersonation'
 import { findUserById } from '@/core/auth/userRepo'
+import { submitEditSuggestion } from '@/core/places/suggestions'
 import { getModerationPolicy } from '@/core/settings/policies'
 import { sanitizeAnswers } from '@/core/taste/quiz'
 import {
@@ -122,7 +123,7 @@ export async function submitReviewAction(
   // نامِ نمایشی در لحظه‌ی ثبت ذخیره می‌شود؛ اگر بعداً حساب حذف شود، نظر
   // بی‌نام نمی‌ماند.
   const account = await findUserById(guard.userId)
-  const authorName = account?.name || 'کاربر کافه‌گرد'
+  const authorName = account?.name || 'کاربر کو کافه'
 
   const result = await submitReview(
     {
@@ -198,5 +199,40 @@ export async function submitPlaceAction(
   return {
     ok: true,
     message: 'ممنون! کافه در صف بررسی است و بعد از تأیید منتشر می‌شود.',
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// اصلاح اطلاعات یک مجموعه — «مشارکت»
+// ═══════════════════════════════════════════════════════════════════════
+
+export async function suggestEditAction(
+  _prev: ActionState,
+  form: FormData,
+): Promise<ActionState> {
+  const guard = await requireWritableUser()
+  if (!guard.ok) return { ok: false, error: guard.error }
+
+  const placeId = num(form, 'placeId')
+  if (!placeId) return { ok: false, error: 'مجموعه مشخص نیست.' }
+
+  const result = await submitEditSuggestion({
+    placeId,
+    userId: guard.userId,
+    field: str(form, 'field'),
+    // مقدار فعلی از فرم می‌آید نه از دیتابیس: همان چیزی ثبت می‌شود که کاربر
+    // *روی صفحه دیده* و به آن اعتراض کرده. اگر بین دیدن و فرستادن عوض شده
+    // باشد، ادمین از همین تفاوت می‌فهمد.
+    currentValue: str(form, 'currentValue') || null,
+    suggestedValue: str(form, 'suggestedValue'),
+  })
+
+  if (!result.ok) return { ok: false, error: result.error }
+
+  revalidatePath(paths.contribute)
+  revalidatePath(paths.admin)
+  return {
+    ok: true,
+    message: 'ممنون! اصلاح شما ثبت شد و بعد از بررسی روی صفحه اعمال می‌شود.',
   }
 }

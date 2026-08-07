@@ -241,58 +241,6 @@
   color: var(--c-ink-2);
 }
 
-/* ── facetها ────────────────────────────────────────────────────────── */
-
-.facets {
-  margin-bottom: 26px;
-}
-
-.facetsNote {
-  margin: -4px 0 10px;
-  font-size: 0.78rem;
-  color: var(--c-muted-3);
-}
-
-.facetList {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.facetChip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 12px;
-  border: 1px solid var(--c-border);
-  border-radius: 999px;
-  background: var(--c-surface);
-  font-size: 0.8rem;
-}
-
-.facetIcon {
-  font-size: 0.95rem;
-}
-
-.facetLabel {
-  font-weight: 700;
-  color: var(--c-ink);
-}
-
-.facetCount {
-  color: var(--c-muted);
-  font-variant-numeric: tabular-nums;
-}
-
-.facetPrice {
-  color: var(--c-primary-strong);
-  font-weight: 700;
-  white-space: nowrap;
-}
-
 /* ── ارزان‌تر از شهر ────────────────────────────────────────────────── */
 
 .value {
@@ -411,47 +359,6 @@
   color: var(--c-muted);
 }
 
-.hoursTable {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.84rem;
-}
-
-.hoursTable th {
-  padding: 5px 0;
-  text-align: start;
-  font-weight: 600;
-  color: var(--c-ink-2);
-  white-space: nowrap;
-}
-
-.hoursTable td {
-  padding: 5px 0;
-  text-align: end;
-  color: var(--c-ink);
-}
-
-.today th,
-.today td {
-  font-weight: 800;
-  color: var(--c-primary-strong);
-}
-
-.hoursRange {
-  display: block;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-
-.hoursClosed {
-  color: var(--c-muted-3);
-}
-
-.hoursUnknown {
-  color: var(--c-muted-4);
-  font-size: 0.78rem;
-}
-
 .contactList {
   list-style: none;
   margin: 0;
@@ -552,9 +459,15 @@
 
   .side {
     position: static;
-    /* روی موبایل، نقشه و ساعت کاری **قبل** از منو می‌آیند: کاربر موبایل
-       معمولاً وسط شهر ایستاده و اول می‌خواهد بداند باز است و کجاست. */
-    order: -1;
+    /*
+      ستون کنار روی موبایل **بعد** از منو می‌آید.
+
+      قبلاً `order: -1` بود، با این استدلال که کاربر موبایل اول می‌خواهد بداند
+      باز است و کجاست. آن استدلال درست بود ولی جوابش این نبود: نقشه + تماس +
+      «نزدیک همین‌جا» با هم حدود یک صفحه‌ی کامل می‌شدند که بین اطلاعات و منو
+      می‌نشست. حالا وضعیتِ باز/بسته و ساعت کاری و آدرس و دکمه‌ی مسیریابی همه در
+      سرصفحه‌اند — همان سه سؤال، در یک‌سومِ فضا — و منو بلافاصله بعدشان می‌آید.
+    */
   }
 
   .name {
@@ -586,6 +499,15 @@
   align-items: center;
   gap: 8px;
   justify-content: space-between;
+}
+
+@media (max-width: 640px) {
+  /* دکمه‌ی مسیریابی تمام عرض می‌گیرد (`DirectionsBar` خودش این را می‌داند)؛
+     «ذخیره» زیرش می‌نشیند و هم‌عرض می‌شود تا ردیفِ نصفه‌ی زشت نسازد. */
+  .actionRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
 
 .reviewFormWrap {

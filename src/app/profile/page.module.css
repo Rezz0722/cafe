@@ -263,6 +263,9 @@
 }
 
 .contribAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   margin-top: 4px;
   font-size: 0.79rem;
   font-weight: 700;

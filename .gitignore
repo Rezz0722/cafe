@@ -15,6 +15,14 @@ next-env.d.ts
 
 # bundles
 *.zip
+# آرشیو فونت‌ها — نسخه‌ی woff2 استخراج‌شده در public/fonts کافی است
+*.rar
+
+# پیکربندی دیپلوی — رمز دیتابیس و کلید پیامک داخلش است، هرگز در git
+/deploy.env
+
+# بکاپ‌های قابل‌انتقالِ backup.sh
+kucafe-backup-*.tar.gz
 
 # کافه‌های افزوده‌شده از پنل ادمین — داده‌ی محلی، در git نمی‌آید
 src/data/places.custom.json
@@ -31,6 +39,8 @@ src/data/otp.json
 # صفحه‌های ذخیره‌شده‌ی پنل — کلید API داخل متنشان است
 *.html
 !index.html
+# صفحه‌ی خطای nginx وقتی Node پایین است — بخشی از دیپلوی، باید در git باشد
+!deploy/_offline.html
 
 # دسترسی محلی — رمز متن ساده دارد
 ACCESS-LOCAL.md
@@ -38,8 +48,19 @@ ACCESS-LOCAL.md
 # تصاویر لوکالِ تولیدشده (۱ گیگابایت) — با npm run media:download بازسازی می‌شوند
 /public/media/
 
+# worker مپ‌لایبر — کپیِ تولیدشده از node_modules، با npm run map:worker
+# (خودکار در predev و prebuild) ساخته می‌شود
+/public/maplibre/
+
+# لایه‌های منتشرشده‌ی نقشه (~۸ مگابایت) — از src/data/map با
+# npm run map:publish ساخته می‌شوند. منبعشان در git است، خروجی نه.
+/public/map/
+
 # فایل منبع و نقشه‌ی آفلاین — بزرگ‌تر از حد مخزن
 /all-cafe-data/
 
 # کوکی موقتِ تست صفحات پشتِ ورود
 /.cookie.tmp
+
+# لاگ‌های PM2
+logs/

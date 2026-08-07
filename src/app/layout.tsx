@@ -3,6 +3,8 @@ import type { ReactNode } from 'react'
 import { Providers } from '@/components/Providers'
 import { ViewAsBanner } from '@/components/admin/ViewAsBanner'
 import { PageViewTracker } from '@/components/analytics/PageViewTracker'
+import { SiteFooter } from '@/components/layout/SiteFooter'
+import { SiteHeader } from '@/components/layout/SiteHeader'
 import { AnnouncementBar } from '@/components/site/AnnouncementBar'
 import { getSession } from '@/core/auth/currentUser'
 import { getSettings } from '@/core/settings/store'
@@ -75,7 +77,31 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             actorName={actor.name || 'ادمین'}
           />
         )}
-        <Providers user={user}>{children}</Providers>
+        {/*
+          هدر و فوتر در layout ریشه‌اند، نه در هر صفحه.
+
+          قبلاً فقط `page.tsx` و `not-found.tsx` رندرشان می‌کردند — یعنی
+          صفحه‌ی کافه، جست‌وجو، محله و پروفایل **هیچ هدری نداشتند**. کاربری که
+          از گوگل مستقیم روی صفحه‌ی یک کافه می‌آمد، هیچ راهی به بقیه‌ی سایت
+          نداشت: نه لوگو، نه دکمه‌ی خانه، نه منو. اینجا بودنشان یعنی هر صفحه‌ی
+          حالا و آینده خودبه‌خود دارَدشان.
+
+          پنل‌های ادمین و کافه‌دار هم همین هدر را می‌گیرند و این درست است —
+          ناوبریِ برگشت به سایت، همان چیزی است که آنجا هم کم بود.
+        */}
+        {/*
+          ⚠️ هدر **داخل** `Providers` است، نه بیرونش.
+
+          `SiteHeader` از `useAuth()` استفاده می‌کند و آن هوک بدون
+          `AuthProvider` استثنا می‌دهد. با هدرِ بیرونی، *هر صفحه‌ی سایت* با
+          «useAuth must be used inside AuthProvider» می‌افتاد — یعنی یک خطای
+          ۵۰۰ سراسری، نه یک ایراد موضعی.
+        */}
+        <Providers user={user}>
+          <SiteHeader siteName={settings.siteName} />
+          {children}
+          <SiteFooter siteName={settings.siteName} tagline={settings.siteTagline || undefined} />
+        </Providers>
         {/* ثبت بازدید — بی‌صدا، و اگر مدیر خاموشش کرده باشد، اصلاً رندر نمی‌شود. */}
         {settings.trackPageViews && <PageViewTracker />}
       </body>

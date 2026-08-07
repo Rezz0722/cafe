@@ -1,0 +1,46 @@
+/* تصویر آیتم منو و دو جایگزینش. هر سه حالت **دقیقاً هم‌اندازه**اند، وگرنه
+   ردیف‌های فهرست با هم جور نمی‌شوند. */
+
+.photo,
+.logoWrap,
+.iconWrap {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  object-fit: cover;
+  background: var(--c-surface-3);
+}
+
+/* ── جایگزین: لوگوی مجموعه ──────────────────────────────────────────── */
+
+.logoWrap {
+  display: grid;
+  place-items: center;
+  /* تینتِ ملایم تا لوگو «عکسِ آیتم» خوانده نشود. */
+  background: var(--grad-tint);
+}
+
+.logo {
+  width: 62%;
+  height: 62%;
+  object-fit: contain;
+  /* شفافیت، تفاوتِ «عکس این غذا» و «نشانِ این کافه» را منتقل می‌کند. */
+  opacity: 0.5;
+  mix-blend-mode: multiply;
+}
+
+/* ── جایگزین: آیکون ─────────────────────────────────────────────────── */
+
+.iconWrap {
+  display: grid;
+  place-items: center;
+  background: var(--grad-tint);
+  color: var(--c-muted-4);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .logo {
+    opacity: 0.7;
+  }
+}

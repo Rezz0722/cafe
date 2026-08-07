@@ -6,9 +6,10 @@ import { getCurrentUser } from '@/core/auth/currentUser'
 import { findUserById } from '@/core/auth/userRepo'
 import { authUrl, paths } from '@/routes'
 import styles from '../page.module.css'
+import { ArrowLeft } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'رمز عبور — کافه‌گرد',
+  title: 'رمز عبور',
   robots: { index: false, follow: false },
 }
 
@@ -24,7 +25,7 @@ export default async function PasswordPage() {
   return (
     <div className={styles.page}>
       <Link href={paths.profile} className={styles.backLink}>
-        ← پنل من
+        <ArrowLeft size={15} aria-hidden="true" /> پنل من
       </Link>
       <h1 className={styles.title}>{hasPassword ? 'تغییر رمز عبور' : 'تنظیم رمز عبور'}</h1>
       <p className={styles.lede}>

@@ -18,6 +18,7 @@ import {
   createVenueAccountAction,
   moderateReviewAction,
   reviewSubmissionAction,
+  reviewSuggestionAction,
   setCredentialsAction,
   setPlaceStatusAction,
   setUserBlockedAction,
@@ -26,10 +27,12 @@ import {
 } from '@/app/admin/actions'
 import { EMPTY_ADMIN_STATE, type AdminActionState } from '@/app/admin/state'
 import { OperationsPanel } from '@/components/admin/OperationsPanel'
+import { Stars } from '@/components/ui/Stars'
 import { SettingsPanel, type SettingsPanelProps } from '@/components/admin/SettingsPanel'
 import { fa, faCount } from '@/lib/format'
 import { paths } from '@/routes'
 import styles from './AdminDashboard.module.css'
+import { TriangleAlert, X } from 'lucide-react'
 
 type Tab =
   | 'queue'
@@ -121,6 +124,17 @@ export interface AdminData {
     userPhone: string | null
     payload: unknown
   }[]
+  /** اصلاح‌هایی که کاربران روی صفحه‌ی کافه‌ها فرستاده‌اند — بخش «مشارکت». */
+  suggestions: {
+    id: number
+    placeName: string
+    placeSlug: string
+    fieldLabel: string
+    currentValue: string | null
+    suggestedValue: string
+    userName: string | null
+    userPhone: string | null
+  }[]
   health: Record<string, number>
   incomplete: { id: number; slug: string; name: string; qualityScore: number; geoStatus: string }[]
   failedMedia: { id: number; sourceUrl: string; kind: string; error: string | null }[]
@@ -164,6 +178,7 @@ export function AdminDashboard({ data }: { data: AdminData }) {
 
   const [reviewState, reviewAction] = useActionState(moderateReviewAction, EMPTY_ADMIN_STATE)
   const [subState, subAction] = useActionState(reviewSubmissionAction, EMPTY_ADMIN_STATE)
+  const [sugState, sugAction] = useActionState(reviewSuggestionAction, EMPTY_ADMIN_STATE)
   const [statusState, statusAction] = useActionState(setPlaceStatusAction, EMPTY_ADMIN_STATE)
   const [credState, credAction] = useActionState(setCredentialsAction, EMPTY_ADMIN_STATE)
   const [venueState, venueAction] = useActionState(createVenueAccountAction, EMPTY_ADMIN_STATE)
@@ -173,7 +188,10 @@ export function AdminDashboard({ data }: { data: AdminData }) {
   const [viewAsState, viewAsAction] = useActionState(startViewAsAction, EMPTY_ADMIN_STATE)
 
   const queueCount =
-    data.queue.pendingReviews + data.queue.pendingSubmissions + data.queue.duplicateSubmissions
+    data.queue.pendingReviews +
+    data.queue.pendingSubmissions +
+    data.queue.duplicateSubmissions +
+    data.suggestions.length
 
   const tabs: { id: Tab; label: string; badge?: number }[] = [
     { id: 'queue', label: 'صف کار', badge: queueCount },
@@ -218,15 +236,22 @@ export function AdminDashboard({ data }: { data: AdminData }) {
       {/* هشدار تنظیمات — قبل از هر چیز، چون سایت را می‌شکند. */}
       {(data.configProblems.some((problem) => problem.fatal) || !data.dbOk || !data.mapReady) && (
         <div className={styles.warnBox}>
-          {!data.dbOk && <p>⚠️ اتصال دیتابیس برقرار نیست.</p>}
+          {!data.dbOk && (
+            <p>
+              <TriangleAlert size={15} aria-hidden="true" /> اتصال دیتابیس برقرار نیست.
+            </p>
+          )}
           {!data.mapReady && (
-            <p>⚠️ داده‌ی نقشه استخراج نشده — نقشه‌ها خالی می‌مانند. (`npm run map:extract`)</p>
+            <p>
+              <TriangleAlert size={15} aria-hidden="true" /> داده‌ی نقشه استخراج نشده — نقشه‌ها
+              خالی می‌مانند. (`npm run map:extract`)
+            </p>
           )}
           {data.configProblems
             .filter((problem) => problem.fatal)
             .map((problem) => (
               <p key={problem.key}>
-                ⚠️ {problem.key}: {problem.message}
+                <TriangleAlert size={15} aria-hidden="true" /> {problem.key}: {problem.message}
               </p>
             ))}
         </div>
@@ -251,6 +276,63 @@ export function AdminDashboard({ data }: { data: AdminData }) {
         <section className={styles.section}>
           <Feedback state={reviewState} />
           <Feedback state={subState} />
+          <Feedback state={sugState} />
+
+          {/*
+            اصلاح‌های کاربران اول صف است، چون ارزانی‌ترین کارِ صف است و
+            مستقیم روی داده‌ی غلطِ صفحه‌ی عمومی اثر می‌گذارد. نظر و کافه‌ی جدید
+            صبر می‌کنند؛ ساعت کاریِ غلط هر روز کاربر را به درِ بسته می‌فرستد.
+          */}
+          <h2 className={styles.h2}>
+            اصلاح‌های فرستاده‌ی کاربران
+            <span className={styles.count}>{fa(data.suggestions.length)}</span>
+          </h2>
+          {data.suggestions.length === 0 ? (
+            <p className={styles.empty}>صف خالی است.</p>
+          ) : (
+            <ul className={styles.list}>
+              {data.suggestions.map((suggestion) => (
+                <li key={suggestion.id} className={styles.card}>
+                  <div className={styles.cardHead}>
+                    <Link href={paths.cafe(suggestion.placeSlug)} target="_blank">
+                      {suggestion.placeName}
+                    </Link>
+                    <span className={styles.warnBadge}>{suggestion.fieldLabel}</span>
+                    <span className={styles.dim}>
+                      {suggestion.userName || 'بی‌نام'}
+                      {suggestion.userPhone ? ` · ${fa(suggestion.userPhone)}` : ''}
+                    </span>
+                  </div>
+
+                  {/* «از → به» کنار هم، وگرنه ادمین باید صفحه را باز کند و
+                      خودش مقایسه کند. */}
+                  {suggestion.currentValue && (
+                    <p className={styles.cardText}>
+                      <span className={styles.dim}>الان: </span>
+                      {suggestion.currentValue}
+                    </p>
+                  )}
+                  <p className={styles.cardText}>
+                    <strong>پیشنهاد: </strong>
+                    {suggestion.suggestedValue}
+                  </p>
+
+                  <div className={styles.cardActions}>
+                    <form action={sugAction}>
+                      <input type="hidden" name="suggestionId" value={suggestion.id} />
+                      <input type="hidden" name="decision" value="applied" />
+                      <Submit label="اعمال کردم — ببند" />
+                    </form>
+                    <form action={sugAction}>
+                      <input type="hidden" name="suggestionId" value={suggestion.id} />
+                      <input type="hidden" name="decision" value="rejected" />
+                      <Submit label="رد" danger />
+                    </form>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
 
           <h2 className={styles.h2}>
             نظرهای در انتظار تأیید
@@ -266,7 +348,7 @@ export function AdminDashboard({ data }: { data: AdminData }) {
                     <Link href={paths.cafe(review.placeSlug)} target="_blank">
                       {review.placeName}
                     </Link>
-                    <span className={styles.stars}>{'★'.repeat(review.stars)}</span>
+                    <Stars count={review.stars} size={13} />
                     <span className={styles.dim}>{review.authorName}</span>
                   </div>
                   {review.text && <p className={styles.cardText}>{review.text}</p>}
@@ -578,7 +660,7 @@ export function AdminDashboard({ data }: { data: AdminData }) {
                           <input type="hidden" name="placeId" value={place.id} />
                           <input type="hidden" name="revoke" value="1" />
                           <button type="submit" title="برداشتن دسترسی">
-                            ×
+                            <X size={16} aria-hidden="true" />
                           </button>
                         </form>
                       </span>

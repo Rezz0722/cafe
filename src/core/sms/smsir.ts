@@ -88,7 +88,9 @@ export async function sendVerificationCode(
 ): Promise<SendResult> {
   const mobile = toSmsirMobile(phone)
   const devMode = options.devMode ?? AUTH_DEV_MODE
-  const siteName = options.siteName?.trim() || 'کافه‌گرد'
+  // فراخوان معمولاً `siteName` را از تنظیمات می‌دهد؛ این فقط پشتوانه است تا
+  // پیامکِ کد هیچ‌وقت بی‌نام نرود.
+  const siteName = options.siteName?.trim() || 'کو کافه'
 
   // ── حالت توسعه ──
   if (devMode) {

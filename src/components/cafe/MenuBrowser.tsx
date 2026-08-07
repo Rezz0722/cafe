@@ -23,8 +23,10 @@
  */
 
 import { useDeferredValue, useMemo, useRef, useState } from 'react'
+import { Search, Star, X } from 'lucide-react'
 import { fa, toman } from '@/lib/format'
 import { normalizeFa } from '@/core/text/normalize'
+import { MenuItemImage } from './MenuItemImage'
 import styles from './MenuBrowser.module.css'
 
 export interface MenuItemProps {
@@ -50,14 +52,20 @@ interface Props {
   sections: MenuSectionProps[]
   /** نامِ کافه — برای متن جایگزین تصویرها. */
   placeName: string
+  /**
+   * لوگوی مجموعه — جایگزینِ تصویرِ آیتم‌هایی که عکس اختصاصی ندارند.
+   *
+   * بدون این، آن آیتم‌ها یک مربع خالی می‌گرفتند؛ در فهرستی که نیمی از
+   * آیتم‌هایش عکس دارند، آن مربع‌ها شبیه خرابیِ بارگذاری دیده می‌شدند.
+   */
+  logoUrl?: string | null
   /** آدرس منوی اصلی در منبع، اگر خواستند نسخه‌ی کامل را ببینند. */
   sourceUrl?: string | null
 }
 
-export function MenuBrowser({ sections, placeName, sourceUrl }: Props) {
+export function MenuBrowser({ sections, placeName, logoUrl = null, sourceUrl }: Props) {
   const [query, setQuery] = useState('')
   const [activeSection, setActiveSection] = useState<number | 'all'>('all')
-  const [onlyWithPhoto, setOnlyWithPhoto] = useState(false)
   const [lightbox, setLightbox] = useState<MenuItemProps | null>(null)
   const listRef = useRef<HTMLDivElement>(null)
 
@@ -74,7 +82,6 @@ export function MenuBrowser({ sections, placeName, sourceUrl }: Props) {
           return { ...section, items: [] }
         }
         let items = section.items
-        if (onlyWithPhoto) items = items.filter((item) => item.image)
         if (normalizedQuery) {
           items = items.filter((item) => {
             const haystack = `${normalizeFa(item.name)} ${normalizeFa(item.nameEn ?? '')} ${normalizeFa(
@@ -86,17 +93,13 @@ export function MenuBrowser({ sections, placeName, sourceUrl }: Props) {
         return { ...section, items }
       })
       .filter((section) => section.items.length > 0)
-  }, [sections, activeSection, normalizedQuery, onlyWithPhoto])
+  }, [sections, activeSection, normalizedQuery])
 
   const totalItems = useMemo(
     () => sections.reduce((sum, section) => sum + section.items.length, 0),
     [sections],
   )
   const shownItems = visible.reduce((sum, section) => sum + section.items.length, 0)
-  const photoCount = useMemo(
-    () => sections.reduce((sum, s) => sum + s.items.filter((i) => i.image).length, 0),
-    [sections],
-  )
 
   const jumpTo = (sectionId: number) => {
     setActiveSection('all')
@@ -132,14 +135,21 @@ export function MenuBrowser({ sections, placeName, sourceUrl }: Props) {
           </h2>
           <p className={styles.subtitle}>
             {fa(totalItems)} آیتم در {fa(sections.length)} دسته
-            {photoCount > 0 && <> · {fa(photoCount)} آیتم با عکس</>}
           </p>
         </div>
       </header>
 
+      {/*
+        چک‌باکس «فقط با عکس» برداشته شد.
+
+        دو دلیل: (۱) حالا هر آیتم تصویر دارد — یا عکس خودش یا لوگوی مجموعه —
+        پس «با عکس» دیگر تفکیک‌کننده نیست. (۲) کاربر دنبال *غذا* می‌گردد نه
+        دنبال عکس؛ آن فیلتر نصفِ منو را پنهان می‌کرد بدون اینکه به سؤالی جواب
+        بدهد.
+      */}
       <div className={styles.controls}>
         <div className={styles.searchBox}>
-          <span aria-hidden="true">⌕</span>
+          <Search size={17} aria-hidden="true" className={styles.searchIcon} />
           <input
             type="search"
             value={query}
@@ -149,20 +159,10 @@ export function MenuBrowser({ sections, placeName, sourceUrl }: Props) {
           />
           {query && (
             <button type="button" onClick={() => setQuery('')} aria-label="پاک‌کردن جست‌وجو">
-              ×
+              <X size={17} aria-hidden="true" />
             </button>
           )}
         </div>
-        {photoCount > 0 && (
-          <label className={styles.photoToggle}>
-            <input
-              type="checkbox"
-              checked={onlyWithPhoto}
-              onChange={(event) => setOnlyWithPhoto(event.target.checked)}
-            />
-            فقط با عکس
-          </label>
-        )}
       </div>
 
       {/* نوار دسته — چسبان، تا در منوی ۲۸۷ آیتمی همیشه در دسترس باشد */}
@@ -211,56 +211,63 @@ export function MenuBrowser({ sections, placeName, sourceUrl }: Props) {
                   key={item.id}
                   className={`${styles.item} ${item.available ? '' : styles.itemUnavailable}`}
                 >
+                  {/*
+                    تصویر همیشه هست: عکس آیتم، وگرنه لوگوی مجموعه، وگرنه آیکون.
+                    فقط عکسِ *اختصاصی* قابل بزرگ‌شدن است — لایت‌باکسِ لوگو
+                    وعده‌ای است که چیزی پشتش نیست.
+                  */}
                   {item.image ? (
                     <button
                       type="button"
-                      className={styles.thumbButton}
+                      className={styles.thumb}
                       onClick={() => setLightbox(item)}
                       aria-label={`بزرگ‌کردن تصویر ${item.name}`}
                     >
-                      {/* width/height در دیتابیس ثبت شده تا چیدمان با
-                          رسیدن هر تصویر نپرد. */}
-                      <img
+                      <MenuItemImage
                         src={item.image.url}
+                        fallbackSrc={logoUrl}
                         alt={`${item.name} — ${placeName}`}
-                        width={item.image.width ?? 400}
-                        height={item.image.height ?? 400}
-                        loading="lazy"
-                        decoding="async"
-                        className={styles.thumb}
+                        // width/height در دیتابیس ثبت شده تا چیدمان با رسیدن
+                        // هر تصویر نپرد.
+                        width={item.image.width}
+                        height={item.image.height}
                       />
                     </button>
                   ) : (
-                    <span className={styles.thumbEmpty} aria-hidden="true" />
+                    <span className={styles.thumb}>
+                      <MenuItemImage src={null} fallbackSrc={logoUrl} alt="" />
+                    </span>
                   )}
 
                   <div className={styles.itemBody}>
-                    <div className={styles.itemHead}>
-                      <h4 className={styles.itemName}>
-                        {item.name}
-                        {item.featured && (
-                          <span className={styles.featured} title="آیتم ویژه‌ی مجموعه">
-                            ★
-                          </span>
-                        )}
-                      </h4>
-                      {item.nameEn && <span className={styles.itemNameEn}>{item.nameEn}</span>}
-                    </div>
+                    <h4 className={styles.itemName}>
+                      {item.name}
+                      {item.featured && (
+                        <Star
+                          size={14}
+                          aria-label="آیتم ویژه‌ی مجموعه"
+                          className={styles.featured}
+                        />
+                      )}
+                    </h4>
+                    {item.nameEn && <p className={styles.itemNameEn}>{item.nameEn}</p>}
                     {item.description && <p className={styles.itemDesc}>{item.description}</p>}
-                    {!item.available && <span className={styles.soldOut}>موجود نیست</span>}
-                  </div>
 
-                  <div className={styles.itemPrice}>
-                    {item.price !== null ? (
-                      <>
-                        <span className={styles.priceValue}>{fa(item.price.toLocaleString('fa-IR'))}</span>
-                        <span className={styles.priceUnit}>تومان</span>
-                      </>
-                    ) : (
-                      /* صفر و «۰٫۱» در منبع قیمت نبودند؛ نمایش «۰ تومان»
-                         دروغ می‌شد. */
-                      <span className={styles.priceUnknown}>قیمت روز</span>
-                    )}
+                    <div className={styles.itemFoot}>
+                      {item.price !== null ? (
+                        <span className={styles.price}>
+                          <span className={styles.priceValue}>
+                            {fa(item.price.toLocaleString('fa-IR'))}
+                          </span>
+                          <span className={styles.priceUnit}>تومان</span>
+                        </span>
+                      ) : (
+                        /* صفر و «۰٫۱» در منبع قیمت نبودند؛ نمایش «۰ تومان»
+                           دروغ می‌شد. */
+                        <span className={styles.priceUnknown}>قیمت روز</span>
+                      )}
+                      {!item.available && <span className={styles.soldOut}>موجود نیست</span>}
+                    </div>
                   </div>
                 </li>
               ))}
@@ -278,7 +285,7 @@ export function MenuBrowser({ sections, placeName, sourceUrl }: Props) {
           onClick={() => setLightbox(null)}
         >
           <button type="button" className={styles.lightboxClose} aria-label="بستن">
-            ×
+            <X size={22} aria-hidden="true" />
           </button>
           <figure className={styles.lightboxFigure} onClick={(event) => event.stopPropagation()}>
             <img src={lightbox.image!.fullUrl} alt={`${lightbox.name} — ${placeName}`} />

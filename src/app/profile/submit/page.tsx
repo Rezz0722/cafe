@@ -8,9 +8,10 @@ import { listMySubmissions } from '@/core/user/userData'
 import { fa } from '@/lib/format'
 import { authUrl, paths } from '@/routes'
 import styles from '../page.module.css'
+import { ArrowLeft } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'ثبت کافه — کافه‌گرد',
+  title: 'ثبت کافه',
   robots: { index: false, follow: false },
 }
 
@@ -42,7 +43,7 @@ export default async function SubmitPlacePage() {
   return (
     <div className={styles.page}>
       <Link href={paths.profile} className={styles.backLink}>
-        ← پنل من
+        <ArrowLeft size={15} aria-hidden="true" /> پنل من
       </Link>
       <h1 className={styles.title}>ثبت کافه‌ی جدید</h1>
       <p className={styles.lede}>

@@ -2,18 +2,29 @@
 .buttonOn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
+  /* هم‌قدِ دکمه‌ی مسیریابی و بالای کمینه‌ی لمس. */
+  min-height: 44px;
   padding: 10px 16px;
   border: 1px solid var(--c-border);
-  border-radius: 999px;
+  border-radius: var(--r-pill);
   background: var(--c-surface);
   color: var(--c-ink);
   font: inherit;
-  font-size: 0.87rem;
+  font-size: var(--fs-sm);
   font-weight: 700;
   text-decoration: none;
   cursor: pointer;
   white-space: nowrap;
+  transition: border-color var(--t-fast), color var(--t-fast), background var(--t-fast);
+}
+
+.button:focus-visible,
+.buttonOn:focus-visible {
+  outline: none;
+  border-color: var(--c-primary);
+  box-shadow: 0 0 0 3px var(--c-primary-soft);
 }
 
 .button:hover {

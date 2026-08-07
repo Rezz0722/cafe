@@ -79,12 +79,33 @@ for (const index of ['place_name_ft', 'menu_item_name_ft', 'review_text_ft']) {
   )
 }
 
-// ── منطقه‌ی زمانی
-const [[tz]] = await conn.query(`SELECT @@time_zone AS tz, NOW() AS now, UTC_TIMESTAMP() AS utc`)
+/*
+  ── منطقه‌ی زمانی ─────────────────────────────────────────────────────
+
+  چیزی که واقعاً مهم است، منطقه‌ی زمانیِ **نشستی** است که اپ استفاده می‌کند،
+  نه تنظیم سراسریِ سرور. `src/db/connection.ts` روی هر اتصالِ تازه‌ی استخر
+  `SET time_zone='+00:00'` می‌زند، پس اپ روی سروری با هر منطقه‌ی زمانی درست
+  کار می‌کند.
+
+  نسخه‌ی قبلیِ این بررسی فقط `@@time_zone` را می‌دید و روی سرور تولید — که
+  `Asia/Tehran` است و عوض‌کردنش کلِ ماشین را تحت تأثیر می‌گذارد (میل‌سرور و
+  چند سایت دیگر رویش هستند) — همیشه قرمز می‌ماند. بررسیِ همیشه‌قرمز، بررسیِ
+  بی‌فایده است: آدم یاد می‌گیرد نادیده‌اش بگیرد.
+
+  پس حالا هر دو سنجیده می‌شود و **آنچه اپ می‌بیند** تعیین‌کننده است.
+*/
+const [[tzGlobal]] = await conn.query('SELECT @@global.time_zone AS tz')
+await conn.query("SET time_zone = '+00:00'")
+const [[tzSession]] = await conn.query(
+  'SELECT @@session.time_zone AS tz, NOW() AS now_, UTC_TIMESTAMP() AS utc_',
+)
+const sessionIsUtc = String(tzSession.now_) === String(tzSession.utc_)
 check(
-  'منطقه‌ی زمانی سرور UTC است',
-  tz.tz === '+00:00' || tz.tz === 'UTC',
-  `${tz.tz} — اگر UTC نباشد همه‌ی تایم‌استمپ‌ها جابه‌جا خوانده می‌شوند`,
+  'نشست دیتابیس روی UTC می‌خواند',
+  sessionIsUtc,
+  sessionIsUtc
+    ? `سراسری ${tzGlobal.tz} است ولی اپ نشست را UTC می‌کند (connection.ts)`
+    : 'NOW() با UTC_TIMESTAMP() یکی نیست — تایم‌استمپ‌ها جابه‌جا خوانده می‌شوند',
 )
 
 // ── داده

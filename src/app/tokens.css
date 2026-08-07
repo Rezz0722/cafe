@@ -76,7 +76,8 @@
   --c-closed-neutral-bg: #e9ebee;
 
   /* --- typography -------------------------------------------------------- */
-  --font-sans: 'Vazirmatn', 'Dana', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* Dana is the brand face; Vazirmatn is the fallback that covers it. */
+  --font-sans: 'Dana', 'Vazirmatn', sans-serif;
 
   --fs-xs: 12px;
   --fs-sm: 13.5px;

@@ -14,6 +14,7 @@ import { useActionState, useEffect, useOptimistic, useTransition } from 'react'
 import { toggleSaveAction } from '@/app/profile/actions'
 import { EMPTY_ACTION_STATE } from '@/app/profile/state'
 import styles from './SavePlaceButton.module.css'
+import { Heart } from 'lucide-react'
 
 interface Props {
   placeId: number
@@ -39,7 +40,7 @@ export function SavePlaceButton({ placeId, slug, initialSaved, signedIn, authHre
   if (!signedIn) {
     return (
       <a href={authHref} className={styles.button}>
-        <span aria-hidden="true">♡</span> ذخیره
+        <Heart size={16} aria-hidden="true" /> ذخیره
       </a>
     )
   }
@@ -59,7 +60,7 @@ export function SavePlaceButton({ placeId, slug, initialSaved, signedIn, authHre
         disabled={pending}
         aria-pressed={saved}
       >
-        <span aria-hidden="true">{saved ? '♥' : '♡'}</span>
+        <Heart size={16} aria-hidden="true" fill={saved ? 'currentColor' : 'none'} />
         {saved ? 'ذخیره شد' : 'ذخیره'}
       </button>
     </form>

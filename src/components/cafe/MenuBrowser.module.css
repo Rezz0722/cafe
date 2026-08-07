@@ -65,35 +65,26 @@
   display: none;
 }
 
+.searchIcon {
+  flex: 0 0 auto;
+  color: var(--c-muted);
+}
+
 .searchBox button {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
   border: none;
+  border-radius: 50%;
   background: none;
   color: var(--c-muted);
-  font-size: 1.2rem;
-  line-height: 1;
   cursor: pointer;
-  padding: 0 2px;
 }
 
-.photoToggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 13px;
-  border: 1px solid var(--c-border);
-  border-radius: 999px;
-  background: var(--c-surface);
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--c-ink-2);
-  cursor: pointer;
-  user-select: none;
-}
-
-.photoToggle:has(input:checked) {
-  border-color: var(--c-primary);
-  background: var(--c-primary-soft);
-  color: var(--c-primary-strong);
+.searchBox button:hover {
+  background: var(--c-surface-3);
+  color: var(--c-ink);
 }
 
 /* ── نوار دسته ───────────────────────────────────────────────────────
@@ -101,8 +92,13 @@
 
 .sectionNav {
   position: sticky;
-  top: 0;
-  z-index: 5;
+  /*
+    `top: 0` بود و این یک باگ واقعی بود: هدر سایت خودش چسبان است
+    (`z-index: 50`)، پس نوار دسته زیرش می‌رفت و روی موبایل — یعنی همان‌جایی که
+    بیشترین کاربرد را دارد — عملاً دیده نمی‌شد. حالا زیرِ هدر می‌ایستد نه پشتش.
+  */
+  top: calc(var(--header-h) + var(--view-as-h, 0px));
+  z-index: 20;
   display: flex;
   gap: 7px;
   overflow-x: auto;
@@ -113,6 +109,9 @@
   border-bottom: 1px solid var(--c-border-3);
   scrollbar-width: thin;
   -webkit-overflow-scrolling: touch;
+  /* چیپ‌ها وسطِ حرکت نمی‌مانند — هر بار یکی کامل جلو می‌آید. */
+  scroll-snap-type: x proximity;
+  overscroll-behavior-x: contain;
 }
 
 .chip {
@@ -120,20 +119,30 @@
   align-items: center;
   gap: 5px;
   flex: 0 0 auto;
-  padding: 7px 12px;
+  scroll-snap-align: start;
+  /* ۴۰px ارتفاع مؤثر: نوارِ چیپ روی موبایل پرلمس‌ترین عنصر این صفحه است. */
+  min-height: 40px;
+  padding: 8px 14px;
   border: 1px solid var(--c-border);
-  border-radius: 999px;
+  border-radius: var(--r-pill);
   background: var(--c-surface);
   color: var(--c-ink-2);
-  font-size: 0.82rem;
+  font-size: var(--fs-sm);
   font-weight: 700;
   white-space: nowrap;
   cursor: pointer;
+  transition: border-color var(--t-fast), color var(--t-fast), background var(--t-fast);
 }
 
 .chip:hover {
   border-color: var(--c-primary);
   color: var(--c-primary-strong);
+}
+
+.chip:focus-visible {
+  outline: none;
+  border-color: var(--c-primary);
+  box-shadow: 0 0 0 3px var(--c-primary-soft);
 }
 
 .chipActive {
@@ -164,8 +173,9 @@
   margin-top: 18px;
 }
 
+/* پرشِ دسته باید عنوان را زیرِ هدر **و** نوار چیپ بیاورد، نه زیرشان. */
 .section {
-  scroll-margin-top: 70px;
+  scroll-margin-top: calc(var(--header-h) + var(--view-as-h, 0px) + 64px);
 }
 
 .sectionTitle {
@@ -200,86 +210,92 @@
   gap: 10px;
 }
 
+/* ── کارت آیتم ────────────────────────────────────────────────────────
+   گوشه‌ی گرد بزرگ + سایه‌ی نرم. عکس در ابتدا (سمت راست در RTL)، متن و قیمت
+   در یک ستون کنارش — قیمت پایینِ کارت، برجسته. */
+
 .item {
   display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 12px;
-  padding: 10px;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: stretch;
+  gap: 13px;
+  padding: 12px;
   border: 1px solid var(--c-border-3);
-  border-radius: var(--r-md, 12px);
+  border-radius: var(--r-xl);
   background: var(--c-surface);
+  box-shadow: var(--sh-card-sm);
+  transition: border-color var(--t-fast), box-shadow var(--t-fast);
 }
 
 .item:hover {
   border-color: var(--c-border-5);
+  box-shadow: var(--sh-card);
 }
 
 .itemUnavailable {
   opacity: 0.62;
 }
 
-.thumbButton {
+/* ۹۶×۹۶ روی دسکتاپ. `thumb` هم دکمه است (عکس اختصاصی، قابل بزرگ‌شدن) و هم
+   span (جایگزین) — استایل یکی است تا ردیف‌ها هم‌قد بمانند. */
+.thumb {
+  flex: 0 0 auto;
+  width: 96px;
+  height: 96px;
   padding: 0;
   border: none;
+  border-radius: var(--r-lg);
   background: none;
-  cursor: zoom-in;
-  border-radius: 10px;
   overflow: hidden;
   line-height: 0;
 }
 
-.thumb {
-  display: block;
-  width: 64px;
-  height: 64px;
-  object-fit: cover;
-  background: var(--c-surface-3);
+button.thumb {
+  cursor: zoom-in;
 }
 
-.thumbEmpty {
-  display: block;
-  width: 64px;
-  height: 64px;
-  border-radius: 10px;
-  background: var(--grad-tint, var(--c-surface-3));
+button.thumb:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--c-primary-soft);
 }
 
 .itemBody {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
   min-width: 0;
 }
 
-.itemHead {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 7px;
-}
-
 .itemName {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   margin: 0;
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
   font-weight: 700;
   color: var(--c-ink);
   line-height: 1.5;
 }
 
 .featured {
+  flex: 0 0 auto;
   color: var(--c-accent);
-  font-size: 0.85rem;
 }
 
 .itemNameEn {
-  font-size: 0.74rem;
+  margin: 0;
+  font-size: var(--fs-xs);
   color: var(--c-muted-3);
   direction: ltr;
+  text-align: start;
+  line-height: 1.5;
 }
 
 .itemDesc {
-  margin: 3px 0 0;
-  font-size: 0.8rem;
+  margin: 2px 0 0;
+  font-size: var(--fs-sm);
   color: var(--c-muted);
-  line-height: 1.65;
+  line-height: 1.7;
   /* توضیحات بعضی آیتم‌ها بلند است؛ دو خط برای فهم کافی است. */
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -287,28 +303,25 @@
   overflow: hidden;
 }
 
-.soldOut {
-  display: inline-block;
-  margin-top: 4px;
-  padding: 1px 7px;
-  border-radius: 999px;
-  background: var(--c-surface-4);
-  color: var(--c-muted);
-  font-size: 0.7rem;
-  font-weight: 700;
+/* قیمت پایینِ کارت می‌نشیند، نه وسطِ ردیف: چشم برای مقایسه‌ی قیمت یک ستونِ
+   یکدست می‌خواهد و `margin-top: auto` آن را در هر ارتفاعی هم‌تراز نگه می‌دارد. */
+.itemFoot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 6px;
 }
 
-.itemPrice {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 1px;
-  min-width: 74px;
-  text-align: end;
+.price {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
 }
 
 .priceValue {
-  font-size: 0.98rem;
+  font-size: var(--fs-lg);
   font-weight: 800;
   color: var(--c-ink);
   font-variant-numeric: tabular-nums;
@@ -316,14 +329,24 @@
 }
 
 .priceUnit {
-  font-size: 0.68rem;
+  font-size: var(--fs-xs);
+  font-weight: 600;
   color: var(--c-muted-3);
 }
 
 .priceUnknown {
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   font-weight: 700;
   color: var(--c-muted);
+}
+
+.soldOut {
+  padding: 2px 9px;
+  border-radius: var(--r-pill);
+  background: var(--c-closed-bg);
+  color: var(--c-closed);
+  font-size: var(--fs-xs);
+  font-weight: 700;
 }
 
 /* ── نمای بزرگ ───────────────────────────────────────────────────────── */
@@ -419,19 +442,44 @@
   color: var(--c-muted-3);
 }
 
-@media (max-width: 520px) {
+/* ── موبایل ─────────────────────────────────────────────────────────── */
+
+@media (max-width: 560px) {
+  /* تصویر ۹۶px روی صفحه‌ی ۳۶۰px نصفِ عرض را می‌خورد و برای نام و توضیحات
+     چیزی نمی‌گذارد؛ ۷۲px همان نقش را با یک‌سومِ فضا بازی می‌کند. */
   .item {
-    gap: 9px;
-    padding: 9px;
+    gap: 11px;
+    padding: 11px;
+    border-radius: var(--r-lg);
   }
 
-  .thumb,
-  .thumbEmpty {
-    width: 54px;
-    height: 54px;
+  .thumb {
+    width: 72px;
+    height: 72px;
+    border-radius: var(--r-md);
   }
 
-  .itemPrice {
-    min-width: 62px;
+  .itemName {
+    font-size: var(--fs-base);
+  }
+
+  .priceValue {
+    font-size: var(--fs-md);
+  }
+
+  .itemDesc {
+    -webkit-line-clamp: 3;
+  }
+
+  /* نوار جست‌وجو تمام عرض و بالای کمینه‌ی لمس. */
+  .searchBox {
+    flex: 1 1 100%;
+    min-height: 46px;
+  }
+
+  /* نوار چیپ لبه‌تا‌لبه اسکرول می‌شود، وگرنه آخرین دسته زیر حاشیه گم می‌شود. */
+  .sectionNav {
+    margin-inline: -12px;
+    padding-inline: 12px;
   }
 }

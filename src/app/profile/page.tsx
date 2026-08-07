@@ -6,6 +6,7 @@ import { SignOutButton } from '@/components/profile/SignOutButton'
 import { getSession } from '@/core/auth/currentUser'
 import { findUserById } from '@/core/auth/userRepo'
 import { listPlaceCards } from '@/core/places/queries'
+import { listMySuggestions } from '@/core/places/suggestions'
 import { rankPlaces } from '@/core/taste/recommend'
 import {
   getTasteProfile,
@@ -18,6 +19,7 @@ import {
 import { fa, toman } from '@/lib/format'
 import { authUrl, paths } from '@/routes'
 import styles from './page.module.css'
+import { Coffee } from 'lucide-react'
 
 /**
  * پنل کاربر.
@@ -27,7 +29,7 @@ import styles from './page.module.css'
  */
 
 export const metadata: Metadata = {
-  title: 'پنل من — کافه‌گرد',
+  title: 'پنل من',
   robots: { index: false, follow: false },
 }
 
@@ -39,12 +41,13 @@ export default async function ProfilePage() {
   const { user, actor } = await getSession()
   if (!user) redirect(authUrl(paths.profile))
 
-  const [account, taste, saved, reviews, submissions] = await Promise.all([
+  const [account, taste, saved, reviews, submissions, suggestions] = await Promise.all([
     findUserById(user.id),
     getTasteProfile(user.id),
     listSavedPlaces(user.id),
     listMyReviews(user.id),
     listMySubmissions(user.id),
+    listMySuggestions(user.id),
   ])
 
   const candidates = await loadRecommendationCandidates(
@@ -60,6 +63,7 @@ export default async function ProfilePage() {
 
   const answeredCount = taste ? Object.keys(taste.answers).length : 0
   const pendingReviews = reviews.filter((review) => review.status === 'pending').length
+  const pendingSuggestions = suggestions.filter((item) => item.status === 'pending').length
 
   return (
     <div className={styles.page}>
@@ -154,7 +158,7 @@ export default async function ProfilePage() {
                     <img src={item.logoUrl} alt="" width={44} height={44} loading="lazy" />
                   ) : (
                     <span className={styles.savedEmpty} aria-hidden="true">
-                      ☕
+                      <Coffee size={17} strokeWidth={1.7} />
                     </span>
                   )}
                   <span className={styles.savedBody}>
@@ -187,6 +191,18 @@ export default async function ProfilePage() {
             <span className={styles.contribValue}>{fa(submissions.length)}</span>
             <span className={styles.contribLabel}>کافه‌ی ثبت‌شده</span>
             <span className={styles.contribAction}>ثبت کافه‌ی جدید</span>
+          </Link>
+
+          <Link href={paths.contribute} className={styles.contribCard}>
+            <span className={styles.contribValue}>{fa(suggestions.length)}</span>
+            <span className={styles.contribLabel}>اصلاح فرستاده‌شده</span>
+            {pendingSuggestions > 0 ? (
+              <span className={styles.pendingBadge}>
+                {fa(pendingSuggestions)} در انتظار بررسی
+              </span>
+            ) : (
+              <span className={styles.contribAction}>اصلاح اطلاعات کافه‌ها</span>
+            )}
           </Link>
         </div>
       </section>

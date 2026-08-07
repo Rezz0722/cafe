@@ -1,26 +1,27 @@
 /**
  * دود-تست خط لوله‌ی نقشه.
  *
- * ثابت می‌کند که از GeoJSONهای استخراج‌شده، تایل واقعیِ MVT بیرون می‌آید و
- * تایل‌ها در جایی که کافه هست خالی نیستند — همان چیزی که بدون باز کردن
- * مرورگر نمی‌شود مطمئن شد.
+ * ═══ چه چیزی عوض شد ═══
+ *
+ * نسخه‌ی قبلی تایل‌های MVT را می‌ساخت و اندازه‌شان را می‌سنجید. آن خط لوله
+ * برداشته شد (`scripts/map-publish.mjs` و `src/core/map/style.ts` را ببینید)،
+ * پس این تست حالا همان سؤال را از **خروجیِ منتشرشده** می‌پرسد: آیا کلاینت
+ * فایل‌های سالم و غیرخالی می‌گیرد، و آیا استایل به همان‌ها اشاره می‌کند.
+ *
+ * بدون این، خرابیِ انتشار فقط در مرورگر و به‌شکل «نقشه‌ی خالی» دیده می‌شد.
  */
 
-import { buildTile, getMapMeta, isMapReady, LAYER_IDS } from '../src/core/map/tiles'
+import { existsSync, readFileSync, statSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { getMapLabels } from '../src/core/map/labels'
 import { buildDirectionLinks } from '../src/core/map/directions'
-import { buildMapStyle } from '../src/core/map/style'
-
-/** تبدیل مختصات به شماره‌ی تایل — همان فرمول استاندارد Web Mercator. */
-function lngLatToTile(lng: number, lat: number, zoom: number): { x: number; y: number } {
-  const n = 2 ** zoom
-  const x = Math.floor(((lng + 180) / 360) * n)
-  const latRad = (lat * Math.PI) / 180
-  const y = Math.floor(
-    ((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2) * n,
-  )
-  return { x, y }
-}
+import {
+  BUILDING_SOURCE,
+  buildMapStyle,
+  buildingLayerSpec,
+  EAGER_LAYERS,
+} from '../src/core/map/style'
+import { getPublishedMap, isMapPublished } from '../src/core/map/published'
 
 let failures = 0
 const check = (label: string, ok: boolean, detail = '') => {
@@ -28,41 +29,118 @@ const check = (label: string, ok: boolean, detail = '') => {
   if (!ok) failures++
 }
 
-check('داده‌ی نقشه موجود است', isMapReady())
+const MAP_DIR = resolve(process.cwd(), 'public', 'map')
+const kb = (bytes: number) => `${(bytes / 1024).toFixed(0)} KB`
 
-const meta = getMapMeta()
-check('meta.json خوانده شد', !!meta, meta ? `${meta.layers.length} لایه` : '')
-if (meta) {
-  const total = meta.layers.reduce((sum, layer) => sum + layer.features, 0)
-  check('عارضه‌ها استخراج شده‌اند', total > 50_000, `${total.toLocaleString('fa-IR')} عارضه`)
+// ── انتشار
+
+check('نقشه منتشر شده است', isMapPublished(), 'public/map/manifest.json')
+
+const published = getPublishedMap()
+if (!published) {
+  console.log('\nنقشه منتشر نشده. اجرا کنید: npm run map:publish')
+  process.exit(1)
 }
 
-// مرکز مشهد (حرم) — پرترددترین نقطه‌ی شهر، قطعاً باید داده داشته باشد.
-const HARAM = { lat: 36.2879, lng: 59.6157 }
-for (const zoom of [11, 13, 15, 16]) {
-  const { x, y } = lngLatToTile(HARAM.lng, HARAM.lat, zoom)
-  const started = Date.now()
-  const tile = buildTile(zoom, x, y)
-  const ms = Date.now() - started
+check(
+  'مانیفست همه‌ی لایه‌های استایل را دارد',
+  EAGER_LAYERS.every((layer) => layer in published.layers),
+  `${Object.keys(published.layers).length} لایه`,
+)
+
+check(
+  'لایه‌ی ساختمان منتشر و «تنبل» علامت خورده',
+  published.layers[BUILDING_SOURCE]?.lazy === true,
+)
+
+/*
+  سقفِ بارِ اول.
+
+  عدد ثابت است تا اگر کسی لایه‌ی سنگینی به `KEEP` اضافه کرد، همین‌جا قرمز شود
+  نه در گزارشِ سرعتِ سایت سه ماه بعد. یک مگابایت gzip سخت‌گیرانه ولی
+  دست‌ودل‌باز است: اندازه‌گیریِ فعلی ۶۷۵ کیلوبایت است.
+*/
+const EAGER_BUDGET = 1024 * 1024
+check(
+  'بارِ اولِ نقشه زیر سقف است',
+  published.eagerGzip < EAGER_BUDGET,
+  `${kb(published.eagerGzip)} gzip از سقف ${kb(EAGER_BUDGET)}`,
+)
+console.log(`  تنبل (فقط با زوم): ${kb(published.lazyGzip)} gzip`)
+console.log(`  مجموع عارضه: ${published.totalFeatures.toLocaleString('fa-IR')}`)
+
+// ── خودِ فایل‌ها
+
+for (const layer of [...EAGER_LAYERS, BUILDING_SOURCE]) {
+  const path = resolve(MAP_DIR, `${layer}.geojson`)
+  if (!existsSync(path)) {
+    check(`فایل ${layer}.geojson`, false, 'نیست')
+    continue
+  }
+  const size = statSync(path).size
+  let features = -1
+  let valid = false
+  try {
+    const parsed = JSON.parse(readFileSync(path, 'utf8')) as {
+      type?: string
+      features?: unknown[]
+    }
+    valid = parsed.type === 'FeatureCollection' && Array.isArray(parsed.features)
+    features = parsed.features?.length ?? 0
+  } catch {
+    valid = false
+  }
   check(
-    `تایل زوم ${zoom} (${x},${y}) ساخته شد`,
-    !!tile && tile.byteLength > 200,
-    tile ? `${(tile.byteLength / 1024).toFixed(1)} KB در ${ms}ms` : 'خالی',
+    `${layer}.geojson سالم و غیرخالی`,
+    valid && features > 0 && size > 200,
+    `${features.toLocaleString('fa-IR')} عارضه · ${kb(size)}`,
   )
 }
 
-// وکیل‌آباد — پرکافه‌ترین محله (۳۹ کافه)
-const VAKILABAD = { lat: 36.3298, lng: 59.479 }
-const vTile = lngLatToTile(VAKILABAD.lng, VAKILABAD.lat, 15)
-const vBuffer = buildTile(15, vTile.x, vTile.y)
-check('تایل وکیل‌آباد در زوم ۱۵', !!vBuffer && vBuffer.byteLength > 200)
+// ── استایل
 
-// بیرون از کادر — باید خالی باشد، نه اینکه بترکد.
-const outside = lngLatToTile(51.4, 35.7, 13) // تهران
-check('تایلِ بیرون کادر خالی برمی‌گردد', buildTile(13, outside.x, outside.y) === null)
+const style = buildMapStyle({ theme: 'light' })
+const layers = (style.layers as { id: string }[]).map((layer) => layer.id)
+const sources = Object.keys(style.sources as Record<string, unknown>)
 
-// زوم غیرمجاز
-check('زوم پایین‌تر از حد، خالی برمی‌گردد', buildTile(5, 1, 1) === null)
+check('استایل ساخته شد', layers.length > 8, `${layers.length} لایه · ${sources.length} منبع`)
+
+check(
+  'هر منبعِ استایل یک فایل منتشرشده دارد',
+  sources.every((source) => existsSync(resolve(MAP_DIR, `${source}.geojson`))),
+  sources.join(' · '),
+)
+
+check(
+  'ساختمان در استایلِ پایه نیست (تنبل بارگذاری می‌شود)',
+  !sources.includes(BUILDING_SOURCE),
+)
+
+const buildings = buildingLayerSpec('light', 15.5)
+check(
+  'مشخصاتِ لایه‌ی تنبلِ ساختمان ساخته می‌شود',
+  (buildings.source as { data?: string }).data === `/map/${BUILDING_SOURCE}.geojson` &&
+    (buildings.layer as { minzoom?: number }).minzoom === 15.5,
+)
+
+/*
+  هیچ آدرس بیرونی — نقشه باید آفلاین کار کند. `attribution` عمداً متن ساده
+  است و لینک ندارد، وگرنه همین بررسی را می‌شکست.
+*/
+const styleJson = JSON.stringify(style)
+check(
+  'استایل هیچ منبع بیرونی ندارد',
+  !styleJson.includes('http://') && !styleJson.includes('https://'),
+)
+
+check(
+  'همه‌ی منابع به مسیر نسبیِ /map می‌روند',
+  sources.every((source) =>
+    ((style.sources as Record<string, { data: string }>)[source]!.data ?? '').startsWith('/map/'),
+  ),
+)
+
+// ── برچسب محله (نشانگر DOM، نه لایه‌ی MapLibre)
 
 const labels = getMapLabels({ zoom: 14 })
 check('برچسب محله بارگذاری شد', labels.length > 5, `${labels.length} برچسب`)
@@ -70,18 +148,9 @@ if (labels.length > 0) {
   console.log(`  نمونه: ${labels.slice(0, 6).map((l) => l.name).join(' · ')}`)
 }
 
-const style = buildMapStyle({ theme: 'light' })
-const layers = (style.layers as { id: string }[]).map((layer) => layer.id)
-check('استایل ساخته شد', layers.length > 8, `${layers.length} لایه`)
-check(
-  'استایل هیچ منبع بیرونی ندارد',
-  !JSON.stringify(style).includes('http://') && !JSON.stringify(style).includes('https://'),
-)
-check(
-  'هر لایه‌ی داده در استایل استفاده شده',
-  LAYER_IDS.every((id) => JSON.stringify(style).includes(id)),
-)
+// ── مسیریابی
 
+const HARAM = { lat: 36.2879, lng: 59.6157 }
 const links = buildDirectionLinks({ lat: HARAM.lat, lng: HARAM.lng, name: 'حرم' })
 check('لینک مسیریابی ساخته شد', links.length >= 4, links.map((l) => l.label).join(' · '))
 check(
@@ -90,7 +159,7 @@ check(
 )
 check(
   'مختصات در لینک‌ها درست است (عرض اول)',
-  links.every((link) => link.href.includes('36.2879') || link.href.includes('36.287900')),
+  links.every((link) => link.href.includes('36.287900')),
 )
 
 console.log(failures === 0 ? '\nهمه‌ی بررسی‌ها موفق.' : `\n${failures} بررسی شکست خورد.`)

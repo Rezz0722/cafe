@@ -22,6 +22,7 @@
 import { useCallback, useEffect, useMemo, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { MapPin } from 'lucide-react'
 import { CafeMap, type MapLabel } from '@/components/map/CafeMap'
 import { PlaceCardView, type CardData } from '@/components/cafe/PlaceCardView'
 import {
@@ -35,6 +36,7 @@ import {
 } from '@/core/search/filters'
 import { fa } from '@/lib/format'
 import styles from './SearchView.module.css'
+import { FacetIcon } from '@/components/ui/FacetIcon'
 
 export interface FacetOption {
   id: string
@@ -81,6 +83,21 @@ interface Props {
     minZoom: number
     maxZoom: number
   }
+  /**
+   * منطقه‌ای که از **متنِ** کوئری حدس زده شد (نه از فیلتر صریح کاربر).
+   *
+   * نمایشش اجباری است: تشخیصِ خاموش یعنی کاربری که «کافه سجاد» را برای پیدا
+   * کردنِ کافه‌ای به همین نام نوشته، فهرست کافه‌های *منطقه‌ی* سجاد را می‌بیند
+   * و هیچ سرنخی ندارد که چرا. با این نشان، هم می‌فهمد و هم راه برگشت دارد.
+   */
+  detectedDistrict?: { id: string; name: string } | null
+  /**
+   * متنی که نادیده گرفته شد چون با آن هیچ نتیجه‌ای نبود.
+   *
+   * سرور فقط منطقه را نگه داشته. گفتنش لازم است، وگرنه کاربر فکر می‌کند
+   * «خوب» هم اعمال شده و نتایج را اشتباه تفسیر می‌کند.
+   */
+  ignoredText?: string | null
 }
 
 const STORAGE_KEY = 'cafegard:lastLocation'
@@ -104,6 +121,8 @@ export function SearchView({
   pageSize,
   priceCaps = PRICE_CAPS,
   mapConfig,
+  detectedDistrict = null,
+  ignoredText = null,
 }: Props) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
@@ -232,6 +251,30 @@ export function SearchView({
           {subheading ?? `${fa(total)} مجموعه`}
           {pending && <span className={styles.pending}> · در حال به‌روزرسانی…</span>}
         </p>
+
+        {detectedDistrict && (
+          <p className={styles.detected} role="status">
+            <MapPin size={15} aria-hidden="true" />
+            <span>
+              منطقه‌ی <strong>{detectedDistrict.name}</strong> از متن جست‌وجو تشخیص داده
+              شد — فقط کافه‌های همین منطقه نشان داده می‌شوند.
+            </span>
+            {/* راه برگشت: جست‌وجوی همان متن به‌عنوان نامِ کافه، بدون فیلتر منطقه. */}
+            <button
+              type="button"
+              className={styles.detectedUndo}
+              onClick={() => apply({ rawQuery: true, districtId: null })}
+            >
+              نه، دنبال کافه‌ای به این نام بودم
+            </button>
+          </p>
+        )}
+
+        {ignoredText && (
+          <p className={styles.ignored} role="status">
+            با «{ignoredText}» نتیجه‌ای نبود، پس فقط منطقه اعمال شد.
+          </p>
+        )}
       </header>
 
       {/* ── نوار جست‌وجو و ابزار ─────────────────────────────────── */}
@@ -241,7 +284,11 @@ export function SearchView({
           onSubmit={(event) => {
             event.preventDefault()
             const value = new FormData(event.currentTarget).get('q')
-            apply({ q: typeof value === 'string' ? value : '' })
+            /*
+              جست‌وجوی تازه، `raw` را صفر می‌کند: آن پرچم پاسخِ کاربر به یک
+              تشخیصِ *مشخص* بود و نباید روی کوئری بعدی بچسبد.
+            */
+            apply({ q: typeof value === 'string' ? value : '', rawQuery: false })
           }}
         >
           <input
@@ -331,7 +378,7 @@ export function SearchView({
             className={`${styles.chip} ${filters.facets.includes(facet.id) ? styles.chipOn : ''}`}
             onClick={() => toggleFacet(facet.id)}
           >
-            <span aria-hidden="true">{facet.icon}</span>
+            <FacetIcon id={facet.id} size={14} />
             {facet.labelFa}
             <span className={styles.chipCount}>{fa(facet.placeCount)}</span>
           </button>
@@ -441,7 +488,7 @@ export function SearchView({
                   className={filters.facets.includes(facet.id) ? styles.optionOn : styles.option}
                   onClick={() => toggleFacet(facet.id)}
                 >
-                  <span aria-hidden="true">{facet.icon}</span> {facet.labelFa}
+                  <FacetIcon id={facet.id} size={13} /> {facet.labelFa}
                   <span className={styles.chipCount}>{fa(facet.placeCount)}</span>
                 </button>
               ))}

@@ -114,6 +114,15 @@
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.12);
 }
 
+/* شمارِ کافه‌های محله، زیر نامش — فقط در نقشه‌ی محله‌ها. */
+.pinNote {
+  display: block;
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: var(--c-primary-strong);
+  font-variant-numeric: tabular-nums;
+}
+
 /* ── خوشه ──────────────────────────────────────────────────────────── */
 
 .cluster {

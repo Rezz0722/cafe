@@ -26,11 +26,50 @@ import {
   Marker,
   NavigationControl,
   ScaleControl,
+  setWorkerUrl,
   type ErrorEvent,
   type LngLatBoundsLike,
 } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import styles from './CafeMap.module.css'
+import { Crosshair } from 'lucide-react'
+
+/**
+ * آدرس worker مپ‌لایبر.
+ *
+ * مپ‌لایبر ۶ آدرس worker خودش را از `import.meta.url` می‌سازد و آن را فقط
+ * وقتی قبول می‌کند که با `http(s):` شروع شود. بعد از باندل‌شدن با Next این
+ * شرط برقرار نیست، پس مپ‌لایبر رشته‌ی خالی می‌گیرد و
+ * `new Worker('', { type: 'module' })` می‌سازد — که نسبت به آدرس صفحه
+ * resolve می‌شود و مرورگر خودِ HTML صفحه را به‌عنوان اسکریپت ماژول رد
+ * می‌کند. بی worker، هیچ تایلی رمزگشایی نمی‌شود: نقشه ساخته می‌شود ولی
+ * `load` هرگز نمی‌آید و «در حال آماده‌سازی نقشه…» تا ابد می‌ماند.
+ *
+ * پس آدرس را صریح می‌دهیم. فایل با `npm run map:worker` از `node_modules`
+ * به `public/maplibre/` کپی می‌شود (`scripts/sync-map-worker.mjs`) — هم‌دامنه
+ * و آفلاین، مثل بقیه‌ی نقشه.
+ */
+setWorkerUrl('/maplibre/maplibre-gl-worker.mjs')
+
+/**
+ * سقف انتظار برای استایل، و برای رویداد `load` نقشه.
+ *
+ * چرا نگهبان لازم است: تنها چیزی که پیام «در حال آماده‌سازی نقشه…» را پاک
+ * می‌کند رویداد `load` است. هر خرابی‌ای که آن رویداد را نگه دارد — worker،
+ * استایل، WebGL، سروری که پاسخ نمی‌دهد — به یک پیامِ بی‌پایان و بی‌توضیح
+ * تبدیل می‌شد؛ همان اشکالی که این فایل را به اینجا رساند. با نگهبان،
+ * سکوت به یک پیام قابل‌پیگیری تبدیل می‌شود.
+ *
+ * سقفِ `load` عمداً بلند است: این رویداد تا **اولین رندر کامل** شلیک نمی‌شود،
+ * یعنی منتظر گرفتن و تایل‌کردنِ لایه‌های GeoJSON می‌ماند (~۶۷۵ کیلوبایت gzip).
+ * روی اتصال کند یا موبایلِ ضعیف این چند ثانیه طول می‌کشد. عددِ تنگ، نقشه‌ی
+ * سالمِ کند را خطا نشان می‌داد؛ این عدد فقط خرابیِ واقعی را می‌گیرد.
+ *
+ * قبلاً دلیلِ این سقفِ بلند بدتر بود: تایل‌ها در سرور ساخته می‌شدند و بارِ
+ * سردشان تا ~۲۵ ثانیه دیده شده بود. آن خط لوله برداشته شد.
+ */
+const STYLE_TIMEOUT_MS = 15_000
+const LOAD_TIMEOUT_MS = 60_000
 
 export interface MapPlace {
   id: number
@@ -72,6 +111,21 @@ export interface CafeMapProps {
   className?: string
   /** نمایش دکمه‌ی «موقعیت من». */
   showLocate?: boolean
+  /**
+   * خوشه‌بندی نشانگرهای نزدیک.
+   *
+   * برای نقشه‌ی کافه‌ها لازم است (۳۳۱ پین روی هم می‌افتند)، ولی برای نقشه‌ی
+   * **محله‌ها** غلط است: ۲۹ محله باید همیشه ۲۹ نشانگر باشند، وگرنه کاربر روی
+   * یک عددِ بی‌نام کلیک می‌کند و نمی‌داند کدام محله را باز می‌کند.
+   */
+  cluster?: boolean
+  /** نام نشانگر همیشه دیده شود، مستقل از زوم. */
+  alwaysLabel?: boolean
+  /**
+   * پیشوند لینکِ نشانگر. پیش‌فرض صفحه‌ی کافه است؛ نقشه‌ی محله‌ها
+   * `/mashhad/` می‌دهد.
+   */
+  linkBase?: string
 }
 
 const MASHHAD_CENTER = { lat: 36.2972, lng: 59.6067 }
@@ -79,6 +133,76 @@ const MASHHAD_BOUNDS: LngLatBoundsLike = [
   [59.05, 36.0],
   [60.0, 36.67],
 ]
+
+/**
+ * نشانِ پیش‌فرضِ نشانگر — برای مکانی که لوگو ندارد.
+ *
+ * SVG دستی و نه `lucide-react`: این نشانگرها با `innerHTML` ساخته می‌شوند نه
+ * با React (MapLibre یک عنصر DOM می‌خواهد، نه یک المنت React)، پس کامپوننت
+ * آیکون اینجا قابل استفاده نیست. مسیرها معادلِ `Coffee` در lucide است تا
+ * ظاهرش با بقیه‌ی آیکون‌های سایت یکی بماند.
+ */
+const PIN_GLYPH = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v2M14 2v2M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"/></svg>`
+
+/** کلیدِ متادیتای استایل که مشخصاتِ لایه‌ی تنبلِ ساختمان را حمل می‌کند. */
+const LAZY_BUILDINGS_KEY = 'kucafe:lazyBuildings'
+
+interface LazyBuildingSpec {
+  fromZoom: number
+  beforeId: string
+  source: Record<string, unknown>
+  layer: { id: string } & Record<string, unknown>
+}
+
+/**
+ * لایه‌ی ساختمان را در اولین باری که کاربر به زومِ لازم رسید اضافه می‌کند.
+ *
+ * ═══ چرا تنبل ═══
+ *
+ * `building.geojson` بعد از گِردکردنِ مختصات هم ۶۴۰ کیلوبایت gzip است — تقریباً
+ * هم‌اندازه‌ی *همه‌ی* لایه‌های دیگر با هم. ساختمان‌ها فقط از زوم ۱۵.۵ به بالا
+ * دیده می‌شوند و بیشتر بازدیدکننده‌ها هرگز آن‌قدر زوم نمی‌کنند (نقشه‌ی صفحه‌ی
+ * کافه روی ۱۶ باز می‌شود ولی نقشه‌ی جست‌وجو و محله روی ۱۱ تا ۱۴).
+ *
+ * پس بارِ اول ۶۷۵ کیلوبایت است، و آن ۶۴۰ کیلوبایت فقط برای کسی خرج می‌شود که
+ * واقعاً زوم می‌کند. حذفِ کاملِ لایه گزینه نبود: تنظیمِ «زوم نمایش ساختمان» در
+ * پنل ادمین وجود دارد و بی‌اثرکردنش یک کنترلِ دروغین می‌ساخت.
+ *
+ * ═══ چرا `once` کافی نیست ═══
+ *
+ * کاربر ممکن است چند بار از آستانه رد شود. پرچمِ `added` جلوی `addSource`
+ * دوباره را می‌گیرد — که وگرنه MapLibre با خطای «source already exists»
+ * می‌ترکد.
+ */
+function attachLazyBuildings(map: MapLibreMap, style: unknown): void {
+  const spec = (style as { metadata?: Record<string, LazyBuildingSpec> } | null)?.metadata?.[
+    LAZY_BUILDINGS_KEY
+  ]
+  if (!spec?.source || !spec.layer) return
+
+  let added = false
+  const maybeAdd = () => {
+    if (added || map.getZoom() < spec.fromZoom) return
+    added = true
+    map.off('zoomend', maybeAdd)
+    try {
+      if (map.getSource(spec.layer.id)) return
+      map.addSource(spec.layer.id, spec.source as never)
+      // زیرِ جاده‌ها می‌نشیند، وگرنه خیابان‌ها زیر پلیگون‌ها گم می‌شوند.
+      const before = map.getLayer(spec.beforeId) ? spec.beforeId : undefined
+      map.addLayer(spec.layer as never, before)
+    } catch (error) {
+      // نقشه بدون ساختمان کاملاً قابل استفاده است؛ این خرابی نباید
+      // چیزی را بشکند.
+      console.warn('لایه‌ی ساختمان اضافه نشد:', error)
+    }
+  }
+
+  map.on('zoomend', maybeAdd)
+  // اگر نقشه از همان اول روی زومِ بالا باز شده (صفحه‌ی یک کافه)، منتظر
+  // رویداد نمی‌مانیم.
+  maybeAdd()
+}
 
 /** فاصله‌ی شبکه‌ی خوشه‌بندی بر حسب پیکسل صفحه. */
 const CLUSTER_GRID_PX = 64
@@ -133,6 +257,9 @@ export function CafeMap({
   onSelect,
   className,
   showLocate = true,
+  cluster = true,
+  alwaysLabel = false,
+  linkBase = '/cafe/',
 }: CafeMapProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
@@ -155,13 +282,20 @@ export function CafeMap({
     if (!containerRef.current || mapRef.current) return
 
     let cancelled = false
+    // در پاک‌سازی لغو می‌شوند، وگرنه بعد از unmount شلیک می‌کنند.
+    let styleTimer: ReturnType<typeof setTimeout> | undefined
+    let loadTimer: ReturnType<typeof setTimeout> | undefined
+
     const create = async () => {
+      const abort = new AbortController()
+      styleTimer = setTimeout(() => abort.abort(), STYLE_TIMEOUT_MS)
       try {
         // استایل از سرور می‌آید تا رنگ‌ها یک منبع داشته باشند و تغییر تم
         // نیازی به ری‌بیلد کلاینت نداشته باشد.
-        const response = await fetch(`/api/map/style?theme=${theme}`)
+        const response = await fetch(`/api/map/style?theme=${theme}`, { signal: abort.signal })
         if (!response.ok) throw new Error(`استایل نقشه در دسترس نیست (${response.status})`)
         const style = await response.json()
+        clearTimeout(styleTimer)
         if (cancelled || !containerRef.current) return
 
         const map = new MapLibreMap({
@@ -188,27 +322,52 @@ export function CafeMap({
         map.addControl(new NavigationControl({ showCompass: false }), 'top-left')
         map.addControl(new ScaleControl({ maxWidth: 90, unit: 'metric' }), 'bottom-left')
 
+        // آخرین خطای نقشه، تا اگر `load` نیامد بتوانیم علت را نشان دهیم
+        // نه یک پیام کلی.
+        let lastError: string | null = null
+
         map.on('load', () => {
+          clearTimeout(loadTimer)
           if (!cancelled) setReady(true)
+          attachLazyBuildings(map, style)
         })
         map.on('error', (event: ErrorEvent) => {
-          // خطای تایلِ خالی (۲۰۴) طبیعی است و نباید کاربر را بترساند.
           const message = event.error?.message ?? ''
+          // خطای «۲۰۴/خالی» از دوره‌ی سرو تایل می‌آمد و حالا رخ نمی‌دهد، ولی
+          // نگه‌داشتنِ این گارد بی‌هزینه است و نقشه‌ی سالم را نویزی نمی‌کند.
           if (message.includes('204') || message.includes('empty')) return
+          lastError = message
           console.warn('خطای نقشه:', message)
         })
 
+        loadTimer = setTimeout(() => {
+          if (cancelled || map.loaded()) return
+          // نقشه‌ی نیمه‌ساخته را برمی‌داریم: بومِ چسبیده به گره‌ای که دیگر
+          // در صفحه نیست، هم WebGL نگه می‌دارد هم worker.
+          map.remove()
+          if (mapRef.current === map) mapRef.current = null
+          setFailed(lastError ?? 'نقشه در زمان معقول آماده نشد')
+        }, LOAD_TIMEOUT_MS)
+
         mapRef.current = map
       } catch (error) {
-        if (!cancelled) {
-          setFailed(error instanceof Error ? error.message : 'نقشه بار نشد')
-        }
+        clearTimeout(styleTimer)
+        if (cancelled) return
+        setFailed(
+          abort.signal.aborted
+            ? 'گرفتن استایل نقشه از سرور بیش از حد طول کشید'
+            : error instanceof Error
+              ? error.message
+              : 'نقشه بار نشد',
+        )
       }
     }
     void create()
 
     return () => {
       cancelled = true
+      clearTimeout(styleTimer)
+      clearTimeout(loadTimer)
       for (const marker of markersRef.current) marker.remove()
       for (const marker of labelMarkersRef.current) marker.remove()
       markersRef.current = []
@@ -228,15 +387,16 @@ export function CafeMap({
     markersRef.current = []
 
     const currentZoom = map.getZoom()
-    const showNames = currentZoom >= LABEL_ZOOM
-    const clusters = showNames
-      ? mappable.map((place) => ({
-          key: place.slug,
-          lat: place.lat,
-          lng: place.lng,
-          places: [place],
-        }))
-      : clusterPlaces(map, mappable)
+    const showNames = alwaysLabel || currentZoom >= LABEL_ZOOM
+    const clusters =
+      !cluster || showNames
+        ? mappable.map((place) => ({
+            key: place.slug,
+            lat: place.lat,
+            lng: place.lng,
+            places: [place],
+          }))
+        : clusterPlaces(map, mappable)
 
     for (const cluster of clusters) {
       const element = document.createElement(cluster.places.length > 1 ? 'button' : 'a')
@@ -244,16 +404,24 @@ export function CafeMap({
 
       if (single) {
         const anchor = element as HTMLAnchorElement
-        anchor.href = `/cafe/${single.slug}`
+        anchor.href = `${linkBase}${single.slug}`
         anchor.className = `${styles.pin} ${single.slug === focusSlug ? styles.pinFocus : ''}`
-        anchor.setAttribute('aria-label', single.name)
+        anchor.setAttribute('aria-label', single.note ? `${single.name} — ${single.note}` : single.name)
         anchor.innerHTML = `
           <span class="${styles.pinDot}" aria-hidden="true">${
             single.logoUrl
               ? `<img src="${single.logoUrl}" alt="" width="26" height="26" loading="lazy" />`
-              : '☕'
+              : PIN_GLYPH
           }</span>
-          ${showNames ? `<span class="${styles.pinLabel}">${escapeHtml(single.name)}</span>` : ''}
+          ${
+            showNames
+              ? `<span class="${styles.pinLabel}">${escapeHtml(single.name)}${
+                  single.note
+                    ? `<span class="${styles.pinNote}">${escapeHtml(single.note)}</span>`
+                    : ''
+                }</span>`
+              : ''
+          }
         `
         if (onSelect) {
           anchor.addEventListener('click', (event) => {
@@ -277,7 +445,7 @@ export function CafeMap({
         .addTo(map)
       markersRef.current.push(marker)
     }
-  }, [mappable, focusSlug, onSelect])
+  }, [mappable, focusSlug, onSelect, cluster, alwaysLabel, linkBase])
 
   useEffect(() => {
     if (!ready) return
@@ -369,7 +537,7 @@ export function CafeMap({
       {!ready && <div className={styles.loading}>در حال آماده‌سازی نقشه…</div>}
       {showLocate && ready && (
         <button type="button" className={styles.locate} onClick={locate}>
-          <span aria-hidden="true">◎</span> موقعیت من
+          <Crosshair size={15} aria-hidden="true" /> موقعیت من
         </button>
       )}
       {ready && mappable.length === 0 && (

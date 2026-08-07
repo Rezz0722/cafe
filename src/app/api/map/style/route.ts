@@ -5,10 +5,13 @@
  *   • رنگ‌ها یک منبع دارند (`src/core/map/style.ts`) و با توکن‌های سایت
  *     هم‌گام می‌مانند؛
  *   • عوض‌کردن تم یا رنگ نقشه نیازی به ری‌بیلد کلاینت ندارد.
+ *
+ * خودِ داده‌ی نقشه از اینجا نمی‌آید: لایه‌ها فایل‌های استاتیکِ `public/map/`
+ * هستند که nginx مستقیم سرو می‌کند. این روت فقط چند کیلوبایت JSONِ استایل است.
  */
 
 import { buildMapStyle } from '@/core/map/style'
-import { isMapReady } from '@/core/map/tiles'
+import { isMapPublished } from '@/core/map/published'
 import { getMapPolicy } from '@/core/settings/policies'
 
 /*
@@ -19,9 +22,12 @@ import { getMapPolicy } from '@/core/settings/policies'
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: Request): Promise<Response> {
-  if (!isMapReady()) {
+  if (!isMapPublished()) {
     return Response.json(
-      { error: 'داده‌ی نقشه استخراج نشده است. اجرا کنید: node scripts/map-extract.mjs' },
+      {
+        error:
+          'نقشه منتشر نشده است. اجرا کنید: npm run map:extract و بعد npm run map:publish',
+      },
       { status: 503 },
     )
   }

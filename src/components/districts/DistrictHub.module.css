@@ -1,0 +1,308 @@
+.page {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 22px 16px 56px;
+}
+
+/* ── سرصفحه و جست‌وجو ───────────────────────────────────────────────── */
+
+.head {
+  margin-bottom: 18px;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--fs-2xl);
+  font-weight: 800;
+  line-height: 1.35;
+  color: var(--c-ink);
+}
+
+.lead {
+  margin: 8px 0 0;
+  font-size: var(--fs-base);
+  line-height: 1.85;
+  color: var(--c-ink-2);
+}
+
+.searchBox {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  max-width: 520px;
+  margin-top: 16px;
+  padding: 0 15px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-pill);
+  background: var(--c-surface);
+  box-shadow: var(--sh-card-sm);
+  transition: border-color var(--t-fast), box-shadow var(--t-fast);
+}
+
+.searchBox:focus-within {
+  border-color: var(--c-primary);
+  box-shadow: 0 0 0 3px var(--c-primary-soft);
+}
+
+.searchIcon {
+  flex: 0 0 auto;
+  color: var(--c-muted);
+}
+
+.searchInput {
+  flex: 1;
+  min-width: 0;
+  /* ۴۸px ارتفاع مؤثر — این اولین چیزی است که انگشت روی این صفحه لمس می‌کند. */
+  min-height: 48px;
+  border: none;
+  background: none;
+  color: var(--c-ink);
+  font: inherit;
+  font-size: var(--fs-base);
+  outline: none;
+}
+
+.searchInput::-webkit-search-cancel-button {
+  display: none;
+}
+
+.searchClear {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--c-muted);
+  cursor: pointer;
+}
+
+.searchClear:hover {
+  background: var(--c-surface-3);
+  color: var(--c-ink);
+}
+
+.resultCount {
+  margin: 9px 0 0;
+  font-size: var(--fs-sm);
+  color: var(--c-muted);
+}
+
+/* ── نقشه ───────────────────────────────────────────────────────────── */
+
+.mapSection {
+  position: relative;
+  margin-bottom: 22px;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+
+/* پنلِ تأیید بعد از کلیک روی نشانگر — روی نقشه می‌نشیند. */
+.mapPanel {
+  position: absolute;
+  z-index: 10;
+  inset-block-end: 14px;
+  inset-inline-start: 14px;
+  min-width: 220px;
+  max-width: calc(100% - 28px);
+  padding: 13px 15px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+  background: var(--c-surface);
+  box-shadow: var(--sh-raised);
+}
+
+.mapPanelClose {
+  position: absolute;
+  inset-block-start: 7px;
+  inset-inline-end: 7px;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--c-muted);
+  cursor: pointer;
+}
+
+.mapPanelClose:hover {
+  background: var(--c-surface-3);
+  color: var(--c-ink);
+}
+
+.mapPanelName {
+  margin: 0;
+  padding-inline-end: 30px;
+  font-size: var(--fs-md);
+  font-weight: 800;
+  color: var(--c-ink);
+}
+
+.mapPanelMeta {
+  margin: 3px 0 10px;
+  font-size: var(--fs-sm);
+  color: var(--c-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.mapPanelCta {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 9px 17px;
+  border-radius: var(--r-pill);
+  background: var(--c-primary);
+  color: #fff;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+
+.mapPanelCta:hover {
+  background: var(--c-primary-strong);
+}
+
+/* ── شبکه‌ی کارت ────────────────────────────────────────────────────── */
+
+.grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  /* `auto-fill` با کمینه‌ی ۲۴۰px: روی موبایل یک ستون، روی دسکتاپ چهار — بدون
+     media query جدا. */
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 11px;
+}
+
+.card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 100%;
+  padding: 12px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  background: var(--c-surface);
+  box-shadow: var(--sh-card-sm);
+  transition: border-color var(--t-fast), box-shadow var(--t-fast), transform var(--t-fast);
+}
+
+.card:hover {
+  border-color: var(--c-primary);
+  box-shadow: var(--sh-card);
+  transform: translateY(-2px);
+}
+
+.card:focus-visible {
+  outline: none;
+  border-color: var(--c-primary);
+  box-shadow: 0 0 0 3px var(--c-primary-soft);
+}
+
+.cardMedia {
+  flex: 0 0 auto;
+  width: 62px;
+  height: 62px;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  background: var(--grad-tint);
+}
+
+.cardImage {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cardInitial {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  color: var(--c-primary-strong);
+  font-size: var(--fs-xl);
+  font-weight: 900;
+}
+
+.cardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.cardName {
+  font-size: var(--fs-md);
+  font-weight: 800;
+  color: var(--c-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cardCount {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--c-primary-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.cardPrice {
+  font-size: var(--fs-xs);
+  color: var(--c-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.cardArrow {
+  flex: 0 0 auto;
+  color: var(--c-muted-4);
+}
+
+.card:hover .cardArrow {
+  color: var(--c-primary);
+}
+
+/* ── حالت خالی ──────────────────────────────────────────────────────── */
+
+.empty {
+  margin: 0;
+  padding: 26px 20px;
+  border: 1px dashed var(--c-disabled);
+  border-radius: var(--r-lg);
+  color: var(--c-muted);
+  font-size: var(--fs-base);
+  line-height: 1.9;
+  text-align: center;
+}
+
+.emptyReset {
+  border: none;
+  background: none;
+  color: var(--c-primary-strong);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+@media (max-width: 520px) {
+  .page {
+    padding: 16px 12px 44px;
+  }
+
+  .mapPanel {
+    inset-inline: 12px;
+    inset-block-end: 12px;
+    min-width: 0;
+    max-width: none;
+  }
+}

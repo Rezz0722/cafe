@@ -16,6 +16,7 @@ import { useFormStatus } from 'react-dom'
 import { submitReviewAction } from '@/app/profile/actions'
 import { EMPTY_ACTION_STATE } from '@/app/profile/state'
 import styles from './ReviewForm.module.css'
+import { Star } from 'lucide-react'
 
 function SubmitButton({ isEdit }: { isEdit: boolean }) {
   const { pending } = useFormStatus()
@@ -63,7 +64,7 @@ function StarInput({
             className={star <= value ? styles.starOn : styles.starOff}
             aria-label={`${star} ستاره`}
           >
-            ★
+            <Star size={26} fill={star <= value ? 'currentColor' : 'none'} />
           </span>
         </label>
       ))}

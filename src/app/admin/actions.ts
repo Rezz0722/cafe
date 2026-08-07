@@ -32,6 +32,7 @@ import {
 import { purgeOldPageViews, rollupDay } from '@/core/analytics/track'
 import { recordAudit, refreshPlaceDerived, type Actor } from '@/core/places/manage'
 import { invalidateReferenceCache, invalidateSiteMean } from '@/core/places/queries'
+import { reviewEditSuggestion } from '@/core/places/suggestions'
 import { getAuthPolicy } from '@/core/settings/policies'
 import { SETTING_DEFS } from '@/core/settings/registry'
 import { getSettings, invalidateSettings, resetSettings, saveSettings } from '@/core/settings/store'
@@ -240,6 +241,58 @@ export async function reviewSubmissionAction(
   return {
     ok: true,
     message: `«${name}» ساخته شد (پیش‌نویس). برای انتشار، اطلاعاتش را کامل کنید.`,
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// اصلاحِ پیشنهادیِ کاربر
+// ═══════════════════════════════════════════════════════════════════════
+
+/**
+ * بستنِ یک پیشنهادِ اصلاح.
+ *
+ * ═══ چرا «اعمال شد» خودش داده را عوض نمی‌کند ═══
+ *
+ * متنِ کاربر ساختار ندارد: «شنبه تا چهارشنبه ۹ تا ۲۳» باید به ردیف‌های
+ * `place_hour` تبدیل شود و «۳۶.۳۱۶، ۵۹.۵۶۷» باید اعتبارسنجی جغرافیایی شود.
+ * تحلیلِ حدسی این متن‌ها داده‌ی خراب می‌سازد، که از داده‌ی بیات بدتر است.
+ *
+ * پس این دکمه فقط پیشنهاد را از صف بیرون می‌برد. اعمالِ واقعی را ادمین در تب
+ * «مجموعه‌ها» یا کافه‌دار در پنل خودش انجام می‌دهد — همان‌جایی که فرمِ درست با
+ * اعتبارسنجیِ درست هست.
+ */
+export async function reviewSuggestionAction(
+  _prev: AdminActionState,
+  form: FormData,
+): Promise<AdminActionState> {
+  const guard = await requireAdminActor()
+  if (!guard.ok) return { ok: false, error: guard.error }
+
+  const suggestionId = num(form, 'suggestionId')
+  const decision = str(form, 'decision')
+  if (!suggestionId) return { ok: false, error: 'پیشنهاد مشخص نیست.' }
+  if (decision !== 'applied' && decision !== 'rejected') {
+    return { ok: false, error: 'تصمیم نامعتبر است.' }
+  }
+
+  const { placeSlug } = await reviewEditSuggestion(suggestionId, decision, guard.actor.userId)
+
+  await recordAudit(
+    guard.actor,
+    'suggestion.review',
+    'edit_suggestion',
+    suggestionId,
+    'pending',
+    decision,
+  )
+
+  if (placeSlug) revalidatePath(paths.cafe(placeSlug))
+  revalidatePath(paths.admin)
+  revalidatePath(paths.contribute)
+
+  return {
+    ok: true,
+    message: decision === 'applied' ? 'به‌عنوان اعمال‌شده بسته شد.' : 'رد شد.',
   }
 }
 

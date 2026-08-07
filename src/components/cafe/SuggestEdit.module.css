@@ -1,0 +1,238 @@
+/* فرمِ اصلاح — بسته یک سطر، باز یک فرمِ کوتاه. */
+
+.wrap {
+  border: 1px dashed var(--c-border-5);
+  border-radius: var(--r-lg);
+  background: var(--c-surface-tint);
+}
+
+.summary {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 10px 14px;
+  border-radius: var(--r-lg);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--c-ink-2);
+  cursor: pointer;
+  list-style: none;
+}
+
+.summary::-webkit-details-marker,
+.summary::marker {
+  display: none;
+  content: '';
+}
+
+.summary:hover {
+  color: var(--c-primary-strong);
+}
+
+.summary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--c-primary-soft);
+}
+
+.icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  color: var(--c-muted);
+}
+
+.summaryText {
+  flex: 1;
+}
+
+.caret {
+  flex: 0 0 auto;
+  color: var(--c-muted);
+  transition: transform var(--t-fast);
+}
+
+.wrap[open] .caret {
+  transform: rotate(180deg);
+}
+
+.body {
+  padding: 4px 14px 14px;
+  border-block-start: 1px solid var(--c-border-3);
+}
+
+.form {
+  display: grid;
+  gap: 11px;
+  padding-block-start: 12px;
+}
+
+.field {
+  display: grid;
+  gap: 5px;
+}
+
+.label {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--c-ink-2);
+}
+
+.input,
+.textarea,
+.select {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 13px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+  background: var(--c-surface);
+  color: var(--c-ink);
+  font: inherit;
+  font-size: var(--fs-base);
+}
+
+.select {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.input:focus,
+.textarea:focus,
+.select:focus {
+  outline: none;
+  border-color: var(--c-primary);
+  box-shadow: 0 0 0 3px var(--c-primary-soft);
+}
+
+.textarea {
+  resize: vertical;
+  line-height: 1.8;
+}
+
+.hint {
+  font-size: var(--fs-xs);
+  line-height: 1.75;
+  color: var(--c-muted);
+}
+
+/* ── مقدار فعلی ─────────────────────────────────────────────────────── */
+
+.current {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  margin: 0;
+  padding: 9px 12px;
+  border-radius: var(--r-md);
+  background: var(--c-surface-4);
+  font-size: var(--fs-sm);
+  line-height: 1.7;
+}
+
+.currentLabel {
+  flex: 0 0 auto;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--c-muted);
+}
+
+.currentValue,
+.currentValueLtr {
+  color: var(--c-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.currentValueLtr {
+  direction: ltr;
+  text-align: start;
+}
+
+/* ── بازخورد و ارسال ────────────────────────────────────────────────── */
+
+.submit {
+  justify-self: start;
+  min-height: 44px;
+  padding: 11px 22px;
+  border: none;
+  border-radius: var(--r-pill);
+  background: var(--c-primary);
+  color: #fff;
+  font: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background var(--t-fast);
+}
+
+.submit:hover:not(:disabled) {
+  background: var(--c-primary-strong);
+}
+
+.submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.submit:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--c-primary-soft);
+}
+
+.error,
+.success {
+  margin: 0;
+  padding: 10px 13px;
+  border-radius: var(--r-md);
+  font-size: var(--fs-sm);
+  line-height: 1.7;
+}
+
+.error {
+  background: var(--c-closed-bg);
+  color: var(--c-closed);
+}
+
+.success {
+  background: var(--c-success-soft);
+  color: var(--c-open);
+}
+
+.note {
+  margin: 0;
+  font-size: var(--fs-xs);
+  line-height: 1.8;
+  color: var(--c-muted);
+}
+
+/* ── حالت مهمان ─────────────────────────────────────────────────────── */
+
+.signIn {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+  padding-block-start: 12px;
+}
+
+.signIn p {
+  margin: 0;
+  font-size: var(--fs-sm);
+  line-height: 1.85;
+  color: var(--c-ink-2);
+}
+
+.signInLink {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 20px;
+  border-radius: var(--r-pill);
+  background: var(--c-primary);
+  color: #fff;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+
+.signInLink:hover {
+  background: var(--c-primary-strong);
+}
