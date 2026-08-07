@@ -97,7 +97,6 @@ fi
 [ -n "${SECRET:-}" ] || SECRET="$(node -e 'console.log(require("crypto").randomBytes(32).toString("hex"))')"
 # AUTH_DEV_MODE فقط وقتی کلید پیامک باشد false می‌شود
 if [ -n "${SMSIR_API_KEY:-}" ]; then DEV_MODE=false; else DEV_MODE=true; c_y "  کلید SMS خالی → AUTH_DEV_MODE=true (کد ورود در لاگ، بدون پیامک واقعی)"; fi
-umask 077
 cat > .env.local <<EOF
 # تولیدشده توسط deploy.sh — رازها اینجا می‌مانند، در git نمی‌روند.
 DATABASE_URL=${DB_URL}
