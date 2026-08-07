@@ -100,8 +100,17 @@ CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASS}';
 ALTER USER '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASS}';
 GRANT ALL PRIVILEGES ON \`${DB_NAME}\`.* TO '${DB_USER}'@'localhost';
 FLUSH PRIVILEGES;"
-  if echo "$SQL" | "$MYSQL_CLI" -u root 2>/dev/null; then c_g "  دیتابیس/کاربر آماده شد."
-  elif echo "$SQL" | sudo "$MYSQL_CLI" -u root 2>/dev/null; then c_g "  دیتابیس/کاربر آماده شد (sudo)."
+  DA_CONF=/usr/local/directadmin/conf/mysql.conf
+  if echo "$SQL" | "$MYSQL_CLI" -u root 2>/dev/null; then c_g "  دیتابیس/کاربر آماده شد (root سوکت)."
+  elif echo "$SQL" | sudo "$MYSQL_CLI" -u root 2>/dev/null; then c_g "  دیتابیس/کاربر آماده شد (sudo root)."
+  elif [ -r "$DA_CONF" ]; then
+    # DirectAdmin: root مای‌اسکل با سوکت باز نمی‌شود؛ رمزِ da_admin در این فایل است.
+    DA_U="$(awk -F= '/^user=/{print $2}' "$DA_CONF")"
+    DA_P="$(awk -F= '/^passwd=/{print $2}' "$DA_CONF")"
+    if [ -n "$DA_U" ] && echo "$SQL" | "$MYSQL_CLI" -u"$DA_U" -p"$DA_P" 2>/dev/null; then
+      c_g "  دیتابیس/کاربر آماده شد (اعتبارِ DirectAdmin)."
+    else die "ساخت دیتابیس با اعتبارِ DirectAdmin هم نشد. دستی بساز یا CREATE_DB=0 کن. SQL:
+$SQL"; fi
   else die "ساخت دیتابیس با root نشد. دستی بساز یا CREATE_DB=0 کن. SQL:
 $SQL"; fi
 else
