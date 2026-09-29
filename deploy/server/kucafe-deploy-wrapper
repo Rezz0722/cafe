@@ -27,10 +27,18 @@ git -C "$release_dir" fetch --prune origin production
 git -C "$release_dir" checkout --detach "$requested_sha"
 git -C "$release_dir" clean -ffd
 
-exec env \
+env \
   GITHUB_SHA="$requested_sha" \
   KUCAFE_ENV_FILE=/opt/kucafe/.env.local \
   KUCAFE_MEDIA_DIR=/var/www/kucafe/public/media \
   KUCAFE_BACKUP_DIR=/var/backups/kucafe \
   KUCAFE_DEPLOY_STATE_DIR=/var/lib/kucafe \
   bash "$release_dir/scripts/docker-deploy.sh"
+
+# These are idempotent. The first successful GitHub deployment performs the
+# guarded Apache cutover; later deployments simply keep the cron definition in
+# sync. PM2 remains available on :3000 as a first-week emergency fallback.
+bash "$release_dir/scripts/install-media-cron.sh"
+if ! grep -q '127\.0\.0\.1:3100' /etc/httpd/conf/extra/kucafe-tls.conf 2>/dev/null; then
+  bash "$release_dir/deploy/server/cutover-to-docker.sh"
+fi

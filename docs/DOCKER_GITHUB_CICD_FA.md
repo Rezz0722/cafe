@@ -54,14 +54,20 @@ Repository عمومی است؛ به همین علت workflow مربوط به PR 
 
 ## ۴. نصب runner اختصاصی
 
-در GitHub به Settings → Actions → Runners → New self-hosted runner بروید و
-registration token یک‌ساعته را بگیرید. سپس فقط یک‌بار روی سرور:
+روش توصیه‌شده این است که یک fine-grained PAT کوتاه‌عمر با دسترسی‌های
+`Contents: Read/Write`، `Actions: Read/Write`، `Administration: Read/Write` و
+`Environments: Read/Write` را در فایل root-only قرار دهید:
 
 ```bash
 cd /opt/kucafe
-sudo env GITHUB_RUNNER_TOKEN='TOKEN_ONE_HOUR' bash scripts/install-github-runner.sh
-unset GITHUB_RUNNER_TOKEN
+sudo install -m 600 /dev/null /root/.github-kucafe-token
+sudo nano /root/.github-kucafe-token
+sudo bash scripts/bootstrap-github-cicd.sh
 ```
+
+اسکریپت branch و environment محافظت‌شده، Pull Request و runner را می‌سازد و
+در پایان PAT را حذف می‌کند. مسیر دستی با registration token یک‌ساعته و
+`scripts/install-github-runner.sh` نیز برای بازیابی در دسترس است.
 
 runner عضو گروه Docker نمی‌شود. تنها sudo مجاز آن wrapper ثابتی است که SHA را
 با HEAD واقعی `origin/production` تطبیق می‌دهد و هیچ فایل workspace رانر را
@@ -90,7 +96,7 @@ git push -u origin feature/short-name
 
 ## ۶. media و Cron
 
-پس از اولین انتشار موفق:
+پس از اولین انتشار موفق، Cron به‌صورت خودکار نصب می‌شود. نصب دستیِ idempotent:
 
 ```bash
 sudo bash /opt/kucafe-release/scripts/install-media-cron.sh

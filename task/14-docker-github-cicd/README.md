@@ -27,6 +27,11 @@
 | ۵ | build و آزمون موازی روی پورت ۳۱۰۰ | انجام شد؛ container سالم و smoke موفق |
 | ۶ | Push، حفاظت branch/environment و cutover Apache | نیازمند دسترسی GitHub مالک |
 
+فعال‌سازی فاز ۶ پس از قرارگرفتن PAT موقت، با یک دستور انجام می‌شود:
+`sudo bash scripts/bootstrap-github-cicd.sh`. اسکریپت PR را باز می‌کند؛ merge
+فقط بعد از سبزشدن check اجباری `verify` ممکن است و همان merge اولین deploy و
+cutover محافظت‌شده را آغاز می‌کند.
+
 ## معماری هدف
 
 ```text

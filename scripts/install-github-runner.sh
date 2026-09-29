@@ -29,7 +29,8 @@ sudo -u "$runner_user" "$runner_dir/config.sh" --unattended --replace \
   --labels kucafe-production --work _work
 "$runner_dir/svc.sh" install "$runner_user"
 "$runner_dir/svc.sh" start
-install -o root -g root -m 0755 /opt/kucafe/deploy/server/kucafe-deploy-wrapper /usr/local/sbin/kucafe-deploy
+project_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+install -o root -g root -m 0755 "$project_dir/deploy/server/kucafe-deploy-wrapper" /usr/local/sbin/kucafe-deploy
 cat >/etc/sudoers.d/kucafe-github-runner <<EOF
 $runner_user ALL=(root) NOPASSWD: /usr/local/sbin/kucafe-deploy [0-9a-f]*
 EOF
