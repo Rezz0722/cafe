@@ -24,7 +24,7 @@
 | ۲ | جداسازی media، snapshot افزایشی و retention پنج‌نسخه‌ای | انجام شد |
 | ۳ | CI عمومی بدون secret و دیتابیس یک‌بارمصرف | انجام شد |
 | ۴ | Deploy از runner اختصاصی با trust boundary | آماده؛ ثبت runner نیازمند token مالک است |
-| ۵ | build و آزمون موازی روی پورت ۳۱۰۰ | در حال اعتبارسنجی |
+| ۵ | build و آزمون موازی روی پورت ۳۱۰۰ | انجام شد؛ container سالم و smoke موفق |
 | ۶ | Push، حفاظت branch/environment و cutover Apache | نیازمند دسترسی GitHub مالک |
 
 ## معماری هدف
