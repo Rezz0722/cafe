@@ -38,7 +38,8 @@ rsync "${rsync_args[@]}" "$source_dir/" "$partial/"
 mv "$partial" "$target"
 ln -sfn "$target" "$backup_root/latest"
 
-mapfile -t snapshots < <(find "$backup_root" -mindepth 1 -maxdepth 1 -type d -name '20????????T??????Z' -printf '%f\n' | sort -r)
+# YYYYMMDDTHHMMSSZ = "20" + six date digits + "T" + six time digits.
+mapfile -t snapshots < <(find "$backup_root" -mindepth 1 -maxdepth 1 -type d -name '20??????T??????Z' -printf '%f\n' | sort -r)
 for expired in "${snapshots[@]:retention}"; do
   candidate="$backup_root/$expired"
   [[ "$candidate" == "$backup_root"/* && -d "$candidate" ]] || continue

@@ -13,7 +13,12 @@ running_ids="$(docker ps --format '{{.Image}}' | while read -r image; do
   docker image inspect --format '{{.Id}}' "$image" 2>/dev/null || true
 done | sort -u)"
 
-for repository in kucafe/app kucafe/maintenance; do
+read -r -a repositories <<<"${KUCAFE_IMAGE_REPOSITORIES:-kucafe/app kucafe/maintenance}"
+for repository in "${repositories[@]}"; do
+  [[ "$repository" == kucafe/* ]] || {
+    echo "Refusing to manage an image repository outside kucafe/*: $repository" >&2
+    exit 2
+  }
   mapfile -t rows < <(docker image ls "$repository" --format '{{.CreatedAt}}|{{.ID}}|{{.Repository}}:{{.Tag}}' | sort -r)
   if (( ${#rows[@]} <= keep )); then
     continue
@@ -22,11 +27,15 @@ for repository in kucafe/app kucafe/maintenance; do
   for row in "${rows[@]:keep}"; do
     image_id="${row#*|}"; image_id="${image_id%%|*}"
     image_ref="${row##*|}"
-    if grep -qxF "$image_id" <<<"$running_ids"; then
+    full_image_id="$(docker image inspect --format '{{.Id}}' "$image_ref" 2>/dev/null || true)"
+    if [[ -n "$full_image_id" ]] && grep -qxF "$full_image_id" <<<"$running_ids"; then
       echo "Keeping running image $image_ref"
       continue
     fi
-    docker image rm "$image_ref" >/dev/null || true
-    echo "Removed expired KuCafe image $image_ref"
+    if docker image rm "$image_ref" >/dev/null; then
+      echo "Removed expired KuCafe image $image_ref"
+    else
+      echo "Could not remove expired KuCafe image $image_ref" >&2
+    fi
   done
 done
