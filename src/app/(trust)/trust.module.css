@@ -1,0 +1,191 @@
+.page {
+  width: min(100% - 32px, 980px);
+  margin: 0 auto;
+  padding: 32px 0 88px;
+}
+
+.breadcrumbs {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #68758a;
+  font-size: .82rem;
+  margin-bottom: 18px;
+}
+
+.breadcrumbs a { min-height: 40px; display: inline-flex; align-items: center; color: var(--c-primary-strong); }
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(28px, 5vw, 58px);
+  border-radius: 30px;
+  color: white;
+  background: #174f9e;
+  box-shadow: var(--sh-card);
+}
+
+.hero::after {
+  content: '';
+  position: absolute;
+  width: 280px;
+  height: 280px;
+  left: -110px;
+  bottom: -180px;
+  border-radius: 50%;
+  border: 42px solid rgba(255, 255, 255, .07);
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 14px;
+  color: #d9e8ff;
+  font-size: .82rem;
+  font-weight: 800;
+}
+
+.hero h1 {
+  max-width: 760px;
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 3.7rem);
+  line-height: 1.2;
+}
+
+.hero p {
+  max-width: 720px;
+  margin: 18px 0 0;
+  color: #e7effd;
+  font-size: clamp(.98rem, 2vw, 1.15rem);
+  line-height: 2;
+}
+
+.updated {
+  display: block;
+  margin-top: 18px;
+  color: #bdd4fa;
+  font-size: .78rem;
+}
+
+.leadGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.leadCard {
+  padding: 21px;
+  border: 1px solid var(--c-border);
+  border-radius: 20px;
+  background: var(--c-surface);
+  box-shadow: 0 10px 28px rgba(26, 60, 112, .055);
+}
+
+.leadCard svg { color: #2f6fe0; }
+.leadCard h2 { margin: 14px 0 7px; font-size: 1rem; color: var(--c-ink); }
+.leadCard p { margin: 0; color: var(--c-ink-2); font-size: .86rem; line-height: 1.85; }
+
+.content {
+  display: grid;
+  gap: 18px;
+  margin-top: 28px;
+}
+
+.section {
+  scroll-margin-top: 100px;
+  padding: clamp(22px, 4vw, 36px);
+  border: 1px solid var(--c-border);
+  border-radius: 24px;
+  background: var(--c-surface);
+}
+
+.section h2 {
+  margin: 0 0 12px;
+  color: var(--c-ink);
+  font-size: clamp(1.2rem, 3vw, 1.55rem);
+}
+
+.section h3 { margin: 24px 0 8px; color: var(--c-ink-2); font-size: 1rem; }
+.section p, .section li { color: var(--c-ink-2); line-height: 2; font-size: .94rem; }
+.section p { margin: 0; }
+.section p + p { margin-top: 12px; }
+.section ul, .section ol { margin: 10px 0 0; padding-right: 21px; }
+.section li + li { margin-top: 5px; }
+.section a { color: #2162ce; font-weight: 750; text-decoration: underline; text-underline-offset: 3px; }
+
+.callout {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 20px;
+  border: 1px solid var(--c-primary-border);
+  border-radius: 18px;
+  background: var(--c-primary-soft);
+}
+
+.callout svg { flex: 0 0 auto; margin-top: 4px; color: #2f6fe0; }
+.callout p { color: var(--c-ink-2); }
+
+.steps {
+  list-style: none;
+  counter-reset: steps;
+  padding: 0 !important;
+}
+
+.steps li {
+  position: relative;
+  min-height: 44px;
+  padding-right: 55px;
+  counter-increment: steps;
+}
+
+.steps li::before {
+  content: counter(steps);
+  position: absolute;
+  right: 0;
+  top: 3px;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 13px;
+  color: #fff;
+  background: #2f6fe0;
+  font-weight: 900;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.actions a {
+  display: inline-flex;
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 18px;
+  border-radius: 14px;
+  color: #fff;
+  background: #2f6fe0;
+  font-weight: 850;
+}
+
+.actions a:last-child { color: #234a86; background: #eaf2ff; }
+
+@media (max-width: 760px) {
+  .page { width: min(100% - 24px, 980px); padding-top: 18px; padding-bottom: 110px; }
+  .hero { border-radius: 23px; padding: 27px 22px; }
+  .leadGrid { grid-template-columns: 1fr; }
+  .leadCard { display: grid; grid-template-columns: 32px 1fr; column-gap: 10px; padding: 17px; }
+  .leadCard h2 { margin: 0 0 4px; }
+  .leadCard p { grid-column: 2; }
+  .section { border-radius: 20px; padding: 21px 18px; }
+  .actions { display: grid; grid-template-columns: 1fr; }
+}

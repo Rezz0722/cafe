@@ -19,6 +19,8 @@ export interface TokenClaims {
 }
 
 export interface SessionPayload extends TokenClaims {
+  /** شناسهٔ ردیف نشست؛ توکن بدون آن قابل ابطال نیست و پذیرفته نمی‌شود. */
+  sessionId: string
   userId: string
   phone: string
   role: Role
@@ -93,5 +95,5 @@ export function verifyToken(
   now = Date.now(),
 ): SessionPayload | null {
   const payload = verifyClaims<SessionPayload>(token, secret, now)
-  return payload?.userId ? payload : null
+  return payload?.userId && payload.sessionId ? payload : null
 }

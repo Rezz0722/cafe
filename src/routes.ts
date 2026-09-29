@@ -15,6 +15,11 @@ export const paths = {
   home: '/',
   search: '/search',
   cafe: (slug: string) => `/cafe/${slug}`,
+  /** صفحهٔ مستقل محصول واقعی یک منو؛ sourceId فعلی هویت پایدار import است. */
+  item: (publicId: string | number, slug: string) =>
+    `/item/${encodeURIComponent(String(publicId))}/${encodeURIComponent(slug)}`,
+  /** صفحهٔ مقایسهٔ یک Dish کانونی بین کافه‌ها. */
+  dish: (slug: string) => `/dish/${slug}`,
   /**
    * لندینگ محله‌ها — بالای سرِ صفحات `/mashhad/[district]`.
    *
@@ -23,7 +28,17 @@ export const paths = {
    */
   districtHub: '/mashhad',
   district: (districtSlug: string) => `/mashhad/${districtSlug}`,
+  /** لندینگ‌های کانونی دسته‌های منو؛ برخلاف ترکیب‌های /search ایندکس‌پذیرند. */
+  menuHub: '/mashhad/menu',
+  menuCategory: (facetId: string) => `/mashhad/menu/${encodeURIComponent(facetId)}`,
+  about: '/about',
+  methodology: '/methodology',
+  reviewedCafes: '/reviewed-cafes',
+  editorialPolicy: '/editorial-policy',
+  privacy: '/privacy',
   auth: '/auth',
+  authRegister: '/auth/register',
+  authRecover: '/auth/recover',
   /**
    * «مشارکت» — صفحه‌ای که می‌گوید کاربر چطور می‌تواند داده را بهتر کند.
    *
@@ -34,6 +49,7 @@ export const paths = {
   profile: '/profile',
   /** تغییر رمز — مقصد اجباریِ کسی که رمز موقت گرفته. */
   changePassword: '/profile/password',
+  accountSecurity: '/profile/security',
   /** سلیقه‌سنجی کاربر. */
   taste: '/profile/taste',
   /** ثبت کافه‌ی جدید توسط کاربر. */
@@ -41,8 +57,12 @@ export const paths = {
   /** نظرهای کاربر. */
   myReviews: '/profile/reviews',
   admin: '/admin',
+  /** صف سریع پوشش تجربه‌ها برای تحریریه. */
+  adminExperiences: '/admin/experiences',
   /** پنل مالک کافه — جدا از پنل مدیر. */
   ownerPanel: '/admin/venue',
+  experienceHub: '/mashhad/experience',
+  experience: (slug: string) => `/mashhad/experience/${encodeURIComponent(slug)}`,
 } as const
 
 /** `/search?q=…` — با حذف پارامتر وقتی خالی است. */

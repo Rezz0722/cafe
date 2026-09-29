@@ -2,6 +2,101 @@
   display: grid;
   gap: 16px;
 }
+.cafePicker{min-width:0;margin:0;padding:14px;border:1px solid var(--c-border);border-radius:14px;background:var(--c-surface);display:grid;gap:12px}
+.cafePicker legend{font-size:14px;font-weight:800;padding:0 6px;color:var(--c-ink)}
+.scopeOptions,.pickerTools{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+.scopeOptions label{display:flex;align-items:center;gap:8px;min-height:44px;cursor:pointer;font-size:13px;line-height:1.7}
+.scopeOptions input,.pickerRow input{width:22px;height:22px;flex:0 0 auto;accent-color:var(--c-primary)}
+.pickerSearch{display:grid;gap:6px;font-size:12px;font-weight:700}
+.pickerSearch input{width:100%;min-width:0;min-height:46px;padding:10px 12px;border:1px solid var(--c-border);border-radius:10px;background:var(--c-bg);color:var(--c-ink);font:inherit;font-size:16px}
+.pickerTools strong{margin-inline-end:auto;font-size:13px;color:var(--c-primary)}
+.pickerTools button{min-height:44px;border:1px solid var(--c-border);border-radius:10px;padding:8px 10px;background:var(--c-bg);color:var(--c-ink);font:inherit;font-size:12px;cursor:pointer}
+.pickerList{display:grid;gap:6px;max-height:320px;overflow:auto;overscroll-behavior:contain;padding:2px;min-width:0}
+.pickerRow{display:flex;align-items:center;gap:12px;min-height:64px;padding:10px 12px;border:1px solid var(--c-border);border-radius:12px;cursor:pointer;min-width:0}
+.pickerRow[data-selected]{background:var(--c-primary-soft);border-color:var(--c-primary)}
+/*
+  ردیفی که منبع حذفش کرده. کم‌رنگ و خط‌چین می‌ماند، چون تیک‌زدنش عملیات را
+  می‌کشد — اما پنهان نمی‌شود، چون ادمین باید بداند این مجموعه‌ها در سایت هستند.
+
+  `data-locked` یعنی چک‌باکس واقعاً غیرفعال است (هنوز تیک نخورده). ردیفِ تیک‌خورده
+  قفل نیست و کلاس pointer می‌گیرد: برداشتنِ تیک باید کار کند، وگرنه انتخابی که
+  سرور رد می‌کند از راهِ UI هم قابل اصلاح نیست.
+*/
+.pickerRow[data-stale]{background:var(--c-surface-2, #f6f5f3);border-style:dashed;cursor:default}
+.pickerRow[data-stale] b,.pickerRow[data-stale] small{opacity:.6}
+.pickerRow[data-locked]{cursor:not-allowed}
+.pickerRow[data-stale]:not([data-locked]){cursor:pointer}
+.pickerStale{display:block;margin-top:2px;color:var(--c-danger,#a32020);font-size:11px;font-style:normal;font-weight:700}
+.pickerStaleNote{margin:0;padding:9px 11px;border-radius:10px;background:#fdecea;color:#a5281b;font-size:.72rem;line-height:1.8}
+.pickerRow>span{display:grid;gap:4px;min-width:0;overflow-wrap:anywhere}
+.pickerRow b{font-size:14px;line-height:1.7}.pickerRow small{font-size:11px;color:var(--c-ink-2);line-height:1.6}
+.selectionNote{margin:0;font-size:12px;color:var(--c-ink-2);line-height:1.9}
+.cafePicker button:disabled{opacity:.5;cursor:not-allowed}.cafePicker:disabled{opacity:.65}
+.applyBox input{min-width:0;max-width:100%}.syncActions>form{max-width:100%}.syncActions button,.applyBox button{white-space:normal;min-height:44px}
+
+.syncCard { display: grid; gap: 14px; padding: 18px; border: 1px solid var(--c-primary-border); border-radius: 16px; background: var(--c-primary-soft); }
+.syncHead { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+.syncHead h2 { margin: 0 0 5px; font-size: 1rem; }
+.syncHead p { margin: 0; max-width: 680px; color: var(--c-ink-2); font-size: .8rem; line-height: 1.8; }
+.status { min-height: 30px; display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 999px; background: var(--c-surface); color: var(--c-ink-2); font-size: .72rem; font-weight: 800; }
+.status[data-status='scraping'], .status[data-status='applying'] { color: #8a5400; }
+.status[data-status='ready'], .status[data-status='completed'] { color: var(--c-open, #1f6e2c); }
+.status[data-status='failed'] { color: var(--c-danger, #a32020); }
+.syncActions { display: flex; flex-wrap: wrap; gap: 8px; }
+.progressNote { margin: 0; padding: 10px 12px; border-radius: 10px; background: var(--c-accent-soft); color: var(--c-accent-text-strong); font-size: .78rem; }
+.report { display: grid; gap: 10px; }
+.reportStats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; overflow: hidden; border: 1px solid var(--c-border); border-radius: 12px; background: var(--c-border); }
+.reportStats span { display: grid; gap: 2px; padding: 10px 12px; background: var(--c-surface); color: var(--c-muted); font-size: .7rem; }
+.reportStats strong { color: var(--c-ink); font-size: 1rem; }
+.reportSection { border: 1px solid var(--c-border); border-radius: 12px; background: var(--c-surface); overflow: hidden; }
+.reportSection > summary { min-height: 44px; display: flex; align-items: center; padding: 8px 12px; color: var(--c-ink); font-size: .8rem; font-weight: 800; cursor: pointer; }
+.reportSection ul { max-height: 300px; overflow: auto; margin: 0; padding: 0 34px 12px 12px; color: var(--c-ink-2); font-size: .75rem; line-height: 1.9; }
+.changeList, .priceTable { max-height: 400px; overflow: auto; border-top: 1px solid var(--c-border-3); }
+.changeList > div, .priceTable > div { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 12px; border-bottom: 1px solid var(--c-border-3); font-size: .75rem; }
+.changeList span { color: var(--c-muted); }
+.priceTable > div > span:first-child { display: grid; gap: 1px; }
+.priceTable small { color: var(--c-muted); }
+.priceTable em { padding: 2px 7px; border-radius: 999px; background: var(--c-accent-soft); color: var(--c-accent-text-strong); font-size: .65rem; font-style: normal; }
+.applyBox { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 12px; border: 1px solid #b97614; border-radius: 12px; background: var(--c-surface); }
+.applyBox p { flex: 1 1 100%; margin: 0; color: var(--c-ink-2); font-size: .75rem; line-height: 1.7; }
+.applyBox input { flex: 1 1 190px; min-height: 42px; padding: 8px 11px; border: 1px solid var(--c-border); border-radius: 10px; font: inherit; }
+
+/*
+  نمایشگر زنده‌ی پیشرفت. عمداً روی سطحِ کارتِ sync می‌نشیند و پس‌زمینه‌ی متفاوت
+  دارد: این تنها بخشی از پنل است که خودش داده‌ی تازه می‌گیرد، و کاربر باید بفهمد
+  چیزی دارد زنده به‌روز می‌شود.
+*/
+.logPanel { display: grid; gap: 10px; padding: 14px; border: 1px solid var(--c-border); border-radius: 12px; background: var(--c-surface); }
+.logPanelHead { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.logPanelHead h3 { margin: 0; font-size: .86rem; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.logRunId { font-family: ui-monospace, monospace; font-size: .68rem; color: var(--c-muted); font-weight: 400; }
+.logRefresh, .logTools button { min-height: 44px; padding: 8px 12px; border: 1px solid var(--c-border); border-radius: 10px; background: var(--c-bg); color: var(--c-ink); font: inherit; font-size: .75rem; cursor: pointer; }
+.logTools { display: flex; flex-wrap: wrap; gap: 8px; }
+.logTools button[data-active] { border-color: var(--c-primary); background: var(--c-primary-soft); font-weight: 800; }
+.logStage { margin: 0; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; font-size: .8rem; color: var(--c-ink-2); }
+.logStage b { color: var(--c-ink); font-size: .88rem; }
+.logStage small { color: var(--c-muted); font-size: .72rem; }
+.logStale { flex: 1 1 100%; color: var(--c-danger, #a32020); font-size: .72rem; font-style: normal; font-weight: 700; }
+
+/* نوار پیشرفت: ارتفاع ثابت و متنِ روی نوار، تا در فونتِ بزرگ هم نپرد. */
+.logBarTrack { position: relative; height: 34px; border: 1px solid var(--c-border); border-radius: 999px; background: var(--c-bg); overflow: hidden; }
+.logBarFill { position: absolute; inset-block: 0; inset-inline-start: 0; background: var(--c-primary); opacity: .22; transition: inline-size .4s ease; }
+.logBarText { position: relative; display: flex; align-items: center; justify-content: center; height: 100%; font-size: .74rem; font-weight: 800; color: var(--c-ink); }
+/*
+  نبودِ نوار عمدی است: قبل از اولین خطِ لاگ درصدی وجود ندارد. یک نوار خالی یا
+  متحرک وانمود می‌کند که چیزی در حال رفتن است.
+*/
+.logBarUnknown { height: 34px; display: flex; align-items: center; padding: 0 12px; border: 1px dashed var(--c-border); border-radius: 999px; font-size: .74rem; color: var(--c-muted); }
+
+.logStats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; margin: 0; border: 1px solid var(--c-border); border-radius: 10px; background: var(--c-border); overflow: hidden; }
+.logStats > div { display: grid; gap: 2px; padding: 8px 10px; background: var(--c-surface); }
+.logStats dt { font-size: .68rem; color: var(--c-muted); }
+.logStats dd { margin: 0; font-size: .92rem; font-weight: 800; color: var(--c-ink); }
+.logStats dd.logBad { color: var(--c-danger, #a32020); }
+.logLastError { margin: 0; padding: 9px 11px; border-radius: 10px; background: #fdecea; color: #a5281b; font-size: .72rem; line-height: 1.8; overflow-wrap: anywhere; }
+
+/* لاگ خام: عرضِ ثابت، اسکرول افقی، و ارقامِ هم‌عرض تا ستون‌ها به‌هم نریزد. */
+.logPre { margin: 0; max-height: 320px; overflow: auto; padding: 11px 13px; border: 1px solid var(--c-border); border-radius: 10px; background: var(--c-bg); color: var(--c-ink-2); font-family: ui-monospace, monospace; font-size: .72rem; line-height: 1.9; white-space: pre-wrap; overflow-wrap: anywhere; }
 
 .list {
   list-style: none;
@@ -131,4 +226,13 @@
 .success {
   background: #eaf7ee;
   color: #1e6b35;
+}
+
+@media (max-width: 720px) {
+  .reportStats { grid-template-columns: 1fr 1fr; }
+  .changeList > div, .priceTable > div { align-items: flex-start; flex-direction: column; }
+  .syncCard { padding: 14px; }
+  /* چهار ستون روی موبایل به یک ستون می‌شود: اعداد جای خودشان می‌مانند و
+     برچسب‌ها بالای عدد می‌نشینند، که برای خواندن سریع‌تر است. */
+  .logStats { grid-template-columns: 1fr 1fr; }
 }

@@ -1,0 +1,35 @@
+name: Deploy production
+
+on:
+  push:
+    branches: [production]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kucafe-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment: production
+    runs-on: [self-hosted, linux, x64, kucafe-production]
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+          clean: true
+      - name: Verify workflow checkout
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          bash scripts/check-no-secrets.sh
+      - name: Unit and type checks
+        run: |
+          npm ci --no-audit --no-fund
+          npm run typecheck
+          npm test
+      - name: Deploy exact protected-branch revision
+        run: sudo /usr/local/sbin/kucafe-deploy "$GITHUB_SHA"

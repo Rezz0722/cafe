@@ -78,6 +78,10 @@ export const DATA_SOURCE = [
   'inferred', // محاسبه‌شده از بقیه‌ی داده
 ] as const
 
+// `editorial` فقط منبعِ قضاوت Attribute است، نه منبع واردکردن خود مکان یا
+// منو. انتهای ENUM آمده تا MariaDB آن را بدون rebuild جدول اضافه کند.
+export const ATTRIBUTE_DATA_SOURCE = [...DATA_SOURCE, 'editorial'] as const
+
 /**
  * وضعیت مختصات. بدون این، یک ژئوکدِ خراب سورت «نزدیک‌ترین» را برای همه خراب
  * می‌کند — در داده‌ی واقعی ۱۵ مکان بیرون کادر مشهد بودند و ۷۳ مکان بی‌مختصات.
@@ -235,6 +239,21 @@ export const media = mysqlTable(
 // مکان
 // ═══════════════════════════════════════════════════════════════════════
 
+/** هویت مجموعهٔ مادر؛ اطلاعات عملیاتی همیشه روی شعبه (`place`) است. */
+export const placeBrand = mysqlTable(
+  'place_brand',
+  {
+    id: int('id').autoincrement().primaryKey(),
+    slug: varchar('slug', { length: 140 }).notNull(),
+    name: varchar('name', { length: 200 }).notNull(),
+    nameEn: varchar('name_en', { length: 200 }),
+    status: mysqlEnum('status', ['active', 'inactive']).notNull().default('active'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow().onUpdateNow(),
+  },
+  (t) => [uniqueIndex('place_brand_slug_uq').on(t.slug)],
+)
+
 export const place = mysqlTable(
   'place',
   {
@@ -245,6 +264,12 @@ export const place = mysqlTable(
     sourceId: int('source_id'),
     /** `یوزرنیم` منبع — پایه‌ی slug، چون ۱۰۰٪ یکتاست و نام‌ها نیستند. */
     sourceUsername: varchar('source_username', { length: 140 }),
+
+    /** برند/مجموعهٔ مادر؛ خودِ هر ردیف place یک شعبهٔ مستقل است. */
+    brandId: int('brand_id').references(() => placeBrand.id, { onDelete: 'set null' }),
+    /** نام کوتاه شعبه، بدون تکرار نام برند؛ مثل «قاضی طباطبایی». */
+    branchName: varchar('branch_name', { length: 160 }),
+    isPrimaryBranch: boolean('is_primary_branch').notNull().default(false),
 
     name: varchar('name', { length: 200 }).notNull(),
     nameEn: varchar('name_en', { length: 200 }),
@@ -296,12 +321,15 @@ export const place = mysqlTable(
     lastVerifiedAt: timestamp('last_verified_at'),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow().onUpdateNow(),
+    /** نسخهٔ افزایشی فرم‌های مدیریت برای جلوگیری از overwrite هم‌زمان. */
+    revision: int('revision').notNull().default(0),
     createdByUserId: char('created_by_user_id', { length: 36 }),
   },
   (t) => [
     uniqueIndex('place_slug_uq').on(t.slug),
     uniqueIndex('place_source_uq').on(t.sourceId),
     index('place_status_idx').on(t.status),
+    index('place_brand_idx').on(t.brandId, t.status),
     index('place_district_idx').on(t.districtId),
     index('place_geo_idx').on(t.geoStatus, t.lat, t.lng),
     index('place_price_idx').on(t.priceTier),
@@ -415,10 +443,15 @@ export const placeAttribute = mysqlTable(
     /** ۰ نه · ۱ تاحدی · ۲ بله — عمداً boolean نیست. */
     value: tinyint('value').notNull(),
     confidence: tinyint('confidence').notNull().default(50),
-    source: mysqlEnum('source', DATA_SOURCE).notNull().default('inferred'),
+    source: mysqlEnum('source', ATTRIBUTE_DATA_SOURCE).notNull().default('inferred'),
     verifiedAt: timestamp('verified_at'),
   },
-  (t) => [primaryKey({ columns: [t.placeId, t.attributeId] })],
+  (t) => [
+    primaryKey({ columns: [t.placeId, t.attributeId] }),
+    // صفحه‌های Experience از attribute به مکان می‌رسند؛ کلید اصلی مسیر عکس
+    // این پرس‌وجو را پوشش نمی‌دهد چون با place_id شروع می‌شود.
+    index('place_attribute_discovery_idx').on(t.attributeId, t.value, t.placeId),
+  ],
 )
 
 /** رول‌آپ facet در سطح مکان — تا فیلتر کردن به join با ۱۹هزار آیتم نیفتد. */
@@ -479,7 +512,10 @@ export const placePhoto = mysqlTable(
     uploadedByUserId: char('uploaded_by_user_id', { length: 36 }),
     createdAt: timestamp('created_at').notNull().defaultNow(),
   },
-  (t) => [index('place_photo_place_idx').on(t.placeId, t.sortOrder)],
+  (t) => [
+    index('place_photo_place_idx').on(t.placeId, t.sortOrder),
+    uniqueIndex('place_photo_media_uq').on(t.placeId, t.mediaId),
+  ],
 )
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -499,15 +535,29 @@ export const menuSection = mysqlTable(
     mediaId: int('media_id').references(() => media.id),
     /** facet کانونیِ استخراج‌شده از نام دسته — ۱٬۹۴۵ نام یکتا → ~۴۰ facet. */
     facetId: varchar('facet_id', { length: 48 }).references(() => facet.id),
+    /**
+     * منبع‌هایی مثل راموز یک منوی چندشعبه‌ای پس می‌دهند. دستهٔ متعلق به
+     * شعبهٔ دیگر حفظ می‌شود اما تا تعیین مالک واقعی در صفحهٔ این شعبه منتشر
+     * نمی‌شود.
+     */
+    branchScope: mysqlEnum('branch_scope', ['shared', 'branch', 'other_branch', 'unverified'])
+      .notNull()
+      .default('shared'),
+    branchLabel: varchar('branch_label', { length: 200 }),
     sortOrder: int('sort_order').notNull().default(0),
   },
-  (t) => [index('menu_section_place_idx').on(t.placeId, t.sortOrder)],
+  (t) => [
+    index('menu_section_place_idx').on(t.placeId, t.sortOrder),
+    index('menu_section_scope_idx').on(t.placeId, t.branchScope, t.sortOrder),
+  ],
 )
 
 export const menuItem = mysqlTable(
   'menu_item',
   {
     id: int('id').autoincrement().primaryKey(),
+    /** هویت عمومی پایدار؛ برخلاف id داخلی پس از import عوض نمی‌شود. */
+    publicId: varchar('public_id', { length: 40 }).notNull(),
     /** عمداً denormalize شده: هر پرس‌وجوی «آیتم‌های این کافه» یک join کمتر. */
     placeId: int('place_id')
       .notNull()
@@ -523,18 +573,51 @@ export const menuItem = mysqlTable(
     /** تومان. `NULL` = قیمت نامعلوم؛ صفر یک قیمتِ معتبر است، پس صفر نیست. */
     price: int('price'),
     priceUnknown: boolean('price_unknown').notNull().default(false),
+    /** آیتم‌هایی مثل فروش تجهیزات/خدمات که نباید سطح قیمت خوراکی‌های مکان را منحرف کنند. */
+    excludeFromPriceStats: boolean('exclude_from_price_stats').notNull().default(false),
     available: boolean('available').notNull().default(true),
     featured: boolean('featured').notNull().default(false),
     mediaId: int('media_id').references(() => media.id),
     dishId: int('dish_id').references(() => dish.id),
     sortOrder: int('sort_order').notNull().default(0),
+    /** آرشیو با «ناموجود» فرق دارد: ناموجود موقتی است، آرشیو از سایت پنهان می‌شود. */
+    archivedAt: timestamp('archived_at'),
     priceUpdatedAt: timestamp('price_updated_at'),
   },
   (t) => [
+    uniqueIndex('menu_item_public_id_uq').on(t.publicId),
+    uniqueIndex('menu_item_source_id_uq').on(t.sourceId),
     index('menu_item_section_idx').on(t.sectionId, t.sortOrder),
     index('menu_item_place_idx').on(t.placeId),
+    index('menu_item_place_archive_idx').on(t.placeId, t.archivedAt, t.sectionId, t.sortOrder),
     index('menu_item_dish_idx').on(t.dishId),
     index('menu_item_price_idx').on(t.price),
+  ],
+)
+
+/**
+ * تنوع‌های قابل سفارش یک آیتم؛ مثل «کوچک/بزرگ» یا «تک‌نفره/دونفره».
+ * قیمت پایهٔ menu_item برای آیتم دارای تنوع، کمترین قیمت تنوع‌های موجود است
+ * تا جست‌وجو و مرتب‌سازی قیمت همچنان یک مقدار قابل توضیح داشته باشند.
+ */
+export const menuItemVariant = mysqlTable(
+  'menu_item_variant',
+  {
+    id: int('id').autoincrement().primaryKey(),
+    itemId: int('item_id')
+      .notNull()
+      .references(() => menuItem.id, { onDelete: 'cascade' }),
+    label: varchar('label', { length: 120 }).notNull(),
+    price: int('price'),
+    available: boolean('available').notNull().default(true),
+    sortOrder: int('sort_order').notNull().default(0),
+    priceUpdatedAt: timestamp('price_updated_at'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow().onUpdateNow(),
+  },
+  (t) => [
+    uniqueIndex('menu_item_variant_label_uq').on(t.itemId, t.label),
+    index('menu_item_variant_item_idx').on(t.itemId, t.sortOrder),
   ],
 )
 
@@ -558,7 +641,9 @@ export const appUser = mysqlTable(
     email: varchar('email', { length: 160 }),
     name: varchar('name', { length: 120 }).notNull().default(''),
     role: mysqlEnum('role', ['customer', 'owner', 'admin']).notNull().default('customer'),
-    status: mysqlEnum('status', ['active', 'blocked']).notNull().default('active'),
+    status: mysqlEnum('status', ['active', 'blocked', 'deactivated']).notNull().default('active'),
+    /** شماره فقط پس از مصرف OTP مخصوص verify_phone تأییدشده محسوب می‌شود. */
+    phoneVerifiedAt: timestamp('phone_verified_at'),
 
     /** scrypt. `NULL` = این حساب فقط با کد پیامکی وارد می‌شود. */
     passwordHash: varchar('password_hash', { length: 255 }),
@@ -606,6 +691,17 @@ export const userPlaceRole = mysqlTable(
     index('user_place_role_place_idx').on(t.placeId),
   ],
 )
+
+/** دسترسی تحریریه مستقل از نقش مدیریتی؛ یک مالک نیز می‌تواند بلاگر باشد. */
+export const bloggerProfile = mysqlTable('blogger_profile', {
+  userId: char('user_id', { length: 36 }).primaryKey().references(() => appUser.id, { onDelete: 'cascade' }),
+  instagramHandle: varchar('instagram_handle', { length: 64 }),
+  bio: varchar('bio', { length: 300 }),
+  active: boolean('active').notNull().default(true),
+  verifiedByUserId: char('verified_by_user_id', { length: 36 }),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow().onUpdateNow(),
+})
 
 /**
  * پروفایل سلیقه — خروجی سلیقه‌سنجی چندسؤالی.
@@ -659,6 +755,48 @@ export const savedPlace = mysqlTable(
     index('saved_place_place_idx').on(t.placeId),
   ],
 )
+
+/** عضویت بازاریابی با رضایت صریح؛ مستقل از «ذخیره‌کردن» شخصی کافه. */
+export const clubMembership = mysqlTable('club_membership', {
+  userId: char('user_id', { length: 36 }).notNull().references(() => appUser.id, { onDelete: 'cascade' }),
+  placeId: int('place_id').notNull().references(() => place.id, { onDelete: 'cascade' }),
+  status: mysqlEnum('status', ['active', 'left', 'blocked']).notNull().default('active'),
+  consentAt: timestamp('consent_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow().onUpdateNow(),
+}, (t) => [primaryKey({ columns: [t.userId, t.placeId] }), index('club_membership_place_idx').on(t.placeId, t.status)])
+
+export const clubOffer = mysqlTable('club_offer', {
+  id: int('id').autoincrement().primaryKey(),
+  placeId: int('place_id').notNull().references(() => place.id, { onDelete: 'cascade' }),
+  title: varchar('title', { length: 120 }).notNull(),
+  description: varchar('description', { length: 500 }),
+  discountLabel: varchar('discount_label', { length: 80 }).notNull(),
+  active: boolean('active').notNull().default(true),
+  expiresAt: timestamp('expires_at'),
+  createdByUserId: char('created_by_user_id', { length: 36 }),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+}, (t) => [index('club_offer_place_idx').on(t.placeId, t.active)])
+
+export const clubCode = mysqlTable('club_code', {
+  id: int('id').autoincrement().primaryKey(),
+  offerId: int('offer_id').notNull().references(() => clubOffer.id, { onDelete: 'cascade' }),
+  userId: char('user_id', { length: 36 }).notNull().references(() => appUser.id, { onDelete: 'cascade' }),
+  code: varchar('code', { length: 16 }).notNull(),
+  status: mysqlEnum('status', ['issued', 'redeemed', 'cancelled', 'expired']).notNull().default('issued'),
+  issuedAt: timestamp('issued_at').notNull().defaultNow(),
+  redeemedAt: timestamp('redeemed_at'),
+  redeemedByUserId: char('redeemed_by_user_id', { length: 36 }),
+}, (t) => [uniqueIndex('club_code_code_uq').on(t.code), index('club_code_user_idx').on(t.userId, t.status)])
+
+/** کمپین عمومی روی قیمت پایه منوی همان شعبه؛ مستقل از کد باشگاه. */
+export const venueDiscount = mysqlTable('venue_discount', {
+  placeId:int('place_id').primaryKey().references(()=>place.id,{onDelete:'cascade'}),
+  percent:int('percent').notNull(),
+  expiresAt:timestamp('expires_at').notNull(),
+  active:boolean('active').notNull().default(true),
+  createdByUserId:char('created_by_user_id',{length:36}),
+  updatedAt:timestamp('updated_at').notNull().defaultNow().onUpdateNow(),
+},t=>[index('venue_discount_active_expiry_idx').on(t.active,t.expiresAt)])
 
 /** نشست فعال — تا ادمین بتواند ورودها را ببیند و نشست را باطل کند. */
 export const authSession = mysqlTable(
@@ -733,6 +871,10 @@ export const review = mysqlTable(
     moderatedByUserId: char('moderated_by_user_id', { length: 36 }),
     moderatedAt: timestamp('moderated_at'),
     rejectReason: varchar('reject_reason', { length: 255 }),
+    /** نشانِ نقش در لحظهٔ ثبت؛ با تغییر نقش، سابقهٔ تحریریه‌ای از بین نمی‌رود. */
+    isBloggerReview: boolean('is_blogger_review').notNull().default(false),
+    /** لینک مستقیم Reel/Post اینستاگرام؛ فقط Backend برای نقش blogger می‌پذیرد. */
+    videoUrl: varchar('video_url', { length: 500 }),
     createdAt: timestamp('created_at').notNull().defaultNow(),
   },
   (t) => [
@@ -754,6 +896,20 @@ export const reviewPhoto = mysqlTable(
     sortOrder: tinyint('sort_order').notNull().default(0),
   },
   (t) => [primaryKey({ columns: [t.reviewId, t.mediaId] })],
+)
+
+/** آیتم‌هایی که نویسندهٔ نظر واقعاً سفارش داده است — چند انتخاب برای هر نظر. */
+export const reviewItem = mysqlTable(
+  'review_item',
+  {
+    reviewId: int('review_id').notNull().references(() => review.id, { onDelete: 'cascade' }),
+    menuItemId: int('menu_item_id').notNull().references(() => menuItem.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.reviewId, t.menuItemId] }),
+    index('review_item_menu_item_idx').on(t.menuItemId),
+  ],
 )
 
 export const reviewVote = mysqlTable(
@@ -908,6 +1064,13 @@ export const searchLog = mysqlTable(
   {
     id: bigint('id', { mode: 'number' }).autoincrement().primaryKey(),
     query: varchar('query', { length: 255 }).notNull().default(''),
+    requestedScope: mysqlEnum('requested_scope', ['all', 'places', 'items'])
+      .notNull()
+      .default('all'),
+    resolvedEntity: mysqlEnum('resolved_entity', ['places', 'items'])
+      .notNull()
+      .default('places'),
+    resolvedIntent: varchar('resolved_intent', { length: 80 }),
     facetIds: varchar('facet_ids', { length: 500 }).notNull().default(''),
     dishId: int('dish_id'),
     districtId: varchar('district_id', { length: 48 }),
@@ -924,6 +1087,7 @@ export const searchLog = mysqlTable(
   (t) => [
     index('search_log_created_idx').on(t.createdAt),
     index('search_log_zero_idx').on(t.resultCount),
+    index('search_log_zero_entity_idx').on(t.resultCount, t.resolvedEntity, t.createdAt),
   ],
 )
 
@@ -979,6 +1143,7 @@ export const setting = mysqlTable('setting', {
 // ═══════════════════════════════════════════════════════════════════════
 
 export const placeRelations = relations(place, ({ one, many }) => ({
+  brand: one(placeBrand, { fields: [place.brandId], references: [placeBrand.id] }),
   district: one(district, { fields: [place.districtId], references: [district.id] }),
   logo: one(media, { fields: [place.logoMediaId], references: [media.id] }),
   phones: many(placePhone),
@@ -993,17 +1158,27 @@ export const placeRelations = relations(place, ({ one, many }) => ({
   reviews: many(review),
 }))
 
+export const placeBrandRelations = relations(placeBrand, ({ many }) => ({
+  branches: many(place),
+}))
+
 export const menuSectionRelations = relations(menuSection, ({ one, many }) => ({
   place: one(place, { fields: [menuSection.placeId], references: [place.id] }),
   image: one(media, { fields: [menuSection.mediaId], references: [media.id] }),
   items: many(menuItem),
 }))
 
-export const menuItemRelations = relations(menuItem, ({ one }) => ({
+export const menuItemRelations = relations(menuItem, ({ one, many }) => ({
   section: one(menuSection, { fields: [menuItem.sectionId], references: [menuSection.id] }),
   place: one(place, { fields: [menuItem.placeId], references: [place.id] }),
   image: one(media, { fields: [menuItem.mediaId], references: [media.id] }),
   dish: one(dish, { fields: [menuItem.dishId], references: [dish.id] }),
+  variants: many(menuItemVariant),
+  reviews: many(reviewItem),
+}))
+
+export const menuItemVariantRelations = relations(menuItemVariant, ({ one }) => ({
+  item: one(menuItem, { fields: [menuItemVariant.itemId], references: [menuItem.id] }),
 }))
 
 export const reviewRelations = relations(review, ({ one, many }) => ({
@@ -1011,6 +1186,12 @@ export const reviewRelations = relations(review, ({ one, many }) => ({
   author: one(appUser, { fields: [review.userId], references: [appUser.id] }),
   photos: many(reviewPhoto),
   replies: many(reviewReply),
+  items: many(reviewItem),
+}))
+
+export const reviewItemRelations = relations(reviewItem, ({ one }) => ({
+  review: one(review, { fields: [reviewItem.reviewId], references: [review.id] }),
+  menuItem: one(menuItem, { fields: [reviewItem.menuItemId], references: [menuItem.id] }),
 }))
 
 export const appUserRelations = relations(appUser, ({ many }) => ({

@@ -3,6 +3,16 @@
 راهنمای کافه‌های مشهد با **قیمت واقعی منو**، نقشه‌ی آفلاین، و پنل جدا برای
 کاربر، کافه‌دار و مدیر.
 
+> مسیر رسمی توسعه و انتشار: feature branch در GitHub → Pull Request → CI →
+> شاخهٔ محافظت‌شدهٔ `production` → Docker deploy روی runner اختصاصی. راهنمای
+> کامل: [`docs/DOCKER_GITHUB_CICD_FA.md`](docs/DOCKER_GITHUB_CICD_FA.md).
+
+راه‌اندازی کامل محلی با Docker:
+
+```bash
+docker compose -f compose.local.yaml up --build
+```
+
 | سنجه | مقدار |
 | --- | --- |
 | مجموعه | **۳۳۱** (۳۲۶ منتشرشده) |

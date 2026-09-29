@@ -4,6 +4,7 @@
   max-width: 430px;
   margin-inline: auto;
   min-height: 100vh;
+  min-height: 100dvh;
   position: relative;
   background: var(--c-surface);
   line-height: 1.7;
@@ -102,7 +103,7 @@
 }
 
 .primaryButton:hover {
-  background: var(--c-primary-strong);
+  background: var(--c-primary-action-strong);
 }
 
 .primaryButton:disabled {

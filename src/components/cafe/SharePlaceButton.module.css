@@ -1,0 +1,28 @@
+.button {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding-inline: 0;
+  width: 46px;
+  flex: 0 0 46px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-control, 14px);
+  background: var(--c-surface);
+  color: var(--c-ink-2);
+  font-weight: 700;
+  transition: border-color var(--t-fast), color var(--t-fast), background var(--t-fast);
+}
+
+.button:active { transform: scale(.98); }
+
+@media (hover: hover) and (pointer: fine) {
+  .button:hover { border-color: var(--c-primary-strong); color: var(--c-primary-strong); background: var(--c-primary-soft); }
+}
+
+@media (max-width: 640px) {
+  .button {
+    width: 100%;
+  }
+}

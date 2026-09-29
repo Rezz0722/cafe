@@ -25,6 +25,7 @@ import {
   toggleSavedPlace,
 } from '@/core/user/userData'
 import { paths } from '@/routes'
+import { setMembership } from '@/core/club/service'
 import type { ActionState } from './state'
 
 function str(form: FormData, key: string): string {
@@ -39,6 +40,31 @@ function num(form: FormData, key: string): number | null {
   return Number.isFinite(parsed) ? parsed : null
 }
 
+export async function toggleClubMembershipAction(_prev: ActionState, form: FormData): Promise<ActionState> {
+  const guard = await requireWritableUser()
+  if (!guard.ok) return { ok: false, error: guard.error }
+  const placeId = num(form, 'placeId')
+  const active = str(form, 'active') === '1'
+  if (!placeId) return { ok: false, error: 'کافه مشخص نیست.' }
+  try {
+    await setMembership(guard.userId, placeId, active)
+    const slug = str(form, 'slug')
+    if (slug) revalidatePath(paths.cafe(slug))
+    revalidatePath(paths.profile)
+    return { ok: true, message: active ? 'عضویت باشگاه فعال شد.' : 'عضویت باشگاه لغو شد.' }
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : 'عضویت تغییر نکرد.' }
+  }
+}
+
+function nums(form: FormData, key: string): number[] {
+  return form.getAll(key).flatMap((value) => {
+    if (typeof value !== 'string') return []
+    const parsed = Number(value)
+    return Number.isInteger(parsed) && parsed > 0 ? [parsed] : []
+  })
+}
+
 /** گارد مشترک — کاربر وارد و بدون حالت مشاهده. */
 async function requireWritableUser(): Promise<
   { ok: true; userId: string; name: string } | { ok: false; error: string }
@@ -46,6 +72,11 @@ async function requireWritableUser(): Promise<
   const { user, actor } = await getSession()
   if (!user) return { ok: false, error: 'ابتدا وارد شوید.' }
   if (actor) return { ok: false, error: VIEW_AS_READONLY }
+  const account = await findUserById(user.id)
+  if (!account || account.blocked) return { ok: false, error: 'حساب فعال پیدا نشد.' }
+  if (account.mustChangePassword) {
+    return { ok: false, error: 'پیش از ادامه، رمز موقت را از بخش امنیت حساب تغییر دهید.' }
+  }
   return { ok: true, userId: user.id, name: user.name }
 }
 
@@ -138,6 +169,10 @@ export async function submitReviewAction(
       ratingService: num(form, 'ratingService'),
       ratingValue: num(form, 'ratingValue'),
       visitDate: str(form, 'visitDate') || null,
+      menuItemIds: nums(form, 'menuItemId'),
+      reviewId: num(form, 'reviewId'),
+      isBlogger: account?.isBlogger === true,
+      videoUrl: str(form, 'videoUrl') || null,
     },
     {
       requireApproval: moderation.reviewsRequireApproval,
@@ -152,6 +187,8 @@ export async function submitReviewAction(
   const slug = str(form, 'slug')
   if (slug) revalidatePath(paths.cafe(slug))
   revalidatePath(paths.myReviews)
+  revalidatePath(paths.reviewedCafes)
+  revalidatePath('/sitemap.xml')
 
   // پیام باید با واقعیت بخواند: اگر تأیید خودکار روشن است، «بعد از بررسی»
   // دروغ است و کاربر بی‌دلیل منتظر می‌ماند.

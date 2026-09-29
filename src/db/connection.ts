@@ -29,6 +29,7 @@
 
 import { drizzle, type MySql2Database } from 'drizzle-orm/mysql2'
 import mysql from 'mysql2/promise'
+import { AsyncLocalStorage } from 'node:async_hooks'
 import { ensureEnvLoaded } from '@/core/config/loadEnv'
 import * as schema from './schema'
 
@@ -41,6 +42,7 @@ interface DbCache {
 
 const cache = globalThis as unknown as { __cafegardDb?: DbCache }
 cache.__cafegardDb ??= {}
+const transactions = new AsyncLocalStorage<{ db: Db; committed: (() => void)[] }>()
 
 export function getPool(): mysql.Pool {
   const existing = cache.__cafegardDb!.pool
@@ -114,9 +116,36 @@ export function getPool(): mysql.Pool {
 }
 
 export function getDb(): Db {
+  const active = transactions.getStore()
+  if (active) return active.db
   cache.__cafegardDb!.db ??= drizzle(getPool(), { schema, mode: 'default' })
   return cache.__cafegardDb!.db!
 }
+
+/** Request-local transaction: repositories called below share the same connection. */
+export async function withDbTransaction<T>(work: () => Promise<T>): Promise<T> {
+  const parent = transactions.getStore()
+  if (parent) {
+    const effects: (() => void)[] = []
+    const value = await parent.db.transaction(tx => transactions.run({ db: tx as unknown as Db, committed: effects }, work))
+    parent.committed.push(...effects)
+    return value
+  }
+  const committed: (() => void)[] = []
+  const value = await getDb().transaction(tx => transactions.run({ db: tx as unknown as Db, committed }, work))
+  for (const effect of committed) {
+    try { effect() } catch { console.warn('[db] post-commit cache invalidation failed; data is committed') }
+  }
+  return value
+}
+
+export function afterDbCommit(effect: () => void): void {
+  const active = transactions.getStore()
+  if (active) active.committed.push(effect)
+  else effect()
+}
+
+export function inDbTransaction(): boolean { return Boolean(transactions.getStore()) }
 
 /** برای اسکریپت‌ها: اتصال را ببند تا فرآیند Node تمام شود. */
 export async function closeDb(): Promise<void> {

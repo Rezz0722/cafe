@@ -1,9 +1,41 @@
 # استقرار «کو کافه» روی VPS
 
+> **مسیر رسمی جدید:** انتشار production فقط از GitHub و Docker انجام می‌شود.
+> [راهنمای Docker و GitHub CI/CD](docs/DOCKER_GITHUB_CICD_FA.md) مرجع اصلی
+> است. مطالب PM2 این فایل صرفاً برای شناخت استقرار قدیمی و rollback دورهٔ
+> مهاجرت نگه داشته شده‌اند.
+
 سایت **کاملاً پویا** است و باید با Node اجرا شود: احراز هویت، پنل ادمین، پنل
 کافه‌دار، ثبت نظر و بخش مشارکت همه Server Action دارند. خروجی استاتیک
 (`output: 'export'`) برای این پروژه ممکن نیست — Next آن حالت را با Server Action
 اصلاً build نمی‌کند.
+
+## بکاپ کامل و بازیابی روی سرور تازه
+
+بکاپ production شامل سورس همین worktree، schema و تمام داده‌های MariaDB،
+مدیا، نقشه‌ها، فایل محیط و خود اسکریپت بازیابی است:
+
+```bash
+sudo KUCAFE_ENV_FILE=/path/to/.env.local npm run backup:full
+```
+
+خروجی در `/var/backups/kucafe/` با دسترسی `0600` ساخته می‌شود و کنار آن
+فایل SHA-256 قرار می‌گیرد. چون آرشیو شامل `SESSION_SECRET` و رمز دیتابیس است،
+باید مثل رمز عبور نگهداری شود.
+
+روی یک Ubuntu/Debian تازه، آرشیو و checksum را منتقل و اجرا کنید:
+
+```bash
+tar -xOzf kucafe-full-*.tar.gz restore-full.sh > restore-full.sh
+chmod 700 restore-full.sh
+sudo ./restore-full.sh kucafe-full-*.tar.gz \
+  --domain kucafe.ir --email admin@example.com
+```
+
+اسکریپت Node.js 22، MariaDB، Nginx، systemd و Certbot را آماده می‌کند، داده
+و تصاویر را برمی‌گرداند، build production می‌سازد و در پایان سلامت دیتابیس
+و سرویس را بررسی می‌کند. گزینه‌های کامل با `./restore-full.sh --help` دیده
+می‌شوند.
 
 معماری روی سرور:
 

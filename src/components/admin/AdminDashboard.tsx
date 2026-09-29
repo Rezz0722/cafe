@@ -10,29 +10,41 @@
  * نشانِ عددی روی تب‌ها همان کارهای منتظر را نشان می‌دهد.
  */
 
-import { useActionState, useState } from 'react'
-import { useFormStatus } from 'react-dom'
+import { useState } from 'react'
+import { usePanelTab } from '@/components/admin/usePanelTab'
+import { useAdminCatalog } from '@/components/admin/useAdminCatalog'
+import { CatalogPagination } from '@/components/admin/CatalogPagination'
+import { AuditHistory } from '@/components/admin/AuditHistory'
+import { ManagedForm, useManagedActionState, useManagedFormStatus, useUnsavedForms } from '@/components/admin/ManagedForm'
 import Link from 'next/link'
 import {
   assignPlaceAction,
+  createPlaceAction,
   createVenueAccountAction,
+  deletePlaceAction,
+  archivePlaceAction,
+  restorePlaceAction,
   moderateReviewAction,
+  moderateReplyAction,
   reviewSubmissionAction,
   reviewSuggestionAction,
   setCredentialsAction,
   setPlaceStatusAction,
   setUserBlockedAction,
+  setBloggerAccessAction,
   setUserRoleAction,
   startViewAsAction,
 } from '@/app/admin/actions'
 import { EMPTY_ADMIN_STATE, type AdminActionState } from '@/app/admin/state'
 import { OperationsPanel } from '@/components/admin/OperationsPanel'
+import { ZeroResultInsights } from '@/components/admin/ZeroResultInsights'
 import { Stars } from '@/components/ui/Stars'
 import { SettingsPanel, type SettingsPanelProps } from '@/components/admin/SettingsPanel'
 import { fa, faCount } from '@/lib/format'
 import { paths } from '@/routes'
 import styles from './AdminDashboard.module.css'
 import { TriangleAlert, X } from 'lucide-react'
+import type { TopMenuSyncState } from '@/core/sync/topMenuSync'
 
 type Tab =
   | 'queue'
@@ -43,9 +55,10 @@ type Tab =
   | 'health'
   | 'settings'
   | 'operations'
+  | 'history'
 
 function Submit({ label, danger }: { label: string; danger?: boolean }) {
-  const { pending } = useFormStatus()
+  const { pending } = useManagedFormStatus()
   return (
     <button
       type="submit"
@@ -105,8 +118,8 @@ export interface AdminData {
   }
   daily: { day: string; views: number; visitors: number }[]
   topPlaces: { id: number; slug: string; name: string; views: number; qualityScore: number }[]
-  zeroSearches: { query: string; facetIds: string; count: number }[]
-  queue: { pendingReviews: number; pendingSubmissions: number; duplicateSubmissions: number }
+  queue: { pendingReviews: number; pendingReplies: number; pendingSubmissions: number; duplicateSubmissions: number }
+  pendingReplies: { id: number; text: string; reviewText: string | null; placeSlug: string; placeName: string }[]
   pendingReviews: {
     id: number
     placeSlug: string
@@ -148,9 +161,14 @@ export interface AdminData {
     hasPassword: boolean
     mustChangePassword: boolean
     ownedPlaces: { id: number; name: string }[]
+    isBlogger: boolean
   }[]
   userSummary: { total: number; customers: number; owners: number; admins: number; withPassword: number; blocked: number; newThisWeek: number }
-  places: { id: number; name: string; slug: string; status: string; qualityScore: number }[]
+  places: { id: number; name: string; slug: string; status: string; qualityScore: number; archived?: boolean }[]
+  placesTotal: number
+  placeOptions: { id: number; name: string }[]
+  districts: { id: string; name: string }[]
+  topMenuSync: TopMenuSyncState
   configProblems: { key: string; message: string; fatal: boolean }[]
   dbOk: boolean
   mapReady: boolean
@@ -173,22 +191,32 @@ const ROLE_LABELS: Record<string, string> = {
 }
 
 export function AdminDashboard({ data }: { data: AdminData }) {
-  const [tab, setTab] = useState<Tab>('queue')
-  const [userQuery, setUserQuery] = useState('')
+  const draft = useUnsavedForms()
+  const [tab, setTab] = usePanelTab<Tab>(['queue', 'traffic', 'places', 'users', 'credentials', 'health', 'settings', 'operations', 'history'], 'queue', draft.confirmDiscard)
+  const usersCatalog = useAdminCatalog('users', data.users, data.userSummary.total, (tab === 'users' || tab === 'credentials'))
+  const placesCatalog = useAdminCatalog('places', data.places, data.placesTotal, tab === 'places')
+  const { query: userQuery, setQuery: setUserQuery } = usersCatalog
+  const { query: placeQuery, setQuery: setPlaceQuery } = placesCatalog
 
-  const [reviewState, reviewAction] = useActionState(moderateReviewAction, EMPTY_ADMIN_STATE)
-  const [subState, subAction] = useActionState(reviewSubmissionAction, EMPTY_ADMIN_STATE)
-  const [sugState, sugAction] = useActionState(reviewSuggestionAction, EMPTY_ADMIN_STATE)
-  const [statusState, statusAction] = useActionState(setPlaceStatusAction, EMPTY_ADMIN_STATE)
-  const [credState, credAction] = useActionState(setCredentialsAction, EMPTY_ADMIN_STATE)
-  const [venueState, venueAction] = useActionState(createVenueAccountAction, EMPTY_ADMIN_STATE)
-  const [roleState, roleAction] = useActionState(setUserRoleAction, EMPTY_ADMIN_STATE)
-  const [blockState, blockAction] = useActionState(setUserBlockedAction, EMPTY_ADMIN_STATE)
-  const [assignState, assignAction] = useActionState(assignPlaceAction, EMPTY_ADMIN_STATE)
-  const [viewAsState, viewAsAction] = useActionState(startViewAsAction, EMPTY_ADMIN_STATE)
+  const [reviewState, reviewAction] = useManagedActionState(moderateReviewAction, EMPTY_ADMIN_STATE)
+  const [replyModerationState, replyModerationAction] = useManagedActionState(moderateReplyAction, EMPTY_ADMIN_STATE)
+  const [subState, subAction] = useManagedActionState(reviewSubmissionAction, EMPTY_ADMIN_STATE)
+  const [sugState, sugAction] = useManagedActionState(reviewSuggestionAction, EMPTY_ADMIN_STATE)
+  const [statusState, statusAction] = useManagedActionState(setPlaceStatusAction, EMPTY_ADMIN_STATE)
+  const [createPlaceState, createPlaceSubmit] = useManagedActionState(createPlaceAction, EMPTY_ADMIN_STATE)
+  const [archiveState,archiveSubmit]=useManagedActionState(archivePlaceAction,EMPTY_ADMIN_STATE)
+  const [restoreState,restoreSubmit]=useManagedActionState(restorePlaceAction,EMPTY_ADMIN_STATE)
+  const [deletePlaceState, deletePlaceSubmit] = useManagedActionState(deletePlaceAction, EMPTY_ADMIN_STATE)
+  const [credState, credAction] = useManagedActionState(setCredentialsAction, EMPTY_ADMIN_STATE)
+  const [venueState, venueAction] = useManagedActionState(createVenueAccountAction, EMPTY_ADMIN_STATE)
+  const [roleState, roleAction] = useManagedActionState(setUserRoleAction, EMPTY_ADMIN_STATE)
+  const [bloggerState, bloggerAction] = useManagedActionState(setBloggerAccessAction, EMPTY_ADMIN_STATE)
+  const [blockState, blockAction] = useManagedActionState(setUserBlockedAction, EMPTY_ADMIN_STATE)
+  const [assignState, assignAction] = useManagedActionState(assignPlaceAction, EMPTY_ADMIN_STATE)
+  const [viewAsState, viewAsAction] = useManagedActionState(startViewAsAction, EMPTY_ADMIN_STATE)
 
   const queueCount =
-    data.queue.pendingReviews +
+    data.queue.pendingReviews + data.queue.pendingReplies +
     data.queue.pendingSubmissions +
     data.queue.duplicateSubmissions +
     data.suggestions.length
@@ -202,18 +230,16 @@ export function AdminDashboard({ data }: { data: AdminData }) {
     { id: 'health', label: 'سلامت داده' },
     { id: 'settings', label: 'تنظیمات' },
     { id: 'operations', label: 'عملیات' },
+    { id:'history',label:'تاریخچه'},
   ]
 
-  const filteredUsers = userQuery.trim()
-    ? data.users.filter((user) =>
-        `${user.name} ${user.phone} ${user.username ?? ''}`.includes(userQuery.trim()),
-      )
-    : data.users
+  const filteredUsers = usersCatalog.rows
+  const filteredPlaces = placesCatalog.rows
 
   const maxDaily = Math.max(1, ...data.daily.map((point) => point.views))
 
   return (
-    <div className={styles.panel}>
+    <div className={styles.panel} ref={draft.root} onInputCapture={draft.mark} onChangeCapture={draft.mark} onClickCapture={draft.guardLink}>
       <header className={styles.head}>
         <div>
           <h1 className={styles.title}>پنل مدیریت</h1>
@@ -224,6 +250,9 @@ export function AdminDashboard({ data }: { data: AdminData }) {
           </p>
         </div>
         <div className={styles.headActions}>
+          <Link href={paths.adminExperiences} className={styles.headLink}>
+            پوشش تجربه‌ها
+          </Link>
           <Link href={paths.ownerPanel} className={styles.headLink}>
             پنل کافه
           </Link>
@@ -257,13 +286,14 @@ export function AdminDashboard({ data }: { data: AdminData }) {
         </div>
       )}
 
-      <nav className={styles.tabs}>
+      <nav className={styles.tabs} data-panel-tabs aria-label="بخش‌های مدیریت سایت">
         {tabs.map((item) => (
           <button
             key={item.id}
             type="button"
             className={tab === item.id ? styles.tabOn : styles.tab}
-            onClick={() => setTab(item.id)}
+            aria-pressed={tab === item.id}
+            onClick={() => { if (draft.confirmDiscard()) setTab(item.id) }}
           >
             {item.label}
             {item.badge ? <span className={styles.badge}>{fa(item.badge)}</span> : null}
@@ -318,22 +348,36 @@ export function AdminDashboard({ data }: { data: AdminData }) {
                   </p>
 
                   <div className={styles.cardActions}>
-                    <form action={sugAction}>
+                    <ManagedForm action={sugAction}>
                       <input type="hidden" name="suggestionId" value={suggestion.id} />
                       <input type="hidden" name="decision" value="applied" />
                       <Submit label="اعمال کردم — ببند" />
-                    </form>
-                    <form action={sugAction}>
+                    </ManagedForm>
+                    <ManagedForm action={sugAction}>
                       <input type="hidden" name="suggestionId" value={suggestion.id} />
                       <input type="hidden" name="decision" value="rejected" />
                       <Submit label="رد" danger />
-                    </form>
+                    </ManagedForm>
                   </div>
                 </li>
               ))}
             </ul>
           )}
 
+          <h2 className={styles.h2}>پاسخ‌های کافه‌دار در انتظار تأیید <span className={styles.count}>{fa(data.pendingReplies.length)}</span></h2>
+          <Feedback state={replyModerationState} />
+          {!data.pendingReplies.length ? <p className={styles.empty}>پاسخی در انتظار بررسی نیست.</p> : <ul className={styles.list}>
+            {data.pendingReplies.map(reply => <li key={reply.id} className={styles.card}>
+              <Link href={paths.cafe(reply.placeSlug)} target="_blank">{reply.placeName}</Link>
+              {reply.reviewText && <p className={styles.dim}>نظر مشتری: {reply.reviewText}</p>}
+              <p className={styles.cardText}>{reply.text}</p>
+              <ManagedForm action={replyModerationAction} className={styles.inlineForm}>
+                <input type="hidden" name="replyId" value={reply.id} />
+                <button className={styles.btn} name="decision" value="approved">تأیید و انتشار</button>
+                <button className={styles.btnDanger} name="decision" value="rejected">رد پاسخ</button>
+              </ManagedForm>
+            </li>)}
+          </ul>}
           <h2 className={styles.h2}>
             نظرهای در انتظار تأیید
             <span className={styles.count}>{fa(data.pendingReviews.length)}</span>
@@ -353,12 +397,12 @@ export function AdminDashboard({ data }: { data: AdminData }) {
                   </div>
                   {review.text && <p className={styles.cardText}>{review.text}</p>}
                   <div className={styles.cardActions}>
-                    <form action={reviewAction}>
+                    <ManagedForm action={reviewAction}>
                       <input type="hidden" name="reviewId" value={review.id} />
                       <input type="hidden" name="decision" value="approved" />
                       <Submit label="تأیید و انتشار" />
-                    </form>
-                    <form action={reviewAction} className={styles.inlineForm}>
+                    </ManagedForm>
+                    <ManagedForm action={reviewAction} className={styles.inlineForm}>
                       <input type="hidden" name="reviewId" value={review.id} />
                       <input type="hidden" name="decision" value="rejected" />
                       <input
@@ -367,7 +411,7 @@ export function AdminDashboard({ data }: { data: AdminData }) {
                         placeholder="دلیل رد (به کاربر نشان داده می‌شود)"
                       />
                       <Submit label="رد" danger />
-                    </form>
+                    </ManagedForm>
                   </div>
                 </li>
               ))}
@@ -397,17 +441,17 @@ export function AdminDashboard({ data }: { data: AdminData }) {
                   {submission.note && <p className={styles.cardText}>{submission.note}</p>}
                   <pre className={styles.payload}>{JSON.stringify(submission.payload, null, 1)}</pre>
                   <div className={styles.cardActions}>
-                    <form action={subAction}>
+                    <ManagedForm action={subAction}>
                       <input type="hidden" name="submissionId" value={submission.id} />
                       <input type="hidden" name="decision" value="approved" />
                       <Submit label="تأیید (ساخت پیش‌نویس)" />
-                    </form>
-                    <form action={subAction} className={styles.inlineForm}>
+                    </ManagedForm>
+                    <ManagedForm action={subAction} className={styles.inlineForm}>
                       <input type="hidden" name="submissionId" value={submission.id} />
                       <input type="hidden" name="decision" value="rejected" />
                       <input name="reason" className={styles.inlineInput} placeholder="دلیل" />
                       <Submit label="رد" danger />
-                    </form>
+                    </ManagedForm>
                   </div>
                 </li>
               ))}
@@ -522,26 +566,7 @@ export function AdminDashboard({ data }: { data: AdminData }) {
             {data.topPlaces.length === 0 && <li className={styles.empty}>هنوز بازدیدی ثبت نشده</li>}
           </ul>
 
-          <div className={styles.insightBox}>
-            <h2 className={styles.h2}>جست‌وجوهای بی‌نتیجه</h2>
-            <p className={styles.dim}>
-              باارزش‌ترین گزارش این پنل: کاربر چه چیزی خواسته که نداریم.
-            </p>
-            <ul className={styles.rows}>
-              {data.zeroSearches.map((row) => (
-                <li key={`${row.query}|${row.facetIds}`}>
-                  <span>
-                    {row.query || '—'}
-                    {row.facetIds && <span className={styles.dim}> · {row.facetIds}</span>}
-                  </span>
-                  <span>{fa(row.count)} بار</span>
-                </li>
-              ))}
-              {data.zeroSearches.length === 0 && (
-                <li className={styles.empty}>هر جست‌وجویی نتیجه داشته</li>
-              )}
-            </ul>
-          </div>
+          <ZeroResultInsights />
         </section>
       )}
 
@@ -549,15 +574,41 @@ export function AdminDashboard({ data }: { data: AdminData }) {
       {tab === 'places' && (
         <section className={styles.section}>
           <Feedback state={statusState} />
+          <Feedback state={createPlaceState} />
+          <Feedback state={deletePlaceState} /><Feedback state={archiveState}/><Feedback state={restoreState}/>
           <h2 className={styles.h2}>
             مدیریت مجموعه‌ها
-            <span className={styles.count}>{faCount(data.places.length)}</span>
+            <span className={styles.count}>{faCount(placesCatalog.total)}</span>
           </h2>
           <p className={styles.dim}>
             برای ویرایش اطلاعات، ساعت و منو، پنل کافه‌ی همان مجموعه را باز کنید.
           </p>
+
+          <details className={styles.adminCreate}>
+            <summary>افزودن کافه یا مجموعهٔ جدید</summary>
+            <ManagedForm action={createPlaceSubmit} className={styles.form}>
+              <div className={styles.formGrid}>
+                <label className={styles.field}><span>نام مجموعه *</span><input name="name" className={styles.input} required maxLength={200} /></label>
+                <label className={styles.field}><span>نوع</span><select name="kind" className={styles.select} defaultValue="cafe"><option value="cafe">کافه</option><option value="cafe_restaurant">کافه‌رستوران</option><option value="restaurant">رستوران</option><option value="bakery">نانوایی/بیکری</option><option value="lounge">لانژ</option><option value="shop">فروشگاه</option></select></label>
+                <label className={styles.field}><span>وضعیت اولیه</span><select name="status" className={styles.select} defaultValue="draft"><option value="draft">پیش‌نویس (پیشنهادی)</option><option value="published">انتشار فوری</option></select></label>
+                <label className={styles.field}><span>محله</span><select name="districtId" className={styles.select} defaultValue=""><option value="">ثبت‌نشده</option>{data.districts.map((district) => <option key={district.id} value={district.id}>{district.name}</option>)}</select></label>
+                <label className={styles.fieldWide}><span>آدرس</span><input name="address" className={styles.input} maxLength={500} /></label>
+                <label className={styles.field}><span>اینستاگرام</span><input name="instagram" className={styles.input} dir="ltr" placeholder="cafe_name" /></label>
+                <label className={styles.field}><span>عرض جغرافیایی</span><input name="lat" className={styles.input} dir="ltr" inputMode="decimal" /></label>
+                <label className={styles.field}><span>طول جغرافیایی</span><input name="lng" className={styles.input} dir="ltr" inputMode="decimal" /></label>
+              </div>
+              <Submit label="ساخت مجموعه" />
+            </ManagedForm>
+          </details>
+
+          <label className={styles.field}><span>جست‌وجوی مجموعه</span><input className={styles.search} maxLength={120} value={placeQuery} onChange={(event) => { if (draft.confirmDiscard()) setPlaceQuery(event.target.value) }} placeholder="نام کافه یا آدرس صفحه" /></label>
+          <div className={styles.catalogFilters}>
+            <label>وضعیت<select className={styles.select} value={placesCatalog.filters.status ?? ''} onChange={event => { if (draft.confirmDiscard()) placesCatalog.setFilter('status', event.target.value) }}><option value="">همه وضعیت‌ها</option><option value="published">منتشرشده</option><option value="draft">پیش‌نویس</option><option value="temporarily_closed">تعطیل موقت</option><option value="permanently_closed">تعطیل دائم</option></select></label>
+            <label>محله<select className={styles.select} value={placesCatalog.filters.district ?? ''} onChange={event => { if (draft.confirmDiscard()) placesCatalog.setFilter('district', event.target.value) }}><option value="">همه محله‌ها</option>{data.districts.map(district => <option key={district.id} value={district.id}>{district.name}</option>)}</select></label>
+            <label>نیاز به اقدام<select className={styles.select} value={placesCatalog.filters.health ?? ''} onChange={event => { if (draft.confirmDiscard()) placesCatalog.setFilter('health', event.target.value) }}><option value="">همه مجموعه‌های فعال</option><option value="no_coords">بدون موقعیت</option><option value="out_of_area">بیرون کادر مشهد</option><option value="shops">فروشگاه</option><option value="price_unit_fixed">قیمت اصلاح‌واحدشده</option><option value="no_hours">بدون ساعت کاری</option><option value="no_menu">بدون منو</option><option value="no_phone">بدون تماس</option><option value="no_about">بدون توضیح</option><option value="no_district">بدون محله</option><option value="stale_price">قیمت قدیمی</option><option value="archived">آرشیو قابل بازیابی</option></select></label>
+          </div>
           <ul className={styles.list}>
-            {data.places.map((place) => (
+            {filteredPlaces.map((place) => (
               <li key={place.id} className={styles.rowCard}>
                 <span className={styles.rowName}>
                   <Link href={paths.cafe(place.slug)} target="_blank">
@@ -570,19 +621,34 @@ export function AdminDashboard({ data }: { data: AdminData }) {
                   ویرایش
                 </Link>
 
-                <form action={statusAction} className={styles.inlineForm}>
+                {!place.archived && <ManagedForm action={statusAction} className={styles.inlineForm}>
                   <input type="hidden" name="placeId" value={place.id} />
-                  <select name="status" defaultValue={place.status} className={styles.select}>
+                  <select name="status" aria-label={`وضعیت ${place.name}`} defaultValue={place.status} className={styles.select}>
                     <option value="published">منتشرشده</option>
                     <option value="draft">پیش‌نویس</option>
                     <option value="temporarily_closed">موقتاً تعطیل</option>
                     <option value="permanently_closed">تعطیل دائم</option>
                   </select>
                   <Submit label="ذخیره" />
-                </form>
+                </ManagedForm>}
+                <ManagedForm action={place.archived?restoreSubmit:archiveSubmit} className={styles.inlineForm} onSubmit={event=>{if(!window.confirm(place.archived?'کافه با وضعیت پیش از آرشیو بازیابی شود؟':'کافه از سایت عمومی پنهان شود؟ داده‌ها حفظ می‌شوند و قابل بازیابی‌اند.'))event.preventDefault()}}><input type="hidden" name="placeId" value={place.id}/><Submit label={place.archived?'بازیابی کافه':'آرشیو'}/></ManagedForm>
+                {place.archived && (
+                  <details className={styles.dangerDetails}>
+                    <summary>حذف دائمی (پس از ۷ روز آرشیو)</summary>
+                    <ManagedForm action={deletePlaceSubmit} className={styles.deleteForm} onSubmit={(event) => { if (!window.confirm(`«${place.name}» و تمام منو و داده‌های وابسته برای همیشه حذف شود؟`)) event.preventDefault() }}>
+                      <input type="hidden" name="placeId" value={place.id} />
+                      <p>فقط پس از دوره بازیابی ۷ روزه مجاز است؛ این کار بازگشت‌پذیر نیست. نام مجموعه و عبارت «حذف دائمی» را وارد کنید.</p>
+                      <input name="confirmName" className={styles.input} placeholder={place.name} required />
+                      <input name="confirmPhrase" className={styles.input} placeholder="حذف دائمی" required />
+                      <Submit label="حذف دائمی" danger />
+                    </ManagedForm>
+                  </details>
+                )}
               </li>
             ))}
+            {filteredPlaces.length === 0 && <li className={styles.empty}>مجموعه‌ای پیدا نشد.</li>}
           </ul>
+          <CatalogPagination {...placesCatalog} setPage={page => { if (draft.confirmDiscard()) placesCatalog.setPage(page) }} />
         </section>
       )}
 
@@ -590,6 +656,7 @@ export function AdminDashboard({ data }: { data: AdminData }) {
       {tab === 'users' && (
         <section className={styles.section}>
           <Feedback state={roleState} />
+          <Feedback state={bloggerState} />
           <Feedback state={blockState} />
           <Feedback state={assignState} />
           <Feedback state={viewAsState} />
@@ -620,10 +687,12 @@ export function AdminDashboard({ data }: { data: AdminData }) {
           <input
             className={styles.search}
             value={userQuery}
-            onChange={(event) => setUserQuery(event.target.value)}
+            onChange={(event) => { if (draft.confirmDiscard()) setUserQuery(event.target.value) }}
             placeholder="جست‌وجوی نام، شماره یا یوزرنیم"
+            aria-label="جست‌وجوی کاربران" maxLength={120}
           />
 
+          <label className={styles.field}><span>نقش کاربر</span><select className={styles.select} value={usersCatalog.filters.role ?? ''} onChange={event => { if (draft.confirmDiscard()) usersCatalog.setFilter('role', event.target.value) }}><option value="">همه نقش‌ها</option><option value="admin">مدیر سیستم</option><option value="owner">مالک کافه</option><option value="customer">کاربر عادی</option></select></label>
           <ul className={styles.list}>
             {filteredUsers.map((user) => (
               <li key={user.id} className={styles.card}>
@@ -655,14 +724,14 @@ export function AdminDashboard({ data }: { data: AdminData }) {
                     {user.ownedPlaces.map((place) => (
                       <span key={place.id} className={styles.tag}>
                         {place.name}
-                        <form action={assignAction} className={styles.tagForm}>
+                        <ManagedForm action={assignAction} className={styles.tagForm}>
                           <input type="hidden" name="userId" value={user.id} />
                           <input type="hidden" name="placeId" value={place.id} />
                           <input type="hidden" name="revoke" value="1" />
                           <button type="submit" title="برداشتن دسترسی">
                             <X size={16} aria-hidden="true" />
                           </button>
-                        </form>
+                        </ManagedForm>
                       </span>
                     ))}
                   </p>
@@ -671,13 +740,13 @@ export function AdminDashboard({ data }: { data: AdminData }) {
                 <div className={styles.cardActions}>
                   {/* ورود مستقیم به پنل همین کاربر. */}
                   {user.role !== 'admin' && !user.blocked && (
-                    <form action={viewAsAction}>
+                    <ManagedForm action={viewAsAction}>
                       <input type="hidden" name="userId" value={user.id} />
                       <Submit label="ورود به پنل او" />
-                    </form>
+                    </ManagedForm>
                   )}
 
-                  <form action={roleAction} className={styles.inlineForm}>
+                  <ManagedForm action={roleAction} className={styles.inlineForm}>
                     <input type="hidden" name="userId" value={user.id} />
                     <select name="role" defaultValue={user.role} className={styles.select}>
                       <option value="customer">کاربر</option>
@@ -685,31 +754,38 @@ export function AdminDashboard({ data }: { data: AdminData }) {
                       <option value="admin">مدیر</option>
                     </select>
                     <Submit label="نقش" />
-                  </form>
+                  </ManagedForm>
 
-                  <form action={blockAction}>
+                  <ManagedForm action={bloggerAction}>
+                    <input type="hidden" name="userId" value={user.id} />
+                    <input type="hidden" name="enabled" value={user.isBlogger ? '0' : '1'} />
+                    <Submit label={user.isBlogger ? 'حذف دسترسی بلاگر' : 'تأیید به‌عنوان بلاگر'} />
+                  </ManagedForm>
+
+                  <ManagedForm action={blockAction}>
                     <input type="hidden" name="userId" value={user.id} />
                     <input type="hidden" name="blocked" value={user.blocked ? '0' : '1'} />
                     <Submit label={user.blocked ? 'رفع مسدودی' : 'مسدود کردن'} danger={!user.blocked} />
-                  </form>
+                  </ManagedForm>
 
-                  <form action={assignAction} className={styles.inlineForm}>
+                  <ManagedForm action={assignAction} className={styles.inlineForm}>
                     <input type="hidden" name="userId" value={user.id} />
                     <select name="placeId" className={styles.select} defaultValue="">
                       <option value="">وصل‌کردن مجموعه…</option>
-                      {data.places.map((place) => (
+                      {data.placeOptions.map((place) => (
                         <option key={place.id} value={place.id}>
                           {place.name}
                         </option>
                       ))}
                     </select>
                     <Submit label="وصل" />
-                  </form>
+                  </ManagedForm>
                 </div>
               </li>
             ))}
             {filteredUsers.length === 0 && <li className={styles.empty}>کاربری پیدا نشد.</li>}
           </ul>
+          <CatalogPagination {...usersCatalog} setPage={page => { if (draft.confirmDiscard()) usersCatalog.setPage(page) }} />
         </section>
       )}
 
@@ -725,12 +801,12 @@ export function AdminDashboard({ data }: { data: AdminData }) {
               حساب، اعتبارنامه و انتساب مجموعه — در یک قدم. اگر شماره از قبل حساب دارد،
               همان حساب مالک این کافه می‌شود.
             </p>
-            <form action={venueAction} className={styles.form}>
+            <ManagedForm action={venueAction} className={styles.form}>
               <label className={styles.field}>
                 <span>مجموعه</span>
                 <select name="placeId" className={styles.select} required defaultValue="">
                   <option value="">انتخاب کنید…</option>
-                  {data.places.map((place) => (
+                  {data.placeOptions.map((place) => (
                     <option key={place.id} value={place.id}>
                       {place.name}
                     </option>
@@ -760,7 +836,7 @@ export function AdminDashboard({ data }: { data: AdminData }) {
                 <input name="password" className={styles.input} dir="ltr" minLength={8} />
               </label>
               <Submit label="ساخت حساب و صدور رمز" />
-            </form>
+            </ManagedForm>
           </div>
 
           <div className={styles.formBox}>
@@ -769,12 +845,14 @@ export function AdminDashboard({ data }: { data: AdminData }) {
               برای کاربر عادی هم کار می‌کند — رمز دائمی می‌گیرد و می‌تواند بدون پیامک
               وارد شود.
             </p>
-            <form action={credAction} className={styles.form}>
+            <label className={styles.field}><span>پیداکردن حساب برای بازنشانی</span><input type="search" className={styles.search} value={userQuery} maxLength={120} onChange={event => { if (draft.confirmDiscard()) setUserQuery(event.target.value) }} placeholder="نام، شماره یا نام کاربری" /></label>
+            <CatalogPagination {...usersCatalog} setPage={page => { if (draft.confirmDiscard()) usersCatalog.setPage(page) }} />
+            <ManagedForm action={credAction} className={styles.form}>
               <label className={styles.field}>
                 <span>حساب</span>
                 <select name="userId" className={styles.select} required defaultValue="">
                   <option value="">انتخاب کنید…</option>
-                  {data.users.map((user) => (
+                  {usersCatalog.rows.map((user) => (
                     <option key={user.id} value={user.id}>
                       {user.name || 'بی‌نام'} — {user.phone || user.username || user.id.slice(0, 8)}
                     </option>
@@ -795,7 +873,7 @@ export function AdminDashboard({ data }: { data: AdminData }) {
                 <input name="password" className={styles.input} dir="ltr" minLength={8} />
               </label>
               <Submit label="صدور رمز" />
-            </form>
+            </ManagedForm>
           </div>
         </section>
       )}
@@ -805,7 +883,7 @@ export function AdminDashboard({ data }: { data: AdminData }) {
         <section className={styles.section}>
           <h2 className={styles.h2}>وضعیت داده</h2>
           <p className={styles.dim}>
-            هر عدد یک صفِ کار است، نه آمار تزئینی.
+            عددهای قابل‌کلیک، فهرست مجموعه‌های نیازمند اقدام را باز می‌کنند. «قیمت بیات» تعداد مجموعه‌هاست؛ «تصویر ناموفق» تعداد فایل‌هاست.
           </p>
           <div className={styles.statGrid}>
             {[
@@ -824,10 +902,17 @@ export function AdminDashboard({ data }: { data: AdminData }) {
               ['تصویر ناموفق', data.health.mediaFailed],
               [`قیمت بیات (>${fa(Number(data.settings.values.stalePriceDays ?? 90))} روز)`, data.health.stalePrices],
             ].map(([label, value]) => (
-              <div key={String(label)} className={styles.stat}>
+              <button type="button" key={String(label)} className={styles.stat} onClick={()=>{
+                if(String(label)==='تصویر ناموفق'){document.getElementById('failed-media-list')?.scrollIntoView({behavior:'smooth',block:'start'});return}
+                if(!draft.confirmDiscard())return
+                placesCatalog.setFilter('district','')
+                const health:Record<string,string>={'فروشگاه (غیرکافه)':'shops','بیرون کادر مشهد':'out_of_area','قیمت اصلاح‌واحد‌شده':'price_unit_fixed','بدون مختصات':'no_coords','بدون ساعت کاری':'no_hours','بدون منو':'no_menu','بدون تلفن':'no_phone','بدون درباره':'no_about','بدون محله':'no_district'}
+                const filter=health[String(label)]??(String(label).startsWith('قیمت بیات')?'stale_price':'')
+                placesCatalog.setFilter('health',filter);placesCatalog.setFilter('status',label==='منتشرشده'?'published':label==='پیش‌نویس'?'draft':'');setTab('places')
+              }} style={{textAlign:'start',cursor:'pointer',font:'inherit'}}>
                 <span className={styles.statValue}>{faCount(Number(value ?? 0))}</span>
                 <span className={styles.statLabel}>{String(label)}</span>
-              </div>
+              </button>
             ))}
           </div>
 
@@ -846,7 +931,7 @@ export function AdminDashboard({ data }: { data: AdminData }) {
 
           {data.failedMedia.length > 0 && (
             <>
-              <h2 className={styles.h2}>تصویرهای ناموفق</h2>
+              <h2 id="failed-media-list" className={styles.h2} style={{scrollMarginTop:100}}>تصویرهای ناموفق</h2>
               <ul className={styles.rows}>
                 {data.failedMedia.map((item) => (
                   <li key={item.id}>
@@ -884,9 +969,10 @@ export function AdminDashboard({ data }: { data: AdminData }) {
       )}
 
       {/* ── عملیات ───────────────────────────────────────────────── */}
+      {tab === 'history' && <AuditHistory/>}
       {tab === 'operations' && (
         <section className={styles.section}>
-          <OperationsPanel />
+          <OperationsPanel topMenuSync={data.topMenuSync} />
         </section>
       )}
     </div>

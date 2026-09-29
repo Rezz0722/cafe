@@ -1,0 +1,16 @@
+src/core/sync/topMenuSelection.ts
+src/core/sync/topMenuSelection.test.ts
+src/core/sync/topMenuSync.ts
+src/app/api/admin/topmenu-sync/route.ts
+src/app/admin/actions.ts
+src/components/admin/OperationsPanel.tsx
+src/components/admin/OperationsPanel.module.css
+src/components/admin/SyncCafePicker.tsx
+scripts/topmenu-sync.ts
+topmarket.py
+scripts/topmenu-selective-smoke.ts
+scripts/topmenu-selective-ui-smoke.ts
+scripts/topmenu-selective-public-smoke.ts
+scripts/topmenu-selection-python-smoke.py
+docs/TOPMENU_SELECTIVE_SYNC_FA.md
+docs/TOPMENU_SELECTIVE_SYNC_FILES.txt

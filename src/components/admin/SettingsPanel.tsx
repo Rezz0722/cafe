@@ -24,8 +24,8 @@
  * ولی سایت همان‌طور است. پس روی همان فیلد هشدار داده می‌شود.
  */
 
-import { useActionState, useState } from 'react'
-import { useFormStatus } from 'react-dom'
+import { useState } from 'react'
+import { ManagedForm, useManagedActionState, useManagedFormStatus, useUnsavedForms } from '@/components/admin/ManagedForm'
 import { resetSettingsAction, saveSettingsAction } from '@/app/admin/actions'
 import { EMPTY_ADMIN_STATE, type AdminActionState } from '@/app/admin/state'
 import {
@@ -50,13 +50,13 @@ const GROUP_ORDER: SettingGroup[] = [
 ]
 
 const RECOMPUTE_NOTE: Record<NonNullable<SettingDef['needsRecompute']>, string> = {
-  derived: 'بعد از ذخیره، «بازمحاسبه‌ی مقادیر مشتق» را از تب عملیات اجرا کنید.',
+  derived: 'پس از ذخیره، مقادیر همهٔ مجموعه‌ها خودکار بازمحاسبه می‌شوند.',
   facets: 'بعد از ذخیره، `npm run build:facets` را اجرا کنید.',
   restart: 'فقط روی ایمپورت بعدی اثر دارد؛ داده‌ی موجود عوض نمی‌شود.',
 }
 
 function SaveButton() {
-  const { pending } = useFormStatus()
+  const { pending } = useManagedFormStatus()
   return (
     <button type="submit" className={styles.save} disabled={pending}>
       {pending ? 'در حال ذخیره…' : 'ذخیره'}
@@ -65,7 +65,7 @@ function SaveButton() {
 }
 
 function ResetButton() {
-  const { pending } = useFormStatus()
+  const { pending } = useManagedFormStatus()
   return (
     <button type="submit" className={styles.reset} disabled={pending}>
       {pending ? '…' : 'بازگردانی به پیش‌فرض'}
@@ -180,8 +180,8 @@ function GroupForm({
   values: Record<string, string | number | boolean>
   overridden: Set<string>
 }) {
-  const [saveState, saveAction] = useActionState(saveSettingsAction, EMPTY_ADMIN_STATE)
-  const [resetState, resetAction] = useActionState(resetSettingsAction, EMPTY_ADMIN_STATE)
+  const [saveState, saveAction] = useManagedActionState(saveSettingsAction, EMPTY_ADMIN_STATE)
+  const [resetState, resetAction] = useManagedActionState(resetSettingsAction, EMPTY_ADMIN_STATE)
   const defs = SETTING_DEFS.filter((def) => def.group === group)
   const hint = GROUP_HINTS[group]
 
@@ -195,7 +195,7 @@ function GroupForm({
       <GroupFeedback state={saveState} />
       <GroupFeedback state={resetState} />
 
-      <form action={saveAction} className={styles.form}>
+      <ManagedForm action={saveAction} className={styles.form}>
         <input type="hidden" name="__group" value={group} />
         <div className={styles.fields}>
           {defs.map((def) => (
@@ -209,12 +209,12 @@ function GroupForm({
           ))}
         </div>
         <SaveButton />
-      </form>
+      </ManagedForm>
 
-      <form action={resetAction} className={styles.resetForm}>
+      <ManagedForm action={resetAction} className={styles.resetForm} onSubmit={event => { if (!window.confirm('تنظیمات این گروه به پیش‌فرض بازگردد؟')) event.preventDefault() }}>
         <input type="hidden" name="group" value={group} />
         <ResetButton />
-      </form>
+      </ManagedForm>
     </section>
   )
 }
@@ -227,11 +227,12 @@ export interface SettingsPanelProps {
 }
 
 export function SettingsPanel({ values, overriddenKeys, updatedAt }: SettingsPanelProps) {
+  const draft = useUnsavedForms()
   const overridden = new Set(overriddenKeys)
   const [open, setOpen] = useState<SettingGroup>('identity')
 
   return (
-    <div className={styles.wrap}>
+    <div className={styles.wrap} ref={draft.root} onInputCapture={draft.mark} onChangeCapture={draft.mark} onClickCapture={draft.guardLink}>
       <p className={styles.intro}>
         هر تنظیمی که در دیتابیس ردیف نداشته باشد، پیش‌فرضِ کد را می‌گیرد. جدول تنظیمات فقط
         <b> تفاوت‌ها</b> را نگه می‌دارد، پس «بازگردانی به پیش‌فرض» یعنی پاک‌کردن آن
@@ -249,7 +250,7 @@ export function SettingsPanel({ values, overriddenKeys, updatedAt }: SettingsPan
               key={group}
               type="button"
               className={open === group ? styles.groupTabOn : styles.groupTab}
-              onClick={() => setOpen(group)}
+              onClick={() => { if (draft.confirmDiscard()) setOpen(group) }}
             >
               {GROUP_LABELS[group]}
               {count > 0 && <span className={styles.groupBadge}>{count}</span>}

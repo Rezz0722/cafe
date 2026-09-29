@@ -2,9 +2,9 @@
    یک فایل مشترک، چون همه‌ی این صفحات یک چیدمان دارند. */
 
 .page {
-  max-width: 900px;
+  max-width: 960px;
   margin: 0 auto;
-  padding: 18px 16px 56px;
+  padding: 34px var(--page-pad) 72px;
 }
 
 .head {
@@ -42,6 +42,9 @@
 }
 
 .headLink {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
   padding: 8px 15px;
   border: 1px solid var(--c-border);
   border-radius: 999px;
@@ -145,7 +148,7 @@
 }
 
 .primaryLink:hover {
-  background: var(--c-primary-strong);
+  background: var(--c-primary-action-strong);
 }
 
 /* ── فهرست کارت ─────────────────────────────────────────────────────── */
@@ -391,6 +394,14 @@
   letter-spacing: 1px;
 }
 
+.reviewItems {
+  margin: 7px 0 0;
+  color: var(--c-primary-strong);
+  font-size: .78rem;
+  font-weight: 700;
+  line-height: 1.8;
+}
+
 .statusPending,
 .statusApproved,
 .statusRejected {
@@ -423,8 +434,23 @@
 
 @media (max-width: 520px) {
   .page {
-    padding: 12px 12px 48px;
+    padding: 20px 16px 88px;
   }
+
+  .headActions {
+    width: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .headLink { flex: none; }
+
+  .section { margin-top: 24px; }
+
+  .emptyCard,
+  .contribCard,
+  .accountRow { border-radius: 16px; }
 
   .savedList {
     grid-template-columns: 1fr;

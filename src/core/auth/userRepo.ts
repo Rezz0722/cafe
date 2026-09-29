@@ -22,16 +22,20 @@ import 'server-only'
  */
 
 import { randomUUID } from 'node:crypto'
-import { and, desc, eq, gt, isNotNull, lt, or, sql } from 'drizzle-orm'
+import { and, desc, eq, gt, isNotNull, isNull, lt, or, sql } from 'drizzle-orm'
 import { getDb } from '@/db/client'
 import {
   appUser,
+  authSession,
+  bloggerProfile,
   otpCode,
   place as placeTable,
   userPlaceRole,
 } from '@/db/schema'
 import { ADMIN_PHONES } from '@/core/config/env'
 import { DEFAULT_LOCKOUT, type LockoutPolicy } from './password'
+import { normalizePhone } from './phone'
+import { normalizeFa } from '@/core/text/normalize'
 import type { AppUser, Role } from './types'
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -51,13 +55,38 @@ export interface UserRecord extends AppUser {
   username: string | null
   email: string | null
   mustChangePassword: boolean
-  status: 'active' | 'blocked'
+  status: 'active' | 'blocked' | 'deactivated'
+  phoneVerifiedAt: string | null
   ownedPlaces: { id: number; slug: string; name: string }[]
   createdByUserId: string | null
   passwordUpdatedAt: string | null
+  isBlogger: boolean
 }
 
-function toRecord(row: UserRow, places: { id: number; slug: string; name: string }[]): UserRecord {
+/**
+ * حساب ناقصی که نسخه‌ی قدیمی ورود پیامکی بدون ثبت‌نام می‌ساخت.
+ *
+ * این حساب‌ها را حذف نمی‌کنیم تا کاربر بتواند همان شماره را در مسیر ثبت‌نام
+ * کامل کند؛ اما نباید با همین رکورد ناقص وارد پنل شوند. شناسه‌ی سازنده، رمز
+ * و نام کمک می‌کنند حساب‌های عادیِ ساخته‌شده توسط ادمین با این رکوردها اشتباه
+ * نشوند.
+ */
+export function isUnregisteredPhoneAccount(
+  user: Pick<
+    UserRecord,
+    'role' | 'phone' | 'name' | 'username' | 'passwordHash' | 'phoneVerifiedAt' | 'createdByUserId'
+  >,
+): boolean {
+  return user.role === 'customer'
+    && Boolean(user.phone)
+    && Boolean(user.phoneVerifiedAt)
+    && !user.name.trim()
+    && !user.username
+    && !user.passwordHash
+    && !user.createdByUserId
+}
+
+function toRecord(row: UserRow, places: { id: number; slug: string; name: string }[], isBlogger = false): UserRecord {
   return {
     id: row.id,
     phone: row.phone ?? '',
@@ -69,8 +98,9 @@ function toRecord(row: UserRow, places: { id: number; slug: string; name: string
     ownedPlaces: places,
     createdAt: row.createdAt.toISOString(),
     lastLoginAt: row.lastLoginAt?.toISOString() ?? null,
-    blocked: row.status === 'blocked',
+    blocked: row.status !== 'active',
     status: row.status,
+    phoneVerifiedAt: row.phoneVerifiedAt?.toISOString() ?? null,
     passwordHash: row.passwordHash,
     passwordUpdatedAt: row.passwordUpdatedAt?.toISOString() ?? null,
     mustChangePassword: row.mustChangePassword,
@@ -78,6 +108,7 @@ function toRecord(row: UserRow, places: { id: number; slug: string; name: string
     // شمارنده‌ی تلاش، دیگر آرایه‌ی زمان نیست بلکه عدد + زمان قفل است.
     // برای سازگاری با تایپ قدیمی، آرایه‌ی خالی برگردانده می‌شود.
     failedLogins: [],
+    isBlogger,
   }
 }
 
@@ -96,7 +127,11 @@ async function loadOwnedPlaces(
 
 async function hydrate(row: UserRow | undefined): Promise<UserRecord | null> {
   if (!row) return null
-  return toRecord(row, await loadOwnedPlaces(row.id))
+  const [places, blogger] = await Promise.all([
+    loadOwnedPlaces(row.id),
+    getDb().select({ userId: bloggerProfile.userId }).from(bloggerProfile).where(and(eq(bloggerProfile.userId, row.id), eq(bloggerProfile.active, true))).limit(1),
+  ])
+  return toRecord(row, places, blogger.length > 0)
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -134,10 +169,9 @@ export async function findUserByUsername(username: string): Promise<UserRecord |
 export async function findUserByLogin(identifier: string): Promise<UserRecord | null> {
   const raw = identifier.trim()
   if (!raw) return null
-  // شکل شماره: فقط رقم و حداقل ۱۰ رقم. وگرنه یوزرنیم فرض می‌شود.
-  const digits = raw.replace(/\D/g, '')
-  if (digits.length >= 10) {
-    const byPhone = await findUserByPhone(digits.startsWith('0') ? digits : `0${digits}`)
+  const normalizedPhone = normalizePhone(raw)
+  if (normalizedPhone) {
+    const byPhone = await findUserByPhone(normalizedPhone)
     if (byPhone) return byPhone
   }
   return findUserByUsername(raw)
@@ -156,21 +190,23 @@ export async function listUsers(options: ListUsersOptions = {}): Promise<UserRec
   const conditions = []
   if (role) conditions.push(eq(appUser.role, role))
   if (query?.trim()) {
-    const term = `%${query.trim()}%`
+    for (const word of normalizeFa(query).split(/\s+/).filter(Boolean)) {
+    const term = `%${word.replace(/[\\%_]/g, '\\$&')}%`
     conditions.push(
       or(
-        sql`${appUser.name} LIKE ${term}`,
+        sql`REPLACE(REPLACE(REPLACE(REPLACE(${appUser.name},'ي','ی'),'ك','ک'),'آ','ا'),'‌',' ') LIKE ${term}`,
         sql`${appUser.phone} LIKE ${term}`,
         sql`${appUser.username} LIKE ${term}`,
       ),
     )
+    }
   }
 
   const rows = await db
     .select()
     .from(appUser)
     .where(conditions.length ? and(...conditions) : undefined)
-    .orderBy(desc(appUser.createdAt))
+    .orderBy(desc(appUser.createdAt), desc(appUser.id))
     .limit(limit)
     .offset(offset)
 
@@ -195,7 +231,9 @@ export async function listUsers(options: ListUsersOptions = {}): Promise<UserRec
     else byUser.set(row.userId, [entry])
   }
 
-  return rows.map((row) => toRecord(row, byUser.get(row.id) ?? []))
+  const bloggerRows = await db.select({ userId: bloggerProfile.userId }).from(bloggerProfile).where(eq(bloggerProfile.active, true))
+  const bloggerIds = new Set(bloggerRows.map((row) => row.userId))
+  return rows.map((row) => toRecord(row, byUser.get(row.id) ?? [], bloggerIds.has(row.id)))
 }
 
 export async function countUsers(): Promise<{ total: number; byRole: Record<string, number> }> {
@@ -211,6 +249,14 @@ export async function countUsers(): Promise<{ total: number; byRole: Record<stri
     total += Number(row.n)
   }
   return { total, byRole }
+}
+
+export async function countActiveAdmins(): Promise<number> {
+  const [{ n = 0 } = { n: 0 }] = await getDb()
+    .select({ n: sql<number>`COUNT(*)` })
+    .from(appUser)
+    .where(and(eq(appUser.role, 'admin'), eq(appUser.status, 'active')))
+  return Number(n)
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -239,13 +285,21 @@ export async function findOrCreateUser(phone: string): Promise<UserRecord> {
   }
 
   const id = randomUUID()
-  await db.insert(appUser).values({
-    id,
-    phone,
-    role: shouldBeAdmin ? 'admin' : 'customer',
-    lastLoginAt: new Date(),
-  })
-  return (await findUserById(id))!
+  const lastLoginAt = new Date()
+  await db
+    .insert(appUser)
+    .values({
+      id,
+      phone,
+      role: shouldBeAdmin ? 'admin' : 'customer',
+      lastLoginAt,
+    })
+    // دو تأیید هم‌زمان نباید روی unique phone خطا بدهند یا دو حساب بسازند.
+    .onDuplicateKeyUpdate({ set: { lastLoginAt } })
+
+  const user = await findUserByPhone(phone)
+  if (!user) throw new Error('Verified phone account could not be created')
+  return user
 }
 
 export interface CreateUserInput {
@@ -257,6 +311,7 @@ export interface CreateUserInput {
   passwordHash?: string | null
   mustChangePassword?: boolean
   createdByUserId?: string | null
+  phoneVerifiedAt?: Date | null
 }
 
 /**
@@ -285,6 +340,7 @@ export async function createUser(input: CreateUserInput): Promise<UserRecord> {
     passwordUpdatedAt: input.passwordHash ? new Date() : null,
     mustChangePassword: input.mustChangePassword ?? false,
     createdByUserId: input.createdByUserId ?? null,
+    phoneVerifiedAt: input.phoneVerifiedAt ?? null,
   })
   return (await findUserById(id))!
 }
@@ -296,7 +352,7 @@ export async function updateUser(
     email: string | null
     phone: string | null
     role: Role
-    status: 'active' | 'blocked'
+    status: 'active' | 'blocked' | 'deactivated'
     lastLat: string | null
     lastLng: string | null
   }>,
@@ -312,6 +368,79 @@ export async function setUserRole(id: string, role: Role): Promise<UserRecord | 
 
 export async function setUserBlocked(id: string, blocked: boolean): Promise<UserRecord | null> {
   return updateUser(id, { status: blocked ? 'blocked' : 'active' })
+}
+
+export async function markPhoneVerified(id: string): Promise<UserRecord | null> {
+  const db = getDb()
+  await db.update(appUser).set({ phoneVerifiedAt: new Date() }).where(eq(appUser.id, id))
+  return findUserById(id)
+}
+
+export async function deactivateUser(id: string): Promise<UserRecord | null> {
+  const db = getDb()
+  await db
+    .update(appUser)
+    .set({ status: 'deactivated', failedLogins: 0, lockedUntil: null })
+    .where(eq(appUser.id, id))
+  await revokeAllSessions(id)
+  return findUserById(id)
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// نشست‌های قابل ابطال
+// ═══════════════════════════════════════════════════════════════════════
+
+export type SessionMethod = 'otp' | 'password' | 'impersonation'
+
+export async function createAuthSession(input: {
+  userId: string
+  method: SessionMethod
+  expiresAt: Date
+  ip?: string | null
+  userAgent?: string | null
+}): Promise<string> {
+  const id = randomUUID()
+  await getDb().insert(authSession).values({
+    id,
+    userId: input.userId,
+    method: input.method,
+    expiresAt: input.expiresAt,
+    ip: input.ip?.slice(0, 64) || null,
+    userAgent: input.userAgent?.slice(0, 255) || null,
+  })
+  return id
+}
+
+export async function isAuthSessionActive(sessionId: string, userId: string): Promise<boolean> {
+  if (!sessionId || !userId) return false
+  const [row] = await getDb()
+    .select({ id: authSession.id })
+    .from(authSession)
+    .where(and(
+      eq(authSession.id, sessionId),
+      eq(authSession.userId, userId),
+      isNull(authSession.revokedAt),
+      gt(authSession.expiresAt, new Date()),
+    ))
+    .limit(1)
+  return !!row
+}
+
+export async function revokeSession(sessionId: string, userId?: string): Promise<void> {
+  if (!sessionId) return
+  const condition = userId
+    ? and(eq(authSession.id, sessionId), eq(authSession.userId, userId))
+    : eq(authSession.id, sessionId)
+  await getDb().update(authSession).set({ revokedAt: new Date() }).where(condition)
+}
+
+export async function revokeAllSessions(userId: string, exceptSessionId?: string): Promise<void> {
+  const conditions = [eq(authSession.userId, userId), isNull(authSession.revokedAt)]
+  if (exceptSessionId) conditions.push(sql`${authSession.id} <> ${exceptSessionId}`)
+  await getDb()
+    .update(authSession)
+    .set({ revokedAt: new Date() })
+    .where(and(...conditions))
 }
 
 /**
@@ -472,6 +601,33 @@ export async function revokePlaceRole(userId: string, placeId: number): Promise<
     .update(userPlaceRole)
     .set({ status: 'revoked' })
     .where(and(eq(userPlaceRole.userId, userId), eq(userPlaceRole.placeId, placeId)))
+
+  const [{ active = 0 } = { active: 0 }] = await db
+    .select({ active: sql<number>`COUNT(*)` })
+    .from(userPlaceRole)
+    .where(and(eq(userPlaceRole.userId, userId), eq(userPlaceRole.status, 'active')))
+  if (Number(active) === 0) {
+    await db
+      .update(appUser)
+      .set({ role: 'customer' })
+      .where(and(eq(appUser.id, userId), eq(appUser.role, 'owner')))
+  }
+}
+
+export async function getPlaceRole(
+  userId: string,
+  placeId: number,
+): Promise<'owner' | 'manager' | 'staff' | null> {
+  const [row] = await getDb()
+    .select({ role: userPlaceRole.role })
+    .from(userPlaceRole)
+    .where(and(
+      eq(userPlaceRole.userId, userId),
+      eq(userPlaceRole.placeId, placeId),
+      eq(userPlaceRole.status, 'active'),
+    ))
+    .limit(1)
+  return row?.role ?? null
 }
 
 /** آیا این کاربر اجازه‌ی مدیریت این مکان را دارد؟ */
@@ -519,15 +675,25 @@ export interface StoredOtp {
   attempts: number
   expiresAt: Date
   createdAt: Date
+  purpose: OtpPurpose
 }
 
+export type OtpPurpose = 'login' | 'verify_phone' | 'reset_password'
+
 /** آخرین کدِ مصرف‌نشده‌ی یک شماره. */
-export async function getActiveOtp(phone: string): Promise<StoredOtp | null> {
+export async function getActiveOtp(
+  phone: string,
+  purpose: OtpPurpose = 'login',
+): Promise<StoredOtp | null> {
   const db = getDb()
   const [row] = await db
     .select()
     .from(otpCode)
-    .where(and(eq(otpCode.phone, phone), sql`${otpCode.consumedAt} IS NULL`))
+    .where(and(
+      eq(otpCode.phone, phone),
+      eq(otpCode.purpose, purpose),
+      sql`${otpCode.consumedAt} IS NULL`,
+    ))
     .orderBy(desc(otpCode.createdAt))
     .limit(1)
   if (!row) return null
@@ -538,6 +704,7 @@ export async function getActiveOtp(phone: string): Promise<StoredOtp | null> {
     attempts: row.attempts,
     expiresAt: row.expiresAt,
     createdAt: row.createdAt,
+    purpose: row.purpose,
   }
 }
 
@@ -545,19 +712,25 @@ export async function saveOtp(input: {
   phone: string
   codeHash: string
   ttlSec: number
+  purpose?: OtpPurpose
 }): Promise<void> {
   const db = getDb()
+  const purpose = input.purpose ?? 'login'
   // کدهای قبلیِ همان شماره باطل می‌شوند: دو کد معتبر هم‌زمان یعنی پنجره‌ی
   // حمله دو برابر می‌شود.
   await db
     .update(otpCode)
     .set({ consumedAt: new Date() })
-    .where(and(eq(otpCode.phone, input.phone), sql`${otpCode.consumedAt} IS NULL`))
+    .where(and(
+      eq(otpCode.phone, input.phone),
+      eq(otpCode.purpose, purpose),
+      sql`${otpCode.consumedAt} IS NULL`,
+    ))
 
   await db.insert(otpCode).values({
     phone: input.phone,
     codeHash: input.codeHash,
-    purpose: 'login',
+    purpose,
     expiresAt: new Date(Date.now() + input.ttlSec * 1000),
   })
 }

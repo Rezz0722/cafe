@@ -8,6 +8,7 @@ import {
   hashCode,
   verifyCode,
   OTP_LENGTH,
+  OTP_TTL_SEC,
   OTP_MAX_ATTEMPTS,
   OTP_MAX_PER_HOUR,
   OTP_RESEND_COOLDOWN_SEC,
@@ -16,6 +17,7 @@ import {
   pruneGlobal,
   type OtpRecord,
 } from './otp.ts'
+import { isUnregisteredPhoneAccount } from './userRepo.ts'
 
 // ── نرمال‌سازی شماره ────────────────────────────────────────────────
 // اگر «۰۹۱۵…» و «+98915…» دو کاربر جدا بسازند، یک نفر دو حساب دارد.
@@ -47,6 +49,22 @@ test('isValidPhone و maskPhone', () => {
   assert.equal(maskPhone('09151234567'), '0915***4567')
 })
 
+test('حساب پیامکی ناقص، حساب ثبت‌نام‌شده محسوب نمی‌شود', () => {
+  const incomplete = {
+    role: 'customer' as const,
+    phone: '09151234567',
+    name: '',
+    username: null,
+    passwordHash: null,
+    phoneVerifiedAt: new Date().toISOString(),
+    createdByUserId: null,
+  }
+  assert.equal(isUnregisteredPhoneAccount(incomplete), true)
+  assert.equal(isUnregisteredPhoneAccount({ ...incomplete, name: 'کاربر' }), false)
+  assert.equal(isUnregisteredPhoneAccount({ ...incomplete, passwordHash: 'hash' }), false)
+  assert.equal(isUnregisteredPhoneAccount({ ...incomplete, createdByUserId: 'admin-id' }), false)
+})
+
 // ── تولید کد ────────────────────────────────────────────────────────
 
 test('کد طول درست دارد و فقط رقم است', () => {
@@ -55,6 +73,19 @@ test('کد طول درست دارد و فقط رقم است', () => {
     assert.equal(code.length, OTP_LENGTH)
     assert.match(code, /^\d+$/)
   }
+})
+
+test('کد پیامکی یک دقیقه اعتبار دارد', () => {
+  assert.equal(OTP_TTL_SEC, 60)
+})
+
+test('کد در لحظه‌ی پایان یک دقیقه منقضی می‌شود', () => {
+  const now = Date.now()
+  const record = createOtpRecord('09151234567', '54321', [now], now)
+  assert.deepEqual(verifyCode(record, '09151234567', '54321', now + OTP_TTL_SEC * 1000 - 1), { ok: true })
+  const expired = verifyCode(record, '09151234567', '54321', now + OTP_TTL_SEC * 1000)
+  assert.equal(expired.ok, false)
+  if (!expired.ok) assert.equal(expired.burned, true)
 })
 
 test('هش کد به شماره گره خورده — کد یک شماره برای شماره‌ی دیگر کار نمی‌کند', () => {

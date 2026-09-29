@@ -58,7 +58,7 @@
   flex: none;
   padding: 7px 14px;
   border-radius: var(--r-pill);
-  background: var(--c-ink);
+  background: var(--c-inverse-surface);
   color: #fff;
   font-size: var(--fs-sm);
   font-weight: 700;

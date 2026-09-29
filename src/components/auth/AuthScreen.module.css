@@ -1,19 +1,19 @@
 .wrap {
-  min-height: 100vh;
+  min-height: calc(100dvh - var(--header-h));
   display: grid;
   place-items: center;
-  padding: 24px 16px;
-  background: var(--c-surface, #f7f7f5);
+  padding: 44px 16px 64px;
+  background: var(--c-primary-soft);
 }
 
 .card {
   width: 100%;
-  max-width: 420px;
-  background: #fff;
+  max-width: 440px;
+  background: var(--c-surface);
   border: 1px solid var(--c-border, #ececec);
-  border-radius: 20px;
-  padding: 30px 26px 26px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.05);
+  border-radius: 24px;
+  padding: 32px 28px 28px;
+  box-shadow: var(--sh-raised);
 }
 
 .brand {
@@ -23,6 +23,22 @@
   font-weight: 800;
   font-size: 17px;
   margin-bottom: 22px;
+}
+
+.authHeading {
+  display: grid;
+  gap: 7px;
+  margin-bottom: 20px;
+}
+
+.kicker {
+  width: max-content;
+  padding: 5px 10px;
+  border-radius: 999px;
+  color: var(--c-primary-strong, #2f6fd0);
+  background: var(--c-primary-soft, #eaf2ff);
+  font-size: 11px;
+  font-weight: 850;
 }
 
 .form {
@@ -43,6 +59,88 @@
   margin-top: -6px;
 }
 
+.progress {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 3px;
+  margin: 2px 0 25px;
+}
+
+.progress::before {
+  content: '';
+  position: absolute;
+  height: 2px;
+  inset: 15px 11% auto;
+  background: var(--c-border, #e4e8ed);
+}
+
+.progress[data-count='2']::before { inset-inline: 25%; }
+
+.progressStep {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+  color: var(--c-muted, #7b8490);
+}
+
+.progressStep span {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--c-border, #e4e8ed);
+  border-radius: 50%;
+  background: var(--c-surface);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.progressStep small {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 10px;
+  font-weight: 750;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.progressStep[data-state='current'] { color: var(--c-primary-strong, #2f6fd0); }
+.progressStep[data-state='current'] span { border-color: var(--c-primary); box-shadow: 0 0 0 4px var(--c-primary-soft); }
+.progressStep[data-state='done'] { color: #16824b; }
+.progressStep[data-state='done'] span { border-color: #16824b; color: #fff; background: #16824b; }
+
+.methodTabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-bottom: 18px;
+  padding: 4px;
+  border-radius: 14px;
+  background: var(--c-surface-2, #f2f4f7);
+}
+
+.methodTabs button {
+  min-height: 44px;
+  border: 0;
+  border-radius: 11px;
+  color: var(--c-ink-soft, #6d6d6d);
+  background: transparent;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.methodTabs button[aria-selected='true'] {
+  color: var(--c-ink, #17202b);
+  background: var(--c-surface);
+  box-shadow: 0 3px 12px rgb(15 31 50 / 8%);
+}
+
 .field {
   display: flex;
   flex-direction: column;
@@ -53,6 +151,8 @@
   font-size: 13px;
   font-weight: 700;
 }
+
+.label small { color: var(--c-muted, #7b8490); font-size: 10px; font-weight: 600; }
 
 /* راهنمای زیر فیلد — مثل «حداقل ۸ کاراکتر»، که از تنظیمات می‌آید. */
 .hint {
@@ -68,11 +168,29 @@
   border-radius: 12px;
   background: var(--c-surface, #fafafa);
   width: 100%;
+  min-height: 52px;
 }
 
 .input:focus {
   outline: 2px solid var(--c-primary, #5996ff);
   outline-offset: 1px;
+}
+
+.passwordWrap { position: relative; display: block; }
+.passwordWrap .input { padding-inline-end: 70px; }
+.passwordWrap button {
+  position: absolute;
+  inset-block: 4px;
+  inset-inline-end: 5px;
+  min-width: 58px;
+  border: 0;
+  border-radius: 9px;
+  color: var(--c-primary-strong, #2f6fd0);
+  background: transparent;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
 }
 
 /* کد ورود — درشت و با فاصله، چون رقم‌به‌رقم خوانده می‌شود */
@@ -95,18 +213,30 @@
   color: #fff;
   cursor: pointer;
   margin-top: 4px;
+  min-height: 52px;
+  transition: transform 120ms ease-out, background var(--t-fast);
 }
+
+.primary:active { transform: scale(.985); }
 
 .primary:disabled {
   opacity: 0.6;
   cursor: progress;
 }
 
+.primary:focus-visible,
+.linkButton:focus-visible,
+.methodTabs button:focus-visible,
+.passwordWrap button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--c-primary) 35%, transparent);
+  outline-offset: 2px;
+}
+
 .error {
   font-size: 13px;
   font-weight: 600;
-  color: #a12a2a;
-  background: #fdecec;
+  color: var(--c-danger);
+  background: var(--c-danger-bg);
   padding: 10px 12px;
   border-radius: 10px;
   line-height: 1.8;
@@ -115,9 +245,9 @@
 /* هشدار حالت توسعه — باید واضح باشد که پیامکی نمی‌آید */
 .devNote {
   font-size: 12.5px;
-  color: #7a5314;
-  background: #fff6e5;
-  border: 1px solid #f0d9a8;
+  color: var(--c-accent-text-strong);
+  background: var(--c-accent-soft);
+  border: 1px solid var(--c-accent-border);
   padding: 10px 12px;
   border-radius: 10px;
   line-height: 1.9;
@@ -132,12 +262,39 @@
   margin-top: 2px;
 }
 
+.centerLink { align-self: center; }
+
+.signupPrompt {
+  min-height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--c-border, #ececec);
+  color: var(--c-ink-soft, #6d6d6d);
+  font-size: 12.5px;
+}
+
+.signupPrompt a { color: var(--c-primary-strong, #2f6fd0); font-weight: 850; }
+
+.compactNote {
+  padding: 10px 12px;
+  border-radius: 11px;
+  color: var(--c-ink-soft, #5f6872);
+  background: var(--c-surface-2, #f5f6f8);
+  font-size: 12.5px;
+  line-height: 1.8;
+}
+
 .linkButton {
   font: inherit;
   font-size: 13px;
   background: none;
   border: 0;
-  padding: 0;
+  min-height: 44px;
+  padding: 7px 2px;
   color: var(--c-primary-strong, #2f6fd0);
   cursor: pointer;
   text-decoration: underline;
@@ -154,9 +311,27 @@
   font-size: 13.5px;
   background: none;
   border: 0;
-  padding: 6px;
+  min-height: 44px;
+  padding: 8px;
   color: var(--c-primary-strong, #2f6fd0);
   cursor: pointer;
   text-decoration: underline;
   align-self: center;
+}
+
+@media (max-width: 640px) {
+  .wrap {
+    min-height: calc(100dvh - var(--header-h));
+    place-items: start center;
+    padding: 18px 12px 94px;
+  }
+
+  .card {
+    padding: 22px 18px 20px;
+    border-radius: 20px;
+  }
+
+  .title { font-size: 21px; }
+  .input { font-size: 16px; }
+  .progress { margin-bottom: 21px; }
 }

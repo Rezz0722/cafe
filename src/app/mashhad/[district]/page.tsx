@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { PlaceCardView } from '@/components/cafe/PlaceCardView'
-import { CafeMap } from '@/components/map/CafeMap'
+import { LazyCafeMap } from '@/components/map/LazyCafeMap'
 import { BreadcrumbJsonLd } from '@/components/seo/PlaceJsonLd'
 import { getMapLabels } from '@/core/map/labels'
 import {
@@ -17,6 +17,7 @@ import { MaintenanceScreen } from '@/components/site/MaintenanceScreen'
 import { maintenanceState } from '@/core/settings/maintenance'
 import { getLocalePolicy, getMapPolicy, getSiteName } from '@/core/settings/policies'
 import { paths } from '@/routes'
+import { robotsFor } from '@/core/seo/indexability'
 import styles from './page.module.css'
 import { FacetIcon } from '@/components/ui/FacetIcon'
 
@@ -51,6 +52,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title: `کافه‌ها و رستوران‌های ${district.name}، ${locale.cityName}`,
     description: `${fa(district.placeCount)} مجموعه در ${district.name}. قیمت واقعی منو، ساعت کاری، نقشه و مسیریابی.`,
     alternates: { canonical: paths.district(district.slug) },
+    robots: robotsFor(district.placeCount),
   }
 }
 
@@ -148,7 +150,7 @@ export default async function DistrictPage({ params }: PageProps) {
 
         {mapPlaces.length > 0 && (
           <section className={styles.mapSection}>
-            <CafeMap
+            <LazyCafeMap
               places={mapPlaces}
               labels={getMapLabels({ zoom: 14, limit: 24 })}
               center={district.center}

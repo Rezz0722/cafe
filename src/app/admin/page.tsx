@@ -9,29 +9,31 @@ import {
   getTopPlaces,
   getTrafficSummary,
   getUserSummary,
-  getZeroResultSearches,
   listIncompletePlaces,
   listPendingReviews,
+  listPendingReplies,
   listPendingSubmissions,
 } from '@/core/analytics/stats'
 import { getSession } from '@/core/auth/currentUser'
-import { listUsers } from '@/core/auth/userRepo'
+import { findUserById, listUsers } from '@/core/auth/userRepo'
 import { checkConfig } from '@/core/config/env'
 import { isMapPublished } from '@/core/map/published'
-import { listPlaceCards } from '@/core/places/queries'
+import { listDistricts, listPlaceCards } from '@/core/places/queries'
 import { listPendingSuggestions } from '@/core/places/suggestions'
 import { getSettings, getSettingsUpdatedAt, listOverriddenKeys } from '@/core/settings/store'
 import { pingDb } from '@/db/client'
+import { readTopMenuSyncSummary } from '@/core/sync/topMenuSync'
 import { authUrl, paths } from '@/routes'
+import { getAdminPlaces, getAdminPlaceChoices } from '@/core/admin/catalog'
 
 /**
  * پنل مدیریت.
  *
  * ═══ چرا همه‌ی داده در یک صفحه خوانده می‌شود ═══
  *
- * تب‌ها در کلاینت عوض می‌شوند و همه‌ی داده از قبل آمده. برای این حجم (چند صد
- * ردیف) یک رفت‌وبرگشت بهتر از شش‌تاست، و تعویض تب فوری می‌شود. اگر روزی
- * جدول‌ها بزرگ شوند، هر تب مسیر خودش را می‌گیرد.
+ * داده‌های سبک تب‌ها از قبل آمده تا تعویض تب فوری باشد. گزارش تجمیعی
+ * جست‌وجوی بی‌نتیجه روی لاگ بزرگ، جداگانه و فقط در تب بازدید خوانده می‌شود؛
+ * بازکردن پنل و انجام عملیات نباید منتظر اسکن کل سابقهٔ جست‌وجو بماند.
  */
 
 export const metadata: Metadata = {
@@ -53,13 +55,16 @@ export default async function AdminPage() {
   if (user.role !== 'admin') redirect(paths.profile)
   void actor
 
+  const signedInAccount = await findUserById(user.id)
+  if (signedInAccount?.mustChangePassword) redirect(paths.changePassword)
+
   const [
     traffic,
     daily,
     topPlaces,
-    zeroSearches,
     queue,
     pendingReviews,
+    pendingReplies,
     submissions,
     suggestions,
     health,
@@ -68,29 +73,35 @@ export default async function AdminPage() {
     users,
     userSummary,
     places,
+    placeChoices,
     db,
     settings,
     overriddenKeys,
     settingsUpdatedAt,
+    districts,
+    topMenuSync,
   ] = await Promise.all([
     getTrafficSummary(),
     getDailyViews(30),
     getTopPlaces(12),
-    getZeroResultSearches(20),
     getModerationQueue(),
     listPendingReviews(40),
+    listPendingReplies(40),
     listPendingSubmissions(40),
     listPendingSuggestions(40),
     getDataHealth(),
     listIncompletePlaces(25),
     getFailedMedia(15),
-    listUsers({ limit: 200 }),
+    listUsers({ limit: 25 }),
     getUserSummary(),
-    listPlaceCards({ publishedOnly: false, limit: 400, sort: 'name' }),
+    getAdminPlaces(),
+    getAdminPlaceChoices(),
     pingDb(),
     getSettings(),
     listOverriddenKeys(),
     getSettingsUpdatedAt(),
+    listDistricts(),
+    readTopMenuSyncSummary(),
   ])
 
   const data: AdminData = {
@@ -103,8 +114,8 @@ export default async function AdminPage() {
       views: place.views,
       qualityScore: place.qualityScore,
     })),
-    zeroSearches,
     queue,
+    pendingReplies,
     pendingReviews: pendingReviews.map((review) => ({
       id: review.id,
       placeSlug: review.placeSlug,
@@ -146,15 +157,21 @@ export default async function AdminPage() {
       hasPassword: !!account.passwordHash,
       mustChangePassword: account.mustChangePassword,
       ownedPlaces: account.ownedPlaces.map((place) => ({ id: place.id, name: place.name })),
+      isBlogger: account.isBlogger,
     })),
     userSummary,
-    places: places.map((place) => ({
+    placesTotal: places.total,
+    placeOptions: placeChoices,
+    places: places.rows.map((place) => ({
       id: place.id,
       name: place.name,
       slug: place.slug,
       status: place.status,
       qualityScore: place.qualityScore,
+      archived: place.archived,
     })),
+    districts: districts.map((district) => ({ id: district.id, name: district.name })),
+    topMenuSync,
     configProblems: checkConfig(),
     dbOk: db.ok,
     mapReady: isMapPublished(),

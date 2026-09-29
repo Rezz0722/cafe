@@ -3,10 +3,9 @@
  *
  * ═══ اصول ═══
  *
- *   • **جایگزینی کامل، در یک تراکنش.** داده‌ی قبلی (نمونه‌های آزمایشی) پاک و
- *     ۳۳۱ مجموعه از نو نوشته می‌شوند. اگر وسط کار چیزی بترکد، rollback
- *     می‌شود — یک دیتابیسِ نیمه‌واردشده بدترین حالت ممکن است چون نه کار
- *     می‌کند و نه معلوم است تا کجا رسیده.
+ *   • این importer فقط برای bootstrap دیتابیس خالی است. اجرای destructive
+ *     روی دیتابیس پر، بدون پرچم صریح، متوقف می‌شود تا آیتم‌های owner، نظرها،
+ *     ذخیره‌ها و نقش‌های متصل به Place با cascade از بین نروند.
  *   • **هیچ داده‌ای بی‌صدا دور ریخته نمی‌شود.** هر چیزی که نگاشت نشد در
  *     `ImportReport` می‌آید.
  *   • **idempotent روی رسانه.** جدول `media` دست‌نخورده می‌ماند؛ ایمپورت فقط
@@ -26,9 +25,11 @@ import {
   placeSocial as placeSocialTable,
   district as districtTable,
 } from '@/db/schema'
+import { importedItemPublicId } from '@/core/items/identity'
 import { DISTRICTS } from '@/data/districts'
 import { normalizeFa } from '@/core/text/normalize'
 import { computeQualityFromFacts } from '@/core/quality/scores'
+import { FACET_BY_ID, matchFacet } from '@/core/taxonomy/menuTaxonomy'
 import { hashUrl } from '@/core/media/store'
 import {
   cleanLine,
@@ -50,7 +51,13 @@ import {
   stripHtml,
   type PlaceKind,
 } from './normalize'
-import { rawItemDescription, readSourceCafes, type RawCafe } from './source'
+import {
+  flattenCafeItems,
+  flattenSectionItems,
+  rawItemDescription,
+  readSourceCafes,
+  type RawCafe,
+} from './source'
 
 // ── گزارش ────────────────────────────────────────────────────────────
 
@@ -99,6 +106,8 @@ function statusFor(kind: PlaceKind): 'published' | 'draft' {
  */
 export interface ImportPolicy {
   priceTierBounds: { cheap: number; mid: number }
+  priceStatsMaxItemPrice: number
+  priceStatsExcludeServiceSections: boolean
   thousandUnitThreshold: number
   districtMatchMaxKm: number
   bbox: { minLat: number; maxLat: number; minLng: number; maxLng: number }
@@ -110,6 +119,8 @@ export async function importCafes(
     sourcePath?: string
     log?: (message: string) => void
     policy?: Partial<ImportPolicy>
+    /** فقط برای bootstrap/reset آگاهانه؛ در اجرای عادی هرگز روشن نشود. */
+    allowDestructiveReset?: boolean
   } = {},
 ): Promise<ImportReport> {
   const log = options.log ?? (() => {})
@@ -117,8 +128,19 @@ export async function importCafes(
 
   const priceTierBounds = options.policy?.priceTierBounds ?? PRICE_TIER_BOUNDS
   const thousandUnitThreshold = options.policy?.thousandUnitThreshold ?? THOUSAND_UNIT_THRESHOLD
+  const priceStatsMaxItemPrice = options.policy?.priceStatsMaxItemPrice ?? 5_000_000
+  const priceStatsExcludeServiceSections = options.policy?.priceStatsExcludeServiceSections ?? false
   const districtMatchMaxKm = options.policy?.districtMatchMaxKm ?? 4
   const bbox = options.policy?.bbox ?? MASHHAD_BBOX
+
+  const [existing] = await db
+    .select({ places: sql<number>`COUNT(*)` })
+    .from(placeTable)
+  if (Number(existing?.places ?? 0) > 0 && !options.allowDestructiveReset) {
+    throw new Error(
+      'ایمپورت destructive متوقف شد: دیتابیس Place دارد. برای reset آگاهانه و فقط پس از backup، ALLOW_DESTRUCTIVE_IMPORT=1 بگذارید. برای بروزرسانی روزمره باید reconciler/upsert استفاده شود.',
+    )
+  }
 
   const report: ImportReport = {
     places: 0,
@@ -180,9 +202,9 @@ export async function importCafes(
       })
   }
 
-  // ── پاک‌کردن مکان‌های قبلی
-  // نمونه‌های آزمایشی باید کامل بروند. `place` آبشاری است، پس منو، ساعت،
-  // تلفن و facetها با آن پاک می‌شوند. `media` عمداً دست‌نخورده می‌ماند.
+  // ── پاک‌کردن مکان‌های قبلی — فقط بعد از گارد صریح بالای تابع
+  // `place` آبشاری است، پس منو، ساعت، تلفن و facetها با آن پاک می‌شوند.
+  // `media` عمداً دست‌نخورده می‌ماند.
   log('پاک‌کردن مکان‌های قبلی…')
   await db.delete(placeTable)
 
@@ -195,7 +217,7 @@ export async function importCafes(
     // ── قیمت‌ها: اول واحد را تشخیص بده، بعد آیتم‌ها را نرمال کن
     const rawPrices: number[] = []
     for (const section of sections) {
-      for (const item of section['آیتم‌ها'] ?? []) {
+      for (const item of flattenSectionItems(section)) {
         const price = item['قیمت (تومان)']
         if (typeof price === 'number' && price > 0) rawPrices.push(price)
       }
@@ -205,9 +227,7 @@ export async function importCafes(
 
     // ── نوع مجموعه
     const sectionNames = sections.map((s) => cleanLine(s['دسته‌بندی']))
-    const itemNames = sections.flatMap((s) =>
-      (s['آیتم‌ها'] ?? []).map((i) => cleanLine(i['نام'])),
-    )
+    const itemNames = flattenCafeItems(cafe).map((item) => cleanLine(item['نام']))
     const kindSignal = detectKind(name, sectionNames, itemNames)
 
     // ── مختصات و محله
@@ -236,9 +256,16 @@ export async function importCafes(
     // ── قیمت‌های نرمال‌شده برای محاسبه‌ی رده
     const normalizedPrices: number[] = []
     for (const section of sections) {
-      for (const item of section['آیتم‌ها'] ?? []) {
+      const sectionName = cleanLine(section['دسته‌بندی']) || 'سایر'
+      const facetId = matchFacet(sectionName)
+      const isService = facetId ? FACET_BY_ID.get(facetId)?.kind === 'service' : false
+      for (const item of flattenSectionItems(section)) {
         const { price } = normalizePrice(item['قیمت (تومان)'], priceContext)
-        if (price !== null) normalizedPrices.push(price)
+        if (
+          price !== null &&
+          (priceStatsMaxItemPrice <= 0 || price <= priceStatsMaxItemPrice) &&
+          !(priceStatsExcludeServiceSections && isService)
+        ) normalizedPrices.push(price)
       }
     }
     const priceMedian = median(normalizedPrices)
@@ -248,7 +275,7 @@ export async function importCafes(
     let signatureItem: string | null = null
     let signaturePrice = -1
     for (const section of sections) {
-      for (const item of section['آیتم‌ها'] ?? []) {
+      for (const item of flattenSectionItems(section)) {
         if (!item['ویژه است']) continue
         const { price } = normalizePrice(item['قیمت (تومان)'], priceContext)
         const value = price ?? 0
@@ -259,7 +286,7 @@ export async function importCafes(
       }
     }
 
-    const hasMenu = sections.some((s) => (s['آیتم‌ها'] ?? []).length > 0)
+    const hasMenu = flattenCafeItems(cafe).length > 0
     if (!hasMenu) report.emptyMenu.push(name)
 
     const qualityScore = computeQualityFromFacts({
@@ -375,19 +402,21 @@ export async function importCafes(
     const itemRows: (typeof menuItemTable.$inferInsert)[] = []
     for (const [sectionIndex, section] of sections.entries()) {
       const sectionName = cleanLine(section['دسته‌بندی']) || 'سایر'
+      const facetId = matchFacet(sectionName)
       const [insertedSection] = await db
         .insert(menuSectionTable)
         .values({
           placeId,
           name: sectionName,
           description: stripHtml(section['توضیحات']) || null,
+          facetId,
           mediaId: mediaIdFor(section['تصویر']),
           sortOrder: sectionIndex,
         })
         .$returningId()
       report.sections++
 
-      for (const [itemIndex, item] of (section['آیتم‌ها'] ?? []).entries()) {
+      for (const [itemIndex, item] of flattenSectionItems(section).entries()) {
         const itemName = cleanLine(item['نام'])
         if (!itemName) continue
         const { price, priceUnknown } = normalizePrice(item['قیمت (تومان)'], priceContext)
@@ -396,6 +425,7 @@ export async function importCafes(
         if (priceUnknown) report.itemsWithoutPrice++
 
         itemRows.push({
+          publicId: importedItemPublicId(item['شناسه'], cafe['شناسه'], sectionIndex, itemIndex),
           placeId,
           sectionId: insertedSection!.id,
           sourceId: item['شناسه'] ?? null,

@@ -1,0 +1,85 @@
+.reserve {
+  overflow: hidden;
+  border-radius: var(--r-lg);
+  background: var(--c-surface-3);
+}
+
+.trigger,
+.loading,
+.importFailure {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  border: 1px solid var(--c-border);
+  border-radius: inherit;
+  color: var(--c-ink);
+  background:
+    radial-gradient(circle at 30% 25%, color-mix(in srgb, var(--c-brand) 12%, transparent), transparent 40%),
+    var(--c-surface-3);
+}
+
+.importFailure {
+  flex-direction: column;
+  padding: 1.25rem;
+  text-align: center;
+}
+
+.importFailure span {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.importFailure small {
+  color: var(--c-muted);
+  font-size: 0.78rem;
+}
+
+.importFailure button {
+  min-height: 44px;
+  padding: 0.65rem 1rem;
+  border: 0;
+  border-radius: var(--r-pill);
+  color: #fff;
+  background: var(--c-brand);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.importFailure button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--c-brand) 45%, transparent);
+  outline-offset: 3px;
+}
+
+.loading {
+  min-height: inherit;
+}
+
+.trigger {
+  cursor: pointer;
+  font: inherit;
+}
+
+.trigger span {
+  display: grid;
+  gap: 0.25rem;
+  text-align: right;
+}
+
+.trigger strong {
+  font-size: 0.95rem;
+}
+
+.trigger small,
+.loading {
+  color: var(--c-muted);
+  font-size: 0.78rem;
+}
+
+.trigger:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--c-brand) 45%, transparent);
+  outline-offset: -4px;
+}

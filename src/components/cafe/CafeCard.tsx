@@ -16,6 +16,12 @@ interface CafeCardProps {
   facetLabels: Record<string, string>
   /** نشان تحریریه‌ای را می‌شود در هر بخش خاموش کرد. */
   showRibbon?: boolean
+  /** دادهٔ سبک برای ثبت کلیک در صفحهٔ Experience؛ handler روی خود کارت نیست. */
+  experienceTracking?: {
+    slug: string
+    resultCount: number
+    rank: number
+  }
 }
 
 const TAG_LIMIT = 2
@@ -32,22 +38,32 @@ const TAG_LIMIT = 2
  * server component است: نه hook دارد نه handler، پس اصلاً به بسته‌ی
  * جاوااسکریپت کلاینت فرستاده نمی‌شود.
  */
-export function CafeCard({ card, facetLabels, showRibbon = true }: CafeCardProps) {
+export function CafeCard({ card, facetLabels, showRibbon = true, experienceTracking }: CafeCardProps) {
   const tags = card.facetIds
     .map((id) => facetLabels[id])
     .filter(Boolean)
     .slice(0, TAG_LIMIT)
 
+  const image = card.cover ?? card.logo
+
   return (
-    <Link href={paths.cafe(card.slug)} className={styles.card}>
+    <Link
+      href={paths.cafe(card.slug)}
+      className={styles.card}
+      data-experience-track={experienceTracking ? 'result_click' : undefined}
+      data-experience-slug={experienceTracking?.slug}
+      data-experience-count={experienceTracking?.resultCount}
+      data-experience-place-id={experienceTracking ? card.id : undefined}
+      data-experience-rank={experienceTracking?.rank}
+    >
       <div className={styles.media}>
-        {card.logo ? (
+        {image ? (
           <img
             className={styles.photo}
-            src={card.logo.url}
-            alt={`فضای ${card.name}`}
-            width={card.logo.width ?? 400}
-            height={card.logo.height ?? 300}
+            src={image.url}
+            alt={`تصویر ثبت‌شده برای ${card.name}`}
+            width={image.width ?? 400}
+            height={image.height ?? 300}
             loading="lazy"
           />
         ) : (
@@ -56,6 +72,7 @@ export function CafeCard({ card, facetLabels, showRibbon = true }: CafeCardProps
           </span>
         )}
         {showRibbon && card.ribbon && <div className={styles.ribbon}>{card.ribbon}</div>}
+        {Number(card.bloggerReviewCount)>0 && <span className={styles.bloggerBadge}>بررسی بلاگرها</span>}
       </div>
 
       <div className={styles.body}>
@@ -103,7 +120,6 @@ export function CafeCard({ card, facetLabels, showRibbon = true }: CafeCardProps
                 : PRICE_TIER_LABELS[card.priceTier]}
             </span>
           </div>
-          <span className={styles.cta}>مشاهده</span>
         </div>
       </div>
     </Link>

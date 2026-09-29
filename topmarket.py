@@ -84,6 +84,8 @@ from pathlib import Path
 
 try:
     import requests
+    from requests.adapters import HTTPAdapter
+    from urllib3.util.retry import Retry
 except ImportError:
     sys.stderr.write(
         "کتابخانه‌ی requests نصب نیست. اول این رو اجرا کن:\n"
@@ -97,6 +99,24 @@ HEADERS = {
     "user-agent": "Mozilla/5.0 (compatible; MenuPriceFetcher/1.0)",
 }
 REQUEST_DELAY = 0.5  # ثانیه، بین هر درخواست به سرور
+
+SESSION = requests.Session()
+SESSION.headers.update(HEADERS)
+SESSION.mount(
+    "https://",
+    HTTPAdapter(
+        max_retries=Retry(
+            total=6,
+            connect=6,
+            read=4,
+            status=6,
+            backoff_factor=2,
+            status_forcelist=(429, 500, 502, 503, 504),
+            allowed_methods=("GET",),
+            respect_retry_after_header=True,
+        )
+    ),
+)
 
 MENU_CSV_FIELDNAMES = [
     "نام مجموعه",
@@ -139,7 +159,7 @@ PROVIDER_CSV_FIELDNAMES = [
 
 
 def api_get(path, params=None):
-    resp = requests.get(f"{BASE}{path}", params=params, headers=HEADERS, timeout=30)
+    resp = SESSION.get(f"{BASE}{path}", params=params, timeout=(10, 45))
     resp.raise_for_status()
     payload = resp.json()
     if payload.get("status") != 200:
@@ -389,6 +409,7 @@ def save_csv(path, rows, fieldnames):
 
 
 def main():
+    global REQUEST_DELAY
     parser = argparse.ArgumentParser(
         description="گرفتن قیمت منو + پروفایل (تلفن/آدرس/اینستاگرام/ساعت کاری) همه‌ی کافه/رستوران‌های TopMenuMarket"
     )
@@ -403,6 +424,8 @@ def main():
         default=None,
         help="اگه فقط یک کافه‌ی خاص می‌خوای (یوزرنیمش توی آدرس سایتش، مثلاً ramouz.cafe)",
     )
+    parser.add_argument("--provider-ids-file", default=None,
+                        help="فایل JSON شناسه کافه‌های انتخاب‌شده؛ فقط منوی همین کافه‌ها دریافت می‌شود")
     parser.add_argument(
         "--per-provider-files",
         action="store_true",
@@ -413,7 +436,12 @@ def main():
         action="store_true",
         help="فقط اطلاعات پروفایل (تلفن/آدرس/ساعت کاری) رو بگیر، بدون آیتم‌های منو (سریع‌تر)",
     )
+    parser.add_argument(
+        "--delay", type=float, default=1.2,
+        help="مکث بین درخواست‌ها به ثانیه (پیش‌فرض امن: 1.2)",
+    )
     args = parser.parse_args()
+    REQUEST_DELAY = max(0.5, min(args.delay, 10.0))
 
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -421,7 +449,21 @@ def main():
     if args.per_provider_files:
         per_provider_dir.mkdir(parents=True, exist_ok=True)
 
-    if args.username:
+    if args.provider_ids_file:
+        if args.username or args.limit:
+            parser.error("--provider-ids-file با --username یا --limit قابل ترکیب نیست")
+        selected_ids = json.loads(Path(args.provider_ids_file).read_text(encoding="utf-8"))
+        if not isinstance(selected_ids, list) or not selected_ids or len(selected_ids) > 1000 or any(
+            type(pid) is not int or pid <= 0 or pid > 2147483647 for pid in selected_ids
+        ):
+            parser.error("شناسه‌های انتخاب‌شده معتبر نیستند؛ انتخاب خالی به معنای همه نیست")
+        requested = set(selected_ids)
+        providers = [provider for provider in list_all_providers() if provider["id"] in requested]
+        found = {provider["id"] for provider in providers}
+        if requested != found:
+            parser.error("بعضی کافه‌های انتخاب‌شده در فهرست منبع موجود نیستند؛ عملیات متوقف شد")
+        print(f"فقط {len(providers)} کافه انتخاب‌شده دریافت می‌شود.")
+    elif args.username:
         print(f"در حال گرفتن اطلاعات provider «{args.username}» ...")
         providers = [get_provider_by_username(args.username)]
     else:

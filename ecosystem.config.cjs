@@ -64,6 +64,9 @@ module.exports = {
 
       exec_mode: 'fork',
       instances: 1,
+      // TopMenu workers are deliberately detached background jobs. Reloading
+      // the web server must not tree-kill an in-progress scrape/apply.
+      treekill: false,
 
       /*
         ری‌استارت خودکار وقتی حافظه از حد گذشت.

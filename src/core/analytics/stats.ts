@@ -25,6 +25,7 @@ import {
   place as placeTable,
   placeSubmission,
   review as reviewTable,
+  reviewReply,
   searchLog,
 } from '@/db/schema'
 
@@ -166,6 +167,9 @@ export async function getTopPlaces(limit = 12): Promise<TopPlace[]> {
 export interface ZeroResultSearch {
   query: string
   facetIds: string
+  requestedScope: 'all' | 'places' | 'items'
+  resolvedEntity: 'places' | 'items'
+  resolvedIntent: string | null
   count: number
   lastAt: Date
 }
@@ -182,18 +186,28 @@ export async function getZeroResultSearches(limit = 20): Promise<ZeroResultSearc
     .select({
       query: searchLog.query,
       facetIds: searchLog.facetIds,
+      requestedScope: searchLog.requestedScope,
+      resolvedEntity: searchLog.resolvedEntity,
+      resolvedIntent: searchLog.resolvedIntent,
       count: sql<number>`COUNT(*)`,
       lastAt: sql<Date>`MAX(created_at)`,
     })
     .from(searchLog)
     .where(and(eq(searchLog.resultCount, 0), sql`${searchLog.query} <> ''`))
-    .groupBy(searchLog.query, searchLog.facetIds)
+    .groupBy(
+      searchLog.query,
+      searchLog.facetIds,
+      searchLog.requestedScope,
+      searchLog.resolvedEntity,
+      searchLog.resolvedIntent,
+    )
     .orderBy(desc(sql`COUNT(*)`))
     .limit(limit)
   return rows.map((row) => ({ ...row, count: Number(row.count) }))
 }
 
 export interface ModerationQueue {
+  pendingReplies: number
   pendingReviews: number
   pendingSubmissions: number
   duplicateSubmissions: number
@@ -204,15 +218,23 @@ export async function getModerationQueue(): Promise<ModerationQueue> {
   const [row] = await db
     .select({
       pendingReviews: sql<number>`(SELECT COUNT(*) FROM review WHERE status = 'pending')`,
+      pendingReplies: sql<number>`(SELECT COUNT(*) FROM review_reply WHERE status = 'pending')`,
       pendingSubmissions: sql<number>`(SELECT COUNT(*) FROM place_submission WHERE status = 'pending')`,
       duplicateSubmissions: sql<number>`(SELECT COUNT(*) FROM place_submission WHERE status = 'duplicate')`,
     })
     .from(sql`(SELECT 1) AS one`)
   return {
     pendingReviews: Number(row?.pendingReviews ?? 0),
+    pendingReplies: Number(row?.pendingReplies ?? 0),
     pendingSubmissions: Number(row?.pendingSubmissions ?? 0),
     duplicateSubmissions: Number(row?.duplicateSubmissions ?? 0),
   }
+}
+
+export async function listPendingReplies(limit = 40) {
+  return getDb().select({ id: reviewReply.id, text: reviewReply.text, reviewText: reviewTable.text, placeSlug: placeTable.slug, placeName: placeTable.name })
+    .from(reviewReply).innerJoin(reviewTable, eq(reviewTable.id, reviewReply.reviewId)).innerJoin(placeTable, eq(placeTable.id, reviewTable.placeId))
+    .where(eq(reviewReply.status, 'pending')).orderBy(desc(reviewReply.createdAt), desc(reviewReply.id)).limit(limit)
 }
 
 export interface DataHealth
@@ -254,18 +276,18 @@ export async function getDataHealth(): Promise<DataHealth> {
         (SELECT COUNT(*) FROM place WHERE geo_status = 'missing') AS no_coords,
         (SELECT COUNT(*) FROM place WHERE geo_status = 'out_of_area') AS out_of_area,
         (SELECT COUNT(*) FROM place p WHERE NOT EXISTS
-          (SELECT 1 FROM place_hours h WHERE h.place_id = p.id)) AS no_hours,
+          (SELECT 1 FROM place_hours h WHERE h.place_id = p.id AND h.closed=0)) AS no_hours,
         (SELECT COUNT(*) FROM place p WHERE NOT EXISTS
-          (SELECT 1 FROM menu_item m WHERE m.place_id = p.id)) AS no_menu,
+          (SELECT 1 FROM menu_item m JOIN menu_section ms ON ms.id=m.section_id WHERE m.place_id = p.id AND m.archived_at IS NULL AND ms.branch_scope IN ('shared','branch'))) AS no_menu,
         (SELECT COUNT(*) FROM place p WHERE NOT EXISTS
           (SELECT 1 FROM place_phone ph WHERE ph.place_id = p.id)) AS no_phone,
-        (SELECT COUNT(*) FROM place WHERE about IS NULL OR about = '') AS no_about,
+        (SELECT COUNT(*) FROM place WHERE about IS NULL OR TRIM(about) = '') AS no_about,
         (SELECT COUNT(*) FROM place WHERE district_id IS NULL) AS no_district,
         (SELECT COUNT(*) FROM place WHERE price_unit_fixed = 1) AS price_unit_fixed,
         (SELECT COUNT(*) FROM media WHERE status = 'failed') AS media_failed,
-        (SELECT COUNT(*) FROM menu_item WHERE price IS NOT NULL AND
-          (price_updated_at IS NULL OR
-            price_updated_at < DATE_SUB(UTC_TIMESTAMP(), INTERVAL ${stalePriceDays} DAY))
+        (SELECT COUNT(DISTINCT mi.place_id) FROM menu_item mi JOIN menu_section ms ON ms.id=mi.section_id WHERE mi.archived_at IS NULL AND ms.branch_scope IN ('shared','branch') AND mi.price IS NOT NULL AND
+          (mi.price_updated_at IS NULL OR
+            mi.price_updated_at < DATE_SUB(UTC_TIMESTAMP(), INTERVAL ${stalePriceDays} DAY))
         ) AS stale_prices
     `)
   )[0] as unknown as Record<string, number>[]

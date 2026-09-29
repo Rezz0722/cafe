@@ -73,7 +73,7 @@
 }
 
 .submit:hover:not(:disabled) {
-  background: var(--c-primary-strong);
+  background: var(--c-primary-action-strong);
 }
 
 .submit:disabled {

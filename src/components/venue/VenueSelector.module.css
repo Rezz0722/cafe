@@ -1,0 +1,57 @@
+.page { max-width: 1180px; margin: 0 auto; padding: 20px 20px 72px; }
+.hero { position: relative; overflow: hidden; padding: 24px; border: 1px solid color-mix(in srgb, var(--c-primary) 20%, var(--c-border)); border-radius: 24px; background: linear-gradient(135deg, var(--c-primary-soft), var(--c-surface) 62%); box-shadow: 0 18px 50px color-mix(in srgb, var(--c-primary) 8%, transparent); }
+.hero::after { content: ''; position: absolute; width: 240px; height: 240px; inset: -120px auto auto -80px; border-radius: 50%; background: color-mix(in srgb, var(--c-accent) 12%, transparent); pointer-events: none; }
+.heroTop { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.back { color: var(--c-primary-strong); font-size: .78rem; font-weight: 800; text-decoration: none; }
+.adminBadge { padding: 5px 10px; border-radius: 999px; background: var(--c-inverse-surface); color: var(--c-inverse-text); font-size: .68rem; font-weight: 800; }
+.heroBody { display: flex; align-items: center; gap: 15px; margin-top: 20px; }
+.heroIcon, .logoEmpty { display: grid; place-items: center; flex: 0 0 auto; background: var(--c-surface); color: var(--c-primary-strong); }
+.heroIcon { width: 58px; height: 58px; border-radius: 18px; box-shadow: 0 8px 24px color-mix(in srgb, var(--c-primary) 13%, transparent); }
+.eyebrow { margin: 0 0 3px !important; color: var(--c-primary-strong) !important; font-size: .7rem !important; font-weight: 900; }
+.hero h1 { margin: 0; color: var(--c-ink); font-size: clamp(1.25rem, 3vw, 1.8rem); line-height: 1.5; }
+.heroBody p { margin: 5px 0 0; color: var(--c-ink-2); font-size: .82rem; line-height: 1.8; }
+.stats { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+.stats span { display: inline-flex; align-items: baseline; gap: 4px; padding: 7px 11px; border: 1px solid var(--c-border-3); border-radius: 999px; background: color-mix(in srgb, var(--c-surface) 85%, transparent); color: var(--c-muted); font-size: .7rem; }
+.stats strong { color: var(--c-ink); font-size: .86rem; }
+.controls { position: sticky; top: 8px; z-index: 5; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 9px; margin: 18px 0; padding: 9px; border: 1px solid var(--c-border); border-radius: 17px; background: color-mix(in srgb, var(--c-surface) 92%, transparent); box-shadow: 0 8px 26px rgba(0,0,0,.06); backdrop-filter: blur(16px); }
+.searchBox, .filterBox { min-height: 48px; display: flex; align-items: center; gap: 9px; padding: 0 13px; border: 1px solid var(--c-border-3); border-radius: 12px; background: var(--c-surface); color: var(--c-muted); }
+.searchBox input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--c-ink); font: inherit; font-size: .88rem; }
+.searchBox button { width: 32px; height: 32px; border: 0; border-radius: 50%; background: var(--c-surface-3); color: var(--c-muted); font-size: 1.2rem; cursor: pointer; }
+.filterBox select { border: 0; outline: 0; background: transparent; color: var(--c-ink-2); font: inherit; font-size: .78rem; font-weight: 700; }
+.resultHead { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 20px 2px 10px; }
+.resultHead strong { color: var(--c-ink); font-size: .86rem; }
+.resultHead span { color: var(--c-muted); font-size: .7rem; }
+.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.card { min-width: 0; display: flex; align-items: center; gap: 11px; padding: 13px; border: 1px solid var(--c-border-3); border-radius: 16px; background: var(--c-surface); color: inherit; text-decoration: none; transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
+.card:hover { transform: translateY(-2px); border-color: var(--c-primary-border); box-shadow: 0 10px 25px color-mix(in srgb, var(--c-primary) 9%, transparent); }
+.card img, .logoEmpty { width: 58px; height: 58px; border-radius: 14px; object-fit: cover; }
+.cardBody { min-width: 0; flex: 1; display: grid; gap: 5px; }
+.cardTitle { overflow: hidden; color: var(--c-ink); font-size: .88rem; font-weight: 850; text-overflow: ellipsis; white-space: nowrap; }
+.location { min-width: 0; display: flex; align-items: center; gap: 4px; overflow: hidden; color: var(--c-muted); font-size: .68rem; text-overflow: ellipsis; white-space: nowrap; }
+.location svg { flex: 0 0 auto; }
+.cardMeta { display: flex; align-items: center; flex-wrap: wrap; gap: 5px 8px; color: var(--c-muted); font-size: .63rem; }
+.cardMeta em { padding: 2px 7px; border-radius: 999px; background: var(--c-surface-3); color: var(--c-ink-2); font-style: normal; font-weight: 800; }
+.cardMeta em[data-status='published'] { background: var(--c-open-bg); color: var(--c-open); }
+.cardMeta em[data-status='draft'] { background: var(--c-accent-soft); color: var(--c-accent-text-strong); }
+.chevron { flex: 0 0 auto; color: var(--c-disabled); }
+.empty { min-height: 240px; display: grid; place-content: center; justify-items: center; gap: 7px; border: 1px dashed var(--c-border); border-radius: 18px; color: var(--c-muted); text-align: center; }
+.empty strong { color: var(--c-ink); }
+.empty span { font-size: .76rem; }
+.more { min-height: 48px; display: block; margin: 18px auto 0; padding: 8px 20px; border: 1px solid var(--c-primary-border); border-radius: 999px; background: var(--c-primary-soft); color: var(--c-primary-strong); font: inherit; font-size: .8rem; font-weight: 800; cursor: pointer; }
+.srOnly { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+
+@media (max-width: 900px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 580px) {
+  .page { padding: 10px 10px 88px; }
+  .hero { padding: 17px 15px; border-radius: 19px; }
+  .heroBody { align-items: flex-start; }
+  .heroIcon { width: 48px; height: 48px; border-radius: 15px; }
+  .heroBody p { font-size: .75rem; }
+  .controls { top: 6px; grid-template-columns: 1fr; margin: 12px 0; padding: 7px; border-radius: 15px; }
+  .searchBox, .filterBox { min-height: 50px; }
+  .filterBox select { flex: 1; }
+  .resultHead span { display: none; }
+  .grid { grid-template-columns: 1fr; gap: 8px; }
+  .card { min-height: 86px; padding: 12px; }
+  .card:hover { transform: none; }
+}

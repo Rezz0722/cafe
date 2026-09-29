@@ -13,7 +13,7 @@
 import type { Place } from '@/core/places/types'
 
 /** وزن هر فیلد در کامل‌بودن پروفایل. جمعشان لازم نیست ۱۰۰ باشد. */
-const COMPLETENESS_WEIGHTS = {
+export const COMPLETENESS_WEIGHTS = {
   coords: 20, // بدون مختصات، مکان روی نقشه و در سورت فاصله نیست
   hours: 18, // پرتکرارترین سؤال کاربر
   photos: 14,
@@ -26,8 +26,8 @@ const COMPLETENESS_WEIGHTS = {
 } as const
 
 /** حداقل تعداد ویژگی برای گرفتن امتیاز کامل آن بخش. */
-const ATTRIBUTE_TARGET = 6
-const PHOTO_TARGET = 3
+export const ATTRIBUTE_TARGET = 6
+export const PHOTO_TARGET = 3
 
 /**
  * واقعیت‌های خامِ کامل‌بودن — بدون وابستگی به شکل رکورد.
@@ -48,22 +48,69 @@ export interface CompletenessFacts {
   attributeCount: number
 }
 
+export interface CompletenessPart {
+  id: keyof typeof COMPLETENESS_WEIGHTS
+  label: string
+  earned: number
+  maximum: number
+  complete: boolean
+  detail: string
+}
+
+/**
+ * توضیح‌پذیرکردن درصد تکمیل برای پنل.
+ *
+ * محاسبه و نمایش از همین تابع تغذیه می‌شوند؛ بنابراین دیگر ممکن نیست عدد
+ * مثلاً ۷۷٪ باشد ولی پنل نتواند بگوید ۲۳٪ باقی‌مانده دقیقاً چیست.
+ */
+export function completenessBreakdown(facts: CompletenessFacts): CompletenessPart[] {
+  const binary = (
+    id: Exclude<keyof typeof COMPLETENESS_WEIGHTS, 'photos' | 'attributes'>,
+    label: string,
+    complete: boolean,
+    detail: string,
+  ): CompletenessPart => ({
+    id,
+    label,
+    earned: complete ? COMPLETENESS_WEIGHTS[id] : 0,
+    maximum: COMPLETENESS_WEIGHTS[id],
+    complete,
+    detail,
+  })
+
+  const photoEarned = Math.min(facts.photoCount / PHOTO_TARGET, 1) * COMPLETENESS_WEIGHTS.photos
+  const attributeEarned = Math.min(facts.attributeCount / ATTRIBUTE_TARGET, 1) * COMPLETENESS_WEIGHTS.attributes
+
+  return [
+    binary('coords', 'موقعیت روی نقشه', facts.hasCoords, 'برای نقشه و «نزدیک من»'),
+    binary('hours', 'ساعت کاری', facts.hasHours, 'حداقل یک روز باز'),
+    {
+      id: 'photos',
+      label: 'تصاویر محیط',
+      earned: photoEarned,
+      maximum: COMPLETENESS_WEIGHTS.photos,
+      complete: facts.photoCount >= PHOTO_TARGET,
+      detail: `${Math.min(facts.photoCount, PHOTO_TARGET)} از ${PHOTO_TARGET} تصویر`,
+    },
+    {
+      id: 'attributes',
+      label: 'امکانات و فضا',
+      earned: attributeEarned,
+      maximum: COMPLETENESS_WEIGHTS.attributes,
+      complete: facts.attributeCount >= ATTRIBUTE_TARGET,
+      detail: `${Math.min(facts.attributeCount, ATTRIBUTE_TARGET)} از ${ATTRIBUTE_TARGET} مورد پاسخ‌داده‌شده`,
+    },
+    binary('address', 'آدرس', facts.hasAddress, 'آدرس قابل استفاده برای مراجعه'),
+    binary('phone', 'شماره تماس', facts.hasPhone, 'حداقل یک شماره معتبر'),
+    binary('menu', 'منو', facts.hasMenu, 'حداقل یک آیتم فعال'),
+    binary('description', 'معرفی مجموعه', facts.hasDescription, 'توضیح کوتاه و مفید'),
+    binary('instagram', 'اینستاگرام', facts.hasInstagram, 'شناسه یا لینک معتبر'),
+  ]
+}
+
 /** ۰..۱۰۰ — چقدر از پروفایل پر است. */
 export function computeQualityFromFacts(facts: CompletenessFacts): number {
-  let score = 0
-  const w = COMPLETENESS_WEIGHTS
-
-  if (facts.hasCoords) score += w.coords
-  if (facts.hasHours) score += w.hours
-  if (facts.hasAddress) score += w.address
-  if (facts.hasPhone) score += w.phone
-  if (facts.hasInstagram) score += w.instagram
-  if (facts.hasDescription) score += w.description
-  if (facts.hasMenu) score += w.menu
-
-  score += Math.min(facts.photoCount / PHOTO_TARGET, 1) * w.photos
-  score += Math.min(facts.attributeCount / ATTRIBUTE_TARGET, 1) * w.attributes
-
+  const score = completenessBreakdown(facts).reduce((sum, part) => sum + part.earned, 0)
   return Math.round(Math.min(score, 100))
 }
 

@@ -152,10 +152,21 @@ async function main() {
       id: menuSectionTable.id,
       placeId: menuSectionTable.placeId,
       name: menuSectionTable.name,
+      branchScope: menuSectionTable.branchScope,
     })
     .from(menuSectionTable)
 
+  // A provider page may contain headings for several physical branches. Those
+  // rows stay in the database for audit/sync, but must never influence public
+  // search facets, dish rankings or a branch's price statistics.
+  const publicSectionIds = new Set(
+    sections
+      .filter((section) => section.branchScope === 'shared' || section.branchScope === 'branch')
+      .map((section) => section.id),
+  )
+
   const facetBySection = new Map<number, string>()
+  const sectionNameById = new Map(sections.map((section) => [section.id, section.name]))
   const sectionIdsByFacet = new Map<string, number[]>()
   for (const section of sections) {
     const facetId = matchFacet(section.name)
@@ -193,7 +204,10 @@ async function main() {
   const dishByItem = new Map<number, string>()
   for (const item of items) {
     const facetId = facetBySection.get(item.sectionId) ?? null
-    const slug = matchDish(item.name, facetId)
+    const slug = matchDish(item.name, facetId, {
+      price: item.price,
+      sectionName: sectionNameById.get(item.sectionId),
+    })
     if (!slug) continue
     dishByItem.set(item.id, slug)
     const list = itemIdsByDish.get(slug)
@@ -244,6 +258,7 @@ async function main() {
    */
   const pricesByDish = new Map<string, number[]>()
   for (const item of items) {
+    if (!publicSectionIds.has(item.sectionId)) continue
     const slug = dishByItem.get(item.id)
     if (!slug || item.price === null) continue
     const list = pricesByDish.get(slug)
@@ -271,6 +286,7 @@ async function main() {
   }
 
   for (const item of items) {
+    if (!publicSectionIds.has(item.sectionId)) continue
     const facetId = facetBySection.get(item.sectionId)
     if (facetId) {
       const agg = touch(facetAgg, `${item.placeId}|${facetId}`)
@@ -385,8 +401,12 @@ async function main() {
         ROW_NUMBER() OVER (PARTITION BY mi.dish_id ORDER BY mi.price) AS rn,
         COUNT(*) OVER (PARTITION BY mi.dish_id) AS cnt
       FROM menu_item mi
+      JOIN menu_section ms ON ms.id = mi.section_id
       JOIN place p ON p.id = mi.place_id
-      WHERE mi.dish_id IS NOT NULL AND mi.price IS NOT NULL AND p.status = 'published'
+      WHERE mi.dish_id IS NOT NULL
+        AND mi.price IS NOT NULL
+        AND ms.branch_scope IN ('shared', 'branch')
+        AND p.status = 'published'
     ) ranked
     WHERE rn IN (FLOOR((cnt + 1) / 2), FLOOR((cnt + 2) / 2))
     GROUP BY dish_id

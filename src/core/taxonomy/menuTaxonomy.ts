@@ -86,6 +86,13 @@ export interface FacetDef {
   hint?: string
 }
 
+export interface DishMatchContext {
+  /** قیمت تومان؛ فقط برای رفع ابهام آیتم‌های عمومی مثل «لیموناد» استفاده می‌شود. */
+  price?: number | null
+  /** نام خام دسته برای تشخیص دسته‌های یخچالی/شرکتی. */
+  sectionName?: string | null
+}
+
 /**
  * قاعده‌ی تطبیق نام دسته به facet.
  *
@@ -422,7 +429,19 @@ export const DISHES: DishDef[] = [
 
   // ── ماکتیل و سرد
   { slug: 'mojito', nameFa: 'موهیتو', nameEn: 'Mojito', facetId: 'mocktail', aliases: ['موهیتو', 'موخیتو', 'mojito'], popular: true },
-  { slug: 'lemonade', nameFa: 'لیموناد', nameEn: 'Lemonade', facetId: 'mocktail', aliases: ['لیموناد', 'lemonade'], popular: true },
+  {
+    slug: 'packaged-lemonade',
+    nameFa: 'لیموناد بسته‌بندی',
+    nameEn: 'Packaged lemonade',
+    facetId: 'soft_drinks',
+    aliases: [
+      'لیموناد شیشه ای', 'لیموناد شیشه‌ای', 'لیموناد شیشه', 'لیموناد بطری',
+      'ليموناد بطري', 'لیموناد قوطی', 'لیموناد پت', 'پت لیموناد', 'لیموناد خانواده',
+      'لیموناد 1 لیتری', 'لیموناد یک لیتری', 'نوشابه لیموناد', 'لیموناد خوشگوار',
+      'لیموناد زمزم', 'لیموناد چی لایف', 'bottled lemonade', 'canned lemonade',
+    ],
+  },
+  { slug: 'lemonade', nameFa: 'لیموناد طبیعی', nameEn: 'Fresh lemonade', facetId: 'mocktail', aliases: ['لیموناد', 'lemonade'], popular: true },
   { slug: 'pina-colada', nameFa: 'پیناکولادا', facetId: 'mocktail', aliases: ['پیناکولادا', 'پینا کولادا', 'pina colada'] },
   { slug: 'soda', nameFa: 'سودا', facetId: 'mocktail', aliases: ['سودا', 'soda', 'هی دی'] },
 
@@ -470,7 +489,8 @@ export const DISHES: DishDef[] = [
 
   // ── پاستا
   { slug: 'alfredo-pasta', nameFa: 'پاستا آلفردو', nameEn: 'Alfredo pasta', facetId: 'pasta', aliases: ['آلفردو', 'الفردو', 'alfredo'], popular: true },
-  { slug: 'pesto-pasta', nameFa: 'پاستا پستو', facetId: 'pasta', aliases: ['پاستا پستو', 'چیکن پستو پاستا', 'pesto pasta'], popular: true },
+  { slug: 'pesto-pasta', nameFa: 'پاستا پستو', facetId: 'pasta', aliases: ['پنه چیکن پستو', 'پنه بیف پستو', 'پنه پستو', 'پاستا پستو', 'چیکن پستو پاستا', 'pesto pasta'], popular: true },
+  { slug: 'penne-pasta', nameFa: 'پاستا پنه', nameEn: 'Penne pasta', facetId: 'pasta', aliases: ['پنه', 'penne'] },
   { slug: 'lasagna', nameFa: 'لازانیا', nameEn: 'Lasagna', facetId: 'pasta', aliases: ['لازانیا', 'lasagna', 'lasagne'], popular: true },
   { slug: 'spaghetti', nameFa: 'اسپاگتی', facetId: 'pasta', aliases: ['اسپاگتی', 'spaghetti'] },
   { slug: 'linguine', nameFa: 'لینگوئینی', facetId: 'pasta', aliases: ['لینگوئینی', 'linguine'] },
@@ -552,10 +572,49 @@ export const DISH_BY_SLUG = new Map(DISHES.map((dish) => [dish.slug, dish]))
  *    نباید لاته شمرده شود. اگر facet دسته معلوم باشد، اول بین دیش‌های همان
  *    facet جست‌وجو می‌شود و فقط اگر چیزی پیدا نشد، بین همه.
  */
-export function matchDish(itemName: string, sectionFacetId?: string | null): string | null {
+export function matchDish(
+  itemName: string,
+  sectionFacetId?: string | null,
+  context: DishMatchContext = {},
+): string | null {
   const squashed = squashFa(itemName)
   const spaced = normalizeFa(itemName)
   if (!squashed) return null
+
+  /*
+   * «لیموناد» در دادهٔ منبع دو محصول متفاوت است:
+   *   ۱) نوشیدنی تازه/ماکتیل که معمولاً فقط «لیموناد» نوشته می‌شود؛
+   *   ۲) بطری، شیشه یا قوطیِ شرکتی که هم‌ردهٔ نوشابه است.
+   *
+   * نام صریح بسته‌بندی همیشه قطعی است. برای نام کاملاً ساده فقط وقتی آن را
+   * بسته‌بندی می‌دانیم که هم دسته soft_drinks باشد و هم قیمت در محدودهٔ
+   * نوشابه باشد؛ در دستهٔ ماکتیل حتی قیمت پایین، طبیعی باقی می‌ماند.
+   */
+  const lemonadeHit = squashed.includes(squashFa('لیموناد')) || /(?:^|\s)lemonade/.test(spaced)
+  if (lemonadeHit) {
+    const packagedSignals = [
+      'شیشه', 'بطری', 'قوطی', 'پت', 'خانواده', '1لیتری', 'یکلیتری',
+      'نوشابه', 'خوشگوار', 'زمزم', 'چیلایف', 'bottled', 'canned', 'bottle', 'can',
+    ]
+    const explicitPackaged = packagedSignals.some((signal) =>
+      LATIN_ONLY.test(signal) ? spaced.includes(signal) : squashed.includes(squashFa(signal)),
+    )
+    const plainName = squashed === squashFa('لیموناد') || spaced === 'lemonade'
+    // در دادهٔ فعلی «لیموناد کوچک» در دستهٔ نوشابه و با قیمت بطری ثبت شده
+    // است؛ این عنوان سایزِ ماکتیل نیست و نباید کف قیمت لیموناد طبیعی را خراب کند.
+    const packagedSizeName = squashed === squashFa('لیموناد کوچک')
+    const sectionSquashed = squashFa(context.sectionName ?? '')
+    const packagedSection = ['یخچالی', 'شرکتی', 'کنار غذا', 'مخلفات'].some((signal) =>
+      sectionSquashed.includes(squashFa(signal)),
+    )
+    const lowPricedGeneric = plainName
+      && sectionFacetId === 'soft_drinks'
+      && (
+        packagedSection
+        || (context.price !== null && context.price !== undefined && context.price <= 110_000)
+      )
+    if (explicitPackaged || packagedSizeName || lowPricedGeneric) return 'packaged-lemonade'
+  }
 
   // ── پاس اول: فقط دیش‌های همان facet. دقیق‌ترین حالت.
   if (sectionFacetId) {

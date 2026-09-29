@@ -32,9 +32,9 @@
 }
 
 .groupTabOn {
-  background: var(--c-ink, #222);
-  color: #fff;
-  border-color: var(--c-ink, #222);
+  background: var(--c-inverse-surface);
+  color: var(--c-inverse-text);
+  border-color: var(--c-inverse-surface);
 }
 
 .groupBadge {
@@ -119,7 +119,7 @@
   padding: 8px 10px;
   border: 1px solid var(--c-border, #dcdcdc);
   border-radius: 10px;
-  background: #fff;
+  background: var(--c-surface);
   width: 100%;
 }
 
@@ -161,14 +161,14 @@
   margin: 0;
   font-size: 0.75rem;
   line-height: 1.75;
-  color: #a5670a;
+  color: var(--c-accent-text-strong);
 }
 
 .fieldError {
   margin: 0;
   font-size: 0.76rem;
   font-weight: 600;
-  color: #c0392b;
+  color: var(--c-danger);
 }
 
 .save {
@@ -178,8 +178,8 @@
   padding: 9px 20px;
   border: 0;
   border-radius: 10px;
-  background: var(--c-ink, #222);
-  color: #fff;
+  background: var(--c-inverse-surface);
+  color: var(--c-inverse-text);
   cursor: pointer;
 }
 
@@ -198,7 +198,7 @@
   padding: 0;
   border: 0;
   background: none;
-  color: #c0392b;
+  color: var(--c-danger);
   text-decoration: underline;
   cursor: pointer;
 }
@@ -213,11 +213,11 @@
 }
 
 .error {
-  background: #fdecea;
-  color: #a5281b;
+  background: var(--c-danger-bg);
+  color: var(--c-danger);
 }
 
 .success {
-  background: #eaf7ee;
-  color: #1e6b35;
+  background: var(--c-open-bg);
+  color: var(--c-open);
 }

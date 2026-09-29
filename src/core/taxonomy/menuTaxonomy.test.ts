@@ -157,6 +157,9 @@ test('matchDish دیش‌های پرتکرار منبع را می‌شناسد',
     ['کاپوچینو', 'cappuccino'],
     ['آفوگاتو', 'affogato'],
     ['پاستا چیکن آلفردو', 'alfredo-pasta'],
+    ['پنه چیکن میلانز', 'penne-pasta'],
+    ['پنه چیکن پستو', 'pesto-pasta'],
+    ['پنه بیف پستو', 'pesto-pasta'],
     ['ماشروم برگر', 'mushroom-burger'],
     ['پیتزا پپرونی', 'pepperoni-pizza'],
     ['کروسان شکلاتی', 'croissant'],
@@ -170,6 +173,17 @@ test('matchDish دیش‌های پرتکرار منبع را می‌شناسد',
   for (const [name, slug] of expected) {
     assert.equal(matchDish(name), slug, name)
   }
+})
+
+test('لیموناد طبیعی از نوع بسته‌بندی جدا می‌ماند', () => {
+  assert.equal(matchDish('لیموناد'), 'lemonade')
+  assert.equal(matchDish('لیموناد طبیعی', 'mocktail', { price: 95_000 }), 'lemonade')
+  assert.equal(matchDish('لیموناد شیشه‌ای'), 'packaged-lemonade')
+  assert.equal(matchDish('لیموناد پت خوشگوار'), 'packaged-lemonade')
+  assert.equal(matchDish('لیموناد کوچک'), 'packaged-lemonade')
+  assert.equal(matchDish('نوشابه قوطی لیموناد'), 'packaged-lemonade')
+  assert.equal(matchDish('لیموناد', 'soft_drinks', { price: 60_000 }), 'packaged-lemonade')
+  assert.equal(matchDish('لیموناد', 'soft_drinks', { price: 180_000 }), 'lemonade')
 })
 
 test('matchDish نام یکتای کافه را null می‌دهد', () => {

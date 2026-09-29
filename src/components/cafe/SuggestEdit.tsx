@@ -69,7 +69,7 @@ export function SuggestEdit({
     <details className={styles.wrap}>
       <summary className={styles.summary}>
         <span className={styles.icon} aria-hidden="true">
-          <PencilLine size={16} />
+          <PencilLine size={20} />
         </span>
         <span className={styles.summaryText}>
           چیزی در این صفحه غلط است؟ اصلاحش کنید

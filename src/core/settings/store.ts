@@ -18,7 +18,7 @@ import 'server-only'
  */
 
 import { eq, inArray } from 'drizzle-orm'
-import { getDb } from '@/db/client'
+import { getDb, withDbTransaction, afterDbCommit, inDbTransaction } from '@/db/client'
 import { auditLog, setting as settingTable } from '@/db/schema'
 import {
   parseSettingValue,
@@ -79,7 +79,7 @@ cache.__cafegardSettings ??= {}
 export async function getSettings(): Promise<Settings> {
   const now = Date.now()
   const cached = cache.__cafegardSettings!
-  if (cached.value && cached.at && now - cached.at < CACHE_TTL_MS) return cached.value
+  if (!inDbTransaction() && cached.value && cached.at && now - cached.at < CACHE_TTL_MS) return cached.value
 
   const merged: Settings = { ...SETTING_DEFAULTS }
 
@@ -101,35 +101,33 @@ export async function getSettings(): Promise<Settings> {
     return merged
   }
 
-  cache.__cafegardSettings = { value: merged, at: now }
+  if (!inDbTransaction()) cache.__cafegardSettings = { value: merged, at: now }
   return merged
 }
 
 export function invalidateSettings(): void {
-  cache.__cafegardSettings = {}
+  afterDbCommit(() => { cache.__cafegardSettings = {} })
 }
 
 export interface SaveResult {
   ok: boolean
   /** تنظیم‌هایی که ذخیره شدند. */
   saved: SettingKey[]
-  /** خطاهای فیلدی — بقیه‌ی فیلدها ذخیره شده‌اند. */
+  /** خطاهای فیلدی — در صورت هر خطا، هیچ فیلدی ذخیره نمی‌شود. */
   errors: ValidationError[]
 }
 
 /**
  * ذخیره‌ی یک دسته تنظیم.
  *
- * ═══ قاعده‌ی «خطای یک فیلد، نُه فیلد دیگر را زمین نمی‌زند» ═══
- *
- * فیلدهای نامعتبر رد می‌شوند و بقیه ذخیره می‌شوند، ولی **اعتبارسنجی
- * بین‌فیلدی** قبل از نوشتن اجرا می‌شود: اگر نتیجه‌ی نهایی سایت را در وضعیت
- * غیرقابل‌ورود بگذارد، **هیچ‌چیز** ذخیره نمی‌شود. آن حالت برگشت‌پذیر نیست.
+ * اعتبارسنجی فیلدی و بین‌فیلدی پیش از نوشتن انجام می‌شود. هر خطا کل گروه
+ * را بدون تغییر باقی می‌گذارد؛ قواعد و مقادیر مشتق در یک تراکنش ذخیره می‌شوند.
  */
 export async function saveSettings(
   patch: Record<string, unknown>,
   actor: { userId: string; label: string },
 ): Promise<SaveResult> {
+  if (!inDbTransaction()) return withDbTransaction(() => saveSettings(patch, actor))
   const current = await getSettings()
   const errors: ValidationError[] = []
   const accepted = new Map<SettingKey, unknown>()
@@ -152,7 +150,7 @@ export async function saveSettings(
 
   // اعتبارسنجی بین‌فیلدی — اگر نتیجه بی‌معنی است، هیچ‌چیز نوشته نمی‌شود.
   const crossErrors = validateSettings(next)
-  if (crossErrors.length > 0) {
+  if (errors.length > 0 || crossErrors.length > 0) {
     return { ok: false, saved: [], errors: [...errors, ...crossErrors] }
   }
 

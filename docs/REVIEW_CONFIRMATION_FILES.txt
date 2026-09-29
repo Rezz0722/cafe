@@ -1,0 +1,12 @@
+src/components/cafe/CafePopover.tsx
+src/components/cafe/ReviewForm.tsx
+src/components/cafe/ReviewForm.module.css
+src/app/cafe/[slug]/page.tsx
+src/app/cafe/[slug]/page.module.css
+src/core/places/queries.ts
+src/core/places/queries.test.ts
+src/core/user/userData.ts
+scripts/review-wizard-smoke.ts
+public/sw.js
+docs/REVIEW_CONFIRMATION_FILES.txt
+docs/REVIEW_CONFIRMATION_FA.md

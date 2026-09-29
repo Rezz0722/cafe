@@ -52,6 +52,13 @@ export interface OpenState {
 export const DEFAULT_TIME_ZONE = 'Asia/Tehran'
 const MINUTES_PER_DAY = 24 * 60
 
+/** فقط ساعت واقعی شبانه‌روز؛ دادهٔ خراب مثل ۵۵:۵۵ نباید وارد محاسبه یا UI شود. */
+export function isValidClock(clock: string | null | undefined): clock is string {
+  if (!clock || !/^\d{2}:\d{2}$/.test(clock)) return false
+  const [hours, minutes] = clock.split(':').map(Number)
+  return hours! >= 0 && hours! <= 23 && minutes! >= 0 && minutes! <= 59
+}
+
 /** «HH:MM» → دقیقه از نیمه‌شب. */
 function toMinutes(clock: string): number {
   const [hours, minutes] = clock.split(':').map(Number)
@@ -129,7 +136,7 @@ function resolveShifts(shifts: HourShift[], now: TehranNow): ResolvedShift[] {
   const out: ResolvedShift[] = []
 
   for (const shift of shifts) {
-    if (shift.closed || !shift.opensAt || !shift.closesAt) continue
+    if (shift.closed || !isValidClock(shift.opensAt) || !isValidClock(shift.closesAt)) continue
     const start = toMinutes(shift.opensAt)
     const rawEnd = toMinutes(shift.closesAt)
     const end = shift.crossesMidnight || rawEnd <= start ? rawEnd + MINUTES_PER_DAY : rawEnd
@@ -168,7 +175,7 @@ function nextOpening(
   for (let daysAhead = 0; daysAhead < 8; daysAhead++) {
     const dow = (now.dow + daysAhead) % 7
     const candidates = shifts
-      .filter((shift) => shift.dow === dow && !shift.closed && shift.opensAt)
+      .filter((shift) => shift.dow === dow && !shift.closed && isValidClock(shift.opensAt))
       .map((shift) => ({ shift, start: toMinutes(shift.opensAt!) }))
       .sort((a, b) => a.start - b.start)
 
@@ -294,7 +301,9 @@ export function weekSchedule(
 
   return WEEKDAY_NAMES.map((dayName, dow) => {
     const dayShifts = (byDay.get(dow) ?? []).sort((a, b) => a.shiftIndex - b.shiftIndex)
-    const open = dayShifts.filter((shift) => !shift.closed && shift.opensAt && shift.closesAt)
+    const open = dayShifts.filter(
+      (shift) => !shift.closed && isValidClock(shift.opensAt) && isValidClock(shift.closesAt),
+    )
     return {
       dow,
       dayName,

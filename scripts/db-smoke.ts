@@ -69,6 +69,7 @@ async function main() {
     {
       placeId: row!.id,
       sectionId: sec!.id,
+      publicId: '__smoke_item_1',
       name: EMOJI_NAME,
       nameNormalized: 'وسترن تست',
       price: 480_000,
@@ -76,6 +77,7 @@ async function main() {
     {
       placeId: row!.id,
       sectionId: sec!.id,
+      publicId: '__smoke_item_2',
       name: 'قیمت روز',
       nameNormalized: 'قیمت روز',
       price: null,

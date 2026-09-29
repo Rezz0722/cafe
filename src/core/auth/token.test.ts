@@ -1,12 +1,13 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { signToken, verifyToken, type SessionPayload } from './token.ts'
+import { signClaims, signToken, verifyToken, type SessionPayload } from './token.ts'
 
 const SECRET = 'a'.repeat(64)
 const OTHER = 'b'.repeat(64)
 
 function payload(over: Partial<SessionPayload> = {}): SessionPayload {
   return {
+    sessionId: 's-1',
     userId: 'u-1',
     phone: '09151234567',
     role: 'customer',
@@ -63,4 +64,17 @@ test('ورودی‌های خراب کرش نمی‌کنند', () => {
 
 test('بدون راز، هیچ توکنی معتبر نیست', () => {
   assert.equal(verifyToken(signToken(payload(), SECRET), ''), null)
+})
+
+test('توکن قدیمیِ بدون شناسهٔ نشست پذیرفته نمی‌شود', () => {
+  const legacy = signClaims(
+    {
+      userId: 'u-1',
+      phone: '09151234567',
+      role: 'customer' as const,
+      exp: Math.floor(Date.now() / 1000) + 3600,
+    },
+    SECRET,
+  )
+  assert.equal(verifyToken(legacy, SECRET), null)
 })

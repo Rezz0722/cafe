@@ -11,9 +11,10 @@
  * ═══ چرا اصلاً چیزی کم بود ═══
  *
  * منبع اصلی درخت تو در تو دارد (دسته → زیردسته‌ها → آیتم)، ولی
- * `src/core/import/source.ts` فقط `آیتم‌ها`ی مستقیمِ هر دسته را می‌خواند و
- * `زیردسته‌ها` را نادیده می‌گیرد. هر جا سایت مبدا آیتم را زیرِ یک زیردسته
- * گذاشته باشد (نه مستقیم زیرِ دسته)، آن آیتم هیچ‌وقت وارد نشده. این اسکریپت
+ * نسخهٔ قدیمی importer فقط `آیتم‌ها`ی مستقیمِ هر دسته را می‌خواند و
+ * `زیردسته‌ها` را نادیده می‌گرفت. importer و همگام‌سازی روزمره اکنون اصلاح
+ * شده‌اند؛ این فایل فقط برای ترمیم تاریخی و اجرای دستی نگه داشته شده است.
+ * این اسکریپت
  * کل درخت (دسته + همه‌ی زیردسته‌های تودرتو) را یکی می‌کند و زیرِ همان دسته‌ی
  * سطح‌بالا اضافه می‌کند — بدون ساختن نام دسته‌ی جدید و عجیب.
  *
@@ -34,6 +35,7 @@ import {
 import { rawItemDescription } from '../src/core/import/source'
 import { hashUrl } from '../src/core/media/store'
 import { normalizeFa } from '../src/core/text/normalize'
+import { importedItemPublicId } from '../src/core/items/identity'
 import { closeDb, getDb } from '../src/db/connection'
 import { media as mediaTable, menuItem as menuItemTable, menuSection as menuSectionTable, place as placeTable } from '../src/db/schema'
 
@@ -185,6 +187,16 @@ async function main() {
       .from(menuSectionTable)
       .where(eq(menuSectionTable.placeId, place.id))
     const sectionByName = new Map(existingSections.map((s) => [s.name, s]))
+    // source_id در کل جدول menu_item یکتاست، نه فقط داخل یک دسته. چکِ
+    // دسته‌ای باعث می‌شد آیتمی که در منبع به دستهٔ دیگری منتقل شده دوباره
+    // پیشنهاد/درج شود.
+    const allExistingItems = await db
+      .select({ sourceId: menuItemTable.sourceId })
+      .from(menuItemTable)
+      .where(eq(menuItemTable.placeId, place.id))
+    const placeItemSourceIds = new Set(
+      allExistingItems.map((item) => item.sourceId).filter((value): value is number => value !== null),
+    )
     let maxSectionSort = existingSections.reduce((m, s) => Math.max(m, s.sortOrder), -1)
 
     let placeChanged = false
@@ -234,14 +246,17 @@ async function main() {
       }
 
       const newItemRows: (typeof menuItemTable.$inferInsert)[] = []
-      for (const item of flatItems) {
+      for (const [itemIndex, item] of flatItems.entries()) {
         const itemName = cleanLine(item['نام'])
         if (!itemName) continue
         const srcId = item['شناسه'] ?? null
-        // دوباره‌کاری نکن: هم روی شناسه‌ی منبع (مطمئن‌تر) هم روی نام (پشتیبان
-        // برای آیتم‌های قدیمی‌ای که شاید شناسه نداشتند) چک می‌کنیم.
-        if (srcId != null && existingItemSourceIds.has(srcId)) continue
-        if (existingItemNames.has(itemName)) continue
+        // شناسهٔ منبع هویت اصلی است. نام فقط برای آیتم‌های واقعاً بدون شناسه
+        // fallback است؛ دو محصول معتبر ممکن است نام برابر و شناسهٔ متفاوت داشته باشند.
+        if (srcId != null) {
+          if (placeItemSourceIds.has(srcId)) continue
+        } else if (existingItemNames.has(itemName)) {
+          continue
+        }
 
         const { price, priceUnknown } = normalizePrice(item['قیمت (تومان)'], effectiveContext)
         maxItemSort += 1
@@ -249,6 +264,7 @@ async function main() {
           placeId: place.id,
           sectionId,
           sourceId: srcId,
+          publicId: importedItemPublicId(srcId, cafe['شناسه'], sectionIndex, itemIndex),
           name: itemName,
           nameEn: cleanLine(item['نام انگلیسی']) || null,
           nameNormalized: normalizeFa(itemName),
@@ -261,6 +277,7 @@ async function main() {
           sortOrder: maxItemSort,
         })
         existingItemSourceIds.add(srcId ?? -1)
+        if (srcId != null) placeItemSourceIds.add(srcId)
         existingItemNames.add(itemName)
       }
 

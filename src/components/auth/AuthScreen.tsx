@@ -1,464 +1,227 @@
 'use client'
 
-import { useActionState, useEffect, useRef, useState } from 'react'
+import { useActionState, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useFormStatus } from 'react-dom'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import {
-  passwordLoginAction,
-  registerAction,
-  requestCodeAction,
-  setNameAction,
-  verifyCodeAction,
-} from '@/app/auth/actions'
-import {
-  EMPTY_NAME_STATE,
-  EMPTY_PASSWORD_STATE,
-  EMPTY_REGISTER_STATE,
-  EMPTY_REQUEST_STATE,
-  EMPTY_VERIFY_STATE,
-} from '@/app/auth/state'
+import { passwordLoginAction, requestCodeAction, verifyCodeAction } from '@/app/auth/actions'
+import { EMPTY_PASSWORD_STATE, EMPTY_REQUEST_STATE, EMPTY_VERIFY_STATE } from '@/app/auth/state'
 import { maskPhone } from '@/core/auth/phone'
+import { safeAuthRedirect, withAuthRedirect } from '@/core/auth/redirect'
 import { fa } from '@/lib/format'
 import { paths } from '@/routes'
 import styles from './AuthScreen.module.css'
-import { Hand } from 'lucide-react'
 
-type Step = 'phone' | 'code' | 'name' | 'password' | 'register'
-
-/**
- * پیکربندی از سرور می‌آید، نه از ثابت‌های ماژول.
- *
- * قبلاً `OTP_LENGTH` و `OTP_RESEND_COOLDOWN_SEC` را مستقیم از `otpConfig`
- * می‌خواند. حالا این اعداد در پنل ادمین قابل تغییرند و اگر کلاینت ثابتِ
- * build-time را نگه دارد، شمارش معکوسِ ۹۰ ثانیه‌ای روی سروری که ۶۰ ثانیه
- * تنظیم شده، کاربر را ۳۰ ثانیه بی‌دلیل منتظر می‌گذارد.
- */
 export interface AuthConfig {
   otpLength: number
+  otpTtlSeconds: number
   resendCooldownSeconds: number
   passwordMinLength: number
   allowRegistration: boolean
   allowPasswordLogin: boolean
   allowOtpLogin: boolean
+  allowSmsVerification: boolean
+  registrationRequiresPhoneVerification: boolean
 }
 
-function SubmitButton({ label, pendingLabel }: { label: string; pendingLabel: string }) {
+export function AuthProgress({ steps, current }: { steps: string[]; current: number }) {
+  return (
+    <div
+      className={styles.progress}
+      data-count={steps.length}
+      style={{ gridTemplateColumns: `repeat(${steps.length}, minmax(0, 1fr))` }}
+      aria-label={`مرحله ${current} از ${steps.length}`}
+    >
+      {steps.map((step, index) => {
+        const number = index + 1
+        const state = number < current ? 'done' : number === current ? 'current' : 'upcoming'
+        return (
+          <div key={step} className={styles.progressStep} data-state={state} aria-current={state === 'current' ? 'step' : undefined}>
+            <span>{state === 'done' ? '✓' : number.toLocaleString('fa-IR')}</span>
+            <small>{step}</small>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+export function AuthSubmit({ label, pendingLabel }: { label: string; pendingLabel: string }) {
   const { pending } = useFormStatus()
   return (
-    <button type="submit" className={styles.primary} disabled={pending}>
+    <button type="submit" className={styles.primary} disabled={pending} aria-disabled={pending}>
       {pending ? pendingLabel : label}
     </button>
   )
 }
 
-/**
- * ورود با کد پیامکی.
- *
- * سه گام: شماره → کد → نام (فقط بار اول).
- *
- * اینکه گام «نام» بیاید یا نه را **سرور** تصمیم می‌گیرد (`needsName`)، نه
- * کلاینت. کلاینت نمی‌داند این شماره قبلاً ثبت شده یا نه — و نباید بداند،
- * وگرنه صفحه‌ی ورود تبدیل می‌شود به ابزار فهرست‌برداری از کاربران ثبت‌شده.
- */
+export function AuthShell({ children }: { children: ReactNode }) {
+  return (
+    <main className={styles.wrap}>
+      <div className={styles.card}>
+        {children}
+      </div>
+    </main>
+  )
+}
+
 export function AuthScreen({ config }: { config: AuthConfig }) {
   const router = useRouter()
   const params = useSearchParams()
-  const redirectTo = params?.get('redirect') || paths.profile
+  const redirectTo = safeAuthRedirect(params?.get('redirect'), paths.profile)
+  const [state, action] = useActionState(passwordLoginAction, EMPTY_PASSWORD_STATE)
+  const [showPassword, setShowPassword] = useState(false)
+  const [mode, setMode] = useState<'password' | 'otp'>(config.allowPasswordLogin ? 'password' : 'otp')
 
-  /*
-    اگر ورود با پیامک بسته است، گام «شماره» بی‌فایده است — فرم از همان اول
-    روی ورود با رمز باز می‌شود. نمایش فرمی که مطمئنیم خطا می‌دهد، بدترین
-    نوع تنظیم است.
-  */
-  const [step, setStep] = useState<Step>(config.allowOtpLogin ? 'phone' : 'password')
-  const [phone, setPhone] = useState('')
-  const [cooldown, setCooldown] = useState(0)
-  const codeRef = useRef<HTMLInputElement>(null)
-
-  const [reqState, requestAction] = useActionState(requestCodeAction, EMPTY_REQUEST_STATE)
-  const [verState, verifyAction] = useActionState(verifyCodeAction, EMPTY_VERIFY_STATE)
-  const [nameState, nameAction] = useActionState(setNameAction, EMPTY_NAME_STATE)
-  const [pwState, pwAction] = useActionState(passwordLoginAction, EMPTY_PASSWORD_STATE)
-  const [regState, regAction] = useActionState(registerAction, EMPTY_REGISTER_STATE)
-
-  // ── گام ۱ → ۲ ──
   useEffect(() => {
-    if (reqState.ok && reqState.phone) {
-      setPhone(reqState.phone)
-      setStep('code')
-      setCooldown(config.resendCooldownSeconds)
-    }
-  }, [reqState, config.resendCooldownSeconds])
-
-  // ── گام ۲ → ۳ یا پایان ──
-  useEffect(() => {
-    if (!verState.ok) return
-    if (verState.needsName) {
-      setStep('name')
-    } else {
-      router.replace(redirectTo)
-      // بدون refresh، هدر و صفحات سرور نشست تازه را نمی‌بینند.
-      router.refresh()
-    }
-  }, [verState, router, redirectTo])
-
-  // ── گام ۳ → پایان ──
-  useEffect(() => {
-    if (nameState.ok) {
-      router.replace(redirectTo)
-      router.refresh()
-    }
-  }, [nameState, router, redirectTo])
-
-  // ── ورود با رمز → پایان، یا اجبار به تغییر رمز ──
-  useEffect(() => {
-    if (!pwState.ok) return
-    /*
-      رمزِ موقتی که ادمین صادر کرده باید عوض شود، وگرنه رمزی که در واتساپ
-      فرستاده شده تا ابد معتبر می‌ماند. کاربر به صفحه‌ی تغییر رمز می‌رود،
-      نه به مقصد اصلی.
-    */
-    router.replace(pwState.mustChangePassword ? paths.changePassword : redirectTo)
+    if (!state.ok) return
+    router.replace(state.mustChangePassword ? paths.changePassword : redirectTo)
     router.refresh()
-  }, [pwState, router, redirectTo])
-
-  // ── ثبت‌نام با رمز → پایان ──
-  useEffect(() => {
-    if (regState.ok) {
-      router.replace(redirectTo)
-      router.refresh()
-    }
-  }, [regState, router, redirectTo])
-
-  useEffect(() => {
-    if (cooldown <= 0) return
-    const t = setTimeout(() => setCooldown((c) => c - 1), 1000)
-    return () => clearTimeout(t)
-  }, [cooldown])
-
-  useEffect(() => {
-    if (step === 'code') codeRef.current?.focus()
-  }, [step])
+  }, [state, router, redirectTo])
 
   return (
-    <div className={styles.wrap}>
-      <div className={styles.card}>
-        <Link href={paths.home} className={styles.brand}>
-          <img src="/logo-sm.webp" alt="" width={40} height={40} />
-          <span>کو کافه</span>
-        </Link>
-
-        {/* ═══ گام ۱ — شماره ═══ */}
-        {step === 'phone' && (
-          <form action={requestAction} className={styles.form}>
-            <h1 className={styles.title}>ورود یا ثبت‌نام</h1>
-            <p className={styles.lede}>
-              شماره موبایلت را وارد کن تا کد ورود برایت بفرستیم.
-            </p>
-
-            <label className={styles.field}>
-              <span className={styles.label}>شماره موبایل</span>
-              <input
-                name="phone"
-                className={styles.input}
-                type="tel"
-                inputMode="numeric"
-                autoComplete="tel"
-                placeholder="09151234567"
-                dir="ltr"
-                required
-                autoFocus
-              />
-            </label>
-
-            {reqState.error && <div className={styles.error}>{reqState.error}</div>}
-
-            <SubmitButton label="ارسال کد" pendingLabel="در حال ارسال…" />
-
-            {/*
-              مسیر دوم. ورود فقط با پیامک یک نقطه‌ی شکست تک‌نقطه‌ای است: اعتبار
-              که تمام شود یا سرویس که قطع شود، مدیر از پنل خودش بیرون می‌ماند.
-              فقط حساب‌هایی که رمز دارند از این راه وارد می‌شوند.
-            */}
-            <div className={styles.actionsRow}>
-              {config.allowPasswordLogin && (
-                <button
-                  type="button"
-                  className={styles.linkButton}
-                  onClick={() => setStep('password')}
-                >
-                  ورود با رمز عبور
-                </button>
-              )}
-              {config.allowRegistration && (
-                <button
-                  type="button"
-                  className={styles.linkButton}
-                  onClick={() => setStep('register')}
-                >
-                  ساخت حساب با رمز
-                </button>
-              )}
-            </div>
-          </form>
-        )}
-
-        {/* ═══ ورود با رمز — برای حساب‌های کاری ═══ */}
-        {step === 'password' && (
-          <form action={pwAction} className={styles.form}>
-            <h1 className={styles.title}>ورود با رمز عبور</h1>
-            <p className={styles.lede}>
-              با شماره موبایل یا یوزرنیم. اگر پنل کافه دارید، یوزرنیم را مدیر
-              برایتان ساخته است.
-            </p>
-
-            {/*
-              یک فیلد برای هر دو شکل شناسه. کاربر نمی‌داند حسابش با شماره ساخته
-              شده یا با یوزرنیمِ صادرشده از پنل ادمین — و لازم هم نیست بداند.
-            */}
-            <label className={styles.field}>
-              <span className={styles.label}>شماره موبایل یا یوزرنیم</span>
-              <input
-                name="identifier"
-                className={styles.input}
-                autoComplete="username"
-                placeholder="09151234567"
-                dir="ltr"
-                required
-                autoFocus
-              />
-            </label>
-
-            <label className={styles.field}>
-              <span className={styles.label}>رمز عبور</span>
-              <input
-                name="password"
-                className={styles.input}
-                type="password"
-                autoComplete="current-password"
-                dir="ltr"
-                required
-              />
-            </label>
-
-            {pwState.error && <div className={styles.error}>{pwState.error}</div>}
-
-            <SubmitButton label="ورود" pendingLabel="در حال بررسی…" />
-
-            <div className={styles.actionsRow}>
-              {config.allowOtpLogin && (
-                <button
-                  type="button"
-                  className={styles.linkButton}
-                  onClick={() => setStep('phone')}
-                >
-                  ورود با کد پیامکی
-                </button>
-              )}
-              {config.allowRegistration && (
-                <button
-                  type="button"
-                  className={styles.linkButton}
-                  onClick={() => setStep('register')}
-                >
-                  ساخت حساب با رمز
-                </button>
-              )}
-            </div>
-          </form>
-        )}
-
-        {/* ═══ ثبت‌نام با رمز دائمی ═══ */}
-        {step === 'register' && (
-          <form action={regAction} className={styles.form}>
-            <h1 className={styles.title}>ساخت حساب</h1>
-            <p className={styles.lede}>
-              با شماره و رمز عبور. بعداً با کد پیامکی هم می‌توانید وارد شوید.
-            </p>
-
-            <label className={styles.field}>
-              <span className={styles.label}>شماره موبایل</span>
-              <input
-                name="phone"
-                className={styles.input}
-                type="tel"
-                inputMode="numeric"
-                autoComplete="tel"
-                placeholder="09151234567"
-                dir="ltr"
-                required
-                autoFocus
-              />
-            </label>
-
-            <label className={styles.field}>
-              <span className={styles.label}>نام</span>
-              <input
-                name="name"
-                className={styles.input}
-                maxLength={60}
-                placeholder="مثلاً نگار احمدی"
-                autoComplete="name"
-              />
-            </label>
-
-            <label className={styles.field}>
-              <span className={styles.label}>یوزرنیم (اختیاری)</span>
-              <input
-                name="username"
-                className={styles.input}
-                autoComplete="off"
-                placeholder="negar_a"
-                dir="ltr"
-                pattern="[a-zA-Z0-9_.]{3,32}"
-              />
-            </label>
-
-            <label className={styles.field}>
-              <span className={styles.label}>رمز عبور</span>
-              <input
-                name="password"
-                className={styles.input}
-                type="password"
-                autoComplete="new-password"
-                dir="ltr"
-                minLength={config.passwordMinLength}
-                required
-              />
-              <span className={styles.hint}>
-                حداقل {fa(config.passwordMinLength)} کاراکتر
-              </span>
-            </label>
-
-            <label className={styles.field}>
-              <span className={styles.label}>تکرار رمز عبور</span>
-              <input
-                name="passwordConfirm"
-                className={styles.input}
-                type="password"
-                autoComplete="new-password"
-                dir="ltr"
-                minLength={config.passwordMinLength}
-                required
-              />
-            </label>
-
-            {regState.error && <div className={styles.error}>{regState.error}</div>}
-
-            <SubmitButton label="ساخت حساب" pendingLabel="در حال ساخت…" />
-
-            <div className={styles.actionsRow}>
-              <button
-                type="button"
-                className={styles.linkButton}
-                onClick={() => setStep('password')}
-              >
-                حساب دارم
-              </button>
-              <button
-                type="button"
-                className={styles.linkButton}
-                onClick={() => setStep('phone')}
-              >
-                ورود با کد پیامکی
-              </button>
-            </div>
-          </form>
-        )}
-
-        {/* ═══ گام ۲ — کد ═══ */}
-        {step === 'code' && (
-          <form action={verifyAction} className={styles.form}>
-            <input type="hidden" name="phone" value={phone} />
-
-            <h1 className={styles.title}>کد را وارد کن</h1>
-            <p className={styles.lede}>
-              کد {fa(config.otpLength)} رقمی به <b dir="ltr">{maskPhone(phone)}</b> فرستاده شد.
-            </p>
-
-            {/*
-              در حالت توسعه پیامکی ارسال نمی‌شود. صریح می‌گوییم، وگرنه کاربر
-              منتظر پیامکی می‌ماند که هرگز نمی‌آید.
-            */}
-            {reqState.devMode && (
-              <div className={styles.devNote}>
-                حالت توسعه فعال است — پیامکی ارسال نشد. کد در ترمینال سرور چاپ شده.
-              </div>
-            )}
-
-            <label className={styles.field}>
-              <span className={styles.label}>کد ورود</span>
-              <input
-                ref={codeRef}
-                name="code"
-                className={`${styles.input} ${styles.codeInput}`}
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                maxLength={config.otpLength}
-                dir="ltr"
-                required
-              />
-            </label>
-
-            {verState.error && <div className={styles.error}>{verState.error}</div>}
-
-            <SubmitButton label="ورود" pendingLabel="در حال بررسی…" />
-
-            <div className={styles.actionsRow}>
-              <button
-                type="button"
-                className={styles.linkButton}
-                onClick={() => setStep('phone')}
-              >
-                تغییر شماره
-              </button>
-
-              {cooldown > 0 ? (
-                <span className={styles.muted}>ارسال دوباره تا {fa(cooldown)} ثانیه</span>
-              ) : (
-                <button
-                  type="button"
-                  className={styles.linkButton}
-                  onClick={() => {
-                    const fd = new FormData()
-                    fd.set('phone', phone)
-                    requestAction(fd)
-                  }}
-                >
-                  ارسال دوباره کد
-                </button>
-              )}
-            </div>
-          </form>
-        )}
-
-        {/* ═══ گام ۳ — نام (فقط کاربر تازه) ═══ */}
-        {step === 'name' && (
-          <form action={nameAction} className={styles.form}>
-            <h1 className={styles.title}>
-              خوش آمدی <Hand size={20} aria-hidden="true" />
-            </h1>
-            <p className={styles.lede}>اسمت را بنویس تا پروفایلت کامل شود.</p>
-
-            <label className={styles.field}>
-              <span className={styles.label}>نام</span>
-              <input
-                name="name"
-                className={styles.input}
-                maxLength={60}
-                placeholder="مثلاً نگار احمدی"
-                required
-                autoFocus
-              />
-            </label>
-
-            {nameState.error && <div className={styles.error}>{nameState.error}</div>}
-
-            <SubmitButton label="شروع کنیم" pendingLabel="…" />
-          </form>
-        )}
+    <AuthShell>
+      <div className={styles.authHeading}>
+        <span className={styles.kicker}>خوش آمدی</span>
+        <h1 className={styles.title}>ورود به کو کافه</h1>
+        <p className={styles.lede}>برای ذخیره کافه‌ها، ثبت تجربه و مدیریت حساب وارد شوید.</p>
       </div>
-    </div>
+
+      {config.allowPasswordLogin && config.allowOtpLogin && (
+        <div className={styles.methodTabs} role="tablist" aria-label="روش ورود">
+          <button type="button" role="tab" aria-selected={mode === 'password'} onClick={() => setMode('password')}>رمز عبور</button>
+          <button type="button" role="tab" aria-selected={mode === 'otp'} onClick={() => setMode('otp')}>کد یک‌بارمصرف</button>
+        </div>
+      )}
+
+      {mode === 'password' && config.allowPasswordLogin ? (
+        <form action={action} className={styles.form}>
+          <label className={styles.field}>
+            <span className={styles.label}>شماره موبایل یا نام کاربری</span>
+            <input name="identifier" className={styles.input} autoComplete="username" maxLength={100} dir="ltr" placeholder="مثلاً 09151234567" required autoFocus />
+          </label>
+          <label className={styles.field}>
+            <span className={styles.label}>رمز عبور</span>
+            <span className={styles.passwordWrap}>
+              <input name="password" className={styles.input} type={showPassword ? 'text' : 'password'} autoComplete="current-password" maxLength={256} dir="ltr" required />
+              <button type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? 'پنهان‌کردن رمز' : 'نمایش رمز'}>{showPassword ? 'پنهان' : 'نمایش'}</button>
+            </span>
+          </label>
+          {state.error && <div className={styles.error} role="alert" aria-live="polite">{state.error}</div>}
+          <AuthSubmit label="ورود به حساب" pendingLabel="در حال بررسی…" />
+          <Link className={`${styles.linkButton} ${styles.centerLink}`} href={withAuthRedirect(paths.authRecover, redirectTo)}>رمز را فراموش کرده‌ام</Link>
+        </form>
+      ) : config.allowOtpLogin ? (
+        <OtpLogin redirectTo={redirectTo} config={config} />
+      ) : (
+        <div className={styles.error} role="alert">ورود موقتاً غیرفعال است.</div>
+      )}
+
+      {config.allowRegistration && (
+        <div className={styles.signupPrompt}>
+          <span>هنوز حساب نداری؟</span>
+          <Link href={withAuthRedirect(paths.authRegister, redirectTo)}>ساخت حساب رایگان</Link>
+        </div>
+      )}
+    </AuthShell>
+  )
+}
+
+function OtpLogin({ redirectTo, config }: { redirectTo: string; config: AuthConfig }) {
+  const router = useRouter()
+  const codeRef = useRef<HTMLInputElement>(null)
+  const [phone, setPhone] = useState('')
+  const [requestState, requestAction] = useActionState(requestCodeAction, EMPTY_REQUEST_STATE)
+  const [verifyState, verifyAction] = useActionState(verifyCodeAction, EMPTY_VERIFY_STATE)
+
+  useEffect(() => {
+    if (requestState.needsRegistration) {
+      router.replace(withAuthRedirect(paths.authRegister, redirectTo))
+      router.refresh()
+      return
+    }
+    if (!requestState.ok || !requestState.phone) return
+    setPhone(requestState.phone)
+    queueMicrotask(() => codeRef.current?.focus())
+  }, [requestState, redirectTo, router])
+
+  useEffect(() => {
+    if (verifyState.needsRegistration) {
+      router.replace(withAuthRedirect(paths.authRegister, redirectTo))
+      router.refresh()
+      return
+    }
+    if (!verifyState.ok) return
+    router.replace(redirectTo)
+    router.refresh()
+  }, [verifyState, redirectTo, router])
+
+  /**
+   * Web OTP روی Android Chrome کد را از SMS دامنه‌محور می‌خواند. این API
+   * اختیاری است و در iOS، دسکتاپ یا SMSهای قدیمی وجود ندارد؛ در آن حالت
+   * `autocomplete="one-time-code"` و ورود دستی همچنان کار می‌کنند.
+   * هر بار عوض‌شدن شماره، listener قبلی با AbortController متوقف می‌شود تا
+   * کد شماره‌ی قبلی روی فرم شماره‌ی جدید نوشته نشود.
+   */
+  useEffect(() => {
+    if (!phone || typeof window === 'undefined' || !window.isSecureContext) return
+    if (!('OTPCredential' in window) || !navigator.credentials?.get) return
+
+    const controller = new AbortController()
+    let cancelled = false
+
+    void navigator.credentials
+      .get({
+        otp: { transport: ['sms'] },
+        signal: controller.signal,
+      } as CredentialRequestOptions & { otp: { transport: ['sms'] } })
+      .then((credential) => {
+        if (cancelled || !credential) return
+        const value = credential as Credential & { code?: string }
+        const code = value.code?.replace(/\D/g, '').slice(0, config.otpLength)
+        if (!code || !codeRef.current) return
+        codeRef.current.value = code
+        codeRef.current.dispatchEvent(new Event('input', { bubbles: true }))
+      })
+      .catch((error: unknown) => {
+        // لغو هنگام تغییر شماره/خروج، خطای واقعی نیست. خطاهای Web OTP نباید
+        // فرم ورود دستی را خراب کنند یا در UI به کاربر نشان داده شوند.
+        if (error instanceof DOMException && error.name === 'AbortError') return
+        if (process.env.NODE_ENV !== 'production') console.debug('[auth] Web OTP unavailable', error)
+      })
+
+    return () => {
+      cancelled = true
+      controller.abort()
+    }
+  }, [phone, config.otpLength])
+
+  if (!phone) {
+    return (
+      <form action={requestAction} className={styles.form}>
+        <p className={styles.compactNote}>ورود پیامکی فقط برای حساب‌های ثبت‌شده است. برای شماره جدید، ابتدا «ساخت حساب رایگان» را انتخاب کنید.</p>
+        <label className={styles.field}>
+          <span className={styles.label}>شماره موبایل</span>
+          <input name="phone" className={styles.input} type="tel" inputMode="numeric" autoComplete="tel" placeholder="09151234567" dir="ltr" required autoFocus />
+        </label>
+        {requestState.error && <div className={styles.error} role="alert">{requestState.error}</div>}
+        <AuthSubmit label="دریافت کد ورود" pendingLabel="در حال ارسال…" />
+      </form>
+    )
+  }
+
+  return (
+    <form action={verifyAction} className={styles.form}>
+      <input type="hidden" name="phone" value={phone} />
+      <p className={styles.compactNote}>کد ارسال‌شده به <b dir="ltr">{maskPhone(phone)}</b> را وارد کنید؛ این کد فقط {fa(config.otpTtlSeconds)} ثانیه اعتبار دارد.</p>
+      {requestState.devMode && <div className={styles.devNote}>حالت توسعه پیامک فعال است.</div>}
+      <label className={styles.field}>
+        <span className={styles.label}>کد یک‌بارمصرف</span>
+        <input ref={codeRef} name="code" className={`${styles.input} ${styles.codeInput}`} inputMode="numeric" autoComplete="one-time-code" maxLength={config.otpLength} dir="ltr" required />
+      </label>
+      {verifyState.error && <div className={styles.error} role="alert">{verifyState.error}</div>}
+      <AuthSubmit label="تأیید و ورود" pendingLabel="در حال بررسی…" />
+      <button type="button" className={`${styles.linkButton} ${styles.centerLink}`} onClick={() => setPhone('')}>تغییر شماره</button>
+    </form>
   )
 }

@@ -20,6 +20,8 @@ import { fa, toman } from '@/lib/format'
 import { authUrl, paths } from '@/routes'
 import styles from './page.module.css'
 import { Coffee } from 'lucide-react'
+import { listMyClub } from '@/core/club/service'
+import { DiscountDiscovery } from '@/components/cafe/DiscountDiscovery'
 
 /**
  * پنل کاربر.
@@ -41,13 +43,14 @@ export default async function ProfilePage() {
   const { user, actor } = await getSession()
   if (!user) redirect(authUrl(paths.profile))
 
-  const [account, taste, saved, reviews, submissions, suggestions] = await Promise.all([
+  const [account, taste, saved, reviews, submissions, suggestions, clubCodes] = await Promise.all([
     findUserById(user.id),
     getTasteProfile(user.id),
     listSavedPlaces(user.id),
     listMyReviews(user.id),
     listMySubmissions(user.id),
     listMySuggestions(user.id),
+    listMyClub(user.id),
   ])
 
   const candidates = await loadRecommendationCandidates(
@@ -93,6 +96,12 @@ export default async function ProfilePage() {
           {!actor && <SignOutButton />}
         </div>
       </header>
+
+      <DiscountDiscovery />
+      <section className={styles.section}>
+        <div className={styles.sectionHead}><h2>تخفیف‌های باشگاه</h2><span className={styles.count}>{fa(clubCodes.length)}</span></div>
+        {clubCodes.length===0?<p className={styles.emptyNote}>هنوز کد تخفیفی برایت صادر نشده است.</p>:<ul className={styles.savedList}>{clubCodes.map(item=><li key={item.code}><div className={styles.savedItem}><span className={styles.savedBody}><strong>{item.title} · {item.discountLabel}</strong><Link href={paths.cafe(item.placeSlug)}>{item.placeName}</Link>{item.expiresAt&&<small>پایان: {new Intl.DateTimeFormat('fa-IR',{dateStyle:'medium',timeZone:'Asia/Tehran'}).format(item.expiresAt)}</small>}</span><code dir="ltr">{item.status==='issued'?item.code:item.status==='expired'?'منقضی‌شده':item.status==='cancelled'?'لغوشده':'مصرف‌شده'}</code></div></li>)}</ul>}
+      </section>
 
       <section className={styles.section}>
         <div className={styles.sectionHead}>
@@ -223,6 +232,12 @@ export default async function ProfilePage() {
               {account?.passwordHash ? 'تغییر رمز' : 'تنظیم رمز برای ورود بدون پیامک'}
             </span>
           </Link>
+          {!actor && account?.role !== 'admin' && (
+            <Link href={paths.accountSecurity} className={styles.accountRow}>
+              <span>امنیت حساب</span>
+              <span className={styles.accountValue}>نشست‌ها و غیرفعال‌سازی</span>
+            </Link>
+          )}
         </div>
       </section>
     </div>

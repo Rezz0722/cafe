@@ -26,6 +26,7 @@ import {
   saveSettings,
 } from '../src/core/settings/store'
 import type { SettingKey } from '../src/core/settings/registry'
+import { getSiteStats } from '../src/core/places/queries'
 
 const base = process.argv[2] ?? 'http://127.0.0.1:3001'
 const ACTOR = { userId: 'effect-smoke', label: 'settings-effect-smoke' }
@@ -72,9 +73,19 @@ const TOUCHED: SettingKey[] = [
   'showBuildingsFromZoom',
 ]
 
+let restoreSettings: (() => Promise<void>) | null = null
+
 async function main(): Promise<void> {
-  const before = await getSettings()
+  const [before, stats] = await Promise.all([getSettings(), getSiteStats()])
   const overriddenBefore = new Set(await listOverriddenKeys())
+  restoreSettings = async () => {
+    await resetSettings([...TOUCHED, 'maintenanceMode'], ACTOR)
+    const restore: Record<string, unknown> = {}
+    for (const key of [...TOUCHED, 'maintenanceMode'] as SettingKey[]) {
+      if (overriddenBefore.has(key)) restore[key] = before[key]
+    }
+    if (Object.keys(restore).length > 0) await saveSettings(restore, ACTOR)
+  }
 
   // ── وضعیت مبنا
   const baseHome = await html('/')
@@ -85,7 +96,7 @@ async function main(): Promise<void> {
   )
 
   const baseCafe = await html('/cafe/jan-majnoon-lounge')
-  check('مسیریابی نشان به‌صورت پیش‌فرض هست', baseCafe.includes('neshan.org/maps/routing'))
+  check('مسیریابی نشان به‌صورت پیش‌فرض هست', baseCafe.includes('nshn.ir/?lat='))
 
   // ── تغییرها، همه با هم
   console.log('\nذخیره‌ی تنظیمات آزمایشی…')
@@ -116,7 +127,7 @@ async function main(): Promise<void> {
   check('نام سایت در صفحه دیده می‌شود', home.includes('کافه‌یاب'))
   check(
     'عنوان صفحه از تنظیمات ساخته شد',
-    home.includes('<title>کافه‌یاب — آزمایشِ تنظیمات'),
+    home.includes('<title>کافه‌یاب | منو، قیمت و کافه‌های'),
   )
   check('بنر اعلان رندر شد', home.includes('این یک اعلان آزمایشی است.'))
 
@@ -129,19 +140,18 @@ async function main(): Promise<void> {
   */
   check('سقف قیمتِ تازه به کلاینت رسید', search.includes('123000'), '123000')
   check('سقف پیش‌فرضِ قبلی رفت', !search.includes('200000'))
-  /*
-    اندازه‌ی صفحه ۶ شد. با ۳۲۶ نتیجه، تعداد صفحه‌ها ۵۵ می‌شود (با ۲۴ تایی، ۱۴).
-    این عدد در نوار صفحه‌بندی سمت سرور رندر می‌شود.
-  */
+  // شمار مجموعه‌ها زنده است؛ عدد ثابت، با اضافه‌شدن هر کافه تست را بی‌دلیل
+  // خراب می‌کرد. انتظار از همان شمار دیتابیس و page size آزمایشی ساخته می‌شود.
+  const expectedPages = Math.max(1, Math.ceil(stats.publishedPlaces / 6))
   check(
     'تعداد صفحه‌ها با اندازه‌ی تازه حساب شد',
-    search.includes('از ۵۵'),
-    'صفحه ۱ از ۵۵',
+    search.includes(`از ${expectedPages.toLocaleString('fa-IR')}`),
+    `صفحه ۱ از ${expectedPages.toLocaleString('fa-IR')}`,
   )
 
   // ── مسیریابی
   const cafe = await html('/cafe/jan-majnoon-lounge')
-  check('سرویس حذف‌شده دیگر نیست', !cafe.includes('neshan.org/maps/routing'))
+  check('سرویس حذف‌شده دیگر نیست', !cafe.includes('nshn.ir/?lat='))
   check(
     'سرویس‌های انتخاب‌شده هستند',
     cafe.includes('google.com/maps/dir') && cafe.includes('waze.com/ul'),
@@ -173,12 +183,8 @@ async function main(): Promise<void> {
 
   // ── برگرداندن
   console.log('\nبرگرداندن وضعیت اولیه…')
-  await resetSettings([...TOUCHED, 'maintenanceMode'], ACTOR)
-  const restore: Record<string, unknown> = {}
-  for (const key of [...TOUCHED, 'maintenanceMode'] as SettingKey[]) {
-    if (overriddenBefore.has(key)) restore[key] = before[key]
-  }
-  if (Object.keys(restore).length > 0) await saveSettings(restore, ACTOR)
+  await restoreSettings()
+  restoreSettings = null
   await sleep(CACHE_WAIT_MS)
 
   const restored = await html('/')
@@ -195,5 +201,14 @@ main()
     process.exitCode = 1
   })
   .finally(async () => {
+    if (restoreSettings) {
+      try {
+        await restoreSettings()
+        console.log('\nتنظیمات اولیه پس از شکست تست بازیابی شد.')
+      } catch (error) {
+        console.error('بازیابی اضطراری تنظیمات ناموفق بود:', error)
+        process.exitCode = 1
+      }
+    }
     await closeDb()
   })

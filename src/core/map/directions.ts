@@ -17,23 +17,18 @@
  * ترتیب پارامترها بین سرویس‌ها متفاوت است و اشتباه‌شدنش باعث می‌شود کاربر به
  * نقطه‌ای در وسط بیابان هدایت شود:
  *
- *   نشان        @lat,lng,zoom   — عرض اول
+ *   نشان        lat,lng          — عرض اول؛ از لینک رسمی کوتاه `nshn.ir`
  *   گوگل مپس    lat,lng          — عرض اول
  *   OSM         mlat=…&mlon=…    — نام‌دار، بی‌ابهام
  *   Waze        ll=lat,lng       — عرض اول
  *   بلد         latitude=&longitude= — نام‌دار
  *
- * ═══ چرا لینک `https` و نه اسکیمای اختصاصی اپ ═══
+ * ═══ Deep Link رسمی نشان ═══
  *
- * وسوسه این است که `neshan://` و `waze://` بنویسیم تا «مستقیم اپ باز شود». ولی
- * اسکیمای اختصاصی، اگر اپ نصب **نباشد**، بی‌صدا شکست می‌خورد: کاربر یک صفحه‌ی
- * سفید یا خطای «آدرس ناشناس» می‌گیرد و هیچ راه برگشتی ندارد.
- *
- * لینک `https` هر دو کار را می‌کند: روی موبایل، اگر اپ نصب باشد سیستم‌عامل
- * خودش لینک را به اپ تحویل می‌دهد (Android App Links / iOS Universal Links) —
- * یعنی همان «یک کلیک، مستقیم در اپ». و اگر نصب نباشد، نسخه‌ی وبِ همان سرویس
- * باز می‌شود. برای کسی که هر چهار اپ را ندارد — یعنی اکثر کاربران — این تفاوتِ
- * بین «کار می‌کند» و «خراب است».
+ * مستند رسمی نشان برای Android/Web لینک `nshn.ir` و برای iOS اسکیمای
+ * `neshan://` را معرفی می‌کند. مسیر مستقیم به هر دو مختصات مبدأ و مقصد نیاز
+ * دارد؛ بنابراین UI موقعیت فعلی را می‌گیرد و توابع پایین لینک دقیق را می‌سازند.
+ * لینک نقطه (`href`) fallback بدون مجوز موقعیت و بدون JavaScript است.
  *
  * برای کاربری که می‌خواهد اپِ **پیش‌فرضِ خودش** باز شود، `geoUri` پایین هست.
  *
@@ -71,6 +66,26 @@ function coord(lat: number, lng: number): { lat: string; lng: string } {
   }
 }
 
+/** لینک رسمی Android/Web نشان؛ اپ نصب باشد باز می‌شود وگرنه وب نشان. */
+export function neshanPointLink(target: DirectionTarget): string {
+  const { lat, lng } = coord(target.lat, target.lng)
+  return `https://nshn.ir/?lat=${lat}&lng=${lng}`
+}
+
+/** لینک رسمی مسیریابی نشان برای Android/Web، با fallback بومی به وب. */
+export function neshanRouteLink(origin: DirectionTarget, target: DirectionTarget): string {
+  const from = coord(origin.lat, origin.lng)
+  const to = coord(target.lat, target.lng)
+  return `https://nshn.ir?origin=${from.lat},${from.lng}&destination=${to.lat},${to.lng}&vehicle=d`
+}
+
+/** Deep Link رسمی iOS نشان؛ UI در صورت نصب‌نبودن اپ به neshanRouteLink برمی‌گردد. */
+export function neshanIosRouteLink(origin: DirectionTarget, target: DirectionTarget): string {
+  const from = coord(origin.lat, origin.lng)
+  const to = coord(target.lat, target.lng)
+  return `neshan://?origin=${from.lat},${from.lng}&destination=${to.lat},${to.lng}&vehicle=d`
+}
+
 /**
  * لینک‌های مسیریابی برای یک مقصد.
  *
@@ -85,10 +100,9 @@ export function buildDirectionLinks(target: DirectionTarget): DirectionLink[] {
     {
       id: 'neshan',
       label: 'نشان',
-      // نشان مسیریابی وب را با پارامتر مقصد می‌گیرد؛ اگر اپ نصب باشد،
-      // سیستم‌عامل خودش لینک را به اپ می‌دهد.
-      href: `https://neshan.org/maps/routing/car/#f=current,${lat},${lng}`,
-      viewHref: `https://neshan.org/maps/@${lat},${lng},17z,0p`,
+      // fallback رسمی و قابل‌کلیک بدون JS؛ مسیر مستقیم پس از گرفتن مبدأ در UI.
+      href: neshanPointLink(target),
+      viewHref: neshanPointLink(target),
       local: true,
     },
     {

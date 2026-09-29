@@ -3,11 +3,8 @@
 /**
  * فرم سلیقه‌سنجی.
  *
- * ═══ چرا یک فرم و نه چند گام ═══
- *
- * شش سؤال کوتاه در یک صفحه، از شش صفحه‌ی پشت‌سرهم بهتر است: کاربر کل چیزی که
- * از او خواسته می‌شود را می‌بیند و می‌داند کِی تمام می‌شود. فرم چندگامی
- * برای فرم‌های بلند است، نه برای شش سؤال.
+ * سؤال‌ها مرحله‌ای نمایش داده می‌شوند؛ تمام ورودی‌ها در DOM می‌مانند تا
+ * رفت‌وبرگشت یا رد کردن یک سؤال پاسخ‌های مرحله‌های دیگر را از بین نبرد.
  *
  * ═══ چرا هیچ سؤالی اجباری نیست ═══
  *
@@ -16,7 +13,7 @@
  * تصادفی، پیشنهاد را بدتر می‌کند نه بهتر.
  */
 
-import { useActionState } from 'react'
+import { useActionState, useState } from 'react'
 import { useFormStatus } from 'react-dom'
 import { QUIZ, type QuizAnswers } from '@/core/taste/quiz'
 import { saveTasteAction } from '@/app/profile/actions'
@@ -34,13 +31,17 @@ function SaveButton({ hasAnswers }: { hasAnswers: boolean }) {
 
 export function TasteQuiz({ initial }: { initial: QuizAnswers }) {
   const [state, action] = useActionState(saveTasteAction, EMPTY_ACTION_STATE)
+  const [step, setStep] = useState(0)
+  const [answers,setAnswers] = useState(initial)
 
   return (
     <form action={action} className={styles.form}>
-      {QUIZ.map((question) => {
-        const selected = initial[question.id] ?? []
+      <p aria-live="polite">سؤال {step+1} از {QUIZ.length} · همهٔ سؤال‌ها اختیاری‌اند</p>
+      <progress max={QUIZ.length} value={step+1} aria-label="پیشرفت سلیقه‌سنجی" />
+      {QUIZ.map((question,index) => {
+        const selected = answers[question.id] ?? []
         return (
-          <fieldset key={question.id} className={styles.question}>
+          <fieldset key={question.id} className={styles.question} hidden={index!==step}>
             <legend className={styles.legend}>
               {question.title}
               {question.hint && <span className={styles.hint}>{question.hint}</span>}
@@ -53,7 +54,8 @@ export function TasteQuiz({ initial }: { initial: QuizAnswers }) {
                     type={question.multi ? 'checkbox' : 'radio'}
                     name={question.id}
                     value={option.id}
-                    defaultChecked={selected.includes(option.id)}
+                    checked={selected.includes(option.id)}
+                    onChange={()=>setAnswers(current=>({...current,[question.id]:question.multi?(selected.includes(option.id)?selected.filter(id=>id!==option.id):[...selected,option.id]):[option.id]}))}
                   />
                   <span className={styles.optionBody}>
                     <span className={styles.optionLabel}>{option.label}</span>
@@ -74,7 +76,8 @@ export function TasteQuiz({ initial }: { initial: QuizAnswers }) {
         هر وقت بخواهی می‌توانی عوضشان کنی.
       </p>
 
-      <SaveButton hasAnswers />
+      <div className={styles.navigation}>{step>0 && <button type="button" onClick={()=>setStep(step-1)}>قبلی</button>}<button type="button" onClick={()=>{setAnswers(current=>({...current,[QUIZ[step].id]:[]}));setStep(Math.min(step+1,QUIZ.length-1))}}>برام مهم نیست</button>{step<QUIZ.length-1 && <button type="button" onClick={()=>setStep(step+1)}>ادامه</button>}</div>
+      {step===QUIZ.length-1 && <SaveButton hasAnswers />}
     </form>
   )
 }

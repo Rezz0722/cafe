@@ -116,10 +116,14 @@
 }
 
 .save:hover:not(:disabled) {
-  background: var(--c-primary-strong);
+  background: var(--c-primary-action-strong);
 }
 
 .save:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
+.form [hidden]{display:none!important}
+.navigation{display:flex;flex-wrap:wrap;gap:8px}
+.navigation button{min-height:44px;padding:10px 18px;border:1px solid #cad5e5;border-radius:14px;background:#f7f5ef;color:#233b60;font:inherit;cursor:pointer}
+.form progress{width:100%;accent-color:#233b60}

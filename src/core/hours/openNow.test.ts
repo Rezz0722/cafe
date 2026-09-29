@@ -13,6 +13,7 @@ import { test } from 'node:test'
 import {
   computeOpenState,
   groupedWeekSchedule,
+  isValidClock,
   tehranNow,
   weekSchedule,
   type HourShift,
@@ -38,6 +39,14 @@ const closedDay = (dow: number): HourShift => ({
   closesAt: null,
   crossesMidnight: false,
   closed: true,
+})
+
+test('ساعت خارج از شبانه‌روز معتبر نیست', () => {
+  assert.equal(isValidClock('23:59'), true)
+  assert.equal(isValidClock('00:00'), true)
+  assert.equal(isValidClock('55:55'), false)
+  assert.equal(isValidClock('24:00'), false)
+  assert.equal(isValidClock('9:30'), false)
 })
 
 // ── ۵ آگوست ۲۰۲۶ چهارشنبه است → dow ایرانی = ۴

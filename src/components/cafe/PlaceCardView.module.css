@@ -1,74 +1,126 @@
 .card {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 13px;
-  padding: 12px;
-  border: 1px solid var(--c-border-3);
-  border-radius: var(--r-md, 12px);
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--c-border);
+  border-radius: 20px;
   background: var(--c-surface);
   text-decoration: none;
+  transition:
+    transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    border-color 180ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.card:hover {
-  border-color: var(--c-primary);
-  box-shadow: 0 2px 10px rgb(0 0 0 / 0.06);
+.card:focus-visible {
+  outline: 3px solid var(--c-primary-soft);
+  outline-offset: 3px;
 }
 
+.reviewedCard { border-color: color-mix(in srgb, #8b5cf6 42%, var(--c-border)); box-shadow: 0 10px 28px rgb(91 33 182 / 9%); }
+.bloggerBadge { position: absolute; inset-inline-end: 12px; inset-block-end: 10px; display: inline-flex; align-items: center; gap: 4px; padding: 6px 9px; border: 1px solid rgb(255 255 255 / 35%); border-radius: 999px; color: #fff; background: rgb(74 29 150 / 88%); backdrop-filter: blur(10px); font-size: .68rem; font-weight: 850; }
+
+.media {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  background: var(--grad-tint, var(--c-surface-3));
+}
+
+.cover,
 .logo,
 .logoEmpty {
-  width: 62px;
-  height: 62px;
-  border-radius: 13px;
-  object-fit: cover;
-  background: var(--c-surface-3);
-  flex: 0 0 auto;
+  width: 100%;
+  height: 100%;
 }
+
+.cover {
+  object-fit: cover;
+  transition: transform 360ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.logo {
+  padding: clamp(18px, 12%, 42px);
+  object-fit: contain;
+  background:
+    radial-gradient(circle at 25% 20%, rgb(255 255 255 / 90%), transparent 46%),
+    var(--c-surface-3);
+  transition: transform 360ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .card:hover {
+    transform: translateY(-3px);
+    border-color: var(--c-primary);
+    box-shadow: var(--sh-card-hover);
+  }
+
+  .card:hover .cover,
+  .card:hover .logo {
+    transform: scale(1.025);
+  }
+}
+
+.card:active { transform: scale(.99); }
 
 .logoEmpty {
   display: grid;
   place-items: center;
-  font-size: 24px;
-  background: var(--grad-tint, var(--c-surface-3));
+  color: var(--c-primary-strong);
+  background:
+    radial-gradient(circle at 30% 25%, rgb(255 255 255 / 85%), transparent 42%),
+    var(--grad-tint, var(--c-surface-3));
+}
+
+.ribbon {
+  position: absolute;
+  inset-block-start: 12px;
+  inset-inline-start: 12px;
+  max-width: calc(100% - 24px);
+  overflow: hidden;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: var(--c-accent-soft);
+  color: var(--c-accent-text-strong);
+  box-shadow: 0 3px 12px rgb(26 26 26 / 10%);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .body {
   min-width: 0;
-}
-
-.topRow {
+  flex: 1;
   display: flex;
-  align-items: center;
-  gap: 7px;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
 }
 
 .name {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 800;
-  color: var(--c-ink);
-  white-space: nowrap;
+  display: -webkit-box;
   overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.ribbon {
-  flex: 0 0 auto;
-  padding: 1px 7px;
-  border-radius: 999px;
-  background: var(--c-accent-soft);
-  color: var(--c-accent-text-strong);
-  font-size: 0.68rem;
-  font-weight: 700;
+  margin: 0;
+  color: var(--c-ink);
+  font-size: 1.06rem;
+  font-weight: 800;
+  line-height: 1.55;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
-  margin: 3px 0 0;
-  font-size: 0.78rem;
+  align-items: center;
+  gap: 3px 5px;
+  margin: 0;
   color: var(--c-muted);
+  font-size: 0.78rem;
+  line-height: 1.7;
 }
 
 .distance {
@@ -77,82 +129,160 @@
 }
 
 .rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
   color: var(--c-accent-text);
+  font-weight: 700;
+}
+
+.open,
+.closed {
+  font-weight: 800;
+}
+
+.open { color: var(--c-success-text, #13734b); }
+.closed { color: var(--c-muted-3); }
+
+.starIcon {
+  flex: 0 0 auto;
+  fill: var(--c-accent);
+  color: var(--c-accent);
 }
 
 .facets {
-  margin: 4px 0 0;
-  font-size: 0.75rem;
-  color: var(--c-ink-3);
-  white-space: nowrap;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.facet {
   overflow: hidden;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: var(--c-primary-soft);
+  color: var(--c-primary-strong);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.55;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .signature {
-  margin: 3px 0 0;
-  font-size: 0.74rem;
-  color: var(--c-muted-3);
-  white-space: nowrap;
+  display: -webkit-box;
   overflow: hidden;
-  text-overflow: ellipsis;
+  margin: 0;
+  color: var(--c-muted);
+  font-size: 0.75rem;
+  line-height: 1.65;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+
+.priceRow {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid var(--c-border-3);
 }
 
 .priceCol {
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 1px;
-  min-width: 88px;
-  text-align: end;
 }
 
 .price,
 .dishPrice {
+  color: var(--c-ink);
   font-size: 0.93rem;
   font-weight: 800;
-  color: var(--c-ink);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
-/* قیمتِ دیشِ فیلترشده پُررنگ‌تر است، چون همان چیزی است که کاربر جست. */
 .dishPrice {
   color: var(--c-primary-strong);
 }
 
 .priceLabel {
-  font-size: 0.68rem;
+  overflow: hidden;
   color: var(--c-muted-3);
+  font-size: 0.68rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .tier {
-  margin-top: 3px;
-  padding: 1px 7px;
+  padding: 3px 8px;
   border-radius: 999px;
   background: var(--c-surface-4);
   color: var(--c-ink-3);
-  font-size: 0.66rem;
+  font-size: 0.68rem;
   font-weight: 700;
 }
 
-@media (max-width: 520px) {
+@media (max-width: 640px) {
   .card {
-    gap: 10px;
-    padding: 10px;
+    min-height: 172px;
+    display: grid;
+    grid-template-columns: 38% minmax(0, 1fr);
+    border-radius: 16px;
   }
 
-  .logo,
-  .logoEmpty {
-    width: 52px;
-    height: 52px;
+  .media {
+    min-height: 172px;
+    aspect-ratio: auto;
   }
 
-  .priceCol {
-    min-width: 74px;
+  .body {
+    gap: 6px;
+    padding: 12px;
+  }
+
+  .name {
+    font-size: 1rem;
+  }
+
+  .meta {
+    font-size: 0.75rem;
+  }
+
+  .facets {
+    flex-wrap: nowrap;
+    overflow: hidden;
+  }
+
+  .facet {
+    padding: 3px 8px;
+    font-size: 0.69rem;
   }
 
   .signature {
     display: none;
   }
+
+  .priceRow {
+    padding-top: 8px;
+  }
+
+  .price,
+  .dishPrice {
+    font-size: 0.82rem;
+  }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .cover,
+  .logo {
+    transition-duration: 0.01ms;
+  }
+}
+.bloggerBadge{background:rgba(255,255,255,.95);color:#24395a;border-color:#dbe5f0;box-shadow:0 4px 14px #091c3720;backdrop-filter:blur(12px);font-weight:750}

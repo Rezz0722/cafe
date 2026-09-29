@@ -199,3 +199,11 @@ test('rankPlaces سقف تعداد را رعایت می‌کند', () => {
   const many = Array.from({ length: 40 }, (_, index) => ({ ...base, id: index }))
   assert.equal(rankPlaces(many, { weights: [], limit: 5 }).length, 5)
 })
+test('بودجه یا نبود لیبل، تطابق واقعی سلیقه را تغییر نمی‌دهد',()=>{
+ const ranked=rankPlaces([{...base,id:1,dishSlugs:['pasta']},{...base,id:2}],{weights:[{kind:'dish',refId:'pasta',weight:2}],budgetBand:2})
+ assert.deepEqual(ranked.map(item=>item.place.id),[1])
+})
+test('قیمت نامعلوم بودجه تلقی نمی‌شود و یک نظر اعتماد کامل ندارد',()=>{
+ assert.equal(scorePlace({...base,priceMedian:null},{weights:[],budgetBand:2}).score,scorePlace(base,{weights:[]}).score)
+ assert.ok(scorePlace({...base,ratingCount:20},{weights:[]}).score>scorePlace({...base,ratingCount:1},{weights:[]}).score)
+})

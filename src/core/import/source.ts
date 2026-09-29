@@ -39,6 +39,8 @@ export interface RawMenuSection {
   'توضیحات'?: string | null
   'تصویر'?: string | null
   'آیتم‌ها'?: RawMenuItem[] | null
+  /** TopMenuMarket منو را به‌صورت درختی برمی‌گرداند. */
+  'زیردسته‌ها'?: RawMenuSection[] | null
 }
 
 export interface RawCafe {
@@ -89,6 +91,25 @@ export function rawItemDescription(value: RawItemDescription): string {
   return value.description ?? ''
 }
 
+/**
+ * همهٔ آیتم‌های یک دسته، شامل زیردسته‌های تودرتو.
+ *
+ * ترتیب depth-first عیناً ترتیبی است که کاربر در منبع می‌بیند. این
+ * تابع تنها مسیر مجاز خواندن آیتم منو است تا importer و sync دوباره از
+ * هم جدا نشوند.
+ */
+export function flattenSectionItems(section: RawMenuSection): RawMenuItem[] {
+  const result = [...(section['آیتم‌ها'] ?? [])]
+  for (const child of section['زیردسته‌ها'] ?? []) {
+    result.push(...flattenSectionItems(child))
+  }
+  return result
+}
+
+export function flattenCafeItems(cafe: RawCafe): RawMenuItem[] {
+  return (cafe['منو'] ?? []).flatMap(flattenSectionItems)
+}
+
 // ── استخراج تصاویر ───────────────────────────────────────────────────
 
 export type MediaKind = 'logo' | 'menu_item' | 'menu_section'
@@ -116,12 +137,14 @@ export function extractSourceImages(cafes = readSourceCafes()): SourceImage[] {
 
   for (const cafe of cafes) {
     add(cafe['لوگو'], 'logo')
-    for (const section of cafe['منو'] ?? []) {
+    const visitSection = (section: RawMenuSection) => {
       add(section['تصویر'], 'menu_section')
       for (const item of section['آیتم‌ها'] ?? []) {
         add(item['تصویر'], 'menu_item')
       }
+      for (const child of section['زیردسته‌ها'] ?? []) visitSection(child)
     }
+    for (const section of cafe['منو'] ?? []) visitSection(section)
   }
 
   return [...seen].map(([url, kind]) => ({ url, kind }))

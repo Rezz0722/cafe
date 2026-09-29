@@ -31,6 +31,7 @@ import {
   SUGGESTION_MAX_LENGTH,
   SUGGESTION_MIN_LENGTH,
 } from './suggestFields'
+import { cleanUserText } from '@/core/security/input'
 
 /**
  * سقفِ پیشنهادِ در انتظارِ هر کاربر.
@@ -63,7 +64,7 @@ export async function submitEditSuggestion(
   const definition = findSuggestableField(input.field)
   if (!definition) return { ok: false, error: 'این فیلد قابل اصلاح نیست.' }
 
-  const suggested = input.suggestedValue.trim()
+  const suggested = cleanUserText(input.suggestedValue, SUGGESTION_MAX_LENGTH + 1)
   if (suggested.length < SUGGESTION_MIN_LENGTH) {
     return { ok: false, error: 'توضیح کوتاه‌تر از آن است که قابل بررسی باشد.' }
   }
@@ -71,7 +72,7 @@ export async function submitEditSuggestion(
     return { ok: false, error: `حداکثر ${SUGGESTION_MAX_LENGTH} نویسه.` }
   }
 
-  const current = (input.currentValue ?? '').trim()
+  const current = cleanUserText(input.currentValue, SUGGESTION_MAX_LENGTH)
   if (current && current === suggested) {
     return { ok: false, error: 'مقدار پیشنهادی با مقدار فعلی یکی است.' }
   }

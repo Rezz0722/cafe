@@ -67,6 +67,14 @@ export const FULL_WIDTH = 1000
 
 const CARD_QUALITY = 78
 const FULL_QUALITY = 82
+export const MAX_SOURCE_DIMENSION = 12_000
+export const MAX_SOURCE_PIXELS = 40_000_000
+
+export function sourceDimensionsAllowed(width: number, height: number): boolean {
+  return width > 0 && height > 0 &&
+    width <= MAX_SOURCE_DIMENSION && height <= MAX_SOURCE_DIMENSION &&
+    width * height <= MAX_SOURCE_PIXELS
+}
 
 // ═══════════════════════════════════════════════════════════════════════
 // انتخاب موتور
@@ -139,16 +147,18 @@ export async function imageEngineName(): Promise<Engine> {
 
 async function deriveWithSharp(input: Buffer): Promise<DerivedImage | null> {
   const sharp = sharpModule!
-  const meta = await sharp(input, { failOn: 'none' }).metadata()
+  const inputOptions = { failOn: 'error', limitInputPixels: MAX_SOURCE_PIXELS }
+  const meta = await sharp(input, inputOptions).metadata()
   if (!meta.width || !meta.height) return null
+  if (!sourceDimensionsAllowed(meta.width, meta.height)) return null
 
   const [card, full] = await Promise.all([
-    sharp(input, { failOn: 'none' })
+    sharp(input, inputOptions)
       .rotate() // اعمال EXIF orientation — بدون این، عکس‌های موبایل چرخیده می‌مانند
       .resize({ width: CARD_WIDTH, withoutEnlargement: true })
       .webp({ quality: CARD_QUALITY, effort: 4 })
       .toBuffer({ resolveWithObject: true }),
-    sharp(input, { failOn: 'none' })
+    sharp(input, inputOptions)
       .rotate()
       .resize({ width: FULL_WIDTH, withoutEnlargement: true })
       .webp({ quality: FULL_QUALITY, effort: 4 })
@@ -182,6 +192,7 @@ async function deriveWithImageMagick(input: Buffer): Promise<DerivedImage | null
 
     const meta = await identify(src)
     if (!meta.width || !meta.height) return null
+    if (!sourceDimensionsAllowed(meta.width, meta.height)) return null
 
     const variants = [
       { name: 'card', width: CARD_WIDTH, quality: CARD_QUALITY },

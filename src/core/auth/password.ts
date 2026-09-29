@@ -22,8 +22,10 @@ import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto'
 const COST = 16_384
 const KEY_LEN = 64
 const SALT_LEN = 16
+export const MAX_PASSWORD_LENGTH = 256
 
 export function hashPassword(plain: string): string {
+  if (!plain || plain.length > MAX_PASSWORD_LENGTH) throw new Error('طول رمز عبور نامعتبر است.')
   const salt = randomBytes(SALT_LEN)
   const hash = scryptSync(plain.normalize('NFKC'), salt, KEY_LEN, { N: COST })
   return `scrypt$${COST}$${salt.toString('hex')}$${hash.toString('hex')}`
@@ -36,13 +38,13 @@ export function hashPassword(plain: string): string {
  * برمی‌گردد، و مهاجم می‌تواند با سنجش زمان پاسخ، هش را بایت‌به‌بایت بسازد.
  */
 export function verifyPassword(plain: string, stored: string | null | undefined): boolean {
-  if (!plain || !stored) return false
+  if (!plain || plain.length > MAX_PASSWORD_LENGTH || !stored) return false
 
   const parts = stored.split('$')
   if (parts.length !== 4 || parts[0] !== 'scrypt') return false
 
   const cost = Number(parts[1])
-  if (!Number.isFinite(cost) || cost < 1024) return false
+  if (!Number.isFinite(cost) || cost < 1024 || cost > 1_048_576) return false
 
   try {
     const salt = Buffer.from(parts[2], 'hex')

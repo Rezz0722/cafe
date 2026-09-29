@@ -56,7 +56,7 @@
 }
 
 .primary:hover {
-  background: var(--c-primary-strong);
+  background: var(--c-primary-action-strong);
 }
 
 .secondary {

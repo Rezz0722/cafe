@@ -11,6 +11,9 @@ dist-ssr
 
 # Next.js
 .next
+.next-staging
+.next-previous
+.next-*
 next-env.d.ts
 
 # bundles
@@ -64,3 +67,21 @@ ACCESS-LOCAL.md
 
 # لاگ‌های PM2
 logs/
+
+# local QA/browser state and generated reports
+/.claude/
+/.playwright/
+/.playwright-cli/
+/__pycache__/
+/var/
+/backups/
+/design-plans/
+/audit*.mjs
+
+# database exports and one-off generated assets
+/*.sql.gz
+/kucafe_asset_*.png
+
+# Docker Compose production state is supplied only on the server
+/.env.production
+/.env.compose

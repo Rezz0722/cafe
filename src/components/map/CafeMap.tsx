@@ -33,6 +33,10 @@ import {
 import 'maplibre-gl/dist/maplibre-gl.css'
 import styles from './CafeMap.module.css'
 import { Crosshair } from 'lucide-react'
+import dynamic from 'next/dynamic'
+import { useTheme } from '@/components/theme/ThemeProvider'
+
+const SimpleCafeMap = dynamic(() => import('./SimpleCafeMap').then(module => module.SimpleCafeMap), { ssr: false })
 
 /**
  * آدرس worker مپ‌لایبر.
@@ -49,7 +53,7 @@ import { Crosshair } from 'lucide-react'
  * به `public/maplibre/` کپی می‌شود (`scripts/sync-map-worker.mjs`) — هم‌دامنه
  * و آفلاین، مثل بقیه‌ی نقشه.
  */
-setWorkerUrl('/maplibre/maplibre-gl-worker.mjs')
+setWorkerUrl('/maplibre/v6.9.0/maplibre-gl-worker.mjs')
 
 /**
  * سقف انتظار برای استایل، و برای رویداد `load` نقشه.
@@ -126,6 +130,8 @@ export interface CafeMapProps {
    * `/mashhad/` می‌دهد.
    */
   linkBase?: string
+  /** حفظ center/zoom همین نقشه هنگام رفتن به صفحهٔ کافه و بازگشت. */
+  stateStorageKey?: string
 }
 
 const MASHHAD_CENTER = { lat: 36.2972, lng: 59.6067 }
@@ -152,6 +158,12 @@ interface LazyBuildingSpec {
   beforeId: string
   source: Record<string, unknown>
   layer: { id: string } & Record<string, unknown>
+}
+
+interface StoredMapView {
+  lng: number
+  lat: number
+  zoom: number
 }
 
 /**
@@ -253,20 +265,25 @@ export function CafeMap({
   minZoom = 9,
   maxZoom = 18.5,
   height = '420px',
-  theme = 'light',
+  theme: requestedTheme,
   onSelect,
   className,
   showLocate = true,
   cluster = true,
   alwaysLabel = false,
   linkBase = '/cafe/',
+  stateStorageKey,
 }: CafeMapProps) {
+  const { resolvedTheme } = useTheme()
+  const theme = requestedTheme ?? resolvedTheme
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
   const markersRef = useRef<Marker[]>([])
   const labelMarkersRef = useRef<Marker[]>([])
   const userMarkerRef = useRef<Marker | null>(null)
+  const storageKeyRef = useRef(stateStorageKey)
   const [ready, setReady] = useState(false)
+  const [initialized, setInitialized] = useState(false)
   const [failed, setFailed] = useState<string | null>(null)
 
   const mappable = useMemo(
@@ -277,17 +294,24 @@ export function CafeMap({
   const initialCenter = center ?? (mappable.length === 1 ? mappable[0]! : MASHHAD_CENTER)
   const initialZoom = zoom ?? (mappable.length === 1 ? 16 : 12)
 
+  useEffect(() => {
+    storageKeyRef.current = stateStorageKey
+  }, [stateStorageKey])
+
   // ── ساخت نقشه، یک‌بار
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return
 
     let cancelled = false
+    const abort = new AbortController()
+    setReady(false)
+    setInitialized(false)
+    setFailed(null)
     // در پاک‌سازی لغو می‌شوند، وگرنه بعد از unmount شلیک می‌کنند.
     let styleTimer: ReturnType<typeof setTimeout> | undefined
     let loadTimer: ReturnType<typeof setTimeout> | undefined
 
     const create = async () => {
-      const abort = new AbortController()
       styleTimer = setTimeout(() => abort.abort(), STYLE_TIMEOUT_MS)
       try {
         // استایل از سرور می‌آید تا رنگ‌ها یک منبع داشته باشند و تغییر تم
@@ -298,11 +322,26 @@ export function CafeMap({
         clearTimeout(styleTimer)
         if (cancelled || !containerRef.current) return
 
+        let restored: StoredMapView | null = null
+        if (storageKeyRef.current) {
+          try {
+            const value = JSON.parse(sessionStorage.getItem(storageKeyRef.current) ?? 'null') as StoredMapView | null
+            if (
+              value &&
+              Number.isFinite(value.lng) && Number.isFinite(value.lat) && Number.isFinite(value.zoom) &&
+              value.lng >= 59.05 && value.lng <= 60 && value.lat >= 36 && value.lat <= 36.67 &&
+              value.zoom >= minZoom && value.zoom <= maxZoom
+            ) restored = value
+          } catch {
+            // دادهٔ خراب یا storage بسته؛ مرکز پیش‌فرض استفاده می‌شود.
+          }
+        }
+
         const map = new MapLibreMap({
           container: containerRef.current,
           style,
-          center: [initialCenter.lng, initialCenter.lat],
-          zoom: initialZoom,
+          center: restored ? [restored.lng, restored.lat] : [initialCenter.lng, initialCenter.lat],
+          zoom: restored?.zoom ?? initialZoom,
           minZoom,
           maxZoom,
           maxBounds: MASHHAD_BOUNDS,
@@ -321,10 +360,24 @@ export function CafeMap({
         map.touchZoomRotate.disableRotation()
         map.addControl(new NavigationControl({ showCompass: false }), 'top-left')
         map.addControl(new ScaleControl({ maxWidth: 90, unit: 'metric' }), 'bottom-left')
+        map.on('moveend', () => {
+          const key = storageKeyRef.current
+          if (!key) return
+          const current = map.getCenter()
+          try {
+            sessionStorage.setItem(key, JSON.stringify({ lng: current.lng, lat: current.lat, zoom: map.getZoom() }))
+          } catch {
+            // حفظ viewport قابلیت کمکی است و نباید نقشه را از کار بیندازد.
+          }
+        })
 
         // آخرین خطای نقشه، تا اگر `load` نیامد بتوانیم علت را نشان دهیم
         // نه یک پیام کلی.
         let lastError: string | null = null
+
+        // The full load event waits for every GeoJSON source. Do not hide the
+        // usable map and place marker behind a blocking overlay during that wait.
+        map.on('style.load', () => { if (!cancelled) setInitialized(true) })
 
         map.on('load', () => {
           clearTimeout(loadTimer)
@@ -366,12 +419,15 @@ export function CafeMap({
 
     return () => {
       cancelled = true
+      abort.abort()
       clearTimeout(styleTimer)
       clearTimeout(loadTimer)
       for (const marker of markersRef.current) marker.remove()
       for (const marker of labelMarkersRef.current) marker.remove()
       markersRef.current = []
       labelMarkersRef.current = []
+      userMarkerRef.current?.remove()
+      userMarkerRef.current = null
       mapRef.current?.remove()
       mapRef.current = null
     }
@@ -448,7 +504,7 @@ export function CafeMap({
   }, [mappable, focusSlug, onSelect, cluster, alwaysLabel, linkBase])
 
   useEffect(() => {
-    if (!ready) return
+    if (!initialized) return
     renderMarkers()
     const map = mapRef.current
     if (!map) return
@@ -458,12 +514,12 @@ export function CafeMap({
       map.off('zoomend', renderMarkers)
       map.off('moveend', renderMarkers)
     }
-  }, [ready, renderMarkers])
+  }, [initialized, renderMarkers])
 
   // ── برچسب محله و نقاط شاخص
   useEffect(() => {
     const map = mapRef.current
-    if (!map || !ready) return
+    if (!map || !initialized) return
 
     for (const marker of labelMarkersRef.current) marker.remove()
     labelMarkersRef.current = []
@@ -477,12 +533,12 @@ export function CafeMap({
         .addTo(map)
       labelMarkersRef.current.push(marker)
     }
-  }, [labels, ready])
+  }, [labels, initialized])
 
   // ── موقعیت کاربر
   useEffect(() => {
     const map = mapRef.current
-    if (!map || !ready) return
+    if (!map || !initialized) return
     userMarkerRef.current?.remove()
     userMarkerRef.current = null
     if (!userLocation) return
@@ -493,16 +549,16 @@ export function CafeMap({
     userMarkerRef.current = new Marker({ element, anchor: 'center' })
       .setLngLat([userLocation.lng, userLocation.lat])
       .addTo(map)
-  }, [userLocation, ready])
+  }, [userLocation, initialized])
 
   // ── جا دادن همه‌ی کافه‌ها در کادر
   useEffect(() => {
     const map = mapRef.current
-    if (!map || !ready || center || mappable.length < 2) return
+    if (!map || !initialized || center || storageKeyRef.current || mappable.length < 2) return
     const bounds = new LngLatBounds()
     for (const place of mappable) bounds.extend([place.lng, place.lat])
     map.fitBounds(bounds, { padding: 48, maxZoom: 15, duration: 0 })
-  }, [ready, mappable, center])
+  }, [initialized, mappable, center])
 
   const locate = () => {
     if (!navigator.geolocation) return
@@ -522,19 +578,19 @@ export function CafeMap({
 
   if (failed) {
     return (
-      <div className={`${styles.wrap} ${className ?? ''}`} style={{ height }}>
-        <div className={styles.fallback}>
-          <p className={styles.fallbackTitle}>نقشه بار نشد</p>
-          <p className={styles.fallbackNote}>{failed}</p>
-        </div>
-      </div>
+      <SimpleCafeMap places={places} labels={labels} userLocation={userLocation}
+        focusSlug={focusSlug} center={center} zoom={zoom} minZoom={minZoom} maxZoom={maxZoom}
+        height={height} theme={theme} onSelect={onSelect} className={className}
+        showLocate={showLocate} cluster={cluster} alwaysLabel={alwaysLabel}
+        linkBase={linkBase} stateStorageKey={stateStorageKey} />
     )
   }
 
   return (
     <div className={`${styles.wrap} ${className ?? ''}`} style={{ height }}>
       <div ref={containerRef} className={styles.canvas} />
-      {!ready && <div className={styles.loading}>در حال آماده‌سازی نقشه…</div>}
+      {!initialized && <div className={styles.loading} role="status">در حال آماده‌سازی نقشه…</div>}
+      {initialized && !ready && <div className={styles.tileLoading} role="status">بارگذاری جزئیات نقشه…</div>}
       {showLocate && ready && (
         <button type="button" className={styles.locate} onClick={locate}>
           <Crosshair size={15} aria-hidden="true" /> موقعیت من

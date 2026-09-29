@@ -2,6 +2,7 @@ import { fa } from '@/lib/format'
 import type { DayGroup } from '@/core/hours/openNow'
 import styles from './HoursCard.module.css'
 import { ChevronDown, Clock } from 'lucide-react'
+import {CafePopover} from './CafePopover'
 
 /**
  * ساعت کاری، فشرده.
@@ -43,16 +44,7 @@ export function HoursCard({ groups }: Props) {
   if (groups.every((group) => group.unknown)) return null
 
   return (
-    <details className={styles.hours}>
-      <summary className={styles.summary}>
-        <span className={styles.icon} aria-hidden="true">
-          <Clock size={16} />
-        </span>
-        <span className={styles.today}>{summaryFor(groups)}</span>
-        <span className={styles.more}>ساعت کاری هفته</span>
-        <ChevronDown size={15} aria-hidden="true" className={styles.caret} />
-      </summary>
-
+    <CafePopover label={`◷ ${summaryFor(groups)} · ساعت هفته`} title="ساعت کاری این شعبه" variant="inverse">
       <ul className={styles.list}>
         {groups.map((group) => (
           <li
@@ -76,7 +68,7 @@ export function HoursCard({ groups }: Props) {
           </li>
         ))}
       </ul>
-    </details>
+    </CafePopover>
   )
 }
 

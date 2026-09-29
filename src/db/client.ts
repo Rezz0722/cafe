@@ -10,4 +10,4 @@ import 'server-only'
  * `server-only` در اجرای مستقیم Node می‌ترکد.
  */
 
-export { closeDb, getDb, getPool, pingDb, schema, type Db } from './connection'
+export { closeDb, getDb, getPool, pingDb, schema, withDbTransaction, afterDbCommit, inDbTransaction, type Db } from './connection'
