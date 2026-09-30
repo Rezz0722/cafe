@@ -90,7 +90,10 @@ git push -u origin feature/short-name
 3. wrapper فقط HEAD شاخهٔ production را در `/opt/kucafe-release` checkout می‌کند.
 4. imageهای `kucafe/app:sha-…` و `kucafe/maintenance:sha-…` ساخته می‌شوند.
 5. یک dump فشرده پیش از migration ساخته می‌شود.
-6. migration اجرا و container روی `127.0.0.1:3100` جایگزین می‌شود.
+6. preflight دیتابیس، migration و سپس `db:verify` اجرا می‌شوند؛ فقط بعد از
+   موفقیت هر سه، container روی `127.0.0.1:3100` جایگزین می‌شود. برای دیتابیس
+   legacy با journal خالی، baseline فقط پس از تطبیق کامل snapshot ثبت می‌شود؛
+   schema ناقص یا journal مبهم deploy را متوقف می‌کند.
 7. health check اجرا می‌شود؛ در شکست، application image قبلی برمی‌گردد.
 8. بیش از پنج image KuCafe پاک می‌شود؛ image پروژه‌های دیگر دست نمی‌خورد.
 

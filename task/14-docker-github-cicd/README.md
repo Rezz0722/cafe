@@ -23,14 +23,16 @@
 | ۱ | Dockerfile چندمرحله‌ای، Compose تولید و Compose محلی | انجام شد |
 | ۲ | جداسازی media، snapshot افزایشی و retention پنج‌نسخه‌ای | انجام شد |
 | ۳ | CI عمومی بدون secret و دیتابیس یک‌بارمصرف | انجام شد |
-| ۴ | Deploy از runner اختصاصی با trust boundary | آماده؛ ثبت runner نیازمند token مالک است |
+| ۴ | Deploy از runner اختصاصی با trust boundary | انجام شد؛ runner فعال و محدود به production است |
 | ۵ | build و آزمون موازی روی پورت ۳۱۰۰ | انجام شد؛ container سالم و smoke موفق |
-| ۶ | Push، حفاظت branch/environment و cutover Apache | نیازمند دسترسی GitHub مالک |
+| ۶ | Push، حفاظت branch/environment و cutover Apache | branch و PR فعال؛ اولین deploy در migration baseline متوقف و اصلاح شد |
 
-فعال‌سازی فاز ۶ پس از قرارگرفتن PAT موقت، با یک دستور انجام می‌شود:
-`sudo bash scripts/bootstrap-github-cicd.sh`. اسکریپت PR را باز می‌کند؛ merge
-فقط بعد از سبزشدن check اجباری `verify` ممکن است و همان merge اولین deploy و
-cutover محافظت‌شده را آغاز می‌کند.
+اولین اجرای واقعی GitHub در ۲۰۲۶-۰۹-۳۰ ثابت کرد دیتابیس legacy شمای کامل داشت
+اما `__drizzle_migrations` خالی مانده بود. اجرای دوبارهٔ `0000` پیش از تعویض
+سرویس متوقف شد و PM2 زنده ماند. اکنون `ensure-drizzle-baseline.mjs` تنها پس از
+تطبیق fail-closed جدول‌ها، ستون‌ها، unique indexها و foreign keyهای snapshot،
+baseline را ثبت می‌کند؛ دیتابیس خالی همچنان از مسیر عادی Drizzle ساخته می‌شود.
+پس از migration نیز `db:verify` یک gate اجباری پیش از شروع container است.
 
 ## معماری هدف
 
