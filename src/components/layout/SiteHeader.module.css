@@ -1,189 +1,161 @@
 .header {
   position: sticky;
-  /* در حالت «مشاهده به‌عنوان»، زیر نوار می‌ایستد نه پشتش. */
-  top: var(--view-as-h, 0px);
-  z-index: 50;
-  background: rgb(255 255 255 / 92%);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--c-border-3);
+  inset-block-start: var(--view-as-h, 0);
+  z-index: 90;
+  height: var(--header-h);
+  border-bottom: 1px solid var(--c-border);
+  background: var(--c-surface);
+  box-shadow: 0 4px 18px rgb(7 24 43 / 4%);
+}
+
+@media (display-mode: standalone) {
+  .header { inset-block-start: calc(var(--view-as-h, 0px) + env(safe-area-inset-top, 0px)); }
 }
 
 .bar {
+  height: 100%;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding-block: 12px;
+  gap: clamp(22px, 4vw, 52px);
 }
 
 .brand {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 9px;
+  font-weight: 900;
+}
+
+.brandMark {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+  overflow: hidden;
+  background: var(--c-surface);
+  box-shadow: 0 5px 16px rgb(7 95 220 / 12%);
+}
+
+.brandMark img { width: 100%; height: 100%; object-fit: contain; }
+.brandCopy { display: flex; flex-direction: column; line-height: 1.18; }
+.brandName { font-size: 18px; }
+.brandCopy small { margin-top: 3px; color: var(--c-muted); font-size: 10px; font-weight: 700; }
+
+.nav {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: clamp(18px, 2.4vw, 34px);
+}
+
+.nav a {
+  position: relative;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: var(--c-ink-2);
+  font-size: 14.5px;
+  font-weight: 700;
+}
+
+.nav a::after {
+  content: '';
+  position: absolute;
+  inset-inline: 10px;
+  inset-block-end: 0;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: var(--c-primary);
+  transform: scaleX(0);
+  transition: transform var(--t-base) var(--ease-out);
+}
+
+.nav a[aria-current='page'] { color: var(--c-primary-strong); }
+.nav a[aria-current='page']::after { transform: scaleX(1); }
+
+.actions {
+  margin-inline-start: auto;
   display: flex;
   align-items: center;
   gap: 10px;
-  flex: none;
 }
 
-.logo {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  object-fit: cover;
-  object-position: center 20%;
-  background: #fff;
-}
-
-.brandName {
-  font-size: var(--fs-xl);
-  font-weight: 800;
-  letter-spacing: -0.5px;
-}
-
-.nav {
-  display: flex;
-  align-items: center;
-  gap: 30px;
-  font-size: var(--fs-md);
-  font-weight: 600;
-}
-
-.nav a:hover {
-  color: var(--c-primary);
-}
-
-.homeLink {
+.city {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 7px 14px;
-  border: 1px solid var(--c-border);
-  border-radius: var(--r-pill);
-  background: var(--c-surface);
-  color: var(--c-ink-2);
+  min-height: 44px;
+  padding-inline: 10px;
+  color: var(--c-muted);
   font-size: var(--fs-sm);
   font-weight: 700;
-  transition: border-color var(--t-fast), color var(--t-fast);
-}
-
-.homeLink:hover {
-  border-color: var(--c-primary);
-  color: var(--c-primary-strong);
-}
-
-.homeLink:focus-visible {
-  outline: none;
-  border-color: var(--c-primary);
-  box-shadow: 0 0 0 3px var(--c-primary-soft);
-}
-
-.loginButton {
-  background: var(--c-primary);
-  color: #fff;
   border-radius: var(--r-md);
-  padding: 11px 22px;
-  font-size: 15.5px;
-  font-weight: 700;
-  box-shadow: var(--sh-primary);
-  transition:
-    transform var(--t-fast),
-    box-shadow var(--t-fast);
-  white-space: nowrap;
+  transition: color var(--t-fast), background var(--t-fast);
 }
+.cityCaret { transition: transform var(--t-fast); }
 
-.loginButton:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 22px rgb(89 150 255 / 38%);
-}
-
-.profileButton {
+.accountButton {
+  min-height: 44px;
   display: inline-flex;
   align-items: center;
-  gap: 9px;
-  background: var(--c-surface-2);
-  border: 1px solid var(--c-border);
-  border-radius: var(--r-pill);
-  padding: 6px 15px 6px 6px;
-  transition: background var(--t-fast);
-}
-
-.profileButton:hover {
-  background: #eef1f5;
-}
-
-.avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  object-fit: cover;
-  object-position: center 20%;
-}
-
-.profileName {
-  font-size: var(--fs-base);
-  font-weight: 700;
-}
-
-.burger {
-  display: none;
-  align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
-  border: 1px solid var(--c-border-2);
-  background: #fff;
+  gap: 7px;
+  padding: 8px 16px;
   border-radius: var(--r-md);
-  color: var(--c-ink-2);
-  padding: 0;
-  flex: none;
-}
-
-/* --- mobile drawer -------------------------------------------------------- */
-
-.drawer {
-  border-top: 1px solid var(--c-border-3);
-  padding: 14px 20px 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  background: #fff;
-  animation: cg-rise 0.2s ease both;
-}
-
-.drawerLink {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  /* ۴۸px ارتفاع مؤثر — ردیف‌های کشوی موبایل با شست زده می‌شوند. */
-  min-height: 48px;
-  padding: 12px 6px;
-  font-size: 17px;
-  font-weight: 700;
-  border-bottom: 1px solid var(--c-border-3);
-}
-
-.drawerLink:last-of-type {
-  border-bottom: none;
-}
-
-.drawerCta {
-  margin-top: 12px;
-  background: var(--c-primary);
   color: #fff;
-  border-radius: 13px;
-  padding: 14px;
-  font-size: var(--fs-md);
-  font-weight: 700;
-  width: 100%;
-  text-align: center;
+  background: var(--c-primary);
+  box-shadow: var(--sh-primary);
+  font-size: 13.5px;
+  font-weight: 800;
+  transition: background var(--t-fast), transform var(--t-fast);
 }
 
-@media (max-width: 760px) {
-  .nav,
-  .loginButton,
-  .profileButton {
-    display: none;
-  }
+.accountIcon { display: grid; place-items: center; flex: 0 0 auto; }
+.accountLoggedIn {
+  border: 1px solid var(--c-primary-border);
+  color: var(--c-ink);
+  background: var(--c-surface);
+  box-shadow: var(--sh-card-sm);
+}
+.accountLoggedIn .accountIcon {
+  width: 30px;
+  height: 30px;
+  margin-block: -3px;
+  border-radius: 10px;
+  color: #fff;
+  background: var(--c-primary);
+}
+.accountCaret { color: var(--c-muted); }
 
-  .burger {
-    display: inline-flex;
-  }
+@media (hover: hover) and (pointer: fine) {
+  .nav a:hover { color: var(--c-primary-strong); }
+  .city:hover { color: var(--c-primary-strong); background: var(--c-primary-soft); }
+  .city:hover .cityCaret { transform: translateY(2px); }
+  .accountLoggedIn:hover { color: var(--c-primary-strong); background: var(--c-primary-soft); }
+  .accountButton:hover { background: var(--c-primary-action-strong); transform: translateY(-1px); }
+}
+
+.brand:active,
+.accountButton:active { transform: scale(.98); }
+
+@media (max-width: 900px) {
+  .bar { gap: 18px; }
+  .nav { gap: 14px; }
+  .nav a { font-size: 13px; }
+  .city { display: none; }
+  .accountButton { width: 44px; padding: 0; }
+  .accountLabel, .accountCaret { display: none; }
+  .accountLoggedIn .accountIcon { width: 32px; height: 32px; }
+  .brandName { font-size: 17px; }
+}
+
+@media (max-width: 640px) {
+  .header { box-shadow: 0 3px 14px rgb(26 26 26 / 4%); }
+  .nav, .accountButton { display: none; }
+  .bar { justify-content: space-between; }
+  .brandMark { width: 40px; height: 40px; border-radius: 12px; }
+  .brandName { font-size: 16px; }
+  .brandCopy small { font-size: 9.5px; }
 }

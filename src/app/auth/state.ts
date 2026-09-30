@@ -14,6 +14,8 @@ export interface RequestCodeState {
   retryAfterSec?: number
   /** true یعنی پیامکی ارسال نشد و کد در ترمینال سرور است. */
   devMode?: boolean
+  /** شماره حساب کامل ندارد و باید به مسیر ثبت‌نام برود. */
+  needsRegistration?: boolean
 }
 
 export interface VerifyCodeState {
@@ -21,6 +23,8 @@ export interface VerifyCodeState {
   error?: string
   needsName?: boolean
   role?: Role
+  /** کد برای حساب ناقص/ثبت‌نشده بود؛ ورود مجاز نیست. */
+  needsRegistration?: boolean
 }
 
 export interface PasswordLoginState {
@@ -49,10 +53,22 @@ export interface RegisterState {
   linkedExisting?: boolean
 }
 
+export interface ResetPasswordState {
+  ok: boolean
+  error?: string
+}
+
+export interface DeactivateAccountState {
+  ok: boolean
+  error?: string
+}
+
 export interface ChangePasswordState {
   ok: boolean
   error?: string
 }
 
 export const EMPTY_REGISTER_STATE: RegisterState = { ok: false }
+export const EMPTY_RESET_PASSWORD_STATE: ResetPasswordState = { ok: false }
+export const EMPTY_DEACTIVATE_ACCOUNT_STATE: DeactivateAccountState = { ok: false }
 export const EMPTY_CHANGE_PASSWORD_STATE: ChangePasswordState = { ok: false }

@@ -48,6 +48,9 @@
   font-size: 0.82rem;
 }
 
+.retry { min-height: 44px; justify-self: center; padding: 10px 20px; margin-top: 8px; border-radius: 14px; color: var(--c-primary-strong); background: var(--c-primary-soft); }
+.tileLoading { position: absolute; bottom: 38px; left: 12px; right: 12px; width: fit-content; max-width: calc(100% - 24px); padding: 5px 12px; border-radius: 12px; background: #fffffff0; color: #475569; font-size: 12px; pointer-events: none; }
+
 /* ── نشانگر کافه ─────────────────────────────────────────────────────
    ساختار دو تکه‌ای است: یک دایره‌ی همیشه‌دیده و یک برچسب که فقط در زوم
    نزدیک اضافه می‌شود. اگر برچسب همیشه بود، در زوم شهری نام‌ها روی هم
@@ -143,7 +146,7 @@
 }
 
 .cluster:hover {
-  background: var(--c-primary-strong);
+  background: var(--c-primary-action-strong);
 }
 
 /* ── برچسب محله و نقاط شاخص ─────────────────────────────────────────
@@ -190,7 +193,7 @@
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: var(--c-primary-strong);
+  background: var(--c-primary-action-strong);
   border: 3px solid #fff;
   box-shadow: 0 0 0 6px color-mix(in srgb, var(--c-primary) 22%, transparent);
 }
@@ -225,6 +228,16 @@
   border-radius: 12px;
   border: 1px solid var(--c-border);
   box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
+}
+
+/* کنترل پیش‌فرض ۲۹px برای لمس موبایل کوچک است؛ ۴۴px حد امن touch target است. */
+.wrap :global(.maplibregl-ctrl-group button) {
+  width: 44px;
+  height: 44px;
+}
+
+.wrap :global(.maplibregl-ctrl-group button .maplibregl-ctrl-icon) {
+  background-size: 36px 36px;
 }
 
 .wrap :global(.maplibregl-ctrl-attrib) {

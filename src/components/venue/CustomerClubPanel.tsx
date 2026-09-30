@@ -1,0 +1,27 @@
+'use client'
+import { useState } from 'react'
+import { ManagedForm, useManagedActionState, useUnsavedForms } from '@/components/admin/ManagedForm'
+import { ClubHistory } from './ClubHistory'
+import { PersianExpiryField } from './PersianExpiryField'
+import { createClubOfferAction,issueClubCodeAction,redeemClubCodeAction,broadcastClubOfferAction,venueDiscountAction } from '@/app/admin/venue/actions'
+import { EMPTY_VENUE_STATE } from '@/app/admin/venue/state'
+import styles from './CustomerClubPanel.module.css'
+const Feedback=({state}:{state:{ok:boolean;message?:string;error?:string}})=>(state.message||state.error)?<p role={state.ok?'status':'alert'} className={state.ok?styles.ok:styles.error}>{state.message??state.error}</p>:null
+export function CustomerClubPanel({placeId,members:initialMembers,offers,currentDiscount}:{placeId:number;members:{userId:string;name:string;phone:string|null;joinedAt:Date}[];offers:{id:number;title:string;discountLabel:string}[];currentDiscount?:{percent:number;expiresAt:string}|null}){
+ const draft=useUnsavedForms()
+ const [members,setMembers]=useState(initialMembers)
+ const [offerState,offerAction]=useManagedActionState(createClubOfferAction,EMPTY_VENUE_STATE);const [codeState,codeAction]=useManagedActionState(issueClubCodeAction,EMPTY_VENUE_STATE);const [redeemState,redeemAction]=useManagedActionState(redeemClubCodeAction,EMPTY_VENUE_STATE)
+ const [broadcastState,broadcastAction,broadcastPending]=useManagedActionState(broadcastClubOfferAction,EMPTY_VENUE_STATE)
+ const [discountState,discountAction,discountPending]=useManagedActionState(venueDiscountAction,EMPTY_VENUE_STATE)
+ return <div ref={draft.root} onInputCapture={draft.mark} onChangeCapture={draft.mark} className={styles.panel}><div><span className={styles.kicker}>باشگاه مشتریان</span><h2>اعضا و تخفیف یک‌بارمصرف</h2><p>فقط کاربرانی دیده می‌شوند که با رضایت صریح عضو باشگاه همین کافه شده‌اند.</p></div>
+ {currentDiscount && <p className={styles.ok}>تخفیف عمومی فعال: {currentDiscount.percent.toLocaleString('fa-IR')}٪ · پایان: {new Intl.DateTimeFormat('fa-IR',{dateStyle:'medium',timeStyle:'short',timeZone:'Asia/Tehran'}).format(new Date(currentDiscount.expiresAt))}</p>}
+ <div className={styles.grid}><ManagedForm action={offerAction}><h3>پیشنهاد جدید</h3><input type="hidden" name="placeId" value={placeId}/><label>عنوان پیشنهاد<input name="title" placeholder="مثلاً هدیه تولد" required maxLength={120}/></label><label>مقدار تخفیف<input name="discountLabel" placeholder="مثلاً ۲۰٪ تخفیف" required maxLength={80}/></label><label>شرایط استفاده<textarea name="description" placeholder="شرایط استفاده" maxLength={500}/></label><PersianExpiryField/><button>ساخت پیشنهاد</button><Feedback state={offerState}/></ManagedForm>
+ <ManagedForm action={codeAction}><h3>صدور کد برای عضو</h3><input type="hidden" name="placeId" value={placeId}/><select aria-label="انتخاب عضو باشگاه" name="userId" required defaultValue=""><option value="">انتخاب عضو</option>{members.map(m=><option key={m.userId} value={m.userId}>{m.name||'کاربر'} · {m.phone}</option>)}</select><select aria-label="انتخاب پیشنهاد باشگاه" name="offerId" required defaultValue=""><option value="">انتخاب پیشنهاد</option>{offers.map(o=><option key={o.id} value={o.id}>{o.title} · {o.discountLabel}</option>)}</select><button disabled={!members.length||!offers.length}>صدور کد</button><Feedback state={codeState}/></ManagedForm>
+ <ManagedForm action={redeemAction}><h3>مصرف کد</h3><input type="hidden" name="placeId" value={placeId}/><input aria-label="کد یک‌بارمصرف مشتری" maxLength={16} autoComplete="off" name="code" dir="ltr" placeholder="KU-XXXXXXXXXXXX" required/><button>تأیید مصرف</button><Feedback state={redeemState}/></ManagedForm></div>
+ <div className={styles.grid}>
+ <ManagedForm action={broadcastAction} onSubmit={event=>{if(!window.confirm('کد اختصاصی این پیشنهاد به همه اعضای فعال ارسال شود؟'))event.preventDefault()}}><h3>ارسال پیشنهاد به همه اعضا</h3><input type="hidden" name="placeId" value={placeId}/><select aria-label="انتخاب پیشنهاد باشگاه" name="offerId" required defaultValue=""><option value="">پیشنهاد باشگاه را انتخاب کنید</option>{offers.map(o=><option key={o.id} value={o.id}>{o.title} · {o.discountLabel}</option>)}</select><p>کد اختصاصی در پنل هر عضو فعال قرار می‌گیرد. ارسال دوباره کد تکراری نمی‌سازد؛ پیامک ارسال نمی‌شود.</p><button disabled={broadcastPending||!offers.length}>{broadcastPending?'در حال ارسال…':'ارسال به همه اعضای فعال'}</button><Feedback state={broadcastState}/></ManagedForm>
+ <ManagedForm action={discountAction}><h3>تخفیف عمومی کل منو</h3><input type="hidden" name="placeId" value={placeId}/><label>درصد تخفیف<input name="percent" type="number" min="1" max="90" required inputMode="numeric"/></label><PersianExpiryField required/><p>قیمت پایه حفظ می‌شود. پس از پایان، تخفیف خودکار از سایت حذف می‌شود؛ با کد باشگاه جمع نمی‌شود.</p><button disabled={discountPending}>{discountPending?'در حال ذخیره…':'فعال‌کردن تخفیف کل منو'}</button><Feedback state={discountState}/></ManagedForm>
+ <ManagedForm action={discountAction} onSubmit={event=>{if(!confirm('تخفیف کل منوی این کافه متوقف شود؟'))event.preventDefault()}}><h3>توقف تخفیف عمومی</h3><input type="hidden" name="placeId" value={placeId}/><input type="hidden" name="operation" value="cancel"/><p>کمپین کل منو را بدون تغییر قیمت‌های پایه متوقف کنید.</p><button disabled={discountPending}>توقف تخفیف</button></ManagedForm>
+ </div>
+ <ClubHistory placeId={placeId} onMembers={setMembers}/></div>
+}

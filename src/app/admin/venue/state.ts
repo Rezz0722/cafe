@@ -9,6 +9,8 @@ export interface VenueActionState {
   ok: boolean
   error?: string
   message?: string
+  credentials?: { username: string; password: string }
+  preview?: { fingerprint: string; itemCount: number; variantCount: number; percent: number; changes: { name: string; label: string | null; oldPrice: number; newPrice: number }[] }
 }
 
 export const EMPTY_VENUE_STATE: VenueActionState = { ok: false }

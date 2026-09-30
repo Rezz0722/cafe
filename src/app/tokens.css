@@ -1,130 +1,181 @@
-/* ---------------------------------------------------------------------------
-   Design tokens for کافه‌گرد.
-   Every value here comes from the original design mockups — change a token and
-   it changes everywhere, which is the whole point of keeping them in one file.
-   --------------------------------------------------------------------------- */
-
 :root {
-  /* --- brand ------------------------------------------------------------- */
-  --c-primary: #5996ff;
-  --c-primary-strong: #2f6fe0;
-  --c-primary-soft: #eef4ff;
+  --c-brand: #0868ff;
+  --c-primary: #075fdc;
+  --c-primary-strong: #064bb2;
+  --c-primary-action-strong: #064bb2;
+  --c-primary-soft: #edf4ff;
+  --c-primary-border: #c8dcff;
   --c-accent: #ffb900;
   --c-accent-soft: #fff3ce;
-  --c-accent-text: #8a6b00;
-  /* Darker accent text, for small bold labels sitting on --c-accent-soft. */
-  --c-accent-text-strong: #7a5c00;
+  --c-accent-text: #7a5c00;
+  --c-accent-text-strong: #6f5200;
 
-  /* --- pastel section backgrounds ---------------------------------------- */
-  --c-pastel-blue: #cfecf3;
-  --c-pastel-blue-text: #2a4750;
-  /* Secondary copy on a pastel-blue panel. */
+  --c-pastel-blue: #eaf5ff;
+  --c-pastel-blue-text: #254a66;
   --c-pastel-blue-body: #3d6470;
-  --c-pastel-pink: #f9b2d7;
+  --c-pastel-pink: #fff0f7;
   --c-pastel-pink-text: #63274a;
-  --c-pastel-pink-strong: #b23a7d;
+  --c-pastel-pink-strong: #a83b77;
   --c-pastel-lime: #f6ffdc;
   --c-pastel-lime-text: #494a12;
-  --c-pastel-lime-strong: #8a7000;
-  --c-pastel-green: #daf9de;
+  --c-pastel-lime-strong: #715f00;
+  --c-pastel-green: #edfaeb;
   --c-pastel-green-text: #255230;
-  --c-pastel-green-strong: #2f7a3c;
-  /* Body copy on a pastel-green panel, softer than --c-pastel-green-text. */
+  --c-pastel-green-strong: #28703a;
   --c-pastel-green-body: #2f4a36;
 
-  /* --- neutrals ---------------------------------------------------------- */
-  --c-ink: #1a1a1a;
-  --c-ink-2: #555555;
-  --c-ink-3: #666666;
-  --c-muted: #7a7a7a;
-  --c-muted-2: #8a8a8a;
-  --c-muted-3: #9aa0a8;
-  --c-muted-4: #b0b0b0;
-  --c-muted-5: #aab0b8;
-  --c-muted-6: #b0b4bb;
-  --c-surface: #ffffff;
-  --c-surface-2: #f5f7fa;
-  --c-surface-3: #f5f6f8;
-  --c-surface-4: #f0f2f5;
-  /* Barely-off-white — page backgrounds behind white cards. */
-  --c-surface-tint: #fafbfc;
+  --c-ink: #07182b;
+  --c-ink-2: #3f4d5f;
+  --c-ink-3: #596575;
+  --c-muted: #657181;
+  --c-muted-2: #747982;
+  --c-muted-3: #7d838d;
+  --c-muted-4: #9298a2;
+  --c-muted-5: #9da3ad;
+  --c-muted-6: #a7adb6;
+  --c-surface: #fffdfa;
+  --c-surface-2: #f8f6f1;
+  --c-surface-3: #f5f2ec;
+  --c-surface-4: #ece9e2;
+  --c-surface-tint: #fffbf4;
+  --c-footer: #07182b;
+  --c-inverse-surface: #07182b;
+  --c-inverse-text: #fff;
+  --c-border: #e7e2da;
+  --c-border-2: #ebe7df;
+  --c-border-3: #efebe5;
+  --c-border-4: #f1ede7;
+  --c-border-5: #d9d4cb;
+  --c-disabled: #d9dde4;
 
-  /* Cool tint sitting under map cards and photo placeholders. */
-  --grad-tint: linear-gradient(120deg, #f7fafc 0%, var(--c-primary-soft) 100%);
-  --c-border: #e6e9ee;
-  --c-border-2: #ececf0;
-  --c-border-3: #f0f0f0;
-  --c-border-4: #eef0f2;
-  /* Heaviest of the neutral borders — sheet grips, unselected control outlines. */
-  --c-border-5: #e3e6ea;
-  /* Disabled controls, and the dashed outline of an empty-state drop zone. */
-  --c-disabled: #dfe3e8;
+  --grad-tint: linear-gradient(130deg, #fffdfa 15%, #edf4ff 100%);
+  --c-map-line: #edf1f6;
+  --c-map-line-2: #e3e9f0;
 
-  /* Stripes of the placeholder map grid, standing in for a tile layer. */
-  --c-map-line: #eef2f6;
-  --c-map-line-2: #e6ebf1;
-
-  /* --- semantic ---------------------------------------------------------- */
-  --c-open: #1f6e2c;
-  --c-open-bg: var(--c-pastel-green);
-  /* Brighter success wash than --c-pastel-green, for pills and stat tiles. */
-  --c-success-soft: #e4f8e8;
-  /* Border of an element carrying an active promotion. */
-  --c-accent-border: #ffe28a;
-  --c-closed: #c0344d;
+  --c-open: #17663b;
+  --c-open-bg: #e5f7ec;
+  --c-success-soft: #e5f7ec;
+  --c-accent-border: #f2d36e;
+  --c-closed: #a92740;
   --c-closed-bg: #fdeef1;
   --c-closed-neutral-bg: #e9ebee;
+  --c-danger: #a92740;
+  --c-danger-bg: #fdeef1;
 
-  /* --- typography -------------------------------------------------------- */
-  /* Dana is the brand face; Vazirmatn is the fallback that covers it. */
-  --font-sans: 'Dana', 'Vazirmatn', sans-serif;
-
-  --fs-xs: 12px;
-  --fs-sm: 13.5px;
-  --fs-base: 14.5px;
+  --font-sans: 'Dana', 'Vazirmatn', Tahoma, sans-serif;
+  --fs-xs: 12.5px;
+  --fs-sm: 14px;
+  --fs-base: 15px;
   --fs-md: 16px;
   --fs-lg: 19px;
   --fs-xl: 22px;
   --fs-2xl: 28px;
   --fs-3xl: 36px;
-  --fs-hero: 52px;
+  --fs-hero: clamp(40px, 4.5vw, 64px);
 
-  /* --- radii ------------------------------------------------------------- */
-  --r-sm: 9px;
+  --r-sm: 10px;
   --r-md: 12px;
   --r-lg: 16px;
   --r-xl: 20px;
-  --r-2xl: 22px;
+  --r-2xl: 24px;
   --r-pill: 999px;
 
-  /* --- shadows ----------------------------------------------------------- */
-  --sh-card-sm: 0 4px 14px rgb(26 26 26 / 4%);
-  --sh-card: 0 8px 26px rgb(26 26 26 / 5%);
-  --sh-card-hover: 0 18px 40px rgb(26 26 26 / 13%);
-  --sh-raised: 0 14px 40px rgb(26 26 26 / 7%);
-  --sh-hero: 0 26px 60px rgb(26 26 26 / 14%);
-  --sh-primary: 0 6px 16px rgb(89 150 255 / 28%);
-  --sh-primary-md: 0 8px 20px rgb(89 150 255 / 28%);
-  --sh-primary-lg: 0 10px 26px rgb(89 150 255 / 30%);
-  --sh-accent: 0 10px 24px rgb(255 185 0 / 40%);
+  --sh-card-sm: 0 4px 18px rgb(7 24 43 / 5%);
+  --sh-card: 0 10px 30px rgb(7 24 43 / 7%);
+  --sh-card-hover: 0 18px 44px rgb(7 24 43 / 12%);
+  --sh-raised: 0 12px 36px rgb(7 24 43 / 9%);
+  --sh-hero: 0 24px 60px rgb(7 24 43 / 13%);
+  --sh-primary: 0 7px 18px rgb(7 95 220 / 24%);
+  --sh-primary-md: 0 9px 22px rgb(7 95 220 / 25%);
+  --sh-primary-lg: 0 12px 28px rgb(7 95 220 / 27%);
+  --sh-accent: 0 10px 24px rgb(255 185 0 / 32%);
 
-  /* --- layout ------------------------------------------------------------ */
-  --page-max: 1200px;
-  --page-pad: 28px;
-  --header-h: 67px;
+  --page-max: 1280px;
+  --page-pad: 32px;
+  --header-h: 76px;
+  --mobile-nav-h: 82px;
 
-  /* --- motion ------------------------------------------------------------ */
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
   --t-fast: 0.15s;
-  --t-base: 0.2s;
+  --t-base: 0.22s;
 }
 
-/* On narrow screens the gutter tightens. The mockups did this in JS by reading
-   window.innerWidth; a media query does the same job without a resize listener. */
+html[data-theme='dark'] {
+  --c-brand: oklch(0.56 0.17 255);
+  --c-primary: oklch(0.56 0.17 255);
+  --c-primary-strong: oklch(0.82 0.1 255);
+  --c-primary-action-strong: oklch(0.48 0.16 255);
+  --c-primary-soft: oklch(0.25 0.045 255);
+  --c-primary-border: oklch(0.39 0.065 255);
+  --c-accent: oklch(0.8 0.15 82);
+  --c-accent-soft: oklch(0.25 0.05 82);
+  --c-accent-text: oklch(0.86 0.1 82);
+  --c-accent-text-strong: oklch(0.9 0.09 82);
+
+  --c-pastel-blue: oklch(0.25 0.035 240);
+  --c-pastel-blue-text: oklch(0.85 0.055 240);
+  --c-pastel-blue-body: oklch(0.76 0.035 220);
+  --c-pastel-pink: oklch(0.25 0.035 345);
+  --c-pastel-pink-text: oklch(0.85 0.055 345);
+  --c-pastel-pink-strong: oklch(0.77 0.12 345);
+  --c-pastel-lime: oklch(0.25 0.04 110);
+  --c-pastel-lime-text: oklch(0.87 0.07 110);
+  --c-pastel-lime-strong: oklch(0.79 0.1 105);
+  --c-pastel-green: oklch(0.24 0.035 145);
+  --c-pastel-green-text: oklch(0.86 0.055 145);
+  --c-pastel-green-strong: oklch(0.76 0.11 145);
+  --c-pastel-green-body: oklch(0.76 0.04 145);
+
+  --c-ink: oklch(0.94 0.012 250);
+  --c-ink-2: oklch(0.82 0.018 250);
+  --c-ink-3: oklch(0.73 0.02 250);
+  --c-muted: oklch(0.69 0.018 250);
+  --c-muted-2: oklch(0.65 0.016 250);
+  --c-muted-3: oklch(0.61 0.015 250);
+  --c-muted-4: oklch(0.57 0.014 250);
+  --c-muted-5: oklch(0.54 0.013 250);
+  --c-muted-6: oklch(0.51 0.012 250);
+  --c-surface: oklch(0.17 0.018 250);
+  --c-surface-2: oklch(0.205 0.018 250);
+  --c-surface-3: oklch(0.24 0.018 250);
+  --c-surface-4: oklch(0.28 0.018 250);
+  --c-surface-tint: oklch(0.19 0.025 255);
+  --c-footer: oklch(0.105 0.018 250);
+  --c-inverse-surface: oklch(0.29 0.028 250);
+  --c-inverse-text: oklch(0.97 0.008 250);
+  --c-border: oklch(0.32 0.018 250);
+  --c-border-2: oklch(0.3 0.017 250);
+  --c-border-3: oklch(0.285 0.016 250);
+  --c-border-4: oklch(0.27 0.015 250);
+  --c-border-5: oklch(0.37 0.018 250);
+  --c-disabled: oklch(0.4 0.014 250);
+
+  --grad-tint: linear-gradient(130deg, oklch(0.17 0.018 250) 15%, oklch(0.22 0.035 255) 100%);
+  --c-map-line: oklch(0.29 0.014 250);
+  --c-map-line-2: oklch(0.34 0.016 250);
+  --c-open: oklch(0.78 0.13 150);
+  --c-open-bg: oklch(0.23 0.045 150);
+  --c-success-soft: oklch(0.23 0.045 150);
+  --c-accent-border: oklch(0.51 0.105 82);
+  --c-closed: oklch(0.75 0.13 20);
+  --c-closed-bg: oklch(0.24 0.05 20);
+  --c-closed-neutral-bg: oklch(0.28 0.012 250);
+  --c-danger: oklch(0.75 0.14 20);
+  --c-danger-bg: oklch(0.24 0.05 20);
+
+  --sh-card-sm: 0 4px 18px rgb(0 0 0 / 18%);
+  --sh-card: 0 10px 30px rgb(0 0 0 / 24%);
+  --sh-card-hover: 0 18px 44px rgb(0 0 0 / 34%);
+  --sh-raised: 0 12px 36px rgb(0 0 0 / 30%);
+  --sh-hero: 0 24px 60px rgb(0 0 0 / 38%);
+}
+
 @media (max-width: 760px) {
   :root {
-    --page-pad: 20px;
-    --fs-hero: 33px;
+    --page-pad: 16px;
+    --header-h: 64px;
+    --fs-hero: 36px;
     --fs-3xl: 28px;
-    --fs-lg: 16px;
+    --fs-lg: 17px;
   }
 }

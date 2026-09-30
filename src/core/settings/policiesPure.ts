@@ -22,6 +22,8 @@ export interface AuthPolicy {
   allowRegistration: boolean
   allowPasswordLogin: boolean
   allowOtpLogin: boolean
+  allowSmsVerification: boolean
+  registrationRequiresPhoneVerification: boolean
   /** روشن = پیامک ارسال نمی‌شود و کد در لاگ سرور چاپ می‌شود. */
   smsDevMode: boolean
   siteName: string
@@ -44,6 +46,8 @@ export function authPolicyFrom(s: Settings): AuthPolicy {
     allowRegistration: s.allowRegistration,
     allowPasswordLogin: s.allowPasswordLogin,
     allowOtpLogin: s.allowOtpLogin,
+    allowSmsVerification: s.allowSmsVerification,
+    registrationRequiresPhoneVerification: s.registrationRequiresPhoneVerification,
     smsDevMode: s.smsDevMode,
     siteName: s.siteName,
   }
@@ -74,6 +78,8 @@ export function moderationPolicyFrom(s: Settings): ModerationPolicy {
 
 export interface DataPolicy {
   priceTierBounds: { cheap: number; mid: number }
+  priceStatsMaxItemPrice: number
+  priceStatsExcludeServiceSections: boolean
   thousandUnitThreshold: number
   priceOutlierRatio: number
   stalePriceDays: number
@@ -86,6 +92,8 @@ export interface DataPolicy {
 export function dataPolicyFrom(s: Settings): DataPolicy {
   return {
     priceTierBounds: { cheap: s.priceTierCheapMax, mid: s.priceTierMidMax },
+    priceStatsMaxItemPrice: s.priceStatsMaxItemPrice,
+    priceStatsExcludeServiceSections: s.priceStatsExcludeServiceSections,
     thousandUnitThreshold: s.thousandUnitThreshold,
     priceOutlierRatio: s.priceOutlierRatio,
     stalePriceDays: s.stalePriceDays,

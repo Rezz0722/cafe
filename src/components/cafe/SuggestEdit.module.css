@@ -1,21 +1,21 @@
 /* فرمِ اصلاح — بسته یک سطر، باز یک فرمِ کوتاه. */
 
 .wrap {
-  border: 1px dashed var(--c-border-5);
+  border: 1px solid var(--c-primary-border);
   border-radius: var(--r-lg);
-  background: var(--c-surface-tint);
+  background: linear-gradient(145deg, var(--c-primary-soft), var(--c-surface));
 }
 
 .summary {
   display: flex;
   align-items: center;
   gap: 9px;
-  min-height: 44px;
-  padding: 10px 14px;
+  min-height: 54px;
+  padding: 11px 14px;
   border-radius: var(--r-lg);
   font-size: var(--fs-sm);
-  font-weight: 700;
-  color: var(--c-ink-2);
+  font-weight: 850;
+  color: var(--c-primary-strong);
   cursor: pointer;
   list-style: none;
 }
@@ -36,9 +36,15 @@
 }
 
 .icon {
-  display: inline-flex;
+  display: grid;
+  place-items: center;
   flex: 0 0 auto;
-  color: var(--c-muted);
+  width: 36px;
+  height: 36px;
+  margin-block: -3px;
+  border-radius: 11px;
+  color: #fff;
+  background: var(--c-primary);
 }
 
 .summaryText {
@@ -166,7 +172,7 @@
 }
 
 .submit:hover:not(:disabled) {
-  background: var(--c-primary-strong);
+  background: var(--c-primary-action-strong);
 }
 
 .submit:disabled {
@@ -234,5 +240,5 @@
 }
 
 .signInLink:hover {
-  background: var(--c-primary-strong);
+  background: var(--c-primary-action-strong);
 }

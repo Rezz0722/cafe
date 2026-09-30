@@ -275,6 +275,24 @@ export const ATTRIBUTES: AttributeDef[] = [
     sortOrder: 28,
     synonyms: ['گیاهی', 'ارگانیک', 'رژیمی', 'وگان', 'سالم'],
   },
+  {
+    id: 'good_for_gathering',
+    labelFa: 'مناسب دورهمی',
+    kind: 'intent',
+    isFilter: true,
+    sortOrder: 29,
+    synonyms: ['دورهمی', 'جمع دوستانه', 'جمع دوستان', 'گروهی', 'دورهم'],
+    hint: 'چیدمان، ظرفیت یا خدماتی که برای جمع دوستانه مناسب است',
+  },
+  {
+    id: 'birthday_friendly',
+    labelFa: 'مناسب تولد',
+    kind: 'intent',
+    isFilter: true,
+    sortOrder: 30,
+    synonyms: ['تولد', 'جشن تولد', 'جشن', 'تم تولد', 'birthday'],
+    hint: 'امکان یا سابقه برگزاری جشن تولد؛ نیازمند تأیید کافه یا منبع معتبر',
+  },
 ]
 
 // ── ایندکس‌های مشتق ─────────────────────────────────────────────────

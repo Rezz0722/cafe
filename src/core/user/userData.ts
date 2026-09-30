@@ -8,21 +8,28 @@ import 'server-only'
  * «امتیاز مکان فقط از نظرهای تأییدشده حساب می‌شود».
  */
 
-import { and, desc, eq, inArray, sql } from 'drizzle-orm'
+import { and, desc, eq, inArray, isNull, sql } from 'drizzle-orm'
 import { getDb } from '@/db/client'
 import {
   media as mediaTable,
+  district as districtTable,
   place as placeTable,
+  placeAttribute as placeAttributeTable,
   placeDish as placeDishTable,
   placeFacet as placeFacetTable,
   placeSubmission,
+  menuItem as menuItemTable,
+  menuSection as menuSectionTable,
   review as reviewTable,
+  reviewItem as reviewItemTable,
   savedPlace,
   userPreference,
   userTasteProfile,
 } from '@/db/schema'
 import { dish as dishTable } from '@/db/schema'
 import { invalidateSiteMean, type PlaceCard } from '@/core/places/queries'
+import { parseVisitDate } from '@/core/date/persian'
+import { cleanUserText, normalizeInstagram, normalizeInstagramContentUrl } from '@/core/security/input'
 import {
   computeTaste,
   QUIZ_VERSION,
@@ -164,12 +171,14 @@ export async function listSavedPlaces(userId: string): Promise<SavedCard[]> {
       priceMedian: placeTable.priceMedian,
       priceTier: placeTable.priceTier,
       districtId: placeTable.districtId,
+      districtName: districtTable.name,
       logoPath: mediaTable.localPath,
       savedAt: savedPlace.createdAt,
     })
     .from(savedPlace)
     .innerJoin(placeTable, eq(placeTable.id, savedPlace.placeId))
     .leftJoin(mediaTable, eq(mediaTable.id, placeTable.logoMediaId))
+    .leftJoin(districtTable, eq(districtTable.id, placeTable.districtId))
     .where(eq(savedPlace.userId, userId))
     .orderBy(desc(savedPlace.createdAt))
 
@@ -177,7 +186,7 @@ export async function listSavedPlaces(userId: string): Promise<SavedCard[]> {
     id: row.id,
     slug: row.slug,
     name: row.name,
-    districtName: row.districtId,
+    districtName: row.districtName,
     priceMedian: row.priceMedian,
     priceTier: row.priceTier,
     logoUrl: row.logoPath ? `/${row.logoPath}` : null,
@@ -202,13 +211,17 @@ export interface ReviewInput {
   ratingValue?: number | null
   /** «YYYY-MM-DD» — ستون `DATE` است، پس به `Date` تبدیل می‌شود. */
   visitDate?: string | null
+  menuItemIds?: number[]
+  /** فقط برای ویرایش نظر مشخص‌شده؛ نبودن آن یعنی ثبت نظر جدید. */
+  reviewId?: number | null
+  isBlogger?: boolean
+  videoUrl?: string | null
 }
 
 /** رشته‌ی تاریخ فرم → `Date` که ستون `DATE` می‌پذیرد. */
 function toDateOrNull(value: string | null | undefined): Date | null {
-  if (!value) return null
-  const parsed = new Date(`${value}T00:00:00Z`)
-  return Number.isNaN(parsed.getTime()) ? null : parsed
+  const iso = parseVisitDate(value)
+  return iso ? new Date(`${iso}T00:00:00Z`) : null
 }
 
 export type SubmitReviewResult =
@@ -245,10 +258,11 @@ const DEFAULT_REVIEW_MODERATION: ReviewModeration = {
  * نظر منتشرنشده به کسی آسیب نمی‌زند؛ نظر توهین‌آمیزِ منتشرشده به کافه‌دار
  * آسیب می‌زند و اعتبار سایت را می‌برد. صف تأیید در پنل ادمین است.
  *
- * ═══ چرا یک نظر برای هر کافه ═══
+ * ═══ چرا ویرایشِ نظر مشخص است ═══
  *
- * بدون این قاعده، یک نفر می‌تواند ده نظر پنج‌ستاره بگذارد و رتبه‌بندی را
- * بی‌معنی کند. ویرایش نظر قبلی جایگزین ثبت دوباره است.
+ * هر مراجعه می‌تواند تجربهٔ جداگانه‌ای باشد، پس کاربر محدود به یک نظر نیست.
+ * فقط وقتی شناسهٔ نظر قبلی صریحاً ارسال شود همان نظر ویرایش می‌شود؛ ثبت عادی
+ * همیشه یک نظر جدید می‌سازد.
  */
 export async function submitReview(
   input: ReviewInput,
@@ -258,7 +272,26 @@ export async function submitReview(
     return { ok: false, error: 'امتیاز باید بین ۱ تا ۵ ستاره باشد.' }
   }
 
-  const text = input.text?.trim() ?? ''
+  const subRatings = [
+    input.ratingCoffee,
+    input.ratingFood,
+    input.ratingVibe,
+    input.ratingService,
+    input.ratingValue,
+  ]
+  if (subRatings.some((value) => value !== null && value !== undefined && (!Number.isInteger(value) || value < 1 || value > 5))) {
+    return { ok: false, error: 'همهٔ امتیازها باید بین ۱ تا ۵ باشند.' }
+  }
+
+  if (input.visitDate && !parseVisitDate(input.visitDate)) {
+    return { ok: false, error: 'تاریخ مراجعه معتبر نیست؛ نمونه: ۱۴۰۵/۰۶/۲۱' }
+  }
+
+  const text = cleanUserText(input.text, moderation.maxTextLength)
+  const rawVideoUrl = cleanUserText(input.videoUrl, 500)
+  const videoUrl = input.isBlogger ? normalizeInstagramContentUrl(rawVideoUrl) : null
+  if (rawVideoUrl && !input.isBlogger) return { ok: false, error: 'ثبت لینک بررسی فقط برای بلاگر تأییدشده فعال است.' }
+  if (rawVideoUrl && !videoUrl) return { ok: false, error: 'لینک باید متعلق به یک پست یا Reel معتبر اینستاگرام باشد.' }
   if (moderation.minTextLength > 0 && text.length < moderation.minTextLength) {
     return {
       ok: false,
@@ -277,16 +310,31 @@ export async function submitReview(
     moderation.requireApproval || flagged ? 'pending' : 'approved'
 
   const db = getDb()
-  const [existing] = await db
-    .select({ id: reviewTable.id, status: reviewTable.status })
-    .from(reviewTable)
-    .where(and(eq(reviewTable.placeId, input.placeId), eq(reviewTable.userId, input.userId)))
+  const [target] = await db
+    .select({ id: placeTable.id })
+    .from(placeTable)
+    .where(eq(placeTable.id, input.placeId))
     .limit(1)
+  if (!target) return { ok: false, error: 'این مجموعه پیدا نشد.' }
+  const requestedItemIds = [...new Set((input.menuItemIds ?? []).filter((id) => Number.isInteger(id) && id > 0))].slice(0, 20)
+  if (requestedItemIds.length > 0) {
+    const validItems = await db.select({ id: menuItemTable.id })
+      .from(menuItemTable).innerJoin(menuSectionTable, eq(menuSectionTable.id, menuItemTable.sectionId))
+      .where(and(eq(menuItemTable.placeId, input.placeId), inArray(menuItemTable.id, requestedItemIds), isNull(menuItemTable.archivedAt), inArray(menuSectionTable.branchScope, ['shared', 'branch'])))
+    if (validItems.length !== requestedItemIds.length) return { ok: false, error: 'یکی از آیتم‌های انتخاب‌شده متعلق به این کافه نیست.' }
+  }
+  const existing = input.reviewId
+    ? (await db.select({ id: reviewTable.id, status: reviewTable.status })
+      .from(reviewTable)
+      .where(and(eq(reviewTable.id, input.reviewId), eq(reviewTable.placeId, input.placeId), eq(reviewTable.userId, input.userId)))
+      .limit(1))[0]
+    : undefined
+  if (input.reviewId && !existing) return { ok: false, error: 'نظر انتخاب‌شده برای ویرایش پیدا نشد.' }
 
   const values = {
     placeId: input.placeId,
     userId: input.userId,
-    authorName: input.authorName.slice(0, 120),
+    authorName: cleanUserText(input.authorName, 120) || 'کاربر کو کافه',
     stars: input.stars,
     text: text.slice(0, moderation.maxTextLength) || null,
     ratingCoffee: input.ratingCoffee ?? null,
@@ -295,11 +343,17 @@ export async function submitReview(
     ratingService: input.ratingService ?? null,
     ratingValue: input.ratingValue ?? null,
     visitDate: toDateOrNull(input.visitDate),
+    isBloggerReview: Boolean(input.isBlogger),
+    videoUrl,
     status,
   }
 
   if (existing) {
-    await db.update(reviewTable).set(values).where(eq(reviewTable.id, existing.id))
+    await db.transaction(async (tx) => {
+      await tx.update(reviewTable).set(values).where(eq(reviewTable.id, existing.id))
+      await tx.delete(reviewItemTable).where(eq(reviewItemTable.reviewId, existing.id))
+      if (requestedItemIds.length > 0) await tx.insert(reviewItemTable).values(requestedItemIds.map((menuItemId) => ({ reviewId: existing.id, menuItemId })))
+    })
     /*
       رول‌آپ امتیاز باید بازمحاسبه شود اگر وضعیتِ **قبلی یا جدید** تأییدشده
       باشد: نظرِ تأییدشده‌ای که به صف برگشت باید از میانگین کم شود، و نظری
@@ -311,7 +365,12 @@ export async function submitReview(
     return { ok: true, status }
   }
 
-  await db.insert(reviewTable).values(values)
+  await db.transaction(async (tx) => {
+    const result = await tx.insert(reviewTable).values(values)
+    const reviewId = Number(result[0]?.insertId)
+    if (reviewId && requestedItemIds.length > 0) await tx.insert(reviewItemTable).values(requestedItemIds.map((menuItemId) => ({ reviewId, menuItemId })))
+    return reviewId
+  })
   if (status === 'approved') await recalcPlaceRating(input.placeId)
   return { ok: true, status }
 }
@@ -351,6 +410,8 @@ export interface MyReview {
   status: string
   rejectReason: string | null
   createdAt: Date
+  itemIds: number[]
+  itemNames: string[]
 }
 
 export async function listMyReviews(userId: string): Promise<MyReview[]> {
@@ -371,21 +432,68 @@ export async function listMyReviews(userId: string): Promise<MyReview[]> {
     .innerJoin(placeTable, eq(placeTable.id, reviewTable.placeId))
     .where(eq(reviewTable.userId, userId))
     .orderBy(desc(reviewTable.createdAt))
-  return rows
+  if (rows.length === 0) return []
+  const itemRows = await db.select({ reviewId: reviewItemTable.reviewId, menuItemId: reviewItemTable.menuItemId, name: menuItemTable.name })
+    .from(reviewItemTable).innerJoin(menuItemTable, eq(menuItemTable.id, reviewItemTable.menuItemId))
+    .where(inArray(reviewItemTable.reviewId, rows.map((row) => row.id)))
+  const itemsByReview = new Map<number, { id: number; name: string }[]>()
+  for (const row of itemRows) itemsByReview.set(row.reviewId, [...(itemsByReview.get(row.reviewId) ?? []), { id: row.menuItemId, name: row.name }])
+  return rows.map((row) => ({ ...row, itemIds: itemsByReview.get(row.id)?.map((item) => item.id) ?? [], itemNames: itemsByReview.get(row.id)?.map((item) => item.name) ?? [] }))
 }
 
 /** نظر همین کاربر برای همین کافه — برای پیش‌پرکردن فرم. */
 export async function getMyReviewFor(
   userId: string,
   placeId: number,
-): Promise<{ stars: number; text: string | null; status: string } | null> {
+): Promise<{ id: number; stars: number; text: string | null; status: string; visitDate: Date | null; itemIds: number[]; videoUrl: string | null; ratingCoffee: number | null; ratingFood: number | null; ratingVibe: number | null; ratingService: number | null; ratingValue: number | null } | null> {
   const db = getDb()
   const [row] = await db
-    .select({ stars: reviewTable.stars, text: reviewTable.text, status: reviewTable.status })
+    .select({
+      id: reviewTable.id,
+      stars: reviewTable.stars,
+      text: reviewTable.text,
+      status: reviewTable.status,
+      visitDate: reviewTable.visitDate,
+      videoUrl: reviewTable.videoUrl,
+      ratingCoffee: reviewTable.ratingCoffee,
+      ratingFood: reviewTable.ratingFood,
+      ratingVibe: reviewTable.ratingVibe,
+      ratingService: reviewTable.ratingService,
+      ratingValue: reviewTable.ratingValue,
+    })
     .from(reviewTable)
     .where(and(eq(reviewTable.userId, userId), eq(reviewTable.placeId, placeId)))
+    .orderBy(desc(reviewTable.createdAt), desc(reviewTable.id))
     .limit(1)
-  return row ?? null
+  if (!row) return null
+  const itemRows = await db.select({ menuItemId: reviewItemTable.menuItemId }).from(reviewItemTable).where(eq(reviewItemTable.reviewId, row.id))
+  return { ...row, itemIds: itemRows.map((item) => item.menuItemId) }
+}
+
+export interface ReviewableMenuItem {
+  id: number
+  name: string
+  nameEn: string | null
+  sectionId: number
+  sectionName: string
+  dishName: string | null
+  available: boolean
+}
+
+export async function listReviewableMenuItems(placeId: number): Promise<ReviewableMenuItem[]> {
+  return getDb().select({
+    id: menuItemTable.id,
+    name: menuItemTable.name,
+    nameEn: menuItemTable.nameEn,
+    sectionId: menuSectionTable.id,
+    sectionName: menuSectionTable.name,
+    dishName: dishTable.nameFa,
+    available: menuItemTable.available,
+  }).from(menuItemTable)
+    .innerJoin(menuSectionTable, eq(menuSectionTable.id, menuItemTable.sectionId))
+    .leftJoin(dishTable, eq(dishTable.id, menuItemTable.dishId))
+    .where(and(eq(menuItemTable.placeId, placeId), isNull(menuItemTable.archivedAt), inArray(menuSectionTable.branchScope, ['shared', 'branch'])))
+    .orderBy(menuSectionTable.sortOrder, menuItemTable.sortOrder, menuItemTable.id)
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -406,10 +514,33 @@ export interface PlaceSubmissionInput {
 }
 
 export async function submitPlace(input: PlaceSubmissionInput): Promise<{ ok: boolean; error?: string }> {
-  const name = input.name.trim()
+  const name = cleanUserText(input.name, 200)
   if (name.length < 2) return { ok: false, error: 'نام مجموعه را کامل بنویسید.' }
 
+  const kinds = new Set(['cafe', 'cafe_restaurant', 'restaurant', 'bakery', 'lounge', 'shop'])
+  const kind = kinds.has(input.kind ?? '') ? input.kind! : 'cafe'
+  if ((input.lat === null || input.lat === undefined) !== (input.lng === null || input.lng === undefined)) {
+    return { ok: false, error: 'عرض و طول جغرافیایی را با هم وارد کنید.' }
+  }
+  if (input.lat !== null && input.lat !== undefined && (
+    !Number.isFinite(input.lat) || !Number.isFinite(input.lng) ||
+    input.lat < -90 || input.lat > 90 || input.lng! < -180 || input.lng! > 180
+  )) return { ok: false, error: 'مختصات معتبر نیست.' }
+
+  const instagram = normalizeInstagram(input.instagram)
+  if (input.instagram?.trim() && !instagram) {
+    return { ok: false, error: 'آدرس یا نام کاربری اینستاگرام معتبر نیست.' }
+  }
+
   const db = getDb()
+  if (input.districtId) {
+    const [district] = await db
+      .select({ id: districtTable.id })
+      .from(districtTable)
+      .where(eq(districtTable.id, input.districtId))
+      .limit(1)
+    if (!district) return { ok: false, error: 'محله معتبر نیست.' }
+  }
 
   // ── تکراری؟ نامِ نرمال‌شده را با مکان‌های موجود مقایسه می‌کنیم.
   // نه برای رد کردن، بلکه برای اینکه ادمین در صف بداند احتمال تکراری هست.
@@ -423,14 +554,14 @@ export async function submitPlace(input: PlaceSubmissionInput): Promise<{ ok: bo
     userId: input.userId,
     name,
     payload: {
-      address: input.address?.trim() ?? '',
+      address: cleanUserText(input.address, 500),
       districtId: input.districtId ?? null,
-      phone: input.phone?.trim() ?? '',
-      instagram: input.instagram?.trim() ?? '',
+      phone: cleanUserText(input.phone, 80),
+      instagram: instagram ?? '',
       lat: input.lat ?? null,
       lng: input.lng ?? null,
-      kind: input.kind ?? 'cafe',
-      note: input.note?.trim() ?? '',
+      kind,
+      note: cleanUserText(input.note, 2_000),
       possibleDuplicateOf: similar?.id ?? null,
     },
     status: similar ? 'duplicate' : 'pending',
@@ -489,11 +620,25 @@ export async function loadRecommendationCandidates(
   const db = getDb()
   const ids = cards.map((card) => card.id)
 
-  const dishRows = await db
-    .select({ placeId: placeDishTable.placeId, slug: dishTable.slug })
-    .from(placeDishTable)
-    .innerJoin(dishTable, eq(dishTable.id, placeDishTable.dishId))
-    .where(inArray(placeDishTable.placeId, ids))
+  const [dishRows, attributeRows] = await Promise.all([
+    db
+      .select({ placeId: placeDishTable.placeId, slug: dishTable.slug })
+      .from(placeDishTable)
+      .innerJoin(dishTable, eq(dishTable.id, placeDishTable.dishId))
+      .where(inArray(placeDishTable.placeId, ids)),
+    db
+      .select({
+        placeId: placeAttributeTable.placeId,
+        attributeId: placeAttributeTable.attributeId,
+      })
+      .from(placeAttributeTable)
+      .where(
+        and(
+          inArray(placeAttributeTable.placeId, ids),
+          sql`${placeAttributeTable.value} >= 1`,
+        ),
+      ),
+  ])
 
   const byPlace = new Map<number, string[]>()
   for (const row of dishRows) {
@@ -502,13 +647,17 @@ export async function loadRecommendationCandidates(
     else byPlace.set(row.placeId, [row.slug])
   }
 
+  const attributesByPlace = new Map<number, string[]>()
+  for (const row of attributeRows) {
+    const list = attributesByPlace.get(row.placeId)
+    if (list) list.push(row.attributeId)
+    else attributesByPlace.set(row.placeId, [row.attributeId])
+  }
+
   return cards.map((card) => ({
     ...card,
     dishSlugs: byPlace.get(card.id) ?? [],
-    // ویژگی‌ها (دنج، پریز، …) هنوز از منبع نیامده‌اند؛ خالی می‌مانند تا
-    // بازدید میدانی یا کافه‌دار پرشان کند. وزنِ رویشان بی‌اثر می‌ماند،
-    // نه اینکه غلط اثر کند.
-    attributeIds: [],
+    attributeIds: attributesByPlace.get(card.id) ?? [],
   }))
 }
 

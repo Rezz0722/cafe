@@ -47,7 +47,7 @@
 }
 
 .primaryLink:hover {
-  background: var(--c-primary-strong);
+  background: var(--c-primary-action-strong);
 }
 
 .secondaryLink {
@@ -148,7 +148,7 @@
 }
 
 .panelButton:hover {
-  background: var(--c-primary-strong);
+  background: var(--c-primary-action-strong);
 }
 
 .panelGhost {

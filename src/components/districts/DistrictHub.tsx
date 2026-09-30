@@ -26,7 +26,8 @@
 import { useDeferredValue, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { Coffee, MapPin, Search, X } from 'lucide-react'
-import { CafeMap, type MapLabel, type MapPlace } from '@/components/map/CafeMap'
+import type { MapLabel, MapPlace } from '@/components/map/CafeMap'
+import { LazyCafeMap } from '@/components/map/LazyCafeMap'
 import { normalizeFa, squashFa } from '@/core/text/normalize'
 import { fa, toman } from '@/lib/format'
 import { paths } from '@/routes'
@@ -93,10 +94,10 @@ export function DistrictHub({ cityName, districts, totalPlaces, labels, mapConfi
   return (
     <div className={styles.page}>
       <header className={styles.head}>
-        <h1 className={styles.title}>محله‌های {cityName}</h1>
+        <h1 className={styles.title}>کافه‌های {cityName}؛ انتخاب بر اساس محله</h1>
         <p className={styles.lead}>
-          {fa(totalPlaces)} کافه و رستوران در {fa(districts.length)} محله. محله‌ات را انتخاب
-          کن یا روی نقشه پیدا کن.
+          راهنمای {fa(totalPlaces)} کافه و رستوران در {fa(districts.length)} محله؛ محله‌ات را
+          انتخاب کن تا منو، قیمت، ساعت کاری و مسیر هر مجموعه را ببینی.
         </p>
 
         <div className={styles.searchBox}>
@@ -130,7 +131,7 @@ export function DistrictHub({ cityName, districts, totalPlaces, labels, mapConfi
 
       {/* ── نقشه ─────────────────────────────────────────────────── */}
       <section className={styles.mapSection} aria-label={`نقشه‌ی محله‌های ${cityName}`}>
-        <CafeMap
+        <LazyCafeMap
           places={mapPlaces}
           labels={labels}
           center={mapConfig.center}
@@ -222,6 +223,21 @@ export function DistrictHub({ cityName, districts, totalPlaces, labels, mapConfi
           ))}
         </ul>
       )}
+
+      <section className={styles.guide} aria-labelledby="mashhad-cafe-guide">
+        <span className={styles.guideKicker}>راهنمای انتخاب</span>
+        <h2 id="mashhad-cafe-guide">بهترین کافه مشهد برای تو کدام است؟</h2>
+        <p>
+          یک «بهترین» ثابت برای همه وجود ندارد. برای قرار، کار با لپ‌تاپ، صبحانه یا یک
+          نوشیدنی مشخص، انتخاب درست فرق می‌کند. کو کافه به‌جای فهرست تبلیغاتی، منوی ثبت‌شده،
+          قیمت، محله، ساعت کاری و امکانات را کنار هم می‌گذارد تا انتخابت قابل بررسی باشد.
+        </p>
+        <div className={styles.guideLinks}>
+          <Link href={paths.menuHub}>مقایسهٔ منو و قیمت‌ها</Link>
+          <Link href={paths.search}>جست‌وجوی کافه یا خوراکی</Link>
+          <Link href={`${paths.search}?open=1`}>کافه‌های بازِ مشهد</Link>
+        </div>
+      </section>
     </div>
   )
 }

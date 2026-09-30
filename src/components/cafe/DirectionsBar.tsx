@@ -33,10 +33,17 @@
  */
 
 import { useEffect, useRef, useState } from 'react'
-import { ChevronDown, Navigation, Phone } from 'lucide-react'
+import { Phone } from 'lucide-react'
 import { InstagramIcon } from '@/components/ui/BrandIcons'
-import { buildDirectionLinks, geoUri } from '@/core/map/directions'
+import {
+  buildDirectionLinks,
+  geoUri,
+  neshanIosRouteLink,
+  neshanPointLink,
+  neshanRouteLink,
+} from '@/core/map/directions'
 import { MapServiceIcon } from './MapServiceIcon'
+import { CafePopover } from './CafePopover'
 import styles from './DirectionsBar.module.css'
 
 interface Props {
@@ -66,36 +73,12 @@ export function DirectionsBar({
 }: Props) {
   /** «کپی شد» — بازخورد لازم است، وگرنه کاربر نمی‌داند کلیک کارگر شد یا نه. */
   const [copied, setCopied] = useState<string | null>(null)
-  const detailsRef = useRef<HTMLDetailsElement>(null)
+  const [locating, setLocating] = useState(false)
+  const sheetRef = useRef<HTMLDivElement>(null)
 
   const close = () => {
-    if (detailsRef.current) detailsRef.current.open = false
+    sheetRef.current?.closest('dialog')?.querySelector<HTMLButtonElement>('header button[aria-label="بستن"]')?.click()
   }
-
-  /*
-    بستن با کلیک بیرون و Escape — بهبود، نه شرطِ کارکرد. بدون JS، کاربر با
-    زدن دوباره‌ی خودِ دکمه می‌بندد که رفتار بومیِ `details` است.
-  */
-  useEffect(() => {
-    const onPointerDown = (event: MouseEvent) => {
-      const element = detailsRef.current
-      if (!element?.open) return
-      if (!element.contains(event.target as Node)) element.open = false
-    }
-    const onEscape = (event: KeyboardEvent) => {
-      const element = detailsRef.current
-      if (event.key !== 'Escape' || !element?.open) return
-      element.open = false
-      // فوکوس به دکمه برمی‌گردد، وگرنه کاربر کیبورد سرِ صفحه پرت می‌شود.
-      element.querySelector('summary')?.focus()
-    }
-    document.addEventListener('mousedown', onPointerDown)
-    document.addEventListener('keydown', onEscape)
-    return () => {
-      document.removeEventListener('mousedown', onPointerDown)
-      document.removeEventListener('keydown', onEscape)
-    }
-  }, [])
 
   useEffect(() => {
     if (!copied) return
@@ -119,22 +102,81 @@ export function DirectionsBar({
     close()
   }
 
+  /** iPadOS جدید خودش را Mac معرفی می‌کند؛ touch آن را از مک واقعی جدا می‌کند. */
+  const isIos = () =>
+    /iPad|iPhone|iPod/i.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+
+  /**
+   * iOS طبق مستند نشان custom scheme می‌خواهد. اگر اپ باز شود صفحه hidden
+   * می‌شود و fallback لغو می‌شود؛ اگر نصب نباشد، بعد از مکث کوتاه وب باز است.
+   */
+  const openIosWithWebFallback = (appHref: string, webHref: string) => {
+    let appOpened = false
+    let timer = 0
+    const cleanup = () => {
+      window.clearTimeout(timer)
+      document.removeEventListener('visibilitychange', onVisibility)
+      window.removeEventListener('pagehide', onPageHide)
+    }
+    const onVisibility = () => {
+      if (document.visibilityState !== 'hidden') return
+      appOpened = true
+      cleanup()
+    }
+    const onPageHide = () => {
+      appOpened = true
+      cleanup()
+    }
+    document.addEventListener('visibilitychange', onVisibility)
+    window.addEventListener('pagehide', onPageHide)
+    timer = window.setTimeout(() => {
+      cleanup()
+      if (!appOpened) window.location.assign(webHref)
+    }, 1400)
+    window.location.assign(appHref)
+  }
+
+  const openNeshan = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault()
+    if (locating || lat === null || lng === null) return
+
+    const target = { lat, lng, name }
+    const pointFallback = neshanPointLink(target)
+    setLocating(true)
+
+    const openPoint = () => {
+      setLocating(false)
+      if (isIos()) {
+        openIosWithWebFallback(`neshan://?ll=${lat.toFixed(6)},${lng.toFixed(6)}`, pointFallback)
+      } else {
+        window.location.assign(pointFallback)
+      }
+    }
+
+    if (!navigator.geolocation) {
+      openPoint()
+      return
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLocating(false)
+        const origin = { lat: position.coords.latitude, lng: position.coords.longitude }
+        const webHref = neshanRouteLink(origin, target)
+        if (isIos()) openIosWithWebFallback(neshanIosRouteLink(origin, target), webHref)
+        else window.location.assign(webHref)
+      },
+      openPoint,
+      { enableHighAccuracy: false, timeout: 7000, maximumAge: 300_000 },
+    )
+  }
+
   return (
     <div className={styles.bar}>
       {hasCoords && links.length > 0 ? (
-        <details className={styles.pickerWrap} ref={detailsRef}>
-          <summary className={styles.primaryAction}>
-            <Navigation size={17} aria-hidden="true" />
-            مسیریابی
-            <ChevronDown size={15} aria-hidden="true" className={styles.caret} />
-          </summary>
-
-          {/* پرده — فقط روی موبایل دیده می‌شود؛ کلیکش شیت را می‌بندد. */}
-          <div className={styles.scrim} onClick={close} aria-hidden="true" />
-
-          <div className={styles.sheet} role="menu" aria-label="انتخاب اپ مسیریابی">
-            <div className={styles.grip} aria-hidden="true" />
-            <p className={styles.sheetTitle}>با کدام اپ می‌روید؟</p>
+        <CafePopover label="مسیریابی" title="با کدام نقشه برویم؟" variant="primary">
+          <div ref={sheetRef} className={styles.centeredApps} aria-label="انتخاب اپ مسیریابی">
 
             {links.map((link) => (
               <a
@@ -142,13 +184,15 @@ export function DirectionsBar({
                 href={link.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                role="menuitem"
                 className={styles.sheetItem}
-                onClick={close}
+                onClick={link.id === 'neshan' ? openNeshan : close}
+                aria-busy={link.id === 'neshan' && locating}
               >
                 <MapServiceIcon service={link.id} />
-                <span className={styles.sheetLabel}>{link.label}</span>
-                {link.local && <span className={styles.localTag}>دقیق‌تر در ایران</span>}
+                <span className={styles.sheetLabel}>
+                  <strong>{link.id === 'neshan' && locating ? 'در حال دریافت موقعیت…' : link.label}</strong>
+                  {link.id === 'neshan' && <small>اول اپ نشان؛ در صورت نصب‌نبودن نسخهٔ وب</small>}
+                </span>
               </a>
             ))}
 
@@ -156,7 +200,6 @@ export function DirectionsBar({
 
             <a
               href={geoUri({ lat: lat!, lng: lng!, name })}
-              role="menuitem"
               className={styles.sheetItem}
               onClick={close}
             >
@@ -166,7 +209,6 @@ export function DirectionsBar({
 
             <button
               type="button"
-              role="menuitem"
               className={styles.sheetItem}
               onClick={() => copy(`${lat},${lng}`, 'مختصات')}
             >
@@ -177,7 +219,6 @@ export function DirectionsBar({
             {address && (
               <button
                 type="button"
-                role="menuitem"
                 className={styles.sheetItem}
                 onClick={() => copy(address, 'آدرس')}
               >
@@ -186,7 +227,7 @@ export function DirectionsBar({
               </button>
             )}
           </div>
-        </details>
+        </CafePopover>
       ) : (
         /* بدون مختصات، دکمه‌ی مسیریابی یک وعده‌ی توخالی است. ۷۳ مکان در
            داده مختصات ندارند و برایشان آدرس متنی تنها چیزی است که داریم. */

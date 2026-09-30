@@ -1,7 +1,9 @@
 import type { Metadata } from 'next'
 import { inArray } from 'drizzle-orm'
+import { redirect } from 'next/navigation'
 import { SearchView } from '@/components/search/SearchView'
 import { computeOpenState } from '@/core/hours/openNow'
+import { trackSearch } from '@/core/analytics/track'
 import { getMapLabels } from '@/core/map/labels'
 import {
   countPlaces,
@@ -12,7 +14,7 @@ import {
   listPlaceCards,
   listPopularDishes,
 } from '@/core/places/queries'
-import { describeFilters, parseFilters } from '@/core/search/filters'
+import { buildQuery, describeFilters, parseFilters } from '@/core/search/filters'
 import { parseSearchQuery } from '@/core/search/parseQuery'
 import { attributeLabel } from '@/core/taxonomy/attributes'
 import { MaintenanceScreen } from '@/components/site/MaintenanceScreen'
@@ -20,6 +22,10 @@ import { maintenanceState } from '@/core/settings/maintenance'
 import { getDiscoveryPolicy, getLocalePolicy, getMapPolicy } from '@/core/settings/policies'
 import { getDb } from '@/db/client'
 import { placeHours } from '@/db/schema'
+import { normalizePlaceName, toAsciiDigits } from '@/core/text/normalize'
+import { countMenuItems, listMenuItemCards } from '@/core/items/queries'
+import { effectiveSearchScope, resolveProductIntent, splitProductAndPlaceQuery } from '@/core/search/resolveEntity'
+import { fuzzyMatches } from '@/core/search/fuzzy'
 
 /**
  * صفحه‌ی کشف و جست‌وجو.
@@ -38,6 +44,21 @@ import { placeHours } from '@/db/schema'
  */
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>
+
+/**
+ * متن آزادِ جست‌وجو برای تحلیلِ صفرنتیجه مفید است، اما نباید شماره، ایمیل
+ * یا لینکی را که کاربر اتفاقی در کادر نوشته برای همیشه در لاگ نگه داریم.
+ */
+function privacySafeQuery(raw: string): string {
+  return toAsciiDigits(raw)
+    .replace(/https?:\/\/\S+/gi, '[لینک]')
+    .replace(/[\w.+-]+@[\w.-]+\.[a-z]{2,}/gi, '[ایمیل]')
+    .replace(/(?:\+?98|0098|0)?9\d{9}/g, '[شماره]')
+    .replace(/[\u0000-\u001f\u007f]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 80)
+}
 
 export async function generateMetadata({
   searchParams,
@@ -60,12 +81,30 @@ export async function generateMetadata({
     districtLabel: (id) => districts.find((district) => district.id === id)?.name,
   })
 
+  const parsed = filters.rawQuery
+    ? { text: filters.q.trim() }
+    : parseSearchQuery(filters.q, districts)
+  const productParts = splitProductAndPlaceQuery(parsed.text)
+  const productIntent = productParts.intent
+  const productPlaceQuery = productParts.placeQuery || null
+  const itemResults = filters.scope === 'items'
+    || (filters.scope === 'all' && (Boolean(filters.dish) || productIntent.kind !== 'unknown'))
+  const entityHeading = itemResults
+    ? filters.q.trim()
+      ? `آیتم‌های منو برای «${filters.q.trim()}»`
+      : filters.dish
+        ? `آیتم‌های ${dishes.find((dish) => dish.slug === filters.dish)?.nameFa ?? 'منو'}`
+        : 'جست‌وجوی آیتم‌های منو'
+    : heading
+
   return {
-    title: heading,
-    description: `${heading}. فیلتر بر اساس قیمت واقعی منو، محله، دسته و فاصله.`,
+    title: entityHeading,
+    description: `${entityHeading}. فیلتر بر اساس قیمت واقعی منو، محله، دسته و فاصله.`,
     // صفحه‌ی نتیجه با فیلترِ آزاد ایندکس نمی‌شود: ترکیب فیلترها بی‌نهایت URL
     // می‌سازد و همه‌شان محتوای تقریباً یکسان دارند. صفحات محله مسیر کانونی‌اند.
     robots: { index: false, follow: true },
+    // نتایج جست‌وجو معادل صفحهٔ اصلی نیستند؛ canonical موروثی را حذف کن.
+    alternates: { canonical: null },
   }
 }
 
@@ -87,8 +126,9 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
   ])
 
   const pageSize = discovery.pageSize
-
-  const dish = filters.dish ? await getDishBySlug(filters.dish) : null
+  // نقشه و «نزدیک من» باید کل مجموعهٔ کاندیداها را داشته باشند. مرتب‌کردن
+  // فقط ۲۴ نتیجهٔ اول بر اساس فاصله، نزدیک‌ترین‌های جعلی تولید می‌کرد.
+  const needsCompletePlaceSet = filters.nearMe || filters.view === 'map' || filters.openNow
 
   /*
     پیش‌پردازش کوئری — قبل از رسیدن به دیتابیس.
@@ -107,6 +147,14 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
     : parseSearchQuery(filters.q, districts)
   const effectiveDistrictId = filters.districtId ?? parsed.districtId
   const effectiveQuery = parsed.text || null
+  const productParts = splitProductAndPlaceQuery(parsed.text)
+  const productIntent = productParts.intent
+  const productPlaceQuery = productParts.placeQuery || null
+  let effectiveScope = effectiveSearchScope(filters.scope, productIntent)
+  if (filters.scope === 'all' && filters.dish) effectiveScope = 'items'
+  const resolvedDishSlug = filters.dish ??
+    (productIntent.kind === 'dish' ? productIntent.dishSlug : null)
+  const dish = resolvedDishSlug ? await getDishBySlug(resolvedDishSlug) : null
 
   const queryFilters = {
     facetIds: filters.facets,
@@ -116,22 +164,56 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
     maxPrice: filters.maxPrice,
     query: effectiveQuery,
     // «نزدیک من» و نمای نقشه بدون مختصات بی‌معنی‌اند.
-    mappableOnly: filters.nearMe || filters.view === 'map',
+    // نقشه، نتیجهٔ بی‌مختصات را پنهان نمی‌کند؛ پایین نقشه نسبت پوشش را می‌گوید.
+    // فقط «نزدیک من» ذاتاً به مختصات معتبر نیاز دارد.
+    mappableOnly: filters.nearMe,
     // مرتب‌سازی فاصله در کلاینت انجام می‌شود، پس سرور رتبه‌ی معمول می‌دهد.
     sort: filters.sort === 'distance' ? ('rating' as const) : filters.sort,
     // فیلتر «باز است» بعد از پرس‌وجو اعمال می‌شود، پس باید بیشتر بگیریم و
     // صفحه‌بندی را خودمان انجام دهیم.
-    limit: filters.openNow ? 400 : pageSize,
-    offset: filters.openNow ? 0 : (filters.page - 1) * pageSize,
+    limit: needsCompletePlaceSet ? 600 : pageSize,
+    offset: needsCompletePlaceSet ? 0 : (filters.page - 1) * pageSize,
   }
 
   let cards: Awaited<ReturnType<typeof listCardsWithDishPrice>> | Awaited<
     ReturnType<typeof listPlaceCards>
-  > = dish
-    ? await listCardsWithDishPrice(dish.id, queryFilters)
-    : await listPlaceCards(queryFilters)
+  > = []
+  let itemCards: Awaited<ReturnType<typeof listMenuItemCards>> = []
+  let total = 0
 
-  let total = filters.openNow ? cards.length : await countPlaces(queryFilters)
+  const itemFilters = {
+    query:
+      productIntent.kind === 'unknown' && !dish && filters.facets.length === 0
+        ? effectiveQuery
+        : null,
+    dishId: dish?.id ?? null,
+    placeQuery: productPlaceQuery,
+    facetIds:
+      filters.facets.length > 0
+        ? filters.facets
+        : productIntent.kind === 'facet'
+          ? productIntent.facetIds
+          : undefined,
+    districtId: effectiveDistrictId,
+    maxPrice: filters.maxPrice,
+    sort: filters.sort,
+    // موقعیت فقط در مرورگر داریم؛ برای مرتب‌سازی دقیق، نامزدهای بیشتری
+    // می‌گیریم و بعد از محاسبهٔ فاصله در کلاینت صفحه‌بندی می‌کنیم.
+    limit: filters.nearMe ? 600 : pageSize,
+    offset: filters.nearMe ? 0 : (filters.page - 1) * pageSize,
+  }
+
+  if (effectiveScope === 'items') {
+    ;[itemCards, total] = await Promise.all([
+      listMenuItemCards(itemFilters),
+      countMenuItems(itemFilters),
+    ])
+  } else {
+    cards = dish
+      ? await listCardsWithDishPrice(dish.id, queryFilters)
+      : await listPlaceCards(queryFilters)
+    total = filters.openNow || needsCompletePlaceSet ? cards.length : await countPlaces(queryFilters)
+  }
 
   /*
     باقی‌ماندهٔ متن، صفت است نه نام — پس نباید نتیجه را صفر کند.
@@ -149,17 +231,74 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
     هزینه‌اش یک پرس‌وجوی اضافه، فقط در همین حالتِ خالی.
   */
   let ignoredText: string | null = null
-  if (cards.length === 0 && parsed.district && parsed.text && !dish) {
+  let fuzzyPlaceMatch = false
+  if (effectiveScope === 'places' && cards.length === 0 && parsed.district && parsed.text && !dish) {
     const relaxed = { ...queryFilters, query: null }
     const retry = await listPlaceCards(relaxed)
     if (retry.length > 0) {
       cards = retry
-      total = filters.openNow ? retry.length : await countPlaces(relaxed)
+      total = filters.openNow || needsCompletePlaceSet ? retry.length : await countPlaces(relaxed)
       ignoredText = parsed.text
     }
   }
 
-  if (filters.openNow && cards.length > 0) {
+  // تحمل غلط املایی نام کافه فقط بعد از صفرنتیجه و با یک/دو ویرایش اجرا
+  // می‌شود. چند شعبهٔ یک برند با هم برمی‌گردند؛ حدس مبهم گسترده پذیرفته نیست.
+  if (
+    effectiveScope === 'places' &&
+    cards.length === 0 &&
+    Boolean(effectiveQuery) &&
+    productIntent.kind === 'unknown'
+  ) {
+    const candidates = await listPlaceCards({
+      ...queryFilters,
+      query: null,
+      limit: 600,
+      offset: 0,
+    })
+    const matches = fuzzyMatches(
+      effectiveQuery!,
+      candidates.map((card) => {
+        const normalized = normalizePlaceName(card.name)
+        return {
+          value: card.id,
+          terms: [normalized, ...normalized.split(' ').filter((word) => word.length >= 4), card.nameEn ?? ''],
+        }
+      }),
+    )
+    if (matches.length > 0) {
+      const bestDistance = matches[0]!.distance
+      const ids = new Set(matches.filter((match) => match.distance === bestDistance).map((match) => match.value))
+      cards = candidates.filter((card) => ids.has(card.id))
+      total = cards.length
+      fuzzyPlaceMatch = true
+    }
+  }
+
+  /*
+    متن ناشناخته ممکن است نامِ اختصاصی یک محصول باشد، نه واژهٔ taxonomy.
+    در حالت خودکار فقط وقتی هیچ Place پیدا نشده به آیتم‌ها fallback می‌کنیم؛
+    بنابراین نام واقعی کافه هیچ‌وقت زیر نویز نام‌های منو دفن نمی‌شود.
+  */
+  if (
+    effectiveScope === 'places' &&
+    filters.scope === 'all' &&
+    total === 0 &&
+    Boolean(effectiveQuery) &&
+    productIntent.kind === 'unknown'
+  ) {
+    const fallbackTotal = await countMenuItems(itemFilters)
+    if (fallbackTotal > 0) {
+      effectiveScope = 'items'
+      itemCards = await listMenuItemCards(itemFilters)
+      total = fallbackTotal
+      ignoredText = null
+    }
+  }
+
+  // وضعیت ساعت روی خود کارت هم نمایش داده می‌شود. همهٔ ساعت‌ها در یک query
+  // خوانده می‌شوند تا فهرست به N+1 تبدیل نشود.
+  if (effectiveScope === 'places' && cards.length > 0) {
     const db = getDb()
     const hourRows = await db
       .select()
@@ -178,12 +317,11 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
       else byPlace.set(row.placeId, [row])
     }
 
-    cards = cards.filter((card) => {
+    const openStates = new Map<number, ReturnType<typeof computeOpenState>>()
+    for (const card of cards) {
       const shifts = byPlace.get(card.id) ?? []
-      // ساعت نامشخص یعنی نمی‌توانیم بگوییم باز است. حذفش صادقانه‌تر از
-      // نشان‌دادنش زیر برچسب «الان باز» است.
-      if (shifts.length === 0) return false
-      return (
+      openStates.set(
+        card.id,
         computeOpenState(
           shifts.map((shift) => ({
             dow: shift.dow,
@@ -195,13 +333,65 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
           })),
           new Date(),
           locale.timeZone,
-        ).status === 'open'
+        ),
       )
-    })
+    }
 
-    total = cards.length
-    const start = (filters.page - 1) * pageSize
-    cards = cards.slice(start, start + pageSize)
+    if (filters.openNow) {
+      // دادهٔ ساعت نامعلوم زیر برچسب «الان باز» پذیرفته نمی‌شود.
+      cards = cards.filter((card) => openStates.get(card.id)?.status === 'open')
+      total = cards.length
+      // نقشه همهٔ نتایج باز را می‌خواهد؛ نزدیک‌ترین نیز باید پیش از صفحه‌بندی
+      // روی کل کاندیداها مرتب شود.
+      if (!filters.nearMe && filters.view !== 'map') {
+        const start = (filters.page - 1) * pageSize
+        cards = cards.slice(start, start + pageSize)
+      }
+    }
+
+    cards = cards.map((card) => {
+      const state = openStates.get(card.id)
+      return {
+        ...card,
+        openState: state ? { status: state.status, label: state.label } : null,
+      }
+    })
+  }
+
+  const totalPages = Math.max(1, Math.ceil(total / pageSize))
+  if (total > 0 && filters.page > totalPages) {
+    redirect(`/search${buildQuery({ ...filters, page: totalPages })}`)
+  }
+
+  /*
+    فقط صفرنتیجه‌ها ثبت می‌شوند: همان داده‌ای که برای پیدا کردن شکاف محتوا
+    ارزش دارد، بدون ساختن تاریخچه‌ی کامل جست‌وجوی هر کاربر. شناسه‌ی کاربر و
+    نشست عمداً فرستاده نمی‌شود و شکست analytics نباید رندر را خراب کند.
+  */
+  if (total === 0) {
+    try {
+      await trackSearch({
+        query: privacySafeQuery(filters.q),
+        requestedScope: filters.scope,
+        resolvedEntity: effectiveScope,
+        resolvedIntent: dish
+          ? `dish:${dish.slug}`
+          : productIntent.kind === 'facet'
+            ? `facet:${productIntent.facetId}`
+            : effectiveScope === 'items'
+              ? 'item-text'
+              : 'place-text',
+        facetIds: filters.facets,
+        dishId: dish?.id ?? null,
+        districtId: effectiveDistrictId,
+        sort: filters.sort,
+        priceMax: filters.maxPrice,
+        nearMe: filters.nearMe,
+        resultCount: 0,
+      })
+    } catch (error) {
+      console.warn('[search] ثبت جست‌وجوی بدون نتیجه شکست خورد', error)
+    }
   }
 
   /*
@@ -209,7 +399,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
     «کافه‌ای در احمد آباد» نوشته باید عنوانِ «کافه‌های مشهد در احمدآباد» را
     ببیند، نه «جست‌وجوی «کافه‌ای در احمد آباد»» که هیچ نمی‌گوید چه شد.
   */
-  const heading = describeFilters(
+  const placeHeading = describeFilters(
     {
       ...filters,
       // متنی که نادیده گرفته شد نباید در عنوان بیاید: «جست‌وجوی «خوب» در
@@ -226,15 +416,31 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
     },
   )
 
-  const subheading = dish
-    ? `${dish.placeCount.toLocaleString('fa-IR')} مجموعه ${dish.nameFa} دارند` +
-      (dish.minPrice ? ` · ارزان‌ترین ${dish.minPrice.toLocaleString('fa-IR')} تومان` : '')
-    : `${total.toLocaleString('fa-IR')} مجموعه`
+  const heading = effectiveScope === 'items'
+    ? dish
+      ? productPlaceQuery
+        ? `${dish.nameFa} در ${productPlaceQuery}`
+        : `${dish.nameFa} در منوی کافه‌های مشهد`
+      : productIntent.kind === 'facet'
+        ? `${facets.find((facet) => facet.id === productIntent.facetId)?.labelFa ?? parsed.text}${productPlaceQuery ? ` در ${productPlaceQuery}` : ' در منوها'}`
+        : filters.q.trim()
+          ? `آیتم‌های منو برای «${filters.q.trim()}»`
+          : 'آیتم‌های منوی کافه‌های مشهد'
+    : placeHeading
+
+  const subheading = effectiveScope === 'items'
+    ? `${total.toLocaleString('fa-IR')} آیتم واقعی از منوی کافه‌ها`
+    : dish
+      ? `${dish.placeCount.toLocaleString('fa-IR')} مجموعه ${dish.nameFa} دارند` +
+        (dish.minPrice ? ` · ارزان‌ترین ${dish.minPrice.toLocaleString('fa-IR')} تومان` : '')
+      : `${total.toLocaleString('fa-IR')} مجموعه`
 
   return (
     <SearchView
       filters={filters}
       cards={cards}
+      itemCards={itemCards}
+      effectiveScope={effectiveScope}
       total={total}
       pageSize={pageSize}
       priceCaps={discovery.priceCaps}
@@ -264,6 +470,8 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
           : null
       }
       ignoredText={ignoredText}
+      fuzzyPlaceMatch={fuzzyPlaceMatch}
+      clientPaginated={filters.nearMe}
       labels={getMapLabels({ zoom: map.defaultZoom, limit: 30 })}
       mapConfig={{
         center: map.center,

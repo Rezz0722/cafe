@@ -17,7 +17,9 @@
   cursor: pointer;
   list-style: none;
   user-select: none;
+  transition: background var(--t-fast), border-color var(--t-fast);
 }
+.summary:hover { background: var(--c-primary-soft); }
 
 /* مثلثِ پیش‌فرضِ مرورگر روی RTL سمت اشتباه می‌افتد؛ خودمان می‌گذاریم. */
 .summary::-webkit-details-marker,
@@ -49,9 +51,20 @@
   font-size: var(--fs-xs);
 }
 
-.caret {
+.caretWrap {
+  display: grid;
+  place-items: center;
   flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  margin-block: -3px;
+  border-radius: 10px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-3);
   color: var(--c-muted);
+}
+
+.caret {
   transition: transform var(--t-fast);
 }
 

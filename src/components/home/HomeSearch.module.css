@@ -30,7 +30,7 @@
   padding: 12px 22px;
   border: none;
   border-radius: 999px;
-  background: var(--c-ink);
+  background: var(--c-inverse-surface);
   color: #fff;
   font: inherit;
   font-size: 0.9rem;
@@ -39,7 +39,7 @@
 }
 
 .form button:hover {
-  background: var(--c-primary-strong);
+  background: var(--c-primary-action-strong);
 }
 
 .hints {

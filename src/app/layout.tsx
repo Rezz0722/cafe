@@ -5,10 +5,13 @@ import { ViewAsBanner } from '@/components/admin/ViewAsBanner'
 import { PageViewTracker } from '@/components/analytics/PageViewTracker'
 import { SiteFooter } from '@/components/layout/SiteFooter'
 import { SiteHeader } from '@/components/layout/SiteHeader'
+import { MobileBottomNav } from '@/components/layout/MobileBottomNav'
+import { PwaStatus } from '@/components/pwa/PwaProvider'
 import { AnnouncementBar } from '@/components/site/AnnouncementBar'
 import { getSession } from '@/core/auth/currentUser'
 import { getSettings } from '@/core/settings/store'
 import { SITE_URL } from '@/routes'
+import { THEME_INIT_SCRIPT } from '@/core/theme/theme'
 import './global.css'
 
 /**
@@ -27,6 +30,12 @@ export async function generateMetadata(): Promise<Metadata> {
     title: { default: headline, template: `%s | ${s.siteName}` },
     description: s.siteDescription,
     applicationName: s.siteName,
+    creator: s.siteName,
+    publisher: s.siteName,
+    formatDetection: { telephone: false, address: false, email: false },
+    icons: {
+      icon: [{ url: '/brand/favicon-64.png', sizes: '64x64', type: 'image/png' }],
+    },
     alternates: { canonical: '/' },
     openGraph: {
       type: 'website',
@@ -34,6 +43,20 @@ export async function generateMetadata(): Promise<Metadata> {
       siteName: s.siteName,
       title: headline,
       description: s.siteDescription,
+      images: [
+        {
+          url: '/brand/og-home.png',
+          width: 1200,
+          height: 630,
+          alt: `${s.siteName}؛ راهنمای کافه و رستوران`,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: headline,
+      description: s.siteDescription,
+      images: ['/brand/og-home.png'],
     },
     // در حالت تعمیر، ایندکس‌شدنِ صفحه‌ی «موقتاً بسته» یعنی همان چیزی که در
     // نتیجه‌ی گوگل می‌ماند. تا وقتی بسته است، از ایندکس بیرون می‌ماند.
@@ -42,9 +65,11 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#5996FF',
+  colorScheme: 'light dark',
   width: 'device-width',
   initialScale: 1,
+  viewportFit: 'cover',
+  interactiveWidget: 'resizes-content',
 }
 
 /**
@@ -65,7 +90,19 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const [{ user, actor }, settings] = await Promise.all([getSession(), getSettings()])
 
   return (
-    <html lang="fa" dir="rtl">
+    <html lang="fa" dir="rtl" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        {/* Chrome needs a manifest link in HEAD. Async generateMetadata can
+            stream it into BODY; the file-based manifest may still emit that
+            identical link later, but installation must not depend on it. */}
+        <link rel="manifest" href="/manifest.webmanifest" />
+        <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png" sizes="180x180" type="image/png" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-title" content="کوکافه" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+      </head>
       <body className={actor ? 'viewing-as' : undefined}>
         {/* اعلان قبل از هر چیز دیگری — خواندنش نباید به اسکرول نیاز داشته باشد. */}
         <AnnouncementBar text={settings.announcement} />
@@ -98,8 +135,11 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           ۵۰۰ سراسری، نه یک ایراد موضعی.
         */}
         <Providers user={user}>
+          <a href="#main-content" className="skip-link">رفتن به محتوای اصلی</a>
           <SiteHeader siteName={settings.siteName} />
-          {children}
+          <PwaStatus />
+          <div id="main-content" className="site-content" tabIndex={-1}>{children}</div>
+          <MobileBottomNav />
           <SiteFooter siteName={settings.siteName} tagline={settings.siteTagline || undefined} />
         </Providers>
         {/* ثبت بازدید — بی‌صدا، و اگر مدیر خاموشش کرده باشد، اصلاً رندر نمی‌شود. */}

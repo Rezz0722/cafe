@@ -1,12 +1,14 @@
 import type { Metadata } from 'next'
 import { DistrictHub, type DistrictCard } from '@/components/districts/DistrictHub'
+import { BreadcrumbJsonLd } from '@/components/seo/PlaceJsonLd'
+import { serializeJsonLd } from '@/core/security/jsonLd'
 import { MaintenanceScreen } from '@/components/site/MaintenanceScreen'
 import { getMapLabels } from '@/core/map/labels'
 import { listDistricts, listPlaceCards } from '@/core/places/queries'
 import { maintenanceState } from '@/core/settings/maintenance'
 import { getLocalePolicy, getMapPolicy, getSiteName } from '@/core/settings/policies'
 import { fa } from '@/lib/format'
-import { paths } from '@/routes'
+import { absoluteUrl, paths } from '@/routes'
 
 /**
  * لندینگ محله‌ها — `/mashhad`.
@@ -44,12 +46,12 @@ export async function generateMetadata(): Promise<Metadata> {
   const active = districts.filter((district) => district.placeCount > 0)
 
   return {
-    title: `محله‌های ${locale.cityName} — کافه‌ها به تفکیک منطقه`,
-    description: `کافه‌های ${locale.cityName} در ${fa(active.length)} محله. سجاد، احمدآباد، هاشمیه، وکیل‌آباد، طرقبه و بقیه — با قیمت واقعی منو، ساعت کاری و نقشه.`,
+    title: `کافه‌های ${locale.cityName}؛ منو، قیمت، نقشه و محله‌ها`,
+    description: `راهنمای ${fa(active.reduce((sum, district) => sum + district.placeCount, 0))} کافه و رستوران ${locale.cityName} در ${fa(active.length)} محله؛ منوی ثبت‌شده، قیمت، ساعت کاری، نقشه و انتخاب بر اساس محله.`,
     alternates: { canonical: paths.districtHub },
     openGraph: {
       type: 'website',
-      title: `محله‌های ${locale.cityName} — ${siteName}`,
+      title: `کافه‌های ${locale.cityName}؛ منو، قیمت و محله‌ها — ${siteName}`,
       url: paths.districtHub,
     },
   }
@@ -61,13 +63,14 @@ export default async function DistrictHubPage() {
     return <MaintenanceScreen siteName={gate.siteName} message={gate.message} />
   }
 
-  const [districts, cards, locale, map] = await Promise.all([
+  const [districts, cards, locale, map, siteName] = await Promise.all([
     listDistricts(),
     // `sort: 'quality'` یعنی اولین کارتِ هر محله، کامل‌ترین پروفایلِ آن محله
     // است — پس تصویرِ شاخص، تصویرِ بهترین کافه می‌شود نه یک کافه‌ی تصادفی.
     listPlaceCards({ limit: 400, sort: 'quality' }),
     getLocalePolicy(),
     getMapPolicy(),
+    getSiteName(),
   ])
 
   /** لوگوی شاخص و میانه‌ی قیمتِ هر محله، از همان یک پرس‌وجو. */
@@ -104,19 +107,40 @@ export default async function DistrictHubPage() {
       }
     })
 
-  return (
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    '@id': absoluteUrl(paths.districtHub),
+    name: `راهنمای کافه‌های ${locale.cityName}`,
+    description: `کافه‌ها و رستوران‌های ${locale.cityName} با منو، قیمت، ساعت کاری، نقشه و تفکیک محله`,
+    inLanguage: 'fa-IR',
+    mainEntity: {
+      '@type': 'ItemList',
+      numberOfItems: districtCards.length,
+      itemListElement: districtCards.map((district, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        name: district.name,
+        url: absoluteUrl(paths.district(district.slug)),
+      })),
+    },
+  }
+
+  return <>
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }} />
+    <BreadcrumbJsonLd items={[{ name: siteName, path: paths.home }, { name: `کافه‌های ${locale.cityName}`, path: paths.districtHub }]} />
     <DistrictHub
-      cityName={locale.cityName}
-      districts={districtCards}
-      totalPlaces={districtCards.reduce((sum, district) => sum + district.placeCount, 0)}
-      labels={getMapLabels({ zoom: 12, limit: 40 })}
-      mapConfig={{
-        center: map.center,
-        // یک پله عقب‌تر از پیش‌فرض تا همه‌ی محله‌ها در کادر جا شوند.
-        zoom: Math.max(map.minZoom, Math.min(map.defaultZoom, 11.4)),
-        minZoom: map.minZoom,
-        maxZoom: map.maxZoom,
-      }}
-    />
-  )
+        cityName={locale.cityName}
+        districts={districtCards}
+        totalPlaces={districtCards.reduce((sum, district) => sum + district.placeCount, 0)}
+        labels={getMapLabels({ zoom: 12, limit: 40 })}
+        mapConfig={{
+          center: map.center,
+          // یک پله عقب‌تر از پیش‌فرض تا همه‌ی محله‌ها در کادر جا شوند.
+          zoom: Math.max(map.minZoom, Math.min(map.defaultZoom, 11.4)),
+          minZoom: map.minZoom,
+          maxZoom: map.maxZoom,
+        }}
+      />
+  </>
 }

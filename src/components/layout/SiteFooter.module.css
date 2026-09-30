@@ -1,5 +1,5 @@
 .footer {
-  background: var(--c-ink);
+  background: var(--c-footer);
   color: #f2f2f2;
   margin-top: auto;
 }
@@ -10,15 +10,19 @@
 
 .grid {
   display: grid;
-  grid-template-columns: 1.6fr 1fr 1fr 1fr;
+  grid-template-columns: 1.45fr repeat(4, 1fr);
   gap: 36px;
 }
 
 .brandName {
   font-size: 23px;
   font-weight: 800;
-  margin-bottom: 12px;
 }
+
+.footerBrand { display: flex; align-items: center; gap: 11px; margin-bottom: 14px; }
+.footerBrand img { width: 48px; height: 48px; border-radius: 14px; }
+.footerBrand > div { display: flex; flex-direction: column; }
+.footerBrand small { color: #9fb0c4; font-size: 10px; font-weight: 700; }
 
 .tagline {
   font-size: var(--fs-base);
@@ -32,7 +36,12 @@
   font-weight: 800;
   margin-bottom: 14px;
   color: #fff;
+  list-style: none;
 }
+.colTitle::-webkit-details-marker, .colTitle::marker { display: none; content: ''; }
+.columnSet,
+.column { min-width: 0; }
+.mobileColumn { display: none; }
 
 .links {
   display: flex;
@@ -62,13 +71,14 @@
 }
 
 .madeBy {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   font-size: var(--fs-base);
   font-weight: 700;
 }
 
-.heart {
-  color: var(--c-accent);
-}
+.madeBy svg { color: var(--c-accent); }
 
 .copyright {
   font-size: var(--fs-sm);
@@ -76,6 +86,8 @@
 }
 
 @media (max-width: 760px) {
+  .inner { padding-top: 38px; }
+
   .grid {
     grid-template-columns: 1fr 1fr;
     gap: 26px;
@@ -84,4 +96,40 @@
   .brandCol {
     grid-column: 1 / -1;
   }
+
+  .columnSet,
+  .column {
+    grid-column: 1 / -1;
+  }
+
+  .columnSet {
+    border-top: 1px solid #38424d;
+  }
+
+  .desktopColumn { display: none; }
+  .mobileColumn { display: block; }
+
+  .colTitle {
+    position: relative;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    margin: 0;
+    padding-inline-end: 28px;
+    cursor: pointer;
+  }
+
+  .colTitle::after {
+    content: '+';
+    position: absolute;
+    inset-inline-end: 4px;
+    color: #cbd5e1;
+    font-size: 20px;
+    font-weight: 400;
+  }
+
+  .column[open] .colTitle::after { content: '−'; }
+  .column:not([open]) .links { display: none; }
+  .links { gap: 4px; padding: 0 4px 14px; font-size: 15px; }
+  .links a { display: flex; align-items: center; min-height: 42px; }
 }

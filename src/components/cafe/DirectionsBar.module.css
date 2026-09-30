@@ -5,6 +5,10 @@
   gap: 8px;
 }
 
+.centeredApps { display: grid; gap: 6px; }
+.centeredApps .sheetItem { min-height: 54px; border: 1px solid var(--c-border); border-radius: 15px; padding: 12px; }
+.centeredApps .sheetLabel { min-width: 0; overflow-wrap: anywhere; }
+
 .action,
 .primaryAction {
   display: inline-flex;
@@ -14,7 +18,7 @@
   min-height: 44px;
   padding: 10px 16px;
   border: 1px solid var(--c-border);
-  border-radius: var(--r-pill);
+  border-radius: 13px;
   background: var(--c-surface);
   color: var(--c-ink);
   font-size: var(--fs-sm);
@@ -25,10 +29,7 @@
   transition: border-color var(--t-fast), color var(--t-fast), background var(--t-fast);
 }
 
-.action:hover {
-  border-color: var(--c-primary);
-  color: var(--c-primary-strong);
-}
+.action:active { transform: scale(.98); }
 
 .action:focus-visible,
 .primaryAction:focus-visible {
@@ -53,11 +54,6 @@
 .primaryAction::marker {
   display: none;
   content: '';
-}
-
-.primaryAction:hover {
-  background: var(--c-primary-strong);
-  border-color: var(--c-primary-strong);
 }
 
 .caret {
@@ -126,10 +122,6 @@
   transition: background var(--t-fast);
 }
 
-.sheetItem:hover {
-  background: var(--c-surface-3);
-}
-
 .sheetItem:focus-visible {
   outline: none;
   background: var(--c-primary-soft);
@@ -142,7 +134,19 @@
 
 .sheetLabel {
   flex: 1;
+  display: grid;
+  gap: 2px;
+}
+
+.sheetLabel strong {
   font-weight: 700;
+}
+
+.sheetLabel small {
+  color: var(--c-muted);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  line-height: 1.45;
 }
 
 .localTag {
@@ -183,6 +187,9 @@
 /* ── شیت موبایل ─────────────────────────────────────────────────────── */
 
 @media (max-width: 640px) {
+  .bar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .bar > button:first-child { grid-column: 1 / -1; }
+  .action { justify-content: center; padding-inline: 10px; }
   .scrim {
     display: block;
     position: fixed;
@@ -234,6 +241,12 @@
     width: 100%;
     justify-content: center;
   }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .action:hover { border-color: var(--c-primary); color: var(--c-primary-strong); }
+  .primaryAction:hover { background: var(--c-primary-action-strong); border-color: var(--c-primary-action-strong); }
+  .sheetItem:hover { background: var(--c-surface-3); }
 }
 
 @keyframes rise {

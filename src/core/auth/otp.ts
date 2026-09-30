@@ -129,7 +129,9 @@ export function verifyCode(
     return { ok: false, reason: 'کدی برای این شماره درخواست نشده.', burned: false }
   }
 
-  if (record.expiresAt < now) {
+  // در لحظه‌ی دقیق انقضا هم کد دیگر معتبر نیست؛ پنجره‌ی ورود بیشتر از TTL
+  // حتی به اندازه‌ی یک میلی‌ثانیه باز نماند.
+  if (record.expiresAt <= now) {
     return { ok: false, reason: 'کد منقضی شده. کد جدید بگیرید.', burned: true }
   }
 

@@ -126,6 +126,9 @@ export async function trackPageView(
  */
 export async function trackSearch(input: {
   query: string
+  requestedScope?: 'all' | 'places' | 'items'
+  resolvedEntity?: 'places' | 'items'
+  resolvedIntent?: string | null
   facetIds: string[]
   dishId?: number | null
   districtId?: string | null
@@ -140,6 +143,9 @@ export async function trackSearch(input: {
   const { searchLog } = await import('@/db/schema')
   await db.insert(searchLog).values({
     query: input.query.slice(0, 255),
+    requestedScope: input.requestedScope ?? 'all',
+    resolvedEntity: input.resolvedEntity ?? 'places',
+    resolvedIntent: input.resolvedIntent?.slice(0, 80) ?? null,
     facetIds: input.facetIds.join(',').slice(0, 500),
     dishId: input.dishId ?? null,
     districtId: input.districtId ?? null,

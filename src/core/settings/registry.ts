@@ -52,7 +52,7 @@ export const GROUP_HINTS: Partial<Record<SettingGroup, string>> = {
   locale:
     'منطقه‌ی زمانی روی «الان باز است؟» اثر مستقیم دارد. نام شهر در متادیتای صفحه‌ها و داده‌ی ساخت‌یافته‌ی گوگل استفاده می‌شود.',
   auth: 'اگر سرویس پیامک در دسترس نیست، «ورود با رمز» را روشن نگه دارید — وگرنه هیچ‌کس نمی‌تواند وارد شود.',
-  data: 'این اعداد روی طبقه‌بندی قیمت و تشخیص داده‌ی خراب اثر دارند. بعد از تغییرشان، «بازمحاسبه‌ی مقادیر مشتق» را از تب عملیات اجرا کنید.',
+  data: 'این اعداد روی طبقه‌بندی قیمت و تشخیص داده‌ی خراب اثر دارند. با ذخیرهٔ قواعد سطح قیمت، همهٔ مجموعه‌ها همان لحظه بازمحاسبه می‌شوند.',
   discovery:
     'مرزهای قیمت بر پایه‌ی توزیع واقعیِ داده تنظیم شده‌اند؛ عوض‌کردنشان طبقه‌بندی همه‌ی کافه‌ها را جابه‌جا می‌کند.',
 }
@@ -87,6 +87,10 @@ export interface Settings {
   allowRegistration: boolean
   allowPasswordLogin: boolean
   allowOtpLogin: boolean
+  /** پیامک هدف‌دار برای تأیید شماره در ثبت‌نام و بازیابی رمز. */
+  allowSmsVerification: boolean
+  /** آیا ساخت حساب عمومی باید پیش از ایجاد کاربر، شماره را با OTP تأیید کند؟ */
+  registrationRequiresPhoneVerification: boolean
   passwordMinLength: number
   loginMaxAttempts: number
   loginLockoutMinutes: number
@@ -140,6 +144,10 @@ export interface Settings {
   thousandUnitThreshold: number
   priceTierCheapMax: number
   priceTierMidMax: number
+  /** صفر یعنی سقف خودکار غیرفعال است. */
+  priceStatsMaxItemPrice: number
+  /** دسته‌هایی مثل سرویس و پکیج/قلیان را از آمار قیمت مکان کنار می‌گذارد. */
+  priceStatsExcludeServiceSections: boolean
   /** قیمت کمتر از این نسبت از میانه‌ی شهری، داده‌ی خراب است. */
   priceOutlierRatio: number
   /** بعد از این تعداد روز، قیمت «بیات» شمرده می‌شود. */
@@ -177,14 +185,16 @@ export const SETTING_DEFAULTS: Settings = {
 
   allowRegistration: true,
   allowPasswordLogin: true,
-  allowOtpLogin: true,
+  allowOtpLogin: false,
+  allowSmsVerification: true,
+  registrationRequiresPhoneVerification: false,
   passwordMinLength: 8,
   loginMaxAttempts: 5,
   loginLockoutMinutes: 15,
   sessionDays: 30,
   viewAsMinutes: 30,
   otpLength: 5,
-  otpTtlSeconds: 120,
+  otpTtlSeconds: 60,
   otpResendCooldownSeconds: 90,
   otpMaxPerHour: 5,
   otpMaxAttempts: 5,
@@ -220,6 +230,8 @@ export const SETTING_DEFAULTS: Settings = {
   thousandUnitThreshold: 5000,
   priceTierCheapMax: 250000,
   priceTierMidMax: 400000,
+  priceStatsMaxItemPrice: 5000000,
+  priceStatsExcludeServiceSections: false,
   priceOutlierRatio: 0.05,
   stalePriceDays: 90,
   districtMatchMaxKm: 4,
@@ -327,7 +339,27 @@ export const SETTING_DEFS: SettingDef[] = [
     hint: 'خاموش‌کردنش وقتی پیامک هم کار نمی‌کند، همه را بیرون می‌گذارد.',
     type: 'boolean',
   },
-  { key: 'allowOtpLogin', group: 'auth', label: 'ورود با کد پیامکی', type: 'boolean' },
+  {
+    key: 'allowOtpLogin',
+    group: 'auth',
+    label: 'ورود با کد یک‌بارمصرف',
+    hint: 'فعلاً خاموش بماند؛ با روشن‌کردن، گزینهٔ ورود پیامکی کنار ورود با رمز ظاهر می‌شود.',
+    type: 'boolean',
+  },
+  {
+    key: 'allowSmsVerification',
+    group: 'auth',
+    label: 'پیامک ثبت‌نام و بازیابی',
+    hint: 'برای تأیید مالکیت شماره در ساخت حساب و بازیابی رمز استفاده می‌شود و مستقل از روش ورود است.',
+    type: 'boolean',
+  },
+  {
+    key: 'registrationRequiresPhoneVerification',
+    group: 'auth',
+    label: 'تأیید شماره هنگام ثبت‌نام',
+    hint: 'خاموش = ساخت حساب مستقیم با نام کاربری و رمز؛ روشن = شماره موبایل و کد تأیید هم لازم است.',
+    type: 'boolean',
+  },
   {
     key: 'smsDevMode',
     group: 'auth',
@@ -635,7 +667,8 @@ export const SETTING_DEFS: SettingDef[] = [
   {
     key: 'priceTierCheapMax',
     group: 'data',
-    label: 'سقف رده‌ی اقتصادی',
+    label: 'سقف میانه برای رده‌ی اقتصادی',
+    hint: 'اگر میانهٔ قیمت آیتم‌های مشمول تا این مقدار باشد، مجموعه «اقتصادی» است.',
     type: 'number',
     min: 10000,
     max: 5000000,
@@ -645,11 +678,31 @@ export const SETTING_DEFS: SettingDef[] = [
   {
     key: 'priceTierMidMax',
     group: 'data',
-    label: 'سقف رده‌ی متوسط',
+    label: 'سقف میانه برای رده‌ی متوسط',
+    hint: 'بالاتر از سقف اقتصادی و تا این مقدار «متوسط» است؛ بیشتر از آن «گران» می‌شود.',
     type: 'number',
     min: 20000,
     max: 10000000,
     unit: 'تومان',
+    needsRecompute: 'derived',
+  },
+  {
+    key: 'priceStatsMaxItemPrice',
+    group: 'data',
+    label: 'بیشترین قیمت قابل‌محاسبه',
+    hint: 'آیتم گران‌تر از این عدد (مثلاً دستگاه اسپرسو) خودکار از حداقل، میانه، حداکثر و ردهٔ قیمت کنار می‌رود. صفر = بدون سقف.',
+    type: 'number',
+    min: 0,
+    max: 1000000000,
+    unit: 'تومان',
+    needsRecompute: 'derived',
+  },
+  {
+    key: 'priceStatsExcludeServiceSections',
+    group: 'data',
+    label: 'حذف دسته‌های خدماتی از سطح قیمت',
+    hint: 'آیتم‌های دسته‌های خدماتی مثل «سرویس و پکیج» و «قلیان» در آمار قیمت مجموعه محاسبه نمی‌شوند.',
+    type: 'boolean',
     needsRecompute: 'derived',
   },
   {
@@ -799,7 +852,17 @@ export function validateSettings(next: Settings): ValidationError[] {
   if (!next.allowPasswordLogin && !next.allowOtpLogin) {
     errors.push({
       key: 'allowPasswordLogin',
-      message: 'حداقل یکی از دو راه ورود باید باز باشد، وگرنه هیچ‌کس نمی‌تواند وارد شود.',
+      message: 'حداقل یکی از روش‌های ورود با رمز یا کد یک‌بارمصرف باید روشن باشد.',
+    })
+  }
+  if (
+    next.allowRegistration
+    && next.registrationRequiresPhoneVerification
+    && !next.allowSmsVerification
+  ) {
+    errors.push({
+      key: 'allowSmsVerification',
+      message: 'تا وقتی ثبت‌نام باز است، پیامک تأیید شماره باید روشن بماند.',
     })
   }
   if (next.priceTierMidMax <= next.priceTierCheapMax) {

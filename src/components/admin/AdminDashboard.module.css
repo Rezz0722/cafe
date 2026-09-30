@@ -99,7 +99,7 @@
 }
 
 .tabOn {
-  background: var(--c-ink);
+  background: var(--c-inverse-surface);
   border-color: var(--c-ink);
   color: #fff;
 }
@@ -229,7 +229,7 @@
 
 .bar:hover {
   opacity: 1;
-  background: var(--c-primary-strong);
+  background: var(--c-primary-action-strong);
 }
 
 /* ── فهرست ──────────────────────────────────────────────────────────── */
@@ -369,6 +369,70 @@
   max-width: 460px;
 }
 
+.adminCreate {
+  padding: 14px 16px;
+  border: 1px solid var(--c-primary-border);
+  border-radius: var(--r-lg, 16px);
+  background: var(--c-primary-soft);
+}
+
+.adminCreate > summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  color: var(--c-primary-strong);
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.adminCreate .form { max-width: none; }
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 11px;
+}
+
+.fieldWide {
+  display: grid;
+  gap: 4px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--c-ink-2);
+  grid-column: span 2;
+}
+
+.dangerDetails {
+  flex: 0 0 auto;
+}
+
+.dangerDetails > summary {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  color: var(--c-danger, #a32020);
+  font-size: 0.75rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.deleteForm {
+  position: relative;
+  z-index: 2;
+  width: min(360px, calc(100vw - 48px));
+  display: grid;
+  gap: 8px;
+  margin-top: 6px;
+  padding: 12px;
+  border: 1px solid var(--c-danger, #a32020);
+  border-radius: var(--r-md, 12px);
+  background: var(--c-surface);
+}
+
+.deleteForm p { margin: 0; color: var(--c-danger, #a32020); font-size: .75rem; line-height: 1.7; }
+
 .field {
   display: grid;
   gap: 4px;
@@ -441,7 +505,7 @@
 }
 
 .btn:hover:not(:disabled) {
-  background: var(--c-primary-strong);
+  background: var(--c-primary-action-strong);
 }
 
 .btnDanger {
@@ -507,6 +571,18 @@
   color: var(--c-accent-text-strong);
   font-size: 0.7rem;
   font-weight: 700;
+}
+
+.entityBadge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--c-primary-soft);
+  color: var(--c-primary-strong);
+  font-size: 0.68rem;
+  font-weight: 800;
 }
 
 .stars {
@@ -590,7 +666,63 @@
 }
 
 @media (max-width: 720px) {
+  .panel,
+  .section,
+  .list,
+  .card,
+  .cardHead,
+  .cardActions {
+    min-width: 0;
+  }
+
   .twoCol {
     grid-template-columns: 1fr;
   }
+
+  .formGrid { grid-template-columns: 1fr; }
+  .fieldWide { grid-column: auto; }
+  .rowCard { align-items: stretch; }
+  .rowCard .inlineForm { width: 100%; }
+  .rowCard .inlineForm .select { flex: 1; min-width: 0; }
+
+  /*
+   * متن بلند optionهای «وصل‌کردن مجموعه» عرض ذاتی select را تا بیش از
+   * ۵۰۰px می‌برد و کل تب کاربران را از viewport موبایل بیرون می‌کشید.
+   * فرم‌های هر کاربر در موبایل شبکه‌ای‌اند تا هیچ کنترل مدیریتی بریده نشود.
+   */
+  .cardActions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+  }
+
+  .cardActions > form {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .cardActions > form > :is(.btn, .btnDanger, .btnGhost) {
+    width: 100%;
+    min-height: 44px;
+    padding-inline: 8px;
+  }
+
+  .cardActions .inlineForm {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    width: 100%;
+    min-width: 0;
+    flex-wrap: nowrap;
+  }
+
+  .cardActions .inlineForm:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .cardActions .inlineForm .select {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
 }
+.catalogFilters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:14px 0}.catalogFilters label{display:grid;gap:6px;min-width:0;font-size:.8rem}.catalogFilters select{width:100%;min-width:0;min-height:44px}.catalogPagination{display:grid;gap:8px;margin:18px 0;padding:12px;border-top:1px solid var(--c-border)}.catalogPagination p{margin:0;font-size:.82rem}.catalogPagination nav{display:flex;gap:10px;flex-wrap:wrap}.catalogPagination button{min-height:44px;padding:8px 16px;border:1px solid var(--c-border);border-radius:12px;background:var(--c-surface);color:var(--c-ink);font:inherit;font-weight:700}.catalogPagination button:disabled{opacity:.5}.inlineForm button{min-height:44px}.catalogPagination [role=alert]{color:var(--c-danger,#b42318)}@media(max-width:600px){.catalogFilters{grid-template-columns:1fr}.catalogPagination nav>*{flex:1}}

@@ -4,7 +4,7 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { readViewAsClaims, VIEW_AS_COOKIE } from './impersonation'
 import { SESSION_COOKIE, verifySessionToken } from './session'
-import { findUserById } from './userRepo'
+import { findUserById, isAuthSessionActive, isUnregisteredPhoneAccount, revokeSession } from './userRepo'
 import type { AppUser, SessionUser } from './types'
 import { authUrl } from '@/routes'
 
@@ -23,6 +23,8 @@ import { authUrl } from '@/routes'
 
 /** نشستِ حل‌شده — با در نظر گرفتن «مشاهده به‌عنوان». */
 export interface Session {
+  /** نشست واقعیِ پشت کوکی؛ برای ابطال یا نگه‌داشتن نشست جاری پس از تغییر رمز. */
+  sessionId: string | null
   /** کسی که صفحات، او را می‌بینند. */
   user: SessionUser | null
   /**
@@ -32,7 +34,7 @@ export interface Session {
   actor: SessionUser | null
 }
 
-const NO_SESSION: Session = { user: null, actor: null }
+const NO_SESSION: Session = { user: null, actor: null, sessionId: null }
 
 function toSessionUser(user: AppUser): SessionUser {
   return {
@@ -49,8 +51,18 @@ export async function getSession(): Promise<Session> {
   const payload = verifySessionToken(store.get(SESSION_COOKIE)?.value)
   if (!payload) return NO_SESSION
 
+  if (!(await isAuthSessionActive(payload.sessionId, payload.userId))) return NO_SESSION
+
   const account = await findUserById(payload.userId)
   if (!account || account.blocked) return NO_SESSION
+
+  // نشست‌هایی که قبل از اصلاح باگِ «ساخت خودکار حساب در ورود پیامکی» صادر
+  // شده‌اند نباید به کاربر اجازه‌ی ورود به پنل بدهند. حساب را حذف نمی‌کنیم؛
+  // کاربر می‌تواند همان شماره را از مسیر ثبت‌نام کامل کند.
+  if (isUnregisteredPhoneAccount(account)) {
+    await revokeSession(payload.sessionId, payload.userId)
+    return NO_SESSION
+  }
 
   const self = toSessionUser(account)
 
@@ -65,16 +77,16 @@ export async function getSession(): Promise<Session> {
     نادیده گرفته می‌شود.
   */
   if (!claims || self.role !== 'admin' || claims.actorId !== self.id) {
-    return { user: self, actor: null }
+    return { user: self, actor: null, sessionId: payload.sessionId }
   }
 
   const target = await findUserById(claims.targetId)
   // ادمین دیگر، حساب مسدود و کاربر حذف‌شده: هیچ‌کدام قابل مشاهده نیستند.
   if (!target || target.blocked || target.role === 'admin') {
-    return { user: self, actor: null }
+    return { user: self, actor: null, sessionId: payload.sessionId }
   }
 
-  return { user: toSessionUser(target), actor: self }
+  return { user: toSessionUser(target), actor: self, sessionId: payload.sessionId }
 }
 
 export async function getCurrentUser(): Promise<SessionUser | null> {

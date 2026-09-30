@@ -11,7 +11,7 @@
  */
 
 import { createSessionToken, SESSION_COOKIE } from '../src/core/auth/session'
-import { findUserByLogin } from '../src/core/auth/userRepo'
+import { createAuthSession, findUserByLogin } from '../src/core/auth/userRepo'
 import { closeDb } from '../src/db/connection'
 
 async function main() {
@@ -28,7 +28,14 @@ async function main() {
     process.exit(1)
   }
 
-  const token = createSessionToken({ userId: user.id, phone: user.phone, role: user.role })
+  const maxAgeSec = 30 * 24 * 3600
+  const sessionId = await createAuthSession({
+    userId: user.id,
+    method: 'password',
+    expiresAt: new Date(Date.now() + maxAgeSec * 1000),
+    userAgent: 'scripts/session-token.ts',
+  })
+  const token = createSessionToken({ sessionId, userId: user.id, phone: user.phone, role: user.role }, maxAgeSec)
   console.log(`${SESSION_COOKIE}=${token}`)
   console.error(`(${user.name || 'بی‌نام'} · ${user.role})`)
   await closeDb()

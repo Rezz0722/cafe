@@ -13,7 +13,14 @@
 
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { buildDirectionLinks, geoUri, primaryDirectionLinks } from './directions'
+import {
+  buildDirectionLinks,
+  geoUri,
+  neshanIosRouteLink,
+  neshanPointLink,
+  neshanRouteLink,
+  primaryDirectionLinks,
+} from './directions'
 
 /** مختصات یک کافه‌ی واقعی در مشهد. */
 const TARGET = { lat: 36.316, lng: 59.567, name: 'کافه نمونه' }
@@ -42,10 +49,30 @@ test('همه‌ی لینک‌ها https هستند', () => {
 
 test('مختصات با ترتیب درست و دقت ۶ رقم می‌آید', () => {
   // جابه‌جایی عرض و طول، کاربر را به وسط بیابان می‌فرستد.
-  assert.match(byId('neshan').href, /36\.316000,59\.567000/)
+  assert.match(byId('neshan').href, /lat=36\.316000&lng=59\.567000/)
   assert.match(byId('google').href, /destination=36\.316000,59\.567000/)
   assert.match(byId('waze').href, /ll=36\.316000,59\.567000/)
   assert.match(byId('balad').href, /latitude=36\.316000&longitude=59\.567000/)
+})
+
+test('نشان از لینک رسمی کوتاه برای بازکردن اپ و fallback وب استفاده می‌کند', () => {
+  assert.equal(
+    neshanPointLink(TARGET),
+    'https://nshn.ir/?lat=36.316000&lng=59.567000',
+  )
+  assert.equal(byId('neshan').href, neshanPointLink(TARGET))
+})
+
+test('لینک رسمی نشان مبدأ، مقصد و نوع خودرو را درست می‌فرستد', () => {
+  const origin = { lat: 36.3, lng: 59.5 }
+  assert.equal(
+    neshanRouteLink(origin, TARGET),
+    'https://nshn.ir?origin=36.300000,59.500000&destination=36.316000,59.567000&vehicle=d',
+  )
+  assert.equal(
+    neshanIosRouteLink(origin, TARGET),
+    'neshan://?origin=36.300000,59.500000&destination=36.316000,59.567000&vehicle=d',
+  )
 })
 
 test('بلد به `location` می‌رود، نه به `directions`', () => {
@@ -78,7 +105,7 @@ test('سرویس‌های ایرانی «محلی» علامت خورده‌ان
 
 test('مختصات بیرون از بازه محدود می‌شود', () => {
   const links = buildDirectionLinks({ lat: 999, lng: -999 })
-  assert.match(links[0]!.href, /90\.000000,-180\.000000/)
+  assert.match(links[0]!.href, /lat=90\.000000&lng=-180\.000000/)
 })
 
 test('نامِ مکان در آدرس امن می‌شود', () => {

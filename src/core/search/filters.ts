@@ -17,8 +17,11 @@
  */
 
 export type SortKey = 'rating' | 'price_asc' | 'price_desc' | 'quality' | 'name' | 'distance'
+export type SearchScope = 'all' | 'places' | 'items'
 
 export interface SearchFilters {
+  /** نوع نتیجه؛ `all` اجازه می‌دهد intent resolver بهترین سطح را انتخاب کند. */
+  scope: SearchScope
   /** جست‌وجوی متنی روی نام کافه. */
   q: string
   /**
@@ -57,6 +60,7 @@ export interface SearchFilters {
 }
 
 export const DEFAULT_FILTERS: SearchFilters = {
+  scope: 'all',
   q: '',
   rawQuery: false,
   facets: [],
@@ -114,6 +118,7 @@ function parseList(value: string | string[] | undefined): string[] {
 
 /** خواندن فیلترها از `searchParams` — با نادیده‌گرفتنِ امنِ مقادیر خراب. */
 export function parseFilters(params: Params): SearchFilters {
+  const scopeRaw = firstValue(params.scope)
   const sortRaw = firstValue(params.sort) as SortKey
   const viewRaw = firstValue(params.view)
   const pageRaw = Number.parseInt(firstValue(params.page), 10)
@@ -126,6 +131,7 @@ export function parseFilters(params: Params): SearchFilters {
   const nearMe = firstValue(params.near) === '1'
 
   return {
+    scope: scopeRaw === 'places' || scopeRaw === 'items' ? scopeRaw : 'all',
     q: firstValue(params.q).slice(0, 80),
     rawQuery: firstValue(params.raw) === '1',
     facets: parseList(params.f).slice(0, 6),
@@ -138,7 +144,18 @@ export function parseFilters(params: Params): SearchFilters {
     nearMe,
     // «نزدیک‌ترین» بدون اجازه‌ی موقعیت بی‌معنی است، پس `near=1` خودش
     // مرتب‌سازی را هم تعیین می‌کند مگر کاربر صریحاً چیز دیگری خواسته باشد.
-    sort: SORT_KEYS.includes(sortRaw) ? sortRaw : nearMe ? 'distance' : 'rating',
+    // `distance` بدون موقعیت یک برچسب دروغین است. URL دست‌کاری‌شده یا لینک
+    // قدیمی فقط وقتی این sort را نگه می‌دارد که near هم فعال باشد.
+    sort:
+      sortRaw === 'distance'
+        ? nearMe
+          ? 'distance'
+          : 'rating'
+        : SORT_KEYS.includes(sortRaw)
+          ? sortRaw
+          : nearMe
+            ? 'distance'
+            : 'rating',
     view: viewRaw === 'map' ? 'map' : 'list',
     page: Number.isFinite(pageRaw) && pageRaw > 0 ? Math.min(pageRaw, 50) : 1,
   }
@@ -149,6 +166,7 @@ export function buildQuery(filters: Partial<SearchFilters>): string {
   const merged = { ...DEFAULT_FILTERS, ...filters }
   const params = new URLSearchParams()
 
+  if (merged.scope !== 'all') params.set('scope', merged.scope)
   if (merged.q.trim()) params.set('q', merged.q.trim())
   // بدون متن، `raw` معنی ندارد و فقط آدرس را شلوغ می‌کند.
   if (merged.rawQuery && merged.q.trim()) params.set('raw', '1')
@@ -178,6 +196,7 @@ export function searchPath(filters: Partial<SearchFilters>): string {
 /** آیا هیچ فیلتری فعال است؟ برای نمایش دکمه‌ی «پاک‌کردن فیلترها». */
 export function hasActiveFilters(filters: SearchFilters): boolean {
   return (
+    filters.scope !== 'all' ||
     filters.q.trim() !== '' ||
     filters.facets.length > 0 ||
     filters.attributes.length > 0 ||

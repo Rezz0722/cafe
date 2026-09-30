@@ -3,6 +3,8 @@
 import type { ReactNode } from 'react'
 import { AuthProvider } from '@/hooks/useAuth'
 import type { SessionUser } from '@/core/auth/types'
+import { PwaProvider } from '@/components/pwa/PwaProvider'
+import { ThemeProvider } from '@/components/theme/ThemeProvider'
 
 /**
  * تنها مرز client در ریشه‌ی درخت.
@@ -30,6 +32,6 @@ export function Providers({
   user: SessionUser | null
 }) {
   return (
-    <AuthProvider user={user}>{children}</AuthProvider>
+    <ThemeProvider><AuthProvider user={user}><PwaProvider>{children}</PwaProvider></AuthProvider></ThemeProvider>
   )
 }

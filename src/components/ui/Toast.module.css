@@ -12,7 +12,7 @@
 }
 
 .bubble {
-  background: var(--c-ink);
+  background: var(--c-inverse-surface);
   color: #fff;
   font-size: 15px;
   font-weight: 700;

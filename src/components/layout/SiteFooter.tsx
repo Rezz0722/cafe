@@ -2,10 +2,7 @@ import Link from 'next/link'
 import { searchPath } from '@/core/search/filters'
 import { paths } from '@/routes'
 import styles from './SiteFooter.module.css'
-import { Heart } from 'lucide-react'
-
-/** نشانه‌گذارِ ستونی که عنوانش نامِ برند است — در رندر با تنظیمات عوض می‌شود. */
-const BRAND_COLUMN = '__brand__'
+import { BadgeCheck } from 'lucide-react'
 
 const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
   {
@@ -17,8 +14,9 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
       { label: 'الان باز است', href: searchPath({ openNow: true }) },
       { label: 'نزدیک من', href: searchPath({ nearMe: true, sort: 'distance' }) },
       { label: 'روی نقشه', href: searchPath({ view: 'map' }) },
-      { label: 'قهوه دمی', href: searchPath({ facets: ['brewed_coffee'] }) },
-      { label: 'صبحانه', href: searchPath({ facets: ['breakfast'] }) },
+      { label: 'کافه‌های بررسی‌شده', href: paths.reviewedCafes },
+      { label: 'قهوه دمی', href: paths.menuCategory('brewed_coffee') },
+      { label: 'صبحانه', href: paths.menuCategory('breakfast') },
     ],
   },
   {
@@ -33,14 +31,24 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
     ],
   },
   {
-    title: BRAND_COLUMN,
+    title: 'راهنما',
     links: [
-      { label: 'دربارهٔ ما', href: paths.home },
+      { label: 'نصب کوکافه روی گوشی', href: '/install' },
+      { label: 'دربارهٔ کو کافه', href: paths.about },
+      { label: 'چطور استفاده کنم؟', href: '/#how-it-works' },
+      { label: 'روش جمع‌آوری داده', href: paths.methodology },
+      { label: 'سیاست محتوا و نظرها', href: paths.editorialPolicy },
+      { label: 'حریم خصوصی', href: paths.privacy },
+      { label: 'سؤال‌های رایج', href: '/#faq' },
       { label: 'مشارکت', href: paths.contribute },
-      { label: 'تماس', href: paths.home },
-      // `/admin` حالا پنل ادمین است، نه پنل مالک؛ این لینک همان پنل مالک را
-      // می‌خواهد و باید مستقیم به `/admin/venue` برود.
+    ],
+  },
+  {
+    title: 'برای کافه‌ها',
+    links: [
       { label: 'پنل مدیریت کافه', href: `${paths.admin}/venue` },
+      { label: 'ثبت کافهٔ جدید', href: paths.submitPlace },
+      { label: 'اصلاح اطلاعات یک کافه', href: paths.contribute },
     ],
   },
 ]
@@ -51,43 +59,58 @@ interface Props {
   tagline?: string
 }
 
+function FooterLinks({ column }: { column: (typeof COLUMNS)[number] }) {
+  return (
+    <nav className={styles.links} aria-label={column.title}>
+      {column.links.map((link) => (
+        <Link key={link.label} href={link.href}>{link.label}</Link>
+      ))}
+    </nav>
+  )
+}
+
 export function SiteFooter({
   siteName = 'کو کافه',
-  tagline = 'راهنمای گرم و قابل‌اعتماد کافه و رستوران‌های مشهد. اسم مکان رو جستجو نکن، حالت رو بگو.',
+  tagline = 'راهنمای منو، قیمت، ساعت کاری و مسیر کافه‌ها و رستوران‌های مشهد.',
 }: Props) {
+  const persianYear = new Intl.DateTimeFormat('fa-IR-u-ca-persian', { year: 'numeric' }).format(
+    new Date(),
+  )
+
   return (
     <footer className={styles.footer}>
       <div className={`container ${styles.inner}`}>
         <div className={styles.grid}>
           <div className={styles.brandCol}>
-            <div className={styles.brandName}>{siteName}</div>
+            <div className={styles.footerBrand}>
+              <img src="/brand/app-icon-192.png" alt="" width={192} height={192} />
+              <div>
+                <div className={styles.brandName}>{siteName}</div>
+                <small>KuCafe · kucafe.ir · جای خوب پیدا می‌شود</small>
+              </div>
+            </div>
             <p className={styles.tagline}>{tagline}</p>
           </div>
 
           {COLUMNS.map((column) => (
-            <nav
-              key={column.title}
-              aria-label={column.title === BRAND_COLUMN ? siteName : column.title}
-            >
-              <div className={styles.colTitle}>
-                {column.title === BRAND_COLUMN ? siteName : column.title}
-              </div>
-              <div className={styles.links}>
-                {column.links.map((link) => (
-                  <Link key={link.label} href={link.href}>
-                    {link.label}
-                  </Link>
-                ))}
-              </div>
-            </nav>
+            <div key={column.title} className={styles.columnSet}>
+              <section className={`${styles.column} ${styles.desktopColumn}`}>
+                <h2 className={styles.colTitle}>{column.title}</h2>
+                <FooterLinks column={column} />
+              </section>
+              <details className={`${styles.column} ${styles.mobileColumn}`}>
+                <summary className={styles.colTitle}>{column.title}</summary>
+                <FooterLinks column={column} />
+              </details>
+            </div>
           ))}
         </div>
 
         <div className={styles.bottom}>
           <div className={styles.madeBy}>
-            ساختهٔ جوون‌های مشهد <Heart size={14} className={styles.heart} aria-hidden="true" fill="currentColor" />
+            <BadgeCheck size={15} aria-hidden="true" /> اطلاعات برای انتخاب آگاهانه‌تر
           </div>
-          <div className={styles.copyright}>© ۱۴۰۴ {siteName} — همهٔ حقوق محفوظ است.</div>
+          <div className={styles.copyright}>© {persianYear} {siteName} — همهٔ حقوق محفوظ است.</div>
         </div>
       </div>
     </footer>

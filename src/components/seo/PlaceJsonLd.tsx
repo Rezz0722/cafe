@@ -1,4 +1,5 @@
 import { absoluteUrl, paths } from '@/routes'
+import { serializeJsonLd } from '@/core/security/jsonLd'
 
 /**
  * JSON-LD برای schema.org.
@@ -57,6 +58,7 @@ export interface PlaceJsonLdProps {
   rating?: number
   ratingCount?: number
   imageUrl?: string | null
+  sameAs?: string[]
   description?: string | null
   /** یک ردیف به‌ازای هر روز، با همه‌ی شیفت‌هایش. */
   hours?: { dow: number; ranges: string[] }[]
@@ -128,6 +130,7 @@ export function PlaceJsonLd({
   if (place.description) data.description = place.description
   if (place.phone) data.telephone = place.phone
   if (place.imageUrl) data.image = absoluteUrl(place.imageUrl)
+  if (place.sameAs?.length) data.sameAs = place.sameAs
   if (openingHours.length) data.openingHoursSpecification = openingHours
 
   if (place.coords) {
@@ -190,7 +193,7 @@ export function PlaceJsonLd({
   }
 
   return (
-    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }} />
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(data) }} />
   )
 }
 
@@ -208,6 +211,6 @@ export function BreadcrumbJsonLd({ items }: { items: { name: string; path: strin
   }
 
   return (
-    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }} />
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(data) }} />
   )
 }

@@ -1,0 +1,15 @@
+src/app/admin/page.tsx
+ecosystem.config.cjs
+package.json
+scripts/reload-safe.sh
+src/components/admin/AdminDashboard.tsx
+src/components/admin/ZeroResultInsights.tsx
+src/core/analytics/insightCache.ts
+src/core/analytics/insightCache.test.ts
+src/core/analytics/searchInsights.ts
+src/app/api/admin/search-insights/route.ts
+public/sw.js
+scripts/pwa-smoke.ts
+scripts/admin-performance-smoke.ts
+docs/ADMIN_PERFORMANCE_FILES.txt
+docs/ADMIN_PERFORMANCE_FA.md

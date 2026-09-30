@@ -1,0 +1,18 @@
+.wrap{position:relative;isolation:isolate;overflow:hidden;border-radius:inherit;background:#e9e6df;min-width:0}
+.canvas{width:100%;height:100%;background:#e9e6df;font:inherit}
+.wrap[data-theme="dark"] .canvas{background:#202735}
+.canvas :global(.leaflet-control-zoom a){width:44px;height:44px;line-height:44px;color:#1e293b}
+.canvas :global(.leaflet-control-attribution){font-size:11px;background:#fffc;padding:2px 5px}
+.marker{background:none;border:0;font:inherit;direction:rtl}
+.pin{display:flex;align-items:center;flex-direction:column;position:absolute;bottom:0;left:50%;transform:translateX(-50%);min-width:44px;min-height:44px;text-decoration:none;color:#152b4b;white-space:nowrap}
+.dot{display:grid;place-items:center;width:36px;height:36px;background:#2378d4;color:#fff;border:3px solid #fff;border-radius:50%;box-shadow:0 2px 8px #132a4e40}
+.focus .dot{background:#153b75;width:42px;height:42px}
+.name{max-width:150px;overflow:hidden;text-overflow:ellipsis;padding:3px 9px;border-radius:7px;background:#fffffff2;font-size:12px;font-weight:750;box-shadow:0 1px 4px #132a4e22}
+.pin small{max-width:180px;overflow:hidden;text-overflow:ellipsis;background:#fff;padding:2px 5px;font-size:11px}
+.cluster{display:grid;place-items:center;width:44px;height:44px;border:3px solid #fff;border-radius:50%;background:#206bb9;color:#fff;font-family:inherit;font-size:15px;font-weight:700;box-shadow:0 2px 8px #132a4e40;cursor:pointer}
+.landmark{color:#475569;font-size:11px;text-shadow:0 1px 2px #fff,0 -1px 2px #fff;white-space:nowrap;pointer-events:none}
+.status{position:absolute;z-index:1000;right:10px;top:10px;max-width:calc(100% - 78px);background:#fffffff2;border:1px solid #d4dce7;border-radius:10px;padding:7px 10px;font-size:12px;line-height:1.8;color:#334155}
+.status button{min-height:44px;background:none;border:0;color:#1453a2;font:inherit;cursor:pointer;padding:0 8px}
+.locate{position:absolute;z-index:900;bottom:32px;right:12px;min-height:44px;padding:0 14px;border:1px solid #d4dce7;border-radius:12px;background:#fffffff2;color:#193e6c;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.empty{position:absolute;z-index:900;left:50%;top:50%;transform:translate(-50%,-50%);width:min(280px,80%);background:#fffe;border-radius:12px;padding:14px;font-size:13px;text-align:center}
+.pin:focus-visible,.cluster:focus-visible,.locate:focus-visible{outline:3px solid #2563eb;outline-offset:3px}

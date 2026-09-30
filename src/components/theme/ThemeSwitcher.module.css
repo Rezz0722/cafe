@@ -1,0 +1,61 @@
+.root { position: relative; flex: 0 0 auto; }
+.trigger {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 11px;
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  color: var(--c-ink-2);
+  background: var(--c-surface-2);
+  font: inherit;
+  font-size: .72rem;
+  font-weight: 800;
+}
+.trigger svg { color: var(--c-primary-strong); }
+.panel {
+  position: absolute;
+  z-index: 150;
+  inset-block-start: calc(100% + 9px);
+  inset-inline-end: 0;
+  width: min(276px, calc(100vw - 24px));
+  display: grid;
+  gap: 5px;
+  padding: 10px;
+  border: 1px solid var(--c-border);
+  border-radius: 16px;
+  background: var(--c-surface);
+  box-shadow: var(--sh-raised);
+}
+.panel > strong { padding: 3px 6px 6px; color: var(--c-muted); font-size: .68rem; }
+.panel button {
+  min-height: 56px;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  padding: 7px 9px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  color: var(--c-ink-2);
+  background: transparent;
+  text-align: start;
+}
+.panel button > svg { color: var(--c-muted); }
+.panel button > span { min-width: 0; display: flex; flex-direction: column; }
+.panel b { color: var(--c-ink); font-size: .76rem; }
+.panel small { color: var(--c-muted); font-size: .61rem; }
+.panel button[aria-pressed='true'] { border-color: var(--c-primary-border); background: var(--c-primary-soft); }
+.panel button[aria-pressed='true'] > svg { color: var(--c-primary-strong); }
+
+@media (hover: hover) and (pointer: fine) {
+  .trigger:hover, .panel button:hover { border-color: var(--c-primary-border); color: var(--c-primary-strong); }
+  .panel button:hover { background: var(--c-surface-2); }
+}
+
+@media (max-width: 640px) {
+  .trigger { width: 44px; padding: 0; justify-content: center; }
+  .trigger > span { display: none; }
+  .panel { position: fixed; inset-block-start: calc(var(--header-h) + env(safe-area-inset-top, 0px) + 8px); inset-inline: 12px; width: auto; }
+}

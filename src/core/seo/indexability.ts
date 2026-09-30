@@ -5,7 +5,7 @@
  *
  * ۶ محله × ۱۶ ویژگی = ۹۶ صفحه‌ی ممکن. اگر کورکورانه همه را تولید و ایندکس
  * کنیم، بیشترشان یک یا صفر کافه دارند. گوگل این را «thin content» می‌بیند و
- * می‌تواند *کل دامنه* را تنبیه کند — نه فقط آن صفحات.
+ * بدون ارزش واقعی، ریسک محتوای کم‌ارزش و اتلاف Crawl ایجاد می‌کنند.
  *
  * پس: صفحه ساخته می‌شود و برای کاربر کار می‌کند، ولی تا وقتی به حد نصاب
  * نرسیده `noindex` می‌ماند و در sitemap هم نمی‌آید. با رشد داده، خودکار
@@ -17,6 +17,11 @@ export const MIN_PLACES_FOR_INDEX = 5
 
 export function isIndexable(placeCount: number): boolean {
   return placeCount >= MIN_PLACES_FOR_INDEX
+}
+
+/** سیاست اولیهٔ محصول، نه حدنصاب گوگل؛ یک alias یا عکس کافی نیست. */
+export function isIndexableMenuItem(hasImage: boolean, description: string | null | undefined, approvedReviewCount = 0): boolean {
+  return approvedReviewCount >= 3 || (hasImage && (description?.trim().length ?? 0) >= 40)
 }
 
 /** آبجکت `robots` برای متادیتای Next. */

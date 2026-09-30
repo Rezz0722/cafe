@@ -139,7 +139,23 @@ test('بستنِ هر دو راه ورود مجاز نیست', () => {
   ])
   // بستنِ یکی، مجاز است.
   assert.deepEqual(errorKeys({ allowOtpLogin: false }), [])
-  assert.deepEqual(errorKeys({ allowPasswordLogin: false }), [])
+  assert.deepEqual(errorKeys({ allowPasswordLogin: false, allowOtpLogin: true }), [])
+})
+
+test('ثبت‌نام باز بدون پیامک تأیید مجاز نیست', () => {
+  assert.deepEqual(errorKeys({
+    allowRegistration: true,
+    registrationRequiresPhoneVerification: true,
+    allowSmsVerification: false,
+  }), [
+    'allowSmsVerification',
+  ])
+  assert.deepEqual(errorKeys({
+    allowRegistration: true,
+    registrationRequiresPhoneVerification: false,
+    allowSmsVerification: false,
+  }), [])
+  assert.deepEqual(errorKeys({ allowRegistration: false, allowSmsVerification: false }), [])
 })
 
 test('مرزهای رده‌ی قیمت باید صعودی باشند', () => {
@@ -216,10 +232,14 @@ test('سیاست داده، کادر و مرزها را درست می‌چیند
     withSettings({
       priceTierCheapMax: 100_000,
       priceTierMidMax: 200_000,
+      priceStatsMaxItemPrice: 3_000_000,
+      priceStatsExcludeServiceSections: true,
       geoBboxMinLat: 30,
     }),
   )
   assert.deepEqual(policy.priceTierBounds, { cheap: 100_000, mid: 200_000 })
+  assert.equal(policy.priceStatsMaxItemPrice, 3_000_000)
+  assert.equal(policy.priceStatsExcludeServiceSections, true)
   assert.equal(policy.bbox.minLat, 30)
 })
 

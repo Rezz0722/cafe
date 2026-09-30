@@ -3,8 +3,9 @@
  *
  *   npm run import:cafes
  *
- * ⚠️  **همه‌ی مکان‌های موجود را پاک می‌کند** و از نو می‌نویسد. جدول `media`
- *     دست‌نخورده می‌ماند، پس ۱۴هزار تصویر دانلودشده از دست نمی‌روند.
+ * ⚠️  این دستور برای bootstrap است. روی دیتابیس پر متوقف می‌شود، مگر اینکه
+ *     اپراتور بعد از backup صریحاً `ALLOW_DESTRUCTIVE_IMPORT=1` گذاشته باشد.
+ *     جدول `media` دست‌نخورده می‌ماند.
  *
  * گزارش کامل در `task/04-import/REPORT.md` نوشته می‌شود — نه فقط چاپ در
  * ترمینال، چون این گزارش سند تصمیم‌های داده است و باید قابل رهگیری بماند.
@@ -35,6 +36,7 @@ async function main() {
   const report = await importCafes(db, {
     log: (message) => console.log(`  ${message}`),
     policy,
+    allowDestructiveReset: process.env.ALLOW_DESTRUCTIVE_IMPORT === '1',
   })
   const seconds = ((Date.now() - started) / 1000).toFixed(1)
 

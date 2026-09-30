@@ -1,0 +1,67 @@
+name: kucafe
+
+services:
+  app:
+    image: kucafe/app:${KUCAFE_IMAGE_TAG:-local}
+    build:
+      context: .
+      target: runtime
+      network: host
+      args:
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://kucafe.ir}
+        NEXT_DEPLOYMENT_ID: ${KUCAFE_IMAGE_TAG:-local}
+      secrets:
+        - kucafe_env
+    network_mode: host
+    env_file:
+      - ${KUCAFE_ENV_FILE:-.env.production}
+    environment:
+      NODE_ENV: production
+      HOSTNAME: 127.0.0.1
+      PORT: ${KUCAFE_PORT:-3100}
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://kucafe.ir}
+    volumes:
+      - type: bind
+        source: ${KUCAFE_MEDIA_DIR:-/var/www/kucafe/public/media}
+        target: /app/public/media
+    restart: unless-stopped
+    stop_grace_period: 30s
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "--show-error", "http://127.0.0.1:${KUCAFE_PORT:-3100}/robots.txt"]
+      interval: 15s
+      timeout: 4s
+      start_period: 30s
+      retries: 4
+    labels:
+      ir.kucafe.project: kucafe
+      ir.kucafe.component: application
+
+  maintenance:
+    image: kucafe/maintenance:${KUCAFE_IMAGE_TAG:-local}
+    build:
+      context: .
+      target: maintenance
+      network: host
+    profiles: ["maintenance"]
+    network_mode: host
+    env_file:
+      - ${KUCAFE_ENV_FILE:-.env.production}
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://kucafe.ir}
+    volumes:
+      - type: bind
+        source: ${KUCAFE_MEDIA_DIR:-/var/www/kucafe/public/media}
+        target: /app/public/media
+      - type: bind
+        source: ${KUCAFE_BACKUP_DIR:-/var/backups/kucafe}
+        target: /backups
+    user: "0:0"
+    restart: "no"
+    labels:
+      ir.kucafe.project: kucafe
+      ir.kucafe.component: maintenance
+
+secrets:
+  kucafe_env:
+    file: ${KUCAFE_ENV_FILE:-.env.production}

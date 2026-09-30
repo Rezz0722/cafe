@@ -61,8 +61,26 @@ c_g "  node $(node -v) · $MYSQL_CLI · pm2 $(pm2 -v 2>/dev/null)"
 # ── ۲) کشیدن آخرین کد ────────────────────────────────────────────────────
 step "۲) هم‌تراز کردن با گیت"
 if [ -d .git ]; then
+  git config core.fileMode false
   BR="$(git rev-parse --abbrev-ref HEAD)"
-  git pull --ff-only origin "$BR" 2>&1 | tail -3 || c_y "  git pull رد شد (تغییر محلی؟) — با کدِ فعلی ادامه"
+  STASHED=0
+  if ! git diff --quiet -- ':!deploy.env' ':!.env.local' 2>/dev/null; then
+    c_y "  تغییرات محلی هست؛ قبل از pull کنار گذاشته می‌شود (git stash)."
+    BEFORE_STASH="$(git rev-parse -q --verify refs/stash || true)"
+    git stash push -u -m "deploy.sh auto-stash" -- ':!deploy.env' ':!.env.local' >/dev/null 2>&1
+    # exit code از stash push به تنهایی معتبر نیست: اگر deploy.env/.env.local
+    # نادیده‌گرفته‌شده باشند (که هستند)، git یک هشدار می‌دهد و ۱ برمی‌گرداند
+    # حتی وقتی stash واقعاً ساخته شده. پس با مقایسه‌ی refs/stash چک می‌کنیم.
+    AFTER_STASH="$(git rev-parse -q --verify refs/stash || true)"
+    [ "$AFTER_STASH" != "$BEFORE_STASH" ] && [ -n "$AFTER_STASH" ] && STASHED=1
+  fi
+  if ! git pull --ff-only origin "$BR" 2>&1 | tail -3; then
+    [ "$STASHED" = "1" ] && git stash pop >/dev/null 2>&1
+    die "git pull ناموفق بود (fast-forward نشد). دستی merge/rebase کن و دوباره اجرا کن."
+  fi
+  if [ "$STASHED" = "1" ]; then
+    git stash pop 2>&1 | tail -5 || c_y "  git stash pop تداخل داشت — با دست merge کن: git stash list"
+  fi
   c_g "  شاخه: $BR @ $(git rev-parse --short HEAD)"
 else
   c_y "  اینجا مخزن گیت نیست؛ با فایل‌های موجود ادامه می‌دهم."
@@ -74,12 +92,11 @@ url_pass="$(node -e 'process.stdout.write(encodeURIComponent(process.argv[1]))' 
 DB_URL="mysql://${DB_USER}:${url_pass}@127.0.0.1:3306/${DB_NAME}"
 if [ -f .env.local ]; then
   c_y "  .env.local هست؛ SESSION_SECRET و مقادیر موجود حفظ می‌شوند."
-  SECRET="$(grep -E '^SESSION_SECRET=' .env.local | head -1 | cut -d= -f2-)"
+  SECRET="$(grep -E '^SESSION_SECRET=' .env.local | head -1 | cut -d= -f2- || true)"
 fi
 [ -n "${SECRET:-}" ] || SECRET="$(node -e 'console.log(require("crypto").randomBytes(32).toString("hex"))')"
 # AUTH_DEV_MODE فقط وقتی کلید پیامک باشد false می‌شود
 if [ -n "${SMSIR_API_KEY:-}" ]; then DEV_MODE=false; else DEV_MODE=true; c_y "  کلید SMS خالی → AUTH_DEV_MODE=true (کد ورود در لاگ، بدون پیامک واقعی)"; fi
-umask 077
 cat > .env.local <<EOF
 # تولیدشده توسط deploy.sh — رازها اینجا می‌مانند، در git نمی‌روند.
 DATABASE_URL=${DB_URL}
@@ -93,21 +110,33 @@ chmod 600 .env.local
 c_g "  .env.local نوشته شد (chmod 600)."
 
 # ── ۴) ساخت دیتابیس (اختیاری) ────────────────────────────────────────────
+# نکته: کاربر باید برای هر دو میزبانِ 'localhost' (سوکت، برای CLI/migrate) و
+# '127.0.0.1' (TCP، همانی که DATABASE_URL از آن استفاده می‌کند) ساخته شود؛
+# در MySQL/MariaDB یوزرِ 'localhost' برای اتصال TCP از 127.0.0.1 هم کار نمی‌کند.
 if [ "$CREATE_DB" = "1" ]; then
   step "۴) ساخت دیتابیس و کاربر (با root سوکت)"
   SQL="CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASS}';
+CREATE USER IF NOT EXISTS '${DB_USER}'@'127.0.0.1' IDENTIFIED BY '${DB_PASS}';
 ALTER USER '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASS}';
+ALTER USER '${DB_USER}'@'127.0.0.1' IDENTIFIED BY '${DB_PASS}';
 GRANT ALL PRIVILEGES ON \`${DB_NAME}\`.* TO '${DB_USER}'@'localhost';
+GRANT ALL PRIVILEGES ON \`${DB_NAME}\`.* TO '${DB_USER}'@'127.0.0.1';
 FLUSH PRIVILEGES;"
   DA_CONF=/usr/local/directadmin/conf/mysql.conf
-  if echo "$SQL" | "$MYSQL_CLI" -u root 2>/dev/null; then c_g "  دیتابیس/کاربر آماده شد (root سوکت)."
-  elif echo "$SQL" | sudo "$MYSQL_CLI" -u root 2>/dev/null; then c_g "  دیتابیس/کاربر آماده شد (sudo root)."
+  # سوکتِ واقعیِ MariaDB را پیدا کن؛ کلاینت‌ها به‌طور پیش‌فرض /tmp/mysql.sock را
+  # امتحان می‌کنند که ممکن است روی این سرور وجود نداشته باشد (سوکتِ واقعی جای
+  # دیگری‌ست، مثلاً /var/lib/mysql/mysql.sock).
+  DA_SOCK="$(awk -F= '/^socket=/{print $2}' "$DA_CONF" 2>/dev/null)"
+  [ -S "${DA_SOCK:-}" ] || DA_SOCK="$(awk -F= '/^socket[[:space:]]*=/{print $2}' /etc/my.cnf /etc/my.cnf.d/*.cnf 2>/dev/null | head -1)"
+  SOCK_OPT=(); [ -S "${DA_SOCK:-}" ] && SOCK_OPT=(--socket="$DA_SOCK")
+  if echo "$SQL" | "$MYSQL_CLI" -u root "${SOCK_OPT[@]}" 2>/dev/null; then c_g "  دیتابیس/کاربر آماده شد (root سوکت)."
+  elif echo "$SQL" | sudo "$MYSQL_CLI" -u root "${SOCK_OPT[@]}" 2>/dev/null; then c_g "  دیتابیس/کاربر آماده شد (sudo root)."
   elif [ -r "$DA_CONF" ]; then
     # DirectAdmin: root مای‌اسکل با سوکت باز نمی‌شود؛ رمزِ da_admin در این فایل است.
     DA_U="$(awk -F= '/^user=/{print $2}' "$DA_CONF")"
     DA_P="$(awk -F= '/^passwd=/{print $2}' "$DA_CONF")"
-    if [ -n "$DA_U" ] && echo "$SQL" | "$MYSQL_CLI" -u"$DA_U" -p"$DA_P" 2>/dev/null; then
+    if [ -n "$DA_U" ] && echo "$SQL" | "$MYSQL_CLI" -u"$DA_U" -p"$DA_P" "${SOCK_OPT[@]}" 2>/dev/null; then
       c_g "  دیتابیس/کاربر آماده شد (اعتبارِ DirectAdmin)."
     else die "ساخت دیتابیس با اعتبارِ DirectAdmin هم نشد. دستی بساز یا CREATE_DB=0 کن. SQL:
 $SQL"; fi
@@ -116,10 +145,13 @@ $SQL"; fi
 else
   step "۴) ساخت دیتابیس — رد شد (CREATE_DB=0)"
 fi
-# تست اتصال کاربر اپ
-echo 'SELECT 1;' | "$MYSQL_CLI" -u"$DB_USER" -p"$DB_PASS" "$DB_NAME" >/dev/null 2>&1 \
-  || die "اتصال با کاربر اپ به دیتابیس نشد. DB_PASS/دسترسی را چک کن."
-c_g "  اتصال کاربر اپ به دیتابیس اوکی."
+# اتصال کاربر اپ همیشه با TCP/127.0.0.1 — دقیقاً همان چیزی که DATABASE_URL استفاده
+# می‌کند. سوکتِ پیش‌فرضِ کلاینت (/tmp/mysql.sock) روی خیلی سرورها وجود ندارد،
+# پس زیرِ این خط دیگر هرگز به سوکتِ پیش‌فرض تکیه نمی‌کنیم.
+DB_CLI=("$MYSQL_CLI" -h127.0.0.1 -P3306 --protocol=TCP -u"$DB_USER" -p"$DB_PASS" "$DB_NAME")
+echo 'SELECT 1;' | "${DB_CLI[@]}" >/dev/null 2>&1 \
+  || die "اتصال TCP با کاربر اپ (${DB_USER}@127.0.0.1) به دیتابیس نشد. DB_PASS/دسترسیِ '${DB_USER}'@'127.0.0.1' را چک کن."
+c_g "  اتصال کاربر اپ به دیتابیس (TCP) اوکی."
 
 # ── ۵) وابستگی‌ها ─────────────────────────────────────────────────────────
 step "۵) نصب وابستگی‌ها (npm ci)"
@@ -135,16 +167,16 @@ npm run db:migrate 2>&1 | tail -6 || die "db:migrate نشد."
 
 # ── ۷) واردکردن داده ─────────────────────────────────────────────────────
 step "۷) واردکردن داده"
-PLACES="$(echo 'SELECT COUNT(*) FROM place;' | "$MYSQL_CLI" -u"$DB_USER" -p"$DB_PASS" "$DB_NAME" -N 2>/dev/null || echo 0)"
+PLACES="$(echo 'SELECT COUNT(*) FROM place;' | "${DB_CLI[@]}" -N 2>/dev/null || echo 0)"
 BACKUP_TGZ="$(ls -1t kucafe-backup-*.tar.gz 2>/dev/null | head -1 || true)"
 if [ "${PLACES:-0}" -gt 0 ]; then
   c_g "  دیتابیس از قبل $PLACES کافه دارد — واردکردن رد شد."
 elif [ -n "$BACKUP_TGZ" ]; then
   c_y "  بکاپ پیدا شد: $BACKUP_TGZ — دیتا از آن بازیابی می‌شود."
   tmp="$(mktemp -d)"; tar -xzf "$BACKUP_TGZ" -C "$tmp"
-  SEED="$(ls "$tmp"/*.sql.gz 2>/dev/null | head -1)"
+  SEED="$(ls "$tmp"/*.sql.gz 2>/dev/null | head -1 || true)"
   [ -n "$SEED" ] || die "در بکاپ فایل .sql.gz نبود."
-  gzip -dc "$SEED" | "$MYSQL_CLI" -u"$DB_USER" -p"$DB_PASS" "$DB_NAME" || die "بازیابی دیتای بکاپ نشد."
+  gzip -dc "$SEED" | "${DB_CLI[@]}" || die "بازیابی دیتای بکاپ نشد."
   # مدیای داخل بکاپ (اگر بود)
   if ls "$tmp"/media*.tar.gz >/dev/null 2>&1; then
     c_y "  بازیابی مدیا از بکاپ…"; mkdir -p public/media
@@ -155,10 +187,15 @@ elif [ -n "$BACKUP_TGZ" ]; then
   c_g "  دیتا از بکاپ بازیابی شد."
 elif [ -f db/seed/kucafe-data.sql.gz ]; then
   c_y "  واردکردن seed از مخزن (db/seed/kucafe-data.sql.gz)…"
-  gzip -dc db/seed/kucafe-data.sql.gz | "$MYSQL_CLI" -u"$DB_USER" -p"$DB_PASS" "$DB_NAME" || die "واردکردن seed نشد."
+  gzip -dc db/seed/kucafe-data.sql.gz | "${DB_CLI[@]}" || die "واردکردن seed نشد."
   npm run db:mariadb-fix 2>&1 | tail -2 || true
-  NEW="$(echo 'SELECT COUNT(*) FROM place;' | "$MYSQL_CLI" -u"$DB_USER" -p"$DB_PASS" "$DB_NAME" -N)"
-  c_g "  seed وارد شد: $NEW کافه."
+  # seed از یک دیپلویِ دیگر می‌آید که ردیف‌های media را status='ok' علامت زده؛
+  # روی این سرورِ تازه فایلی روی دیسک نیست. بدون این ریست، media:download
+  # چیزی برای دانلود پیدا نمی‌کند و همه‌ی تصویرها ۴۰۴ می‌مانند.
+  echo "UPDATE media SET status='pending', attempts=0, error=NULL WHERE status='ok';" \
+    | "${DB_CLI[@]}" || true
+  NEW="$(echo 'SELECT COUNT(*) FROM place;' | "${DB_CLI[@]}" -N)"
+  c_g "  seed وارد شد: $NEW کافه (مدیا برای بازسازی از منبع به pending برگشت)."
 else
   c_y "  نه دیتای موجود، نه بکاپ، نه seed. دیتابیس خالی می‌ماند."
 fi
@@ -170,7 +207,10 @@ c_g "  ساخت کامل شد."
 
 # ── ۹) تصاویر ─────────────────────────────────────────────────────────────
 step "۹) تصاویر"
-MEDIA_COUNT="$(find public/media -type f 2>/dev/null | head -2000 | wc -l | tr -d ' ')"
+# اگر public/media هنوز نباشد (اولین اجرا)، find با exit≠0 برمی‌گردد که زیرِ
+# `set -e -o pipefail` کل اسکریپت را قبل از رسیدن به PM2 می‌کشد؛ `|| true` می‌گذاریم.
+mkdir -p public/media
+MEDIA_COUNT="$(find public/media -type f 2>/dev/null | head -2000 | wc -l | tr -d ' ' || true)"
 if [ "${MEDIA_COUNT:-0}" -gt 100 ]; then
   c_g "  مدیا از قبل موجود است (~$MEDIA_COUNT فایلِ نمونه‌گیری‌شده) — رد شد."
 elif [ "$DOWNLOAD_MEDIA" = "1" ]; then

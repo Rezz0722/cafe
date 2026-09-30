@@ -11,10 +11,14 @@
     box-shadow var(--t-base);
 }
 
-.card:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--sh-card-hover);
+@media (hover: hover) and (pointer: fine) {
+  .card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--sh-card-hover);
+  }
 }
+
+.card:active { transform: scale(.99); }
 
 .media {
   position: relative;
@@ -131,21 +135,22 @@
   font-weight: 600;
 }
 
-.cta {
-  background: var(--c-primary-soft);
-  color: var(--c-primary-strong);
-  border-radius: 11px;
-  padding: 9px 18px;
-  font-size: var(--fs-base);
-  font-weight: 700;
-  transition:
-    background var(--t-fast),
-    color var(--t-fast);
-  white-space: nowrap;
-}
+@media (max-width: 640px) {
+  .card {
+    min-height: 158px;
+    display: grid;
+    grid-template-columns: 38% minmax(0, 1fr);
+    border-radius: 18px;
+    box-shadow: var(--sh-card-sm);
+  }
 
-.card:hover .cta,
-.cta:hover {
-  background: var(--c-primary);
-  color: #fff;
+  .media { height: 100%; min-height: 158px; }
+  .body { min-width: 0; gap: 7px; padding: 14px; }
+  .name { font-size: 17px; line-height: 1.5; }
+  .hood { font-size: 12.5px; }
+  .tags { flex-wrap: nowrap; overflow: hidden; }
+  .tag { flex: none; padding: 4px 8px; font-size: 11px; }
+  .footer { padding-top: 6px; }
+  .price { font-size: 12.5px; }
 }
+.bloggerBadge{position:absolute;inset-inline-end:12px;bottom:12px;padding:6px 10px;border-radius:10px;border:1px solid #cad5e5;background:#fffdf5;color:#233b60;font-size:12px;font-weight:600}

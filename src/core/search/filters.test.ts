@@ -39,6 +39,11 @@ test('parseFilters مرتب‌سازی ناشناس را به پیش‌فرض ب
   assert.equal(parseFilters({ sort: 'drop table' }).sort, 'rating')
 })
 
+test('parseFilters نزدیک‌ترین بدون موقعیت را نمی‌پذیرد', () => {
+  assert.equal(parseFilters({ sort: 'distance' }).sort, 'rating')
+  assert.equal(parseFilters({ sort: 'distance', near: '1' }).sort, 'distance')
+})
+
 test('parseFilters صفحه‌ی نامعتبر را ۱ می‌کند و سقف دارد', () => {
   assert.equal(parseFilters({ page: '0' }).page, 1)
   assert.equal(parseFilters({ page: '-3' }).page, 1)

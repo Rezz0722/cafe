@@ -1,4 +1,5 @@
 import 'server-only'
+import { MIN_PLACES_FOR_INDEX } from '@/core/seo/indexability'
 
 /**
  * پرس‌وجوهای خواندنِ مکان از MySQL.
@@ -25,33 +26,46 @@ import {
   desc,
   eq,
   inArray,
+  isNull,
   isNotNull,
+  like,
   lte,
-  ne,
   or,
   sql,
   type SQL,
 } from 'drizzle-orm'
-import { getDb } from '@/db/client'
+import { alias } from 'drizzle-orm/mysql-core'
+import { getDb,afterDbCommit,inDbTransaction } from '@/db/client'
 import {
   dish as dishTable,
   district as districtTable,
   facet as facetTable,
   media as mediaTable,
   menuItem as menuItemTable,
+  menuItemVariant as menuItemVariantTable,
   menuSection as menuSectionTable,
   place as placeTable,
+  placeBrand as placeBrandTable,
   placeAttribute as placeAttributeTable,
   placeDish as placeDishTable,
   placeFacet as placeFacetTable,
   placeHours as placeHoursTable,
+  placePhoto as placePhotoTable,
   placePhone as placePhoneTable,
   placeSocial as placeSocialTable,
   review as reviewTable,
+  reviewItem as reviewItemTable,
+  reviewReply as reviewReplyTable,
 } from '@/db/schema'
 import { mediaFullUrl, mediaPublicUrl } from '@/core/media/store'
 import { bayesianAverage } from '@/core/rating/bayesian'
-import { getDiscoveryPolicy } from '@/core/settings/policies'
+import { getDataPolicy, getDiscoveryPolicy } from '@/core/settings/policies'
+import { isValidClock } from '@/core/hours/openNow'
+import { safeExternalUrl } from '@/core/security/input'
+import { finglishToFa, isLatin, normalizeFa } from '@/core/text/normalize'
+import { FACET_BY_ID } from '@/core/taxonomy/menuTaxonomy'
+import { isEligibleForPriceStats } from '@/core/pricing/stats'
+import { presentMenuSectionName } from '@/core/places/presentation'
 
 // ═══════════════════════════════════════════════════════════════════════
 // شکل خروجی
@@ -89,6 +103,9 @@ export interface PlaceCard {
   priceMedian: number | null
   ribbon: string | null
   signatureItem: string | null
+  /** عکس محیط/کاور شعبه؛ برای کارت تصمیم‌گیری مقدم بر لوگو است. */
+  cover: MediaRef | null
+  /** نشان برند؛ در نبود عکس محیط به‌صورت لوگو نمایش داده می‌شود، نه عکس جعلی. */
   logo: MediaRef | null
   ratingCount: number
   /** میانگین بیزی — نه میانگین خام. */
@@ -96,10 +113,13 @@ export interface PlaceCard {
   qualityScore: number
   /** شناسه‌ی facetهای این مکان — برای نمایش chip بدون پرس‌وجوی دوم. */
   facetIds: string[]
+  bloggerReviewCount?: number
 }
 
 export interface MenuItemView {
   id: number
+  /** شناسهٔ عمومی پایدار؛ id داخلی پس از import عوض می‌شود. */
+  publicId: string
   name: string
   nameEn: string | null
   description: string | null
@@ -109,6 +129,13 @@ export interface MenuItemView {
   featured: boolean
   image: MediaRef | null
   dishId: number | null
+  priceUpdatedAt: Date | null
+  variants: {
+    id: number
+    label: string
+    price: number | null
+    available: boolean
+  }[]
 }
 
 export interface MenuSectionView {
@@ -142,11 +169,26 @@ export interface SocialView {
 }
 
 export interface PlaceDetail extends PlaceCard {
+  /** هویت مجموعهٔ مادر و شعبه؛ برای جلوگیری از قاطی‌شدن این دو در UI. */
+  brandName: string | null
+  brandNameEn: string | null
+  branchName: string | null
+  isPrimaryBranch: boolean
+  source: string
+  /** عکس واقعی محیط/کاور؛ مستقل از لوگوی برند. */
+  cover: MediaRef | null
+  /** گالری مدیریت‌شدهٔ همین شعبه؛ هرگز با تصویر آیتم‌های منو پر نمی‌شود. */
+  photos: (MediaRef & { id: number; alt: string })[]
   about: string | null
   menuUrl: string | null
   instagram: string | null
   priceMin: number | null
   priceMax: number | null
+  priceMinItemName: string | null
+  priceMaxItemName: string | null
+  priceStatsItemCount: number
+  priceLastUpdatedAt: Date | null
+  priceStaleItemCount: number
   priceUnitFixed: boolean
   phones: PhoneView[]
   socials: SocialView[]
@@ -156,6 +198,22 @@ export interface PlaceDetail extends PlaceCard {
   menuItemCount: number
   lastVerifiedAt: Date | null
   updatedAt: Date
+  /** میانگین خام نظرها؛ برای نمایش و Structured Data، نه رتبه‌بندی. */
+  rawRating: number | null
+}
+
+/**
+ * وضعیت‌هایی که صفحه‌ی عمومیِ مکان می‌تواند نمایش دهد.
+ *
+ * `temporarily_closed` عمداً عمومی می‌ماند تا کاربر بفهمد مجموعه موقتاً
+ * بسته است. پیش‌نویس، مکانِ ادغام‌شده و تعطیلی دائمی نباید مثل یک صفحه‌ی
+ * عادی سرو شوند؛ پنل مدیریت همچنان با `includeUnpublished` به آن‌ها دسترسی
+ * دارد.
+ */
+export const PUBLIC_PLACE_STATUSES = ['published', 'temporarily_closed'] as const
+
+export function isPublicPlaceStatus(status: string): boolean {
+  return (PUBLIC_PLACE_STATUSES as readonly string[]).includes(status)
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -188,7 +246,8 @@ function toMediaRef(
 /** `TIME` از MySQL به‌شکل `HH:MM:SS` می‌آید؛ UI ثانیه نمی‌خواهد. */
 function toClock(value: string | null): string | null {
   if (!value) return null
-  return value.slice(0, 5)
+  const clock = value.slice(0, 5)
+  return isValidClock(clock) ? clock : null
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -207,7 +266,7 @@ const SITE_MEAN_TTL_MS = 60_000
 async function getSiteMean(): Promise<number> {
   const { defaultSiteMean } = await getDiscoveryPolicy()
   const now = Date.now()
-  if (siteMeanCache && now - siteMeanCache.at < SITE_MEAN_TTL_MS)
+  if (!inDbTransaction() && siteMeanCache && now - siteMeanCache.at < SITE_MEAN_TTL_MS)
     return siteMeanCache.value
 
   const db = getDb()
@@ -220,13 +279,13 @@ async function getSiteMean(): Promise<number> {
 
   const value =
     row && Number(row.count) > 0 ? Number(row.sum) / Number(row.count) : defaultSiteMean
-  siteMeanCache = { value, at: now }
+  if(!inDbTransaction())siteMeanCache = { value, at: now }
   return value
 }
 
 /** بعد از ثبت یا تأیید نظر صدا زده می‌شود تا میانگین بیات نماند. */
 export function invalidateSiteMean(): void {
-  siteMeanCache = null
+  afterDbCommit(()=>{siteMeanCache = null})
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -268,6 +327,7 @@ interface CacheEntry<T> {
 const referenceCache = new Map<string, CacheEntry<unknown>>()
 
 async function cached<T>(key: string, load: () => Promise<T>): Promise<T> {
+  if(inDbTransaction())return load()
   const hit = referenceCache.get(key)
   if (hit && Date.now() - hit.at < REFERENCE_TTL_MS) return hit.value as T
   const value = await load()
@@ -277,7 +337,7 @@ async function cached<T>(key: string, load: () => Promise<T>): Promise<T> {
 
 /** بعد از ایمپورت یا تغییر واژگان صدا زده می‌شود. */
 export function invalidateReferenceCache(): void {
-  referenceCache.clear()
+  afterDbCommit(()=>referenceCache.clear())
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -310,6 +370,7 @@ export interface ListFilters {
   limit?: number
   offset?: number
   sort?: 'rating' | 'quality' | 'price_asc' | 'price_desc' | 'name'
+  bloggerReviewedOnly?: boolean
 }
 
 const DEFAULT_LIMIT = 60
@@ -337,31 +398,44 @@ function buildPlaceConditions(filters: ListFilters): SQL[] {
     maxPrice,
     mappableOnly,
     query,
+    bloggerReviewedOnly,
   } = filters
 
   const conditions: SQL[] = []
 
   if (publishedOnly) conditions.push(eq(placeTable.status, 'published') as SQL)
   if (districtId) conditions.push(eq(placeTable.districtId, districtId) as SQL)
-  if (priceTiers?.length)
+  if (priceTiers?.length) {
+    // ردهٔ «متوسط» ذخیره‌شده روی رکورد بی‌قیمت یک پیش‌فرض فنی است، نه داده.
+    // ناشناخته نباید با انتخاب ردهٔ قیمت، متوسط یا ارزان تفسیر شود.
     conditions.push(inArray(placeTable.priceTier, priceTiers) as SQL)
+    conditions.push(isNotNull(placeTable.priceMedian) as SQL)
+  }
   if (maxPrice) {
-    // مکانِ بی‌قیمت حذف نمی‌شود: نبودِ قیمت یعنی «نمی‌دانیم»، نه «گران است».
-    conditions.push(
-      or(
-        lte(placeTable.priceMedian, maxPrice),
-        sql`${placeTable.priceMedian} IS NULL`,
-      ) as SQL,
-    )
+    // «نمی‌دانیم» نه ارزان است نه گران؛ با سقف قیمت فقط دادهٔ قابل اثبات می‌آید.
+    conditions.push(lte(placeTable.priceMedian, maxPrice) as SQL)
   }
   if (mappableOnly) {
     conditions.push(eq(placeTable.geoStatus, 'ok') as SQL)
     conditions.push(isNotNull(placeTable.lat) as SQL)
   }
+  if (bloggerReviewedOnly) conditions.push(sql`EXISTS (SELECT 1 FROM review br WHERE br.place_id = place.id AND br.status = 'approved' AND br.is_blogger_review = 1)`)
   if (query?.trim()) {
-    const term = query.trim()
+    const term = normalizeFa(query)
+    const transliterated = isLatin(term) ? finglishToFa(term) : ''
+    const slugTerm = term.replace(/\s+/g, '-')
     conditions.push(
-      sql`MATCH(${placeTable.name}, ${placeTable.nameNormalized}) AGAINST (${term} IN NATURAL LANGUAGE MODE)`,
+      or(
+        sql`MATCH(${placeTable.name}, ${placeTable.nameNormalized}) AGAINST (${term} IN NATURAL LANGUAGE MODE)`,
+        like(placeTable.nameEn, `%${term}%`),
+        like(placeTable.slug, `%${slugTerm}%`),
+        ...(transliterated && transliterated !== term
+          ? [
+              sql`MATCH(${placeTable.name}, ${placeTable.nameNormalized}) AGAINST (${transliterated} IN NATURAL LANGUAGE MODE)`,
+              like(placeTable.nameNormalized, `%${transliterated}%`),
+            ]
+          : []),
+      )!,
     )
   }
 
@@ -425,13 +499,15 @@ export async function listPlaceCards(filters: ListFilters = {}): Promise<PlaceCa
   `
 
   const orderBy = {
-    rating: [desc(bayesian), desc(placeTable.qualityScore)],
-    quality: [desc(placeTable.qualityScore), asc(placeTable.name)],
+    rating: [desc(bayesian), desc(placeTable.qualityScore), asc(placeTable.id)],
+    quality: [desc(placeTable.qualityScore), asc(placeTable.name), asc(placeTable.id)],
     // مکانِ بی‌قیمت آخر می‌آید، نه اول: «نمی‌دانیم» ارزان‌ترین نیست.
-    price_asc: [asc(sql`COALESCE(${placeTable.priceMedian}, 999999999)`)],
-    price_desc: [desc(sql`COALESCE(${placeTable.priceMedian}, 0)`)],
-    name: [asc(placeTable.name)],
+    price_asc: [asc(sql`COALESCE(${placeTable.priceMedian}, 999999999)`), asc(placeTable.id)],
+    price_desc: [desc(sql`COALESCE(${placeTable.priceMedian}, 0)`), asc(placeTable.id)],
+    name: [asc(placeTable.name), asc(placeTable.id)],
   }[sort]
+
+  const coverMedia = alias(mediaTable, 'cover_media')
 
   const rows = await db
     .select({
@@ -455,13 +531,19 @@ export async function listPlaceCards(filters: ListFilters = {}): Promise<PlaceCa
       ratingSum: placeTable.ratingSum,
       ratingCount: placeTable.ratingCount,
       qualityScore: placeTable.qualityScore,
+      coverMediaId: placeTable.coverMediaId,
+      coverPath: coverMedia.localPath,
+      coverWidth: coverMedia.width,
+      coverHeight: coverMedia.height,
       logoPath: mediaTable.localPath,
       logoWidth: mediaTable.width,
       logoHeight: mediaTable.height,
+      bloggerReviewCount: sql<number>`(SELECT COUNT(*) FROM review br WHERE br.place_id = ${placeTable.id} AND br.status = 'approved' AND br.is_blogger_review = 1)`,
     })
     .from(placeTable)
     .leftJoin(districtTable, eq(districtTable.id, placeTable.districtId))
     .leftJoin(mediaTable, eq(mediaTable.id, placeTable.logoMediaId))
+    .leftJoin(coverMedia, eq(coverMedia.id, placeTable.coverMediaId))
     .where(conditions.length ? and(...conditions) : undefined)
     .orderBy(...orderBy)
     .limit(limit)
@@ -488,11 +570,13 @@ export async function listPlaceCards(filters: ListFilters = {}): Promise<PlaceCa
     priceMedian: row.priceMedian,
     ribbon: row.ribbon,
     signatureItem: row.signatureItem,
+    cover: toMediaRef(row.coverPath, row.coverWidth, row.coverHeight),
     logo: toMediaRef(row.logoPath, row.logoWidth, row.logoHeight),
     ratingCount: row.ratingCount,
     rating: bayesianAverage(row.ratingSum, row.ratingCount, siteMean, ratingPriorCount),
     qualityScore: row.qualityScore,
     facetIds: facetMap.get(row.id) ?? [],
+    bloggerReviewCount: Number(row.bloggerReviewCount),
   }))
 }
 
@@ -550,7 +634,9 @@ export async function getPlaceDetail(
   const db = getDb()
 
   const conditions = [eq(placeTable.slug, slug)]
-  if (!options.includeUnpublished) conditions.push(ne(placeTable.status, 'draft'))
+  if (!options.includeUnpublished) {
+    conditions.push(inArray(placeTable.status, [...PUBLIC_PLACE_STATUSES]))
+  }
 
   const [row] = await db
     .select({
@@ -558,8 +644,13 @@ export async function getPlaceDetail(
       slug: placeTable.slug,
       name: placeTable.name,
       nameEn: placeTable.nameEn,
+      brandName: placeBrandTable.name,
+      brandNameEn: placeBrandTable.nameEn,
+      branchName: placeTable.branchName,
+      isPrimaryBranch: placeTable.isPrimaryBranch,
       kind: placeTable.kind,
       status: placeTable.status,
+      source: placeTable.source,
       lat: placeTable.lat,
       lng: placeTable.lng,
       geoStatus: placeTable.geoStatus,
@@ -580,6 +671,7 @@ export async function getPlaceDetail(
       ratingSum: placeTable.ratingSum,
       ratingCount: placeTable.ratingCount,
       qualityScore: placeTable.qualityScore,
+      coverMediaId: placeTable.coverMediaId,
       logoPath: mediaTable.localPath,
       logoWidth: mediaTable.width,
       logoHeight: mediaTable.height,
@@ -589,12 +681,25 @@ export async function getPlaceDetail(
     .from(placeTable)
     .leftJoin(districtTable, eq(districtTable.id, placeTable.districtId))
     .leftJoin(mediaTable, eq(mediaTable.id, placeTable.logoMediaId))
+    .leftJoin(placeBrandTable, eq(placeBrandTable.id, placeTable.brandId))
     .where(and(...conditions))
     .limit(1)
 
   if (!row) return null
 
-  const [phones, socials, hours, sections, items, facets, siteMean, discovery] = await Promise.all([
+  const [coverRow] = row.coverMediaId
+    ? await db
+        .select({
+          path: mediaTable.localPath,
+          width: mediaTable.width,
+          height: mediaTable.height,
+        })
+        .from(mediaTable)
+        .where(eq(mediaTable.id, row.coverMediaId))
+        .limit(1)
+    : []
+
+  const [phones, socials, hours, sections, items, variants, facets, photos, siteMean, discovery, dataPolicy] = await Promise.all([
     db
       .select({ phone: placePhoneTable.phone, kind: placePhoneTable.kind })
       .from(placePhoneTable)
@@ -626,11 +731,15 @@ export async function getPlaceDetail(
       })
       .from(menuSectionTable)
       .leftJoin(mediaTable, eq(mediaTable.id, menuSectionTable.mediaId))
-      .where(eq(menuSectionTable.placeId, row.id))
+      .where(and(
+        eq(menuSectionTable.placeId, row.id),
+        inArray(menuSectionTable.branchScope, ['shared', 'branch']),
+      ))
       .orderBy(asc(menuSectionTable.sortOrder)),
     db
       .select({
         id: menuItemTable.id,
+        publicId: menuItemTable.publicId,
         sectionId: menuItemTable.sectionId,
         name: menuItemTable.name,
         nameEn: menuItemTable.nameEn,
@@ -640,28 +749,92 @@ export async function getPlaceDetail(
         available: menuItemTable.available,
         featured: menuItemTable.featured,
         dishId: menuItemTable.dishId,
+        priceUpdatedAt: menuItemTable.priceUpdatedAt,
+        excludeFromPriceStats: menuItemTable.excludeFromPriceStats,
+        facetId: menuSectionTable.facetId,
         sortOrder: menuItemTable.sortOrder,
         mediaPath: mediaTable.localPath,
         mediaWidth: mediaTable.width,
         mediaHeight: mediaTable.height,
       })
       .from(menuItemTable)
+      .innerJoin(menuSectionTable, eq(menuSectionTable.id, menuItemTable.sectionId))
       .leftJoin(mediaTable, eq(mediaTable.id, menuItemTable.mediaId))
-      .where(eq(menuItemTable.placeId, row.id))
+      .where(and(
+        eq(menuItemTable.placeId, row.id),
+        isNull(menuItemTable.archivedAt),
+        inArray(menuSectionTable.branchScope, ['shared', 'branch']),
+      ))
       .orderBy(asc(menuItemTable.sortOrder)),
+    db
+      .select({
+        id: menuItemVariantTable.id,
+        itemId: menuItemVariantTable.itemId,
+        label: menuItemVariantTable.label,
+        price: menuItemVariantTable.price,
+        available: menuItemVariantTable.available,
+      })
+      .from(menuItemVariantTable)
+      .innerJoin(menuItemTable, eq(menuItemTable.id, menuItemVariantTable.itemId))
+      .innerJoin(menuSectionTable, eq(menuSectionTable.id, menuItemTable.sectionId))
+      .where(and(
+        eq(menuItemTable.placeId, row.id),
+        isNull(menuItemTable.archivedAt),
+        inArray(menuSectionTable.branchScope, ['shared', 'branch']),
+      ))
+      .orderBy(asc(menuItemVariantTable.sortOrder), asc(menuItemVariantTable.id)),
     db
       .select({ facetId: placeFacetTable.facetId })
       .from(placeFacetTable)
       .where(eq(placeFacetTable.placeId, row.id)),
+    db
+      .select({
+        id: placePhotoTable.id,
+        alt: placePhotoTable.alt,
+        path: mediaTable.localPath,
+        width: mediaTable.width,
+        height: mediaTable.height,
+      })
+      .from(placePhotoTable)
+      .innerJoin(mediaTable, eq(mediaTable.id, placePhotoTable.mediaId))
+      .where(and(eq(placePhotoTable.placeId, row.id), eq(mediaTable.status, 'ok')))
+      .orderBy(asc(placePhotoTable.sortOrder), asc(placePhotoTable.id)),
     getSiteMean(),
     getDiscoveryPolicy(),
+    getDataPolicy(),
   ])
   const { ratingPriorCount } = discovery
+
+  const eligiblePriceItems = items.filter((item) =>
+    isEligibleForPriceStats(
+      {
+        price: item.price,
+        manuallyExcluded: item.excludeFromPriceStats,
+        facetKind: item.facetId ? FACET_BY_ID.get(item.facetId)?.kind : null,
+      },
+      {
+        maxItemPrice: dataPolicy.priceStatsMaxItemPrice,
+        excludeServiceSections: dataPolicy.priceStatsExcludeServiceSections,
+      },
+    ),
+  )
+  const priceUpdatedTimes = eligiblePriceItems.flatMap((item) =>
+    item.priceUpdatedAt ? [item.priceUpdatedAt.getTime()] : [],
+  )
+
+  const variantsByItem = new Map<number, MenuItemView['variants']>()
+  for (const variant of variants) {
+    const view = { id: variant.id, label: variant.label, price: variant.price, available: variant.available }
+    const list = variantsByItem.get(variant.itemId)
+    if (list) list.push(view)
+    else variantsByItem.set(variant.itemId, [view])
+  }
 
   const itemsBySection = new Map<number, MenuItemView[]>()
   for (const item of items) {
     const view: MenuItemView = {
       id: item.id,
+      publicId: item.publicId,
       name: item.name,
       nameEn: item.nameEn,
       description: item.description,
@@ -671,6 +844,8 @@ export async function getPlaceDetail(
       featured: item.featured,
       image: toMediaRef(item.mediaPath, item.mediaWidth, item.mediaHeight),
       dishId: item.dishId,
+      priceUpdatedAt: item.priceUpdatedAt,
+      variants: variantsByItem.get(item.id) ?? [],
     }
     const list = itemsBySection.get(item.sectionId)
     if (list) list.push(view)
@@ -682,8 +857,13 @@ export async function getPlaceDetail(
     slug: row.slug,
     name: row.name,
     nameEn: row.nameEn,
+    brandName: row.brandName,
+    brandNameEn: row.brandNameEn,
+    branchName: row.branchName,
+    isPrimaryBranch: row.isPrimaryBranch,
     kind: row.kind,
     status: row.status,
+    source: row.source,
     coords: toCoords(row.lat, row.lng),
     geoStatus: row.geoStatus,
     address: row.address,
@@ -694,6 +874,17 @@ export async function getPlaceDetail(
     priceMin: row.priceMin,
     priceMedian: row.priceMedian,
     priceMax: row.priceMax,
+    priceMinItemName:
+      eligiblePriceItems.find((item) => item.price === row.priceMin)?.name ?? null,
+    priceMaxItemName:
+      eligiblePriceItems.find((item) => item.price === row.priceMax)?.name ?? null,
+    priceStatsItemCount: eligiblePriceItems.length,
+    priceLastUpdatedAt: priceUpdatedTimes.length
+      ? new Date(Math.max(...priceUpdatedTimes))
+      : null,
+    priceStaleItemCount: eligiblePriceItems.filter((item) =>
+      !item.priceUpdatedAt || Date.now() - item.priceUpdatedAt.getTime() > dataPolicy.stalePriceDays * 86_400_000,
+    ).length,
     priceUnitFixed: row.priceUnitFixed,
     ribbon: row.ribbon,
     signatureItem: row.signatureItem,
@@ -701,12 +892,21 @@ export async function getPlaceDetail(
     menuUrl: row.menuUrl,
     instagram: row.instagram,
     logo: toMediaRef(row.logoPath, row.logoWidth, row.logoHeight),
+    cover: coverRow ? toMediaRef(coverRow.path, coverRow.width, coverRow.height) : null,
+    photos: photos.flatMap((photo) => {
+      const media = toMediaRef(photo.path, photo.width, photo.height)
+      return media ? [{ ...media, id: photo.id, alt: photo.alt || `تصویر ${row.name}` }] : []
+    }),
     ratingCount: row.ratingCount,
     rating: bayesianAverage(row.ratingSum, row.ratingCount, siteMean, ratingPriorCount),
+    rawRating: row.ratingCount > 0 ? row.ratingSum / row.ratingCount : null,
     qualityScore: row.qualityScore,
     facetIds: facets.map((f) => f.facetId),
     phones,
-    socials,
+    socials: socials.flatMap((social) => {
+      const url = safeExternalUrl(social.url)
+      return url ? [{ ...social, url }] : []
+    }),
     hours: hours.map((h) => ({
       dow: h.dow,
       shiftIndex: h.shiftIndex,
@@ -717,7 +917,7 @@ export async function getPlaceDetail(
     })),
     menu: sections.map((section) => ({
       id: section.id,
-      name: section.name,
+      name: presentMenuSectionName(section.name, row.branchName),
       description: section.description,
       facetId: section.facetId,
       image: toMediaRef(section.mediaPath, section.mediaWidth, section.mediaHeight),
@@ -817,6 +1017,9 @@ export async function getDistrictBySlug(slug: string): Promise<DistrictView | nu
 
 export interface ReviewView {
   id: number
+  /** برای تشخیص مالک نظر در رندر سرور؛ در HTML چاپ نمی‌شود. */
+  userId: string | null
+  status: string
   authorName: string
   stars: number
   text: string | null
@@ -829,16 +1032,32 @@ export interface ReviewView {
   visitDate: Date | null
   helpfulCount: number
   createdAt: Date
+  replies: { id: number; text: string; createdAt: Date }[]
+  itemNames: string[]
+  isBloggerReview: boolean
+  videoUrl: string | null
 }
 
 export async function listPlaceReviews(
   placeId: number,
   limit = 20,
 ): Promise<ReviewView[]> {
+  return loadPlaceReviews(placeId, eq(reviewTable.status, 'approved'), limit, false)
+}
+
+/** Private, uncached history. The caller must supply the authenticated user ID. */
+export async function listMyPlaceReviews(userId: string, placeId: number, limit = 20): Promise<ReviewView[]> {
+  if (!userId) return []
+  return loadPlaceReviews(placeId, eq(reviewTable.userId, userId), limit, true)
+}
+
+async function loadPlaceReviews(placeId: number, visibility: SQL, limit: number, own: boolean): Promise<ReviewView[]> {
   const db = getDb()
   const rows = await db
     .select({
       id: reviewTable.id,
+      userId: reviewTable.userId,
+      status: reviewTable.status,
       authorName: reviewTable.authorName,
       stars: reviewTable.stars,
       text: reviewTable.text,
@@ -850,12 +1069,69 @@ export async function listPlaceReviews(
       visitDate: reviewTable.visitDate,
       helpfulCount: reviewTable.helpfulCount,
       createdAt: reviewTable.createdAt,
+      isBloggerReview: reviewTable.isBloggerReview,
+      videoUrl: reviewTable.videoUrl,
     })
     .from(reviewTable)
-    .where(and(eq(reviewTable.placeId, placeId), eq(reviewTable.status, 'approved')))
+    .where(and(eq(reviewTable.placeId, placeId), visibility))
+    .orderBy(...(own ? [desc(reviewTable.createdAt), desc(reviewTable.id)] : [desc(reviewTable.helpfulCount), desc(reviewTable.createdAt), desc(reviewTable.id)]))
+    .limit(limit)
+  if (rows.length === 0) return []
+
+  const replies = await db
+    .select({
+      id: reviewReplyTable.id,
+      reviewId: reviewReplyTable.reviewId,
+      text: reviewReplyTable.text,
+      createdAt: reviewReplyTable.createdAt,
+    })
+    .from(reviewReplyTable)
+    .where(and(
+      inArray(reviewReplyTable.reviewId, rows.map((review) => review.id)),
+      eq(reviewReplyTable.status, 'approved'),
+    ))
+    .orderBy(asc(reviewReplyTable.createdAt))
+
+  const itemRows = await db.select({ reviewId: reviewItemTable.reviewId, name: menuItemTable.name })
+    .from(reviewItemTable).innerJoin(menuItemTable, eq(menuItemTable.id, reviewItemTable.menuItemId))
+    .where(inArray(reviewItemTable.reviewId, rows.map((review) => review.id)))
+  const itemNamesByReview = new Map<number, string[]>()
+  for (const item of itemRows) itemNamesByReview.set(item.reviewId, [...(itemNamesByReview.get(item.reviewId) ?? []), item.name])
+
+  const repliesByReview = new Map<number, { id: number; text: string; createdAt: Date }[]>()
+  for (const reply of replies) {
+    const list = repliesByReview.get(reply.reviewId)
+    const view = { id: reply.id, text: reply.text, createdAt: reply.createdAt }
+    if (list) list.push(view)
+    else repliesByReview.set(reply.reviewId, [view])
+  }
+
+  return rows.map((review) => ({ ...review, replies: repliesByReview.get(review.id) ?? [], itemNames: itemNamesByReview.get(review.id) ?? [] }))
+}
+
+export interface ItemReviewView {
+  id: number
+  authorName: string
+  stars: number
+  text: string | null
+  visitDate: Date | null
+  createdAt: Date
+}
+
+/** نظرهای تأییدشده‌ای که نویسنده آن آیتم را در سفارش خود انتخاب کرده است. */
+export async function listMenuItemReviews(itemId: number, limit = 12): Promise<ItemReviewView[]> {
+  return getDb().select({
+    id: reviewTable.id,
+    authorName: reviewTable.authorName,
+    stars: reviewTable.stars,
+    text: reviewTable.text,
+    visitDate: reviewTable.visitDate,
+    createdAt: reviewTable.createdAt,
+  }).from(reviewItemTable)
+    .innerJoin(reviewTable, eq(reviewTable.id, reviewItemTable.reviewId))
+    .where(and(eq(reviewItemTable.menuItemId, itemId), eq(reviewTable.status, 'approved')))
     .orderBy(desc(reviewTable.helpfulCount), desc(reviewTable.createdAt))
     .limit(limit)
-  return rows
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -951,6 +1227,8 @@ export interface PlaceDishSummary {
   facetId: string | null
   minPrice: number | null
   itemCount: number
+  /** تعداد مجموعه‌های منتشرشده در نمونهٔ شهری؛ شرط اعتماد برای مقایسه. */
+  cityPlaceCount: number
   /** میانه‌ی شهریِ همان دیش — برای نشان دادن «ارزان‌تر از میانگین شهر». */
   cityMedian: number | null
 }
@@ -966,6 +1244,7 @@ export async function getPlaceDishes(placeId: number): Promise<PlaceDishSummary[
       facetId: dishTable.facetId,
       minPrice: placeDishTable.minPrice,
       itemCount: placeDishTable.itemCount,
+      cityPlaceCount: dishTable.placeCount,
       cityMedian: dishTable.medianPrice,
     })
     .from(placeDishTable)
@@ -1137,6 +1416,18 @@ export async function listPopularDishes(limit = 24): Promise<PopularDish[]> {
       .orderBy(desc(dishTable.placeCount))
       .limit(limit)
   })
+}
+
+/** کشف SEO از محبوبیت UI مستقل است؛ هیچ limit نمایشی در Sitemap اعمال نشود. */
+export async function listSeoDishes(): Promise<PopularDish[]> {
+  const db = getDb()
+  return db.select({
+    id: dishTable.id, slug: dishTable.slug, nameFa: dishTable.nameFa,
+    facetId: dishTable.facetId, placeCount: dishTable.placeCount,
+    minPrice: dishTable.minPrice, medianPrice: dishTable.medianPrice,
+  }).from(dishTable)
+    .where(and(sql`${dishTable.placeCount} >= ${MIN_PLACES_FOR_INDEX}`, sql`${dishTable.facetId} NOT IN ('addons', 'service')`, sql`${dishTable.slug} <> 'hookah'`))
+    .orderBy(asc(dishTable.slug))
 }
 
 export async function getDishBySlug(slug: string): Promise<PopularDish | null> {

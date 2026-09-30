@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { fa, toman } from '@/lib/format'
 import { paths } from '@/routes'
 import styles from './PlaceCardView.module.css'
-import { Coffee, Star } from 'lucide-react'
+import { BadgeCheck, Coffee, Star } from 'lucide-react'
 
 /**
  * کارت کافه در فهرست و نتیجه‌ی جست‌وجو.
@@ -27,18 +27,22 @@ export interface CardData {
   name: string
   kind: string
   coords: { lat: number; lng: number } | null
+  geoStatus: string
   districtName: string | null
   priceTier: number
   priceMedian: number | null
   signatureItem: string | null
   ribbon: string | null
+  cover?: { url: string; width: number | null; height: number | null } | null
   logo: { url: string; width: number | null; height: number | null } | null
   rating: number
   ratingCount: number
   facetIds: string[]
+  bloggerReviewCount?: number
   /** از سرور در حالت فیلتر دیش، یا از کلاینت بعد از گرفتن موقعیت. */
   dishPrice?: number | null
   distanceKm?: number | null
+  openState?: { status: 'open' | 'closed' | 'unknown'; label: string } | null
 }
 
 const KIND_LABELS: Record<string, string> = {
@@ -98,33 +102,36 @@ export function PlaceCardView({
   /** نام دیشی که فیلتر رویش اعمال شده — «پاستا آلفردو: ۴۲۰ هزار». */
   dishLabel?: string | null
 }) {
+  const decisionImage = card.cover ?? card.logo
+  const hasEnvironmentImage = Boolean(card.cover)
   const facetChips = card.facetIds
     .map((id) => FACET_LABELS[id])
     .filter(Boolean)
-    .slice(0, 4)
+    .slice(0, 3)
 
   return (
-    <Link href={paths.cafe(card.slug)} className={styles.card}>
-      {card.logo ? (
-        <img
-          src={card.logo.url}
-          alt=""
-          width={card.logo.width ?? 72}
-          height={card.logo.height ?? 72}
-          loading="lazy"
-          className={styles.logo}
-        />
-      ) : (
-        <span className={styles.logoEmpty} aria-hidden="true">
-          <Coffee size={24} strokeWidth={1.6} />
-        </span>
-      )}
+    <Link href={paths.cafe(card.slug)} className={`${styles.card} ${card.bloggerReviewCount ? styles.reviewedCard : ''}`}>
+      <div className={styles.media}>
+        {decisionImage ? (
+          <img
+            src={decisionImage.url}
+            alt=""
+            width={decisionImage.width ?? 420}
+            height={decisionImage.height ?? 315}
+            loading="lazy"
+            className={hasEnvironmentImage ? styles.cover : styles.logo}
+          />
+        ) : (
+          <span className={styles.logoEmpty} aria-hidden="true">
+            <Coffee size={34} strokeWidth={1.6} />
+          </span>
+        )}
+        {card.ribbon && <span className={styles.ribbon}>{card.ribbon}</span>}
+        {!!card.bloggerReviewCount && <span className={styles.bloggerBadge}><BadgeCheck size={14} aria-hidden="true" /> بررسی‌شده توسط بلاگر</span>}
+      </div>
 
       <div className={styles.body}>
-        <div className={styles.topRow}>
-          <h3 className={styles.name}>{card.name}</h3>
-          {card.ribbon && <span className={styles.ribbon}>{card.ribbon}</span>}
-        </div>
+        <h3 className={styles.name}>{card.name}</h3>
 
         <p className={styles.meta}>
           <span>{KIND_LABELS[card.kind] ?? 'کافه'}</span>
@@ -137,32 +144,45 @@ export function PlaceCardView({
               · <Star size={12} className={styles.starIcon} aria-hidden="true" /> {fa(card.rating.toFixed(1))} ({fa(card.ratingCount)})
             </span>
           )}
+          {card.openState && card.openState.status !== 'unknown' && (
+            <span className={card.openState.status === 'open' ? styles.open : styles.closed}>
+              · {card.openState.label}
+            </span>
+          )}
         </p>
 
         {facetChips.length > 0 && (
-          <p className={styles.facets}>{facetChips.join(' · ')}</p>
+          <span className={styles.facets} aria-label="دسته‌های شاخص">
+            {facetChips.map((facet) => (
+              <span key={facet} className={styles.facet}>
+                {facet}
+              </span>
+            ))}
+          </span>
         )}
 
         {card.signatureItem && <p className={styles.signature}>ویژه: {card.signatureItem}</p>}
-      </div>
 
-      <div className={styles.priceCol}>
-        {/* در حالت فیلتر دیش، قیمتِ همان دیش مهم‌تر از میانگین کل منوست:
-            کاربری که «بهترین پاستا» را می‌جوید، قیمت پاستا را می‌خواهد. */}
-        {dishLabel && card.dishPrice !== null && card.dishPrice !== undefined ? (
-          <>
-            <span className={styles.dishPrice}>{toman(card.dishPrice)}</span>
-            <span className={styles.priceLabel}>{dishLabel}</span>
-          </>
-        ) : card.priceMedian !== null ? (
-          <>
-            <span className={styles.price}>{toman(card.priceMedian)}</span>
-            <span className={styles.priceLabel}>میانگین منو</span>
-          </>
-        ) : (
-          <span className={styles.priceLabel}>قیمت ثبت نشده</span>
-        )}
-        <span className={styles.tier}>{TIER_MARK[card.priceTier]}</span>
+        <div className={styles.priceRow}>
+          <span className={styles.priceCol}>
+            {/* در حالت فیلتر دیش، قیمتِ همان دیش مهم‌تر از میانگین کل منوست:
+                کاربری که «بهترین پاستا» را می‌جوید، قیمت پاستا را می‌خواهد. */}
+            {dishLabel && card.dishPrice !== null && card.dishPrice !== undefined ? (
+              <>
+                <span className={styles.dishPrice}>{toman(card.dishPrice)}</span>
+                <span className={styles.priceLabel}>{dishLabel}</span>
+              </>
+            ) : card.priceMedian !== null ? (
+              <>
+                <span className={styles.price}>{toman(card.priceMedian)}</span>
+                <span className={styles.priceLabel}>میانگین منو</span>
+              </>
+            ) : (
+              <span className={styles.priceLabel}>قیمت ثبت نشده</span>
+            )}
+          </span>
+          {card.priceMedian !== null && <span className={styles.tier}>{TIER_MARK[card.priceTier]}</span>}
+        </div>
       </div>
     </Link>
   )

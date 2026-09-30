@@ -8,7 +8,8 @@
  */
 
 export const OTP_LENGTH = 5
-export const OTP_TTL_SEC = 120
+/** کد پس از یک دقیقه منقضی می‌شود؛ مقدار پنل نیز همین پیش‌فرض را می‌گیرد. */
+export const OTP_TTL_SEC = 60
 export const OTP_RESEND_COOLDOWN_SEC = 90
 export const OTP_MAX_PER_HOUR = 5
 export const OTP_MAX_ATTEMPTS = 5

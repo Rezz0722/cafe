@@ -65,6 +65,9 @@ export default async function MyReviewsPage() {
               <p className={styles.stars}>
                 <Stars count={review.stars} size={15} showEmpty />
               </p>
+              {review.itemNames.length > 0 && (
+                <p className={styles.reviewItems}>سفارش: {review.itemNames.join('، ')}</p>
+              )}
               {review.text && <p className={styles.itemText}>{review.text}</p>}
               {/* دلیل ردشدن به کاربر گفته می‌شود. نظری که بی‌توضیح رد شود،
                   کاربر را از مشارکت دوباره دلسرد می‌کند. */}

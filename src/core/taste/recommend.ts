@@ -22,6 +22,7 @@ export interface ScorableePlace {
   facetIds: string[]
   districtId: string | null
   priceTier: number
+  priceMedian?: number | null
   /** میانگین بیزی — بین ۰ و ۵. */
   rating: number
   ratingCount: number
@@ -108,7 +109,7 @@ export function scorePlace<T extends ScorableePlace>(
     برنده‌ی «قلیان نمی‌خواهم» می‌شد.
   */
 
-  if (budgetBand) {
+  if (budgetBand && place.priceMedian !== null) {
     if (place.priceTier === budgetBand) {
       score += COMPONENT.budgetExact
       reasons.push('در بودجه‌ی شما')
@@ -126,7 +127,7 @@ export function scorePlace<T extends ScorableePlace>(
 
   // امتیاز کاربران فقط وقتی وزن دارد که نظری وجود داشته باشد.
   if (place.ratingCount > 0) {
-    score += (place.rating / 5) * COMPONENT.ratingMax
+    score += (place.rating / 5) * COMPONENT.ratingMax * (place.ratingCount / (place.ratingCount + 5))
   }
 
   score += (place.qualityScore / 100) * COMPONENT.qualityMax
@@ -146,8 +147,13 @@ export function rankPlaces<T extends ScorableePlace>(
   places: T[],
   options: ScoreOptions & { limit?: number; requireMatch?: boolean },
 ): ScoredPlace<T>[] {
-  const { limit = 12, requireMatch = options.weights.length > 0 } = options
+  const { limit = 12, requireMatch = options.weights.some(weight=>weight.weight>0) } = options
   const scored = places.map((place) => scorePlace(place, options))
-  const filtered = requireMatch ? scored.filter((item) => item.reasons.length > 0) : scored
-  return filtered.sort((first, second) => second.score - first.score).slice(0, limit)
+  const filtered = requireMatch ? scored.filter(({place}) => options.weights.some(weight => weight.weight>0 && (
+    weight.kind==='dish' ? place.dishSlugs?.includes(weight.refId) :
+    weight.kind==='facet' ? place.facetIds.includes(weight.refId) :
+    weight.kind==='attribute' ? place.attributeIds?.includes(weight.refId) :
+    weight.kind==='district' ? place.districtId===weight.refId : false
+  ))) : scored
+  return filtered.sort((first, second) => second.score - first.score || second.place.qualityScore-first.place.qualityScore || first.place.id-second.place.id).slice(0, limit)
 }

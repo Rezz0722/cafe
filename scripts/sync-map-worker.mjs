@@ -63,6 +63,7 @@ function main() {
   const version = JSON.parse(readFileSync(pkgPath, 'utf8')).version
   const distDir = join(dirname(pkgPath), 'dist')
 
+  const versionDir = join(OUT_DIR, `v${version}`)
   const missing = FILES.filter((file) => !existsSync(join(distDir, file)))
   if (missing.length > 0) {
     // نسخه‌ی جدید مپ‌لایبر ممکن است چیدمان dist را عوض کند. در آن حالت
@@ -76,19 +77,25 @@ function main() {
   }
 
   const stamped = existsSync(STAMP) ? readFileSync(STAMP, 'utf8').trim() : null
-  const copiesPresent = FILES.every((file) => existsSync(join(OUT_DIR, file)))
+  const copiesPresent = FILES.every(
+    (file) => existsSync(join(OUT_DIR, file)) && existsSync(join(versionDir, file)),
+  )
   if (stamped === version && copiesPresent) return
 
   mkdirSync(OUT_DIR, { recursive: true })
+  mkdirSync(versionDir, { recursive: true })
   let bytes = 0
   for (const file of FILES) {
     copyFileSync(join(distDir, file), join(OUT_DIR, file))
+    // مسیر versioned کش خراب نسخه‌های قبلی را بدون دست‌زدن به خود worker
+    // باطل می‌کند. import نسبی shared نیز داخل همین پوشه باقی می‌ماند.
+    copyFileSync(join(distDir, file), join(versionDir, file))
     bytes += statSync(join(OUT_DIR, file)).size
   }
   writeFileSync(STAMP, `${version}\n`, 'utf8')
 
   console.log(
-    `sync-map-worker: worker مپ‌لایبر ${version} در public/maplibre/ کپی شد ` +
+    `sync-map-worker: worker مپ‌لایبر ${version} در public/maplibre/v${version}/ کپی شد ` +
       `(${FILES.length} فایل، ${Math.round(bytes / 1024)} کیلوبایت)`,
   )
 }

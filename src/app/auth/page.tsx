@@ -5,6 +5,7 @@ import { AuthScreen } from '@/components/auth/AuthScreen'
 import { getCurrentUser } from '@/core/auth/currentUser'
 import { getAuthPolicy } from '@/core/settings/policies'
 import { paths } from '@/routes'
+import { safeAuthRedirect } from '@/core/auth/redirect'
 
 /**
  * صفحه‌ی ورود — خصوصی، پس از ایندکس بیرون است.
@@ -30,7 +31,7 @@ export default async function AuthPage({ searchParams }: PageProps) {
     const raw = params.redirect
     const target = typeof raw === 'string' ? raw : paths.profile
     // فقط مسیر داخلی — جلوی open redirect به دامنه‌ی بیرونی.
-    redirect(target.startsWith('/') && !target.startsWith('//') ? target : paths.profile)
+    redirect(safeAuthRedirect(target, paths.profile))
   }
 
   const policy = await getAuthPolicy()
@@ -40,11 +41,14 @@ export default async function AuthPage({ searchParams }: PageProps) {
       <AuthScreen
         config={{
           otpLength: policy.otp.length,
+          otpTtlSeconds: policy.otp.ttlSeconds,
           resendCooldownSeconds: policy.otp.resendCooldownSeconds,
           passwordMinLength: policy.passwordMinLength,
           allowRegistration: policy.allowRegistration,
           allowPasswordLogin: policy.allowPasswordLogin,
           allowOtpLogin: policy.allowOtpLogin,
+          allowSmsVerification: policy.allowSmsVerification,
+          registrationRequiresPhoneVerification: policy.registrationRequiresPhoneVerification,
         }}
       />
     </Suspense>

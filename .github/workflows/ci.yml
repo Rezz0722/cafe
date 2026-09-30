@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [production]
+  push:
+    branches-ignore: [production]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    # Never run pull-request code on the production self-hosted runner.
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    services:
+      mysql:
+        image: mariadb:11.4
+        env:
+          MARIADB_DATABASE: kucafe
+          MARIADB_USER: kucafe
+          MARIADB_PASSWORD: ci-only-password
+          MARIADB_ROOT_PASSWORD: ci-root-only-password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=20
+    env:
+      DATABASE_URL: mysql://kucafe:ci-only-password@127.0.0.1:3306/kucafe
+      NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3000
+      SESSION_SECRET: ci-only-session-secret-000000000000000000000000
+      AUTH_DEV_MODE: "true"
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Reject committed secrets
+        run: bash scripts/check-no-secrets.sh
+      - name: Initialize disposable CI database
+        run: npm run db:migrate
+      - run: npm run typecheck
+      - run: npm test
+      - name: Production build
+        run: npm run build

@@ -36,7 +36,12 @@ function readEnvLocal(key) {
 }
 
 /** خطاهایی که «یعنی از قبل انجام شده» — نه شکست. */
-const BENIGN = new Set(['ER_DUP_KEYNAME', 'ER_DUP_FIELDNAME', 'ER_TABLE_EXISTS_ERROR'])
+const BENIGN = new Set([
+  'ER_DUP_KEYNAME',
+  'ER_DUP_FIELDNAME',
+  'ER_TABLE_EXISTS_ERROR',
+  'ER_FK_DUP_NAME',
+])
 
 const sql = readFileSync(file, 'utf8')
 const statements = sql

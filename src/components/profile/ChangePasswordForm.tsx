@@ -53,6 +53,7 @@ export function ChangePasswordForm({
             className={styles.input}
             type="password"
             autoComplete="current-password"
+            maxLength={256}
             dir="ltr"
             required
           />
@@ -68,6 +69,7 @@ export function ChangePasswordForm({
           autoComplete="new-password"
           dir="ltr"
           minLength={8}
+          maxLength={256}
           required
         />
       </label>
@@ -81,6 +83,7 @@ export function ChangePasswordForm({
           autoComplete="new-password"
           dir="ltr"
           minLength={8}
+          maxLength={256}
           required
         />
       </label>

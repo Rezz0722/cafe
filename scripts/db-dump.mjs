@@ -35,10 +35,11 @@ import { gzipSync } from 'node:zlib'
 const BS = String.fromCharCode(92)
 
 function connConfig() {
-  const line = readFileSync('.env.local', 'utf8')
+  const envFile = process.env.KUCAFE_ENV_FILE || '.env.local'
+  const line = readFileSync(envFile, 'utf8')
     .split('\n')
     .find((l) => l.startsWith('DATABASE_URL'))
-  if (!line) throw new Error('DATABASE_URL در .env.local نیست')
+  if (!line) throw new Error(`DATABASE_URL در ${envFile} نیست`)
   const url = new URL(line.split('=').slice(1).join('=').trim())
   return {
     host: url.hostname,
@@ -100,7 +101,9 @@ async function main() {
 
   const [jsonCols] = await conn.query(
     "SELECT table_name t, column_name c FROM information_schema.columns " +
-      "WHERE table_schema=DATABASE() AND data_type='json'",
+      "WHERE table_schema=DATABASE() AND data_type='json' " +
+      "UNION SELECT table_name t, constraint_name c FROM information_schema.check_constraints " +
+      "WHERE constraint_schema=DATABASE() AND check_clause LIKE 'json_valid%'",
   )
   /** `table.column` هایی که باید JSON کدگذاری شوند. */
   const jsonSet = new Set(jsonCols.map((r) => `${r.t}.${r.c}`))

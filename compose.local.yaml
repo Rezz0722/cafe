@@ -1,0 +1,52 @@
+name: kucafe-local
+
+x-maintenance-build: &maintenance-build
+  context: .
+  target: maintenance
+
+services:
+  db:
+    image: mariadb:11.4
+    environment:
+      MARIADB_DATABASE: kucafe
+      MARIADB_USER: kucafe
+      MARIADB_PASSWORD: kucafe-local-only
+      MARIADB_ROOT_PASSWORD: root-local-only
+    volumes:
+      - kucafe-db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  migrate:
+    build: *maintenance-build
+    image: kucafe/maintenance:local
+    command: npm run db:migrate
+    environment: &local-app-env
+      NODE_ENV: development
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      DATABASE_URL: mysql://kucafe:kucafe-local-only@db:3306/kucafe
+      SESSION_SECRET: local-only-change-me-00000000000000000000
+      AUTH_DEV_MODE: "true"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  app:
+    build: *maintenance-build
+    image: kucafe/maintenance:local
+    command: node node_modules/next/dist/bin/next dev --hostname 0.0.0.0 --port 3100
+    ports:
+      - "3000:3100"
+    environment: *local-app-env
+    volumes:
+      - kucafe-media:/app/public/media
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+volumes:
+  kucafe-db:
+  kucafe-media:
