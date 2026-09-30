@@ -27,8 +27,11 @@ chown -R "$runner_user:$runner_user" "$runner_dir"
 sudo -u "$runner_user" "$runner_dir/config.sh" --unattended --replace \
   --url "$repo_url" --token "$token" --name "kucafe-production-$(hostname -s)" \
   --labels kucafe-production --work _work
-"$runner_dir/svc.sh" install "$runner_user"
-"$runner_dir/svc.sh" start
+(
+  cd "$runner_dir"
+  ./svc.sh install "$runner_user"
+  ./svc.sh start
+)
 project_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 install -o root -g root -m 0755 "$project_dir/deploy/server/kucafe-deploy-wrapper" /usr/local/sbin/kucafe-deploy
 cat >/etc/sudoers.d/kucafe-github-runner <<EOF
