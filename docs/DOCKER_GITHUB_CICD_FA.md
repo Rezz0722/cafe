@@ -95,7 +95,9 @@ git push -u origin feature/short-name
    legacy با journal خالی، baseline فقط پس از تطبیق کامل snapshot ثبت می‌شود؛
    schema ناقص یا journal مبهم deploy را متوقف می‌کند.
 7. health check اجرا می‌شود؛ در شکست، application image قبلی برمی‌گردد.
-8. بیش از پنج image KuCafe پاک می‌شود؛ image پروژه‌های دیگر دست نمی‌خورد.
+8. سقف خواسته‌شده پنج image است؛ روی ظرفیت فعلی سرور دو app (جاری و rollback)
+   و یک maintenance جاری، یعنی سه image نهایی نگهداری می‌شود. candidate ناموفق
+   پس از rollback حذف می‌شود و image پروژه‌های دیگر دست نمی‌خورد.
 
 ## ۶. media و Cron
 

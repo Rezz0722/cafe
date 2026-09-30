@@ -39,6 +39,13 @@ rollback_app() {
     echo "Rolling application container back to $previous_tag" >&2
     KUCAFE_IMAGE_TAG="$previous_tag" "${compose[@]}" up -d --no-build app || true
   fi
+  # Failed candidates are reproducible from Git and must not accumulate on a
+  # space-constrained production host. Docker still refuses to remove an image
+  # used by a container, so this never force-removes a live fallback.
+  if [[ "$tag" != "$previous_tag" ]]; then
+    docker image rm "kucafe/maintenance:$tag" >/dev/null 2>&1 || true
+    docker image rm "kucafe/app:$tag" >/dev/null 2>&1 || true
+  fi
   exit "$exit_code"
 }
 trap rollback_app ERR
@@ -88,5 +95,11 @@ fi
 printf '%s\n' "$tag" > "$state_dir/current-image"
 printf '%s\n' "$revision" > "$state_dir/current-revision"
 trap - ERR
-KUCAFE_IMAGE_RETENTION=5 bash "$project_dir/scripts/docker-retain-images.sh"
+# Keep the current app plus one immediate Docker rollback, and only the current
+# maintenance image. Three final images stay below the five-image ceiling and
+# fit the server's measured disk capacity.
+KUCAFE_IMAGE_RETENTION=2 KUCAFE_IMAGE_REPOSITORIES=kucafe/app \
+  bash "$project_dir/scripts/docker-retain-images.sh"
+KUCAFE_IMAGE_RETENTION=1 KUCAFE_IMAGE_REPOSITORIES=kucafe/maintenance \
+  bash "$project_dir/scripts/docker-retain-images.sh"
 echo "KuCafe $tag is healthy on 127.0.0.1:$port"
