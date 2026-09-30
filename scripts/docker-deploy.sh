@@ -65,6 +65,8 @@ done
 
 KUCAFE_IMAGE_TAG="$tag" "${compose[@]}" --profile maintenance run --rm --no-deps \
   maintenance npm run db:migrate
+KUCAFE_IMAGE_TAG="$tag" "${compose[@]}" --profile maintenance run --rm --no-deps \
+  maintenance npm run db:verify
 KUCAFE_IMAGE_TAG="$tag" "${compose[@]}" up -d --no-build --remove-orphans app
 
 healthy=0
