@@ -12,7 +12,8 @@
 2. runner تولید هیچ PR یا branch دیگری را اجرا نمی‌کند.
 3. secret، دیتابیس و media داخل Git یا application image قرار نمی‌گیرند.
 4. پیش از migration بکاپ دیتابیس گرفته می‌شود.
-5. حداکثر ۵ image از هر جزء و ۵ snapshot افزایشی media نگهداری می‌شود.
+5. حداکثر ۵ image نهایی مجاز است؛ تنظیم عملیاتی سرور دو app و یک maintenance
+   است. برای media حداکثر ۵ snapshot افزایشی نگهداری می‌شود.
 6. روی این سرور `docker system prune` اجرا نمی‌شود؛ سرویس‌های دیگری از Docker استفاده می‌کنند.
 
 ## فازها و وضعیت
@@ -21,7 +22,7 @@
 | --- | --- | --- |
 | ۰ | ممیزی Git، سرویس‌ها، دادهٔ پایدار، ظرفیت و rollback | انجام شد |
 | ۱ | Dockerfile چندمرحله‌ای، Compose تولید و Compose محلی | انجام شد |
-| ۲ | جداسازی media، snapshot افزایشی و retention پنج‌نسخه‌ای | انجام شد |
+| ۲ | جداسازی media، snapshot افزایشی و retention ظرفیت‌محور | انجام شد |
 | ۳ | CI عمومی بدون secret و دیتابیس یک‌بارمصرف | انجام شد |
 | ۴ | Deploy از runner اختصاصی با trust boundary | انجام شد؛ runner فعال و محدود به production است |
 | ۵ | build و آزمون موازی روی پورت ۳۱۰۰ | انجام شد؛ container سالم و smoke موفق |
@@ -58,7 +59,7 @@ Apache :443 ──▶ 127.0.0.1:3100
 - unit tests، typecheck و production build موفق باشند.
 - container روی ۳۱۰۰ سالم باشد و media واقعی را ببیند.
 - فقط commit شاخهٔ `production` قابل انتشار باشد.
-- rollback و نگهداری پنج نسخه تست شود.
+- rollback و سقف retention تست شود.
 - پس از cutover، پاسخ دامنه و لاگ Apache بررسی شود.
 
 جزئیات اجرا و دستورات مالک در [راهنمای عملیات](../../docs/DOCKER_GITHUB_CICD_FA.md) است.
