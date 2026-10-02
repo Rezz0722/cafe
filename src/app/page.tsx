@@ -50,7 +50,7 @@ import { maintenanceState } from '@/core/settings/maintenance'
 import { getDiscoveryPolicy, getLocalePolicy } from '@/core/settings/policies'
 import { getSettings } from '@/core/settings/store'
 import { faCount, toman } from '@/lib/format'
-import { absoluteUrl, paths } from '@/routes'
+import { absoluteUrl, authUrl, paths } from '@/routes'
 import { BRAND_ALIASES } from '@/core/seo/brand'
 import styles from '@/components/home/Home.module.css'
 
@@ -438,8 +438,8 @@ export default async function HomePage() {
                 <span><Check size={17} /> حضور در جست‌وجوی خوراکی و محله</span>
               </div>
               <div className={styles.ownerActions}>
-                <Link href={paths.ownerPanel} className={styles.ownerPrimary}>ورود به پنل کافه <ArrowLeft size={16} /></Link>
-                <Link href={paths.submitPlace} className={styles.ownerSecondary}>ثبت کافهٔ جدید</Link>
+                <Link href={paths.ownerLanding} className={styles.ownerPrimary}>دریافت پنل کافه <ArrowLeft size={16} /></Link>
+                <Link href={authUrl(paths.ownerPanel)} className={styles.ownerSecondary}>ورود اعضا</Link>
               </div>
             </div>
 

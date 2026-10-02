@@ -32,6 +32,8 @@ export const paths = {
   menuHub: '/mashhad/menu',
   menuCategory: (facetId: string) => `/mashhad/menu/${encodeURIComponent(facetId)}`,
   about: '/about',
+  /** صفحه جذب و تحویل پنل به کافه‌دارهای جدید. */
+  ownerLanding: '/for-cafes',
   methodology: '/methodology',
   reviewedCafes: '/reviewed-cafes',
   editorialPolicy: '/editorial-policy',
