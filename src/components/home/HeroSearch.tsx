@@ -1,8 +1,20 @@
 import Link from 'next/link'
+import type { CSSProperties } from 'react'
 import { ArrowLeft, Search } from 'lucide-react'
 import { QUICK_SUGGESTIONS } from '@/data/home'
 import { paths } from '@/routes'
 import styles from './Home.module.css'
+
+// Small overlapping strokes blend along the moving path itself. A gradient
+// painted across the SVG viewport would change color as the ray turns a corner.
+const ORBIT_STEPS = Array.from({ length: 13 }, (_, index) => ({
+  index,
+  style: {
+    '--orbit-blue': `${Math.round((index / 12) * 100)}%`,
+    '--orbit-offset': `${(index * 1.45).toFixed(2)}px`,
+    opacity: Math.min(1, (13 - index) / 7),
+  } as CSSProperties,
+}))
 
 /**
  * جست‌وجوی اصلی عمداً یک فرم HTML معمولی است، نه کامپوننت کلاینتی.
@@ -20,8 +32,9 @@ export function HeroSearch() {
       <form className={styles.searchForm} action={paths.search} method="get" role="search">
         <svg className={styles.searchOrbit} aria-hidden="true" focusable="false">
           <rect className={styles.searchOrbitGlow} pathLength="100" />
-          <rect className={styles.searchOrbitBeam} pathLength="100" />
-          <rect className={styles.searchOrbitHead} pathLength="100" />
+          {ORBIT_STEPS.map(({ index, style }) => (
+            <rect key={index} className={styles.searchOrbitSegment} pathLength="100" style={style} />
+          ))}
         </svg>
         <label htmlFor="home-search" className={styles.searchLabel}>
           جست‌وجوی کافه، منو و محله
