@@ -127,12 +127,54 @@
 }
 
 .searchForm {
+  position: relative;
+  isolation: isolate;
+  overflow: visible;
   padding: 7px;
   border: 1px solid color-mix(in srgb, var(--c-primary) 48%, var(--c-border));
   border-radius: 20px;
   background: var(--c-surface);
   box-shadow: 0 12px 28px color-mix(in srgb, var(--c-primary) 14%, transparent), var(--sh-raised);
   transition: border-color var(--t-base), box-shadow var(--t-base), transform var(--t-base);
+}
+
+/* A small orbiting highlight makes the search field read as an active,
+   interactive starting point. The gradient is painted once; only the ring
+   itself moves on the compositor via transform. */
+.searchForm::before,
+.searchForm::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  z-index: -1;
+  border-radius: 23px;
+  padding: 2px;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg 286deg,
+    color-mix(in srgb, var(--c-primary) 30%, transparent) 304deg,
+    var(--c-primary) 326deg,
+    var(--c-accent) 339deg,
+    transparent 356deg 360deg
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  animation: search-orbit 5.5s linear infinite;
+}
+
+.searchForm::after {
+  inset: -5px;
+  padding: 5px;
+  opacity: .48;
+  filter: blur(7px);
+}
+
+.searchForm > * {
+  position: relative;
+  z-index: 1;
 }
 
 .searchForm:focus-within {
@@ -199,6 +241,10 @@
 
 .searchSubmit:active {
   transform: translateY(1px);
+}
+
+@keyframes search-orbit {
+  to { transform: rotate(360deg); }
 }
 
 .searchSubmit:focus-visible,
@@ -613,6 +659,13 @@
 .categoryCard:hover > svg {
   color: var(--c-primary);
   transform: translateX(-2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .searchForm::before,
+  .searchForm::after {
+    animation: none;
+  }
 }
 
 .categoryIcon {
