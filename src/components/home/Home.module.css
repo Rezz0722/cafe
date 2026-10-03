@@ -171,8 +171,7 @@
 }
 
 .searchOrbitGlow,
-.searchOrbitBeam,
-.searchOrbitHead {
+.searchOrbitSegment {
   /* The centre of a 3px stroke sits 1.5px inside the form edge. With a
      18.5px path radius its outer edge exactly follows the 20px CSS radius. */
   x: 1.5px;
@@ -183,34 +182,24 @@
   ry: 18.5px;
   fill: none;
   stroke-linecap: round;
-  stroke-dashoffset: 0;
   animation: search-ray-orbit 7.8s linear infinite;
 }
 
 .searchOrbitGlow {
   /* A wide translucent stroke reads as a halo without continuously
      compositing an animated blur on mobile. */
-  stroke: #16d9ff;
-  stroke-width: 11;
-  stroke-dasharray: 18 82;
-  opacity: .18;
+  stroke: var(--c-primary);
+  stroke-width: 9;
+  stroke-dasharray: 19.75 80.25;
+  opacity: .13;
 }
 
-.searchOrbitBeam {
-  stroke: #16d9ff;
+.searchOrbitSegment {
+  /* The first stroke is orange; the last uses the exact Hero title token.
+     Each rounded stroke overlaps its neighbour, hiding hard color seams. */
+  stroke: color-mix(in oklch, var(--c-primary) var(--orbit-blue), #ff8a18);
   stroke-width: 3;
-  stroke-dasharray: 18 82;
-  opacity: 1;
-}
-
-.searchOrbitHead {
-  /* Keeping the orange tip as its own dash makes blue → orange visible at
-     every part of the rounded path, not only where an SVG gradient happens
-     to cross the viewport. */
-  stroke: #ff8a18;
-  stroke-width: 3.5;
-  stroke-dasharray: 2.6 97.4;
-  opacity: 1;
+  stroke-dasharray: 2.35 97.65;
 }
 
 .searchForm:focus-within {
@@ -695,14 +684,14 @@
 
 @media (prefers-reduced-motion: reduce) {
   .searchOrbitGlow,
-  .searchOrbitBeam,
-  .searchOrbitHead {
+  .searchOrbitSegment {
     animation: none;
   }
 }
 
 @keyframes search-ray-orbit {
-  to { stroke-dashoffset: -100; }
+  from { stroke-dashoffset: var(--orbit-offset, 0px); }
+  to { stroke-dashoffset: calc(var(--orbit-offset, 0px) - 100px); }
 }
 
 .categoryIcon {
