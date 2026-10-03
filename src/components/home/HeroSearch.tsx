@@ -18,7 +18,18 @@ export function HeroSearch() {
         <ArrowLeft size={16} aria-hidden="true" />
       </div>
       <form className={styles.searchForm} action={paths.search} method="get" role="search">
-        <span className={styles.searchOrbitDot} aria-hidden="true" />
+        <svg className={styles.searchOrbit} viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="search-orbit-gradient" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stopColor="#3b82f6" stopOpacity="0" />
+              <stop offset="0.45" stopColor="#38bdf8" stopOpacity="0.9" />
+              <stop offset="0.78" stopColor="#f59e0b" stopOpacity="1" />
+              <stop offset="1" stopColor="#fb923c" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          <rect className={styles.searchOrbitGlow} x="2" y="2" width="96" height="96" rx="18" pathLength="400" />
+          <rect className={styles.searchOrbitBeam} x="2" y="2" width="96" height="96" rx="18" pathLength="400" />
+        </svg>
         <label htmlFor="home-search" className={styles.searchLabel}>
           جست‌وجوی کافه، منو و محله
         </label>
