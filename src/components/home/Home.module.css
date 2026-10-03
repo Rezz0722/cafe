@@ -84,12 +84,61 @@
   max-width: 680px;
 }
 
+.searchIntro {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-block-end: 9px;
+  color: var(--c-ink);
+}
+
+.searchIntroIcon {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--c-primary-border);
+  border-radius: 11px;
+  color: var(--c-primary-strong);
+  background: var(--c-primary-soft);
+}
+
+.searchIntro > span:nth-child(2) {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  line-height: 1.45;
+}
+
+.searchIntro b {
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.searchIntro small {
+  color: var(--c-muted);
+  font-size: 10.5px;
+}
+
+.searchIntro > svg {
+  margin-inline-start: auto;
+  color: var(--c-primary);
+}
+
 .searchForm {
   padding: 7px;
-  border: 1px solid var(--c-primary-border);
+  border: 1px solid color-mix(in srgb, var(--c-primary) 48%, var(--c-border));
   border-radius: 20px;
   background: var(--c-surface);
-  box-shadow: var(--sh-raised);
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--c-primary) 14%, transparent), var(--sh-raised);
+  transition: border-color var(--t-base), box-shadow var(--t-base), transform var(--t-base);
+}
+
+.searchForm:focus-within {
+  border-color: var(--c-primary);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--c-primary) 16%, transparent), var(--sh-raised);
+  transform: translateY(-1px);
 }
 
 .searchLabel {
@@ -141,6 +190,7 @@
   box-shadow: var(--sh-primary);
   font-size: 13px;
   font-weight: 900;
+  transition: background var(--t-fast), box-shadow var(--t-fast), transform var(--t-fast);
 }
 
 .searchSubmit:hover {
@@ -149,6 +199,18 @@
 
 .searchSubmit:active {
   transform: translateY(1px);
+}
+
+.searchSubmit:focus-visible,
+.heroShortcuts a:focus-visible,
+.suggestionLinks a:focus-visible,
+.textLink:focus-visible,
+.categoryCard:focus-visible,
+.experienceCard:focus-visible,
+.heroMomentCard:focus-visible,
+.districtRail a:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--c-accent) 72%, white);
+  outline-offset: 3px;
 }
 
 .suggestions {
@@ -193,6 +255,7 @@
   font-size: 11.5px;
   font-weight: 800;
   scroll-snap-align: start;
+  transition: border-color var(--t-fast), background var(--t-fast), color var(--t-fast), transform var(--t-fast), box-shadow var(--t-fast);
 }
 
 .suggestionLinks a:active,
@@ -207,6 +270,9 @@
 .suggestionLinks a:hover {
   border-color: var(--c-primary-border);
   color: var(--c-primary-strong);
+  background: var(--c-primary-soft);
+  box-shadow: var(--sh-card-sm);
+  transform: translateY(-1px);
 }
 
 .heroShortcuts {
@@ -230,11 +296,16 @@
   background: var(--c-surface);
   font-size: 11px;
   font-weight: 850;
+  box-shadow: var(--sh-card-sm);
+  transition: border-color var(--t-fast), background var(--t-fast), color var(--t-fast), transform var(--t-fast), box-shadow var(--t-fast);
 }
 
 .heroShortcuts a:hover {
   border-color: var(--c-primary-border);
   color: var(--c-primary-strong);
+  background: var(--c-primary-soft);
+  box-shadow: var(--sh-card);
+  transform: translateY(-2px);
 }
 
 .heroShortcuts svg {
@@ -258,6 +329,7 @@
   border-radius: 20px;
   background: var(--c-surface);
   box-shadow: var(--sh-card-sm);
+  transition: border-color var(--t-fast), box-shadow var(--t-fast), transform var(--t-fast);
 }
 
 .heroMomentCard[data-featured='true'] {
@@ -268,6 +340,7 @@
 .heroMomentCard:hover {
   border-color: var(--c-primary-border);
   box-shadow: var(--sh-card);
+  transform: translateY(-2px);
 }
 
 .heroMomentCard > img {
@@ -390,6 +463,12 @@
   color: var(--c-primary-strong);
   font-size: 12.5px;
   font-weight: 900;
+  transition: color var(--t-fast), transform var(--t-fast);
+}
+
+.textLink:hover {
+  color: var(--c-primary);
+  transform: translateX(-2px);
 }
 
 .experienceSection {
@@ -420,11 +499,13 @@
   background: var(--c-surface);
   box-shadow: var(--sh-card-sm);
   scroll-snap-align: start;
+  transition: border-color var(--t-fast), box-shadow var(--t-fast), transform var(--t-fast);
 }
 
 .experienceCard:hover {
   border-color: var(--c-primary-border);
   box-shadow: var(--sh-card);
+  transform: translateY(-2px);
 }
 
 .experienceCard > img {
@@ -486,18 +567,21 @@
   min-width: 0;
   min-height: 84px;
   display: grid;
-  grid-template-columns: 42px minmax(0, 1fr);
+  grid-template-columns: 42px minmax(0, 1fr) 18px;
   align-items: center;
   gap: 9px;
   padding: 11px;
   border: 1px solid var(--c-border);
   border-radius: 16px;
   background: var(--c-surface-tint);
+  transition: border-color var(--t-fast), background var(--t-fast), color var(--t-fast), transform var(--t-fast), box-shadow var(--t-fast);
 }
 
 .categoryCard:hover {
   border-color: var(--c-primary-border);
   background: var(--c-surface);
+  box-shadow: var(--sh-card-sm);
+  transform: translateY(-2px);
 }
 
 .categoryCard > span:nth-child(2) {
@@ -521,7 +605,14 @@
 }
 
 .categoryCard > svg {
-  display: none;
+  display: block;
+  color: var(--c-muted-3);
+  transition: color var(--t-fast), transform var(--t-fast);
+}
+
+.categoryCard:hover > svg {
+  color: var(--c-primary);
+  transform: translateX(-2px);
 }
 
 .categoryIcon {

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Search } from 'lucide-react'
+import { ArrowLeft, Search } from 'lucide-react'
 import { QUICK_SUGGESTIONS } from '@/data/home'
 import { paths } from '@/routes'
 import styles from './Home.module.css'
@@ -12,9 +12,14 @@ import styles from './Home.module.css'
 export function HeroSearch() {
   return (
     <div className={styles.searchBlock}>
+      <div className={styles.searchIntro}>
+        <span className={styles.searchIntroIcon} aria-hidden="true"><Search size={17} /></span>
+        <span><b>دنبال چی می‌گردی؟</b><small>کافه، غذا یا محله را همین‌جا پیدا کن</small></span>
+        <ArrowLeft size={16} aria-hidden="true" />
+      </div>
       <form className={styles.searchForm} action={paths.search} method="get" role="search">
         <label htmlFor="home-search" className={styles.searchLabel}>
-          اسم کافه، خوراکی یا محله را بنویس
+          جست‌وجوی کافه، منو و محله
         </label>
         <div className={styles.searchControl}>
           <Search className={styles.searchIcon} size={21} aria-hidden="true" />
