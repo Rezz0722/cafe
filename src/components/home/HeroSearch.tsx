@@ -18,6 +18,7 @@ export function HeroSearch() {
         <ArrowLeft size={16} aria-hidden="true" />
       </div>
       <form className={styles.searchForm} action={paths.search} method="get" role="search">
+        <span className={styles.searchOrbitDot} aria-hidden="true" />
         <label htmlFor="home-search" className={styles.searchLabel}>
           جست‌وجوی کافه، منو و محله
         </label>

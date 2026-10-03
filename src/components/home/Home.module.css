@@ -146,7 +146,7 @@
   content: '';
   position: absolute;
   inset: -3px;
-  z-index: -1;
+  z-index: 0;
   border-radius: 23px;
   padding: 2px;
   background: conic-gradient(
@@ -175,6 +175,37 @@
 .searchForm > * {
   position: relative;
   z-index: 1;
+}
+
+/* The orbit is a real element (rather than a masked border) so it remains
+   visible in mobile Chromium/WebKit as well as desktop browsers. */
+.searchForm::before,
+.searchForm::after {
+  display: none;
+}
+
+.searchOrbitDot {
+  position: absolute !important;
+  inset: auto !important;
+  top: -5px !important;
+  left: 8% !important;
+  z-index: 3 !important;
+  width: 9px;
+  height: 9px;
+  border: 2px solid var(--c-surface);
+  border-radius: 50%;
+  background: var(--c-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-accent) 22%, transparent), 0 0 12px 3px color-mix(in srgb, var(--c-accent) 70%, transparent);
+  pointer-events: none;
+  animation: search-dot-orbit 5.5s linear infinite;
+}
+
+@keyframes search-dot-orbit {
+  0%, 24% { top: -5px !important; left: 8% !important; }
+  25%, 49% { top: -5px !important; left: calc(100% - 14px) !important; }
+  50%, 74% { top: calc(100% - 5px) !important; left: calc(100% - 14px) !important; }
+  75%, 99% { top: calc(100% - 5px) !important; left: 8% !important; }
+  100% { top: -5px !important; left: 8% !important; }
 }
 
 .searchForm:focus-within {
@@ -664,6 +695,10 @@
 @media (prefers-reduced-motion: reduce) {
   .searchForm::before,
   .searchForm::after {
+    animation: none;
+  }
+
+  .searchOrbitDot {
     animation: none;
   }
 }
