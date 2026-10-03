@@ -151,6 +151,7 @@
 }
 
 .searchOrbit {
+  --orbit-color: oklch(0.64 0.16 250); /* dark-theme Hero blue in both themes */
   position: absolute !important;
   /* An absolutely positioned child starts inside the form's 1px border.
      Extend it by that border width so the beam's outer edge is the frame,
@@ -170,7 +171,6 @@
   pointer-events: none;
 }
 
-.searchOrbitGlow,
 .searchOrbitSegment {
   /* The centre of a 3px stroke sits 1.5px inside the form edge. With a
      18.5px path radius its outer edge exactly follows the 20px CSS radius. */
@@ -185,21 +185,11 @@
   animation: search-ray-orbit 7.8s linear infinite;
 }
 
-.searchOrbitGlow {
-  /* A wide translucent stroke reads as a halo without continuously
-     compositing an animated blur on mobile. */
-  stroke: var(--c-primary);
-  stroke-width: 9;
-  stroke-dasharray: 19.75 80.25;
-  opacity: .13;
-}
-
 .searchOrbitSegment {
-  /* The first stroke is orange; the last uses the exact Hero title token.
-     Each rounded stroke overlaps its neighbour, hiding hard color seams. */
-  stroke: color-mix(in oklch, var(--c-primary) var(--orbit-blue), #ff8a18);
+  /* Dark-theme Hero blue stays fixed in light mode; the tail reaches zero alpha. */
+  stroke: var(--orbit-color);
   stroke-width: 3;
-  stroke-dasharray: 2.35 97.65;
+  stroke-dasharray: 3 97;
 }
 
 .searchForm:focus-within {
@@ -683,7 +673,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .searchOrbitGlow,
   .searchOrbitSegment {
     animation: none;
   }
