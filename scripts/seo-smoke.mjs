@@ -11,6 +11,8 @@
  * را پیش از انتشار می‌گیرد.
  */
 
+import { drainResponse } from './lib/drain-response.mjs'
+
 const base = new URL(process.argv[2] ?? 'http://127.0.0.1:9091')
 const failures = []
 
@@ -148,6 +150,7 @@ async function linkWorker() {
         redirect: 'manual',
         headers: { 'user-agent': 'KuCafe-SEO-Smoke/1.0' },
       })
+      await drainResponse(response)
       if (response.status >= 400) broken.push(`${response.status} ${href}`)
     } catch (error) {
       broken.push(`${href}: ${String(error)}`)
