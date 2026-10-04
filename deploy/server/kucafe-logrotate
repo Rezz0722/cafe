@@ -1,0 +1,13 @@
+/var/log/httpd/kucafe-access.log /var/log/httpd/kucafe-error.log /var/log/httpd/kucafe-dev-access.log /var/log/httpd/kucafe-dev-error.log {
+    daily
+    rotate 14
+    maxsize 100M
+    missingok
+    notifempty
+    compress
+    create 0644 root root
+    sharedscripts
+    postrotate
+        /bin/kill -USR1 "$(cat /var/run/httpd.pid 2>/dev/null)" 2>/dev/null || true
+    endscript
+}

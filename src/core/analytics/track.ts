@@ -125,6 +125,8 @@ export async function trackPageView(
  * چه چیزی خواسته که نداریم.
  */
 export async function trackSearch(input: {
+  /** Used transiently to exclude crawlers; never stored with the query. */
+  userAgent?: string | null
   query: string
   requestedScope?: 'all' | 'places' | 'items'
   resolvedEntity?: 'places' | 'items'
@@ -139,6 +141,7 @@ export async function trackSearch(input: {
   userId?: string | null
   sessionId?: string | null
 }): Promise<void> {
+  if (detectDevice(input.userAgent ?? null) === 'bot') return
   const db = getDb()
   const { searchLog } = await import('@/db/schema')
   await db.insert(searchLog).values({
