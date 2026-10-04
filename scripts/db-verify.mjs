@@ -54,6 +54,7 @@ const REQUIRED = [
   'audit_log', 'impersonation_log', 'otp_code', 'auth_session', 'place_brand',
   'menu_item_variant',
   'blogger_profile', 'club_membership', 'club_offer', 'club_code',
+  'venue_lead', 'venue_lead_rate',
 ]
 const missing = REQUIRED.filter((table) => !names.has(table))
 check(`${REQUIRED.length} جدول لازم موجود است`, missing.length === 0, missing.join(', '))

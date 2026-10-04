@@ -15,11 +15,13 @@ import {
 import { serializeJsonLd } from '@/core/security/jsonLd'
 import { absoluteUrl, authUrl, paths } from '@/routes'
 import styles from './page.module.css'
+import { randomUUID } from 'node:crypto'
+import { getSettings } from '@/core/settings/store'
+import { normalizePhone } from '@/core/auth/phone'
+import { PanelRequestForm } from '@/components/leads/PanelRequestForm'
+import leadStyles from '@/components/leads/leads.module.css'
 
-const OWNER_PHONE = '09306819085'
-const OWNER_PHONE_LINK = 'tel:+989306819085'
-const OWNER_TELEGRAM = 'saghi_alireza'
-const OWNER_TELEGRAM_LINK = `https://t.me/${OWNER_TELEGRAM}`
+export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: 'دریافت پنل دیجیتال کافه',
@@ -42,13 +44,20 @@ const benefits = [
 ]
 
 const faqs = [
-  ['برای گرفتن پنل چه کاری باید انجام بدهم؟', 'با تماس یا تلگرام پیام بدهید و نام کافه و شعبه را بفرستید. بعد از بررسی، دسترسی همان شعبه برایتان فعال می‌شود.'],
+  ['برای گرفتن پنل چه کاری باید انجام بدهم؟', 'فرم کوتاه درخواست پنل را پر کنید یا با تماس و تلگرام پیام بدهید. کد پیگیری دریافت می‌کنید؛ دسترسی شعبه فقط بعد از تأیید شماره و بررسی مالکیت فعال می‌شود.'],
   ['آیا می‌توانم چند شعبه داشته باشم؟', 'بله. هر شعبه صفحه و منوی خودش را دارد و حساب مالک می‌تواند بین مجموعه‌های مجاز جابه‌جا شود.'],
   ['بعد از تحویل پنل چه چیزهایی را مدیریت می‌کنم؟', 'اطلاعات کافه، ساعت کاری، تصاویر، دسته‌بندی و آیتم‌های منو، قیمت‌ها، پاسخ به نظرها و امکانات باشگاه مشتریان.'],
   ['اگر اطلاعات کافه‌ام در سایت ناقص باشد چه؟', 'در زمان راه‌اندازی با هم اطلاعات پایه را بررسی می‌کنیم و بعد شما می‌توانید اصلاح‌های بعدی را از پنل انجام دهید.'],
 ]
 
-export default function ForCafesPage() {
+export default async function ForCafesPage({ searchParams }: { searchParams: Promise<{ from?: string }> }) {
+  const settings = await getSettings()
+  const OWNER_PHONE = normalizePhone(settings.contactPhone) || '09306819085'
+  const OWNER_PHONE_LINK = `tel:+98${OWNER_PHONE.slice(1)}`
+  const telegram = settings.siteTelegram.replace(/^https:\/\/t.me\//, '').replace(/^@/, '').replace(/\/$/, '')
+  const OWNER_TELEGRAM = /^[A-Za-z0-9_]{5,32}$/.test(telegram) ? telegram : 'saghi_alireza'
+  const OWNER_TELEGRAM_LINK = `https://t.me/${OWNER_TELEGRAM}`
+  const source = (await searchParams).from || 'direct'
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
@@ -73,7 +82,8 @@ export default function ForCafesPage() {
             <h1 id="owner-hero-title">کافه‌ات را آنلاین، مرتب و قابل پیدا شدن نگه دار.</h1>
             <p>یک صفحهٔ اختصاصی، منوی دیجیتال و QR شعبه؛ با همراهی مستقیم تیم کو کافه راه‌اندازی می‌شود.</p>
             <div className={styles.heroActions}>
-              <a className={styles.primaryButton} href={OWNER_TELEGRAM_LINK} target="_blank" rel="noreferrer">
+              <a className={styles.primaryButton} href="#panel-request">ثبت درخواست پنل <ArrowLeft size={17} aria-hidden="true" /></a>
+              <a className={styles.secondaryButton} href={OWNER_TELEGRAM_LINK} target="_blank" rel="noreferrer">
                 <MessageCircle size={18} aria-hidden="true" /> شروع گفتگو در تلگرام <ExternalLink size={14} aria-hidden="true" />
               </a>
               <a className={styles.secondaryButton} href={OWNER_PHONE_LINK}>
@@ -93,6 +103,11 @@ export default function ForCafesPage() {
           </div>
         </section>
 
+        <section id="panel-request" className={leadStyles.section} aria-labelledby="request-title">
+          <h2 id="request-title">راه‌اندازی پنل کافه‌ات را از اینجا شروع کن</h2>
+          <PanelRequestForm requestKey={randomUUID()} source={source} />
+        </section>
+
         <section className={styles.benefits} aria-labelledby="benefits-title">
           <div className={styles.sectionHeading}><span>آنچه تحویل می‌گیرید</span><h2 id="benefits-title">پنل برای کارهای واقعی کافه</h2></div>
           <div className={styles.benefitGrid}>
@@ -103,8 +118,8 @@ export default function ForCafesPage() {
         <section className={styles.process} aria-labelledby="process-title">
           <div className={styles.sectionHeading}><span>فرآیند همکاری</span><h2 id="process-title">از پیام تا تحویل پنل</h2></div>
           <ol className={styles.steps}>
-            <li><b>پیام بدهید</b><span>در تلگرام یا تماس، نام کافه و شعبه را بفرستید.</span></li>
-            <li><b>اطلاعات را بررسی می‌کنیم</b><span>مالکیت، مشخصات شعبه و منوی اولیه را با هم چک می‌کنیم.</span></li>
+            <li><b>درخواست بدهید</b><span>فرم را پر کنید و کد پیگیری بگیرید؛ تماس و تلگرام هم در دسترس‌اند.</span></li>
+            <li><b>شماره و مالکیت را بررسی می‌کنیم</b><span>با شمارهٔ تأییدشده وارد شوید و شعبه را برای بررسی انسانی مالکیت انتخاب کنید.</span></li>
             <li><b>پنل را تحویل بگیرید</b><span>حساب شما به شعبه وصل می‌شود و لینک پنل و QR را دریافت می‌کنید.</span></li>
           </ol>
         </section>
@@ -112,7 +127,7 @@ export default function ForCafesPage() {
         <section className={styles.contactCard} aria-labelledby="contact-title">
           <div><span className={styles.sectionKicker}>آماده‌ای شروع کنیم؟</span><h2 id="contact-title">مستقیم با علیرضا در ارتباط باش</h2><p>نام کافه، شهر و تعداد شعبه را بفرستید تا مسیر مناسب راه‌اندازی را هماهنگ کنیم.</p></div>
           <div className={styles.contactActions}>
-            <a href={OWNER_PHONE_LINK} className={styles.contactPhone}>۰۹۳۰۶۸۱۹۰۸۵ <span>تماس مستقیم</span></a>
+            <a href={OWNER_PHONE_LINK} className={styles.contactPhone}><span dir="ltr">{OWNER_PHONE}</span> <span>تماس مستقیم</span></a>
             <a href={OWNER_TELEGRAM_LINK} target="_blank" rel="noreferrer" className={styles.contactTelegram}>@{OWNER_TELEGRAM} <span>تلگرام</span><ExternalLink size={14} aria-hidden="true" /></a>
           </div>
         </section>

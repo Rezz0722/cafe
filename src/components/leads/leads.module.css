@@ -1,0 +1,28 @@
+.section { margin-block: 38px; padding: clamp(18px, 4vw, 32px); border: 1px solid var(--c-border); border-radius: 24px; background: var(--c-surface); color: var(--c-ink); scroll-margin-top: 90px; }
+.section h2 { font-size: clamp(1.4rem, 3vw, 2rem); margin-bottom: 12px; }
+.form { display: grid; gap: 14px; min-width: 0; }
+.fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.field { display: grid; gap: 6px; min-width: 0; }
+.field label { font-weight: 750; font-size: .9rem; }
+.field input, .field select, .field textarea { width: 100%; min-width: 0; min-height: 46px; border: 1px solid var(--c-border); border-radius: 12px; padding: 10px 12px; background: var(--c-surface-2); color: var(--c-ink); font: inherit; font-size: 16px; }
+.field textarea { min-height: 90px; resize: vertical; }
+.button { display: inline-flex; align-items: center; justify-content: center; width: fit-content; max-width: 100%; min-height: 48px; border: 1px solid var(--c-primary); border-radius: 13px; padding: 10px 20px; background: var(--c-primary); color: #fff; font: inherit; font-weight: 850; cursor: pointer; text-decoration: none; }
+.button:hover { background: var(--c-primary-action-strong); }
+.button:disabled { opacity: .65; cursor: wait; }
+.form input:focus-visible, .form select:focus-visible, .form textarea:focus-visible, .button:focus-visible, .filters a:focus-visible { outline: 3px solid var(--c-primary); outline-offset: 3px; }
+.consent { display: flex; gap: 10px; align-items: flex-start; }
+.consent input { flex: 0 0 auto; margin-top: 5px; width: 20px; height: 20px; accent-color: var(--c-primary); }
+.error { color: var(--c-danger); }
+.muted { color: var(--c-ink-2); font-size: .85rem; }
+.honeypot { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.receipt { display: grid; gap: 14px; overflow-wrap: anywhere; }
+.receipt code, .card code { font-size: .9rem; overflow-wrap: anywhere; }
+.page { width: min(100% - 32px, 1000px); margin: 30px auto 80px; color: var(--c-ink); }
+.filters { display: flex; flex-wrap: wrap; gap: 10px; margin-block: 20px; }
+.filters a { padding: 8px 12px; border: 1px solid var(--c-border); border-radius: 12px; color: var(--c-primary-strong); }
+.list { display: grid; gap: 20px; list-style: none; }
+.card { display: grid; gap: 14px; min-width: 0; padding: 22px; border: 1px solid var(--c-border); border-radius: 20px; background: var(--c-surface); overflow-wrap: anywhere; }
+.card header { display: flex; gap: 14px; justify-content: space-between; flex-wrap: wrap; }
+.status { font-weight: 800; color: var(--c-primary-strong); }
+.audit { font-size: .85rem; color: var(--c-ink-2); }
+@media (max-width: 600px) { .fields { grid-template-columns: minmax(0, 1fr); } .button { width: 100%; } .card { padding: 16px; } }

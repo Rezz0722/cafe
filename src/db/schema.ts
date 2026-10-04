@@ -990,6 +990,44 @@ export const editSuggestion = mysqlTable(
   (t) => [index('edit_suggestion_status_idx').on(t.status, t.createdAt)],
 )
 
+/** Sales intake is not a public place submission and never grants ownership. */
+export const venueLead = mysqlTable('venue_lead', {
+  id: char('id', { length: 36 }).primaryKey(),
+  trackingCode: char('tracking_code', { length: 24 }).notNull(),
+  requestHash: char('request_hash', { length: 64 }).notNull(),
+  dedupeKey: char('dedupe_key', { length: 64 }).notNull(),
+  contactName: varchar('contact_name', { length: 120 }).notNull(),
+  contactPhone: varchar('contact_phone', { length: 20 }).notNull(),
+  cafeName: varchar('cafe_name', { length: 160 }).notNull(),
+  city: varchar('city', { length: 80 }).notNull(),
+  branch: varchar('branch', { length: 120 }).notNull().default(''),
+  source: varchar('source', { length: 40 }).notNull().default('direct'),
+  consentAt: timestamp('consent_at').notNull(),
+  status: mysqlEnum('status', ['new', 'contacted', 'demo', 'review', 'active', 'rejected', 'closed']).notNull().default('new'),
+  userId: char('user_id', { length: 36 }).references(() => appUser.id, { onDelete: 'set null' }),
+  placeId: int('place_id').references(() => place.id, { onDelete: 'set null' }),
+  claimId: int('claim_id').references(() => placeClaim.id, { onDelete: 'set null' }),
+  assignedToUserId: char('assigned_to_user_id', { length: 36 }).references(() => appUser.id, { onDelete: 'set null' }),
+  nextFollowUpAt: timestamp('next_follow_up_at'),
+  internalNote: text('internal_note'),
+  revision: int('revision').notNull().default(0),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow().onUpdateNow(),
+}, t => [
+  uniqueIndex('venue_lead_tracking_uq').on(t.trackingCode),
+  uniqueIndex('venue_lead_request_uq').on(t.requestHash),
+  uniqueIndex('venue_lead_dedupe_uq').on(t.dedupeKey),
+  index('venue_lead_status_idx').on(t.status, t.nextFollowUpAt),
+  index('venue_lead_phone_idx').on(t.contactPhone),
+])
+
+/** HMAC keys, not raw IP/phone; fixed hourly buckets shared across workers. */
+export const venueLeadRate = mysqlTable('venue_lead_rate', {
+  key: char('bucket_key', { length: 64 }).primaryKey(),
+  windowStart: timestamp('window_start').notNull(),
+  requests: int('requests').notNull().default(1),
+}, t => [index('venue_lead_rate_window_idx').on(t.windowStart)])
+
 export const placeClaim = mysqlTable(
   'place_claim',
   {

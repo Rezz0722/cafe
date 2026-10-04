@@ -438,7 +438,7 @@ export default async function HomePage() {
                 <span><Check size={17} /> حضور در جست‌وجوی خوراکی و محله</span>
               </div>
               <div className={styles.ownerActions}>
-                <Link href={paths.ownerLanding} className={styles.ownerPrimary}>دریافت پنل کافه <ArrowLeft size={16} /></Link>
+                <Link href={`${paths.ownerLanding}?from=home`} className={styles.ownerPrimary}>دریافت پنل کافه <ArrowLeft size={16} /></Link>
                 <Link href={authUrl(paths.ownerPanel)} className={styles.ownerSecondary}>ورود اعضا</Link>
               </div>
             </div>
