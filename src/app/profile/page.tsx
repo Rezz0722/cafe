@@ -81,6 +81,7 @@ export default async function ProfilePage() {
           </p>
         </div>
         <div className={styles.headActions}>
+          <Link href="/profile/venue-requests" className={styles.headLink}>درخواست پنل کافه</Link>
           {(account?.role === 'owner' || account?.role === 'admin') && (
             <Link href={paths.ownerPanel} className={styles.headLink}>
               پنل کافه
