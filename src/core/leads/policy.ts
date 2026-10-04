@@ -14,7 +14,7 @@ export function validateLead(raw: LeadInput): { data: LeadInput; errors: LeadErr
   for (const [key, min, max] of [['contactName', 2, 120], ['cafeName', 2, 160], ['city', 2, 80], ['branch', 0, 120]] as const) {
     if (data[key].length < min || String(raw[key]).length > max) errors[key] = `این بخش باید بین ${min} و ${max} نویسه باشد.`
   }
-  if (!data.contactPhone) errors.contactPhone = 'شمارهٔ موبایل معتبر وارد کنید؛ مثلاً 09123456789.'
+  if (!data.contactPhone || raw.contactPhone.length > 20) errors.contactPhone = 'شمارهٔ موبایل معتبر وارد کنید؛ مثلاً 09123456789.'
   if (!raw.consent) errors.consent = 'برای پیگیری درخواست، رضایت تماس لازم است.'
   if (!/^[a-f0-9-]{36}$/i.test(raw.requestKey)) errors.requestKey = 'صفحه را تازه کنید و دوباره تلاش کنید.'
   if (raw.website) errors.website = 'درخواست ثبت نشد.'

@@ -44,4 +44,5 @@ test('follow-up uses explicit Tehran offset, empty clears, malformed rejects', (
   assert.equal(parseFollowUp('2026-10-05T10:30')?.toISOString(), '2026-10-05T07:00:00.000Z')
   assert.equal(parseFollowUp(''), null)
   assert.throws(() => parseFollowUp('not a date'))
+  assert.throws(() => parseFollowUp('2026-02-31T10:30'))
 })
