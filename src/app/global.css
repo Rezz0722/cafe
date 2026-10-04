@@ -23,6 +23,14 @@ html {
   background: var(--c-surface);
 }
 
+/* Native focus scrolling must settle before pointerup: Firefox can otherwise
+   move the submit button away from the pointer mid-click. Anchor scrolling
+   stays smooth when the user is not interacting with a search form. Works
+   without JS and leaves explicit menu/rail scroll animations unchanged. */
+html:has(form[role='search']:focus-within) {
+  scroll-behavior: auto;
+}
+
 body {
   min-height: 100vh;
   min-height: 100dvh;
