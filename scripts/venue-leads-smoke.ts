@@ -11,13 +11,13 @@ import { createSessionToken, SESSION_COOKIE } from '../src/core/auth/session'
 const base = process.argv[2] || 'http://127.0.0.1:3201'
 assert.equal(new URL(base).hostname, '127.0.0.1', 'No production test writes')
 assert.equal(new URL(process.env.DATABASE_URL || '').pathname, '/kucafe_phase1_test', 'Isolated database required')
-const db = getDb(), fixture = randomUUID().slice(0, 8), adminId = randomUUID(), ownerId = randomUUID(), otherId = randomUUID()
+const db = getDb(), fixture = randomUUID().slice(0, 8), adminId = randomUUID(), ownerId = randomUUID(), otherId = randomUUID(), unverifiedId = randomUUID()
 const phone = '09123456789', otherPhone = '09123456780', venueIds: number[] = [], leadIds: string[] = [], results: object[] = []
 const output = 'var/qa/phase1'
 await mkdir(output, { recursive: true })
 const browser = await chromium.launch()
 try {
-  await db.insert(appUser).values([{ id: adminId, name: 'QA admin', role: 'admin', username: `qa-admin-${fixture}` }, { id: ownerId, name: 'QA owner', phone, phoneVerifiedAt: new Date() }, { id: otherId, name: 'QA other', phone: otherPhone, phoneVerifiedAt: new Date() }])
+  await db.insert(appUser).values([{ id: adminId, name: 'QA admin', role: 'admin', username: `qa-admin-${fixture}` }, { id: ownerId, name: 'QA owner', phone, phoneVerifiedAt: new Date() }, { id: otherId, name: 'QA other', phone: otherPhone, phoneVerifiedAt: new Date() }, { id: unverifiedId, name: 'QA unverified', phone: '09123456782' }])
   for (const branch of ['a', 'b']) { const [r] = await db.insert(place).values({ name: `QA cafe ${fixture} ${branch}`, nameNormalized: `QA ${fixture}`, slug: `qa-${fixture}-${branch}`, status: 'published' }); venueIds.push(r.insertId) }
   for (const [name, launcher] of Object.entries({ chromium, firefox, webkit })) {
     const instance = await launcher.launch()
@@ -54,12 +54,21 @@ try {
   await page.goto(`${base}/admin/leads`); assert.equal(new URL(page.url()).pathname, '/auth')
   await anonymous.close()
   results.push({ status: 'pass', checks: ['two anonymous real form submits', 'no implicit role', 'private inbox rejects guest'] })
-  const auth = async (id: string, role: 'admin' | 'customer', number: string) => {
+  const auth = async (id: string, role: 'admin' | 'customer', number: string, method: 'otp' | 'password' = 'otp') => {
     const context = await browser.newContext({ serviceWorkers: 'block' })
-    const sessionId = await createAuthSession({ userId: id, method: 'otp', expiresAt: new Date(Date.now() + 3600000) })
+    const sessionId = await createAuthSession({ userId: id, method, expiresAt: new Date(Date.now() + 3600000) })
     await context.addCookies([{ name: SESSION_COOKIE, value: createSessionToken({ sessionId, userId: id, phone: number, role }), url: base, httpOnly: true, sameSite: 'Lax' }])
     return context
   }
+  const unverified = await auth(unverifiedId, 'customer', '09123456782', 'password'), unverifiedPage = await unverified.newPage()
+  await unverifiedPage.goto(`${base}/profile/venue-requests`)
+  await unverifiedPage.getByRole('heading', { name: 'ابتدا شمارهٔ حسابتان را تأیید کنید' }).waitFor()
+  assert.equal(await unverifiedPage.getByRole('button', { name: 'درخواست بررسی مالکیت این شعبه' }).count(), 0)
+  await unverifiedPage.getByRole('button', { name: 'خروج', exact: true }).click()
+  await unverifiedPage.waitForURL(u => u.pathname === '/auth')
+  assert.equal(new URL(unverifiedPage.url()).searchParams.get('redirect'), '/profile/venue-requests')
+  await unverified.close()
+  results.push({ status: 'pass', checks: ['unverified user cannot read/claim', 'sign-out opens verification auth without redirect loop'] })
   const other = await auth(otherId, 'customer', otherPhone), otherPage = await other.newPage()
   await otherPage.goto(`${base}/profile/venue-requests`)
   assert.equal(await otherPage.getByText(`QA lead ${fixture} a`, { exact: false }).count(), 0)
@@ -103,7 +112,7 @@ try {
 } finally {
   await browser.close()
   if (leadIds.length) { await db.delete(venueLead).where(inArray(venueLead.id, leadIds)); await db.delete(auditLog).where(and(eq(auditLog.entity, 'venue_lead'), inArray(auditLog.entityId, leadIds))) }
-  await db.delete(appUser).where(inArray(appUser.id, [adminId, ownerId, otherId]))
+  await db.delete(appUser).where(inArray(appUser.id, [adminId, ownerId, otherId, unverifiedId]))
   if (venueIds.length) await db.delete(place).where(inArray(place.id, venueIds))
   await db.delete(venueLeadRate)
   await closeDb()
