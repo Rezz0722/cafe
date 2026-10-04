@@ -7,6 +7,7 @@ KuCafe application container identified by Compose and verified by project label
 
 - Location: `/var/backups/kucafe/app-logs` (0700), gzip files (0600).
 - Bounds: last 24 hours, last 20,000 lines, latest five successful archives.
+- Header records image, revision, start time, OOM flag and restart count only.
 - No environment, database dump, user/session inspection or public publishing.
 - Logs may contain sensitive exception details. Never attach these files to
   public reports, GitHub, or `/var/www/html` without separate sanitization.

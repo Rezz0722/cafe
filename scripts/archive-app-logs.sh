@@ -15,7 +15,8 @@ chmod 700 "$archive_dir"
 raw="$(mktemp "$archive_dir/.capture.XXXXXX")"
 compressed="$(mktemp "$archive_dir/.compressed.XXXXXX")"
 trap 'rm -f -- "$raw" "$compressed"' EXIT
-docker logs --timestamps --since 24h --tail 20000 "$container_id" >"$raw" 2>&1
+docker inspect --format 'image={{.Config.Image}} revision={{index .Config.Labels "ir.kucafe.revision"}} started={{.State.StartedAt}} oomKilled={{.State.OOMKilled}} restartCount={{.RestartCount}}' "$container_id" >"$raw"
+docker logs --timestamps --since 24h --tail 20000 "$container_id" >>"$raw" 2>&1
 gzip -c "$raw" >"$compressed"
 chmod 600 "$compressed"
 destination="$archive_dir/app-$(date -u +%Y%m%dT%H%M%S)-${container_id:0:12}.log.gz"

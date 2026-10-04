@@ -29,7 +29,7 @@ test('private deploy log archive: identity, permissions, retention and failure c
     const current = files.find(name => name.includes(id.slice(0, 12)))!
     assert.equal((await stat(join(logs, current))).mode & 0o777, 0o600)
     assert.equal((await stat(logs)).mode & 0o777, 0o700)
-    assert.equal(gunzipSync(await readFile(join(logs, current))).toString().trim(), 'private-log')
+    assert.ok(gunzipSync(await readFile(join(logs, current))).toString().endsWith('private-log\n'))
     assert.notEqual(run({ TEST_IDENTITY: 'other/application' }).status, 0)
     assert.notEqual(run({}, 'invalid-id').status, 0)
     assert.notEqual(run({ TEST_LOG_EXIT: '1' }).status, 0)
