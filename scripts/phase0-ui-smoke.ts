@@ -26,8 +26,8 @@ for (const [engine, launcher] of Object.entries({ chromium, firefox, webkit })) 
       const page = await context.newPage()
       page.setDefaultTimeout(30_000)
       let stage = 'home'
-      const errors: string[] = []
-      page.on('pageerror', error => errors.push(error.message))
+      const errors: object[] = []
+      page.on('pageerror', error => errors.push({ message: error.message, stage, url: page.url(), at: new Date().toISOString() }))
       try {
         await page.goto(base, { waitUntil: 'networkidle' })
         await page.getByRole('heading', { level: 1, name: /کافه‌ای پیدا کن/ }).waitFor()
@@ -86,8 +86,10 @@ for (const [engine, launcher] of Object.entries({ chromium, firefox, webkit })) 
         await menu.getByRole('button', { name: 'ساده', exact: true }).and(page.locator('[aria-pressed="true"]')).waitFor()
         await menu.getByRole('button', { name: 'تصویری', exact: true }).click()
         const categoryUrl = page.url()
+        stage = 'menu product navigation'
         await menu.locator('a[href^="/item/"]').first().click()
         await page.waitForURL(/\/item\//)
+        stage = 'product Back to menu'
         await page.goBack({ waitUntil: 'networkidle' })
         assert.equal(page.url(), categoryUrl)
         await assertFits(page)
