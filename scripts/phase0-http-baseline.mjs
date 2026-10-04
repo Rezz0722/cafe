@@ -6,7 +6,8 @@ import { createInterface } from 'node:readline'
 import { createGunzip } from 'node:zlib'
 const inputs = process.argv.slice(2)
 if (!inputs.length) throw new Error('Pass explicit Apache access log paths (.log or .gz)')
-const since = Date.now() - 7 * 86400_000
+const since = process.env.KUCAFE_QA_SINCE ? Date.parse(process.env.KUCAFE_QA_SINCE) : Date.now() - 7 * 86400_000
+if (!Number.isFinite(since)) throw new Error('KUCAFE_QA_SINCE must be a valid timestamp')
 const result = { capturedAt: new Date().toISOString(), requestedSince: new Date(since).toISOString(), firstObserved: null, lastObserved: null, requests: 0, statuses: {}, groups: {}, crawlerRequests: 0, classifiedUserRequests: 0, serverErrors: {} }
 const months = { Jan: '01', Feb: '02', Mar: '03', Apr: '04', May: '05', Jun: '06', Jul: '07', Aug: '08', Sep: '09', Oct: '10', Nov: '11', Dec: '12' }
 for (const path of inputs) {
