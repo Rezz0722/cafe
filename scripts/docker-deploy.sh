@@ -74,6 +74,12 @@ KUCAFE_IMAGE_TAG="$tag" "${compose[@]}" --profile maintenance run --rm --no-deps
   maintenance npm run db:migrate
 KUCAFE_IMAGE_TAG="$tag" "${compose[@]}" --profile maintenance run --rm --no-deps \
   maintenance npm run db:verify
+# Compose deletes the old container and its Docker logs during replacement.
+# Keep bounded, root-private evidence before that irreversible diagnostic loss.
+old_app_id="$(KUCAFE_IMAGE_TAG="$tag" "${compose[@]}" ps -q app)"
+if [[ -n "$old_app_id" ]]; then
+  bash "$project_dir/scripts/archive-app-logs.sh" "$old_app_id"
+fi
 KUCAFE_IMAGE_TAG="$tag" "${compose[@]}" up -d --no-build --remove-orphans app
 
 healthy=0
