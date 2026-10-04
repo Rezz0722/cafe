@@ -111,13 +111,34 @@ Cron هر روز ساعت ۰۳:۲۰ تهران ابتدا downloader موجود 
 container اجرا و سپس snapshot افزایشی می‌گیرد. تست دستی:
 
 ```bash
-sudo /opt/kucafe-release/scripts/media-snapshot.sh
+sudo bash /opt/kucafe-release/scripts/media-snapshot.sh
 ```
 
 بازگردانی media باید در پنجرهٔ maintenance و با توقف نوشتن انجام شود؛ محتوای
 snapshot انتخابی با `rsync -a --delete` به media زنده برگردانده می‌شود.
 
 ## ۷. Rollback
+
+### تمرین ایمن بازیابی دیتابیس
+
+`restore:full` مربوط به معماری قدیمی است و نباید روی Production Docker اجرا شود.
+برای آزمودن dump بدون دست‌زدن به دیتابیس زنده:
+
+```bash
+cd /opt/kucafe-release
+npm run backup:restore-drill -- /absolute/path/backup.sql.gz
+```
+
+این فرمان یک MariaDB موقت بدون شبکه یا پورت عمومی، با سقف یک CPU و یک GB RAM
+می‌سازد، dump را وارد می‌کند و جدول‌ها، شناسه‌های عمومی، indexهای fulltext و
+آیتم‌های یتیم را بررسی می‌کند. در پایان فقط container و volume آزمایشی خودش را
+حذف می‌کند. فایل JSON خروجی شامل شمارش‌هاست، نه داده‌های کاربران. روی سرور باید
+فضای کافی برای حجم بازشدهٔ dump وجود داشته باشد. این تمرین جای بازیابی نهایی در
+پنجرهٔ maintenance و تطبیق schema/image/media را نمی‌گیرد.
+
+Cron رسانه با `/bin/bash` اجرا می‌شود، حتی اگر فایل سورس executable نباشد.
+نصب Cron همچنین تنظیم rotation لاگ‌های KuCafe در Apache را نصب می‌کند؛ فایل
+`deploy/server/kucafe-logrotate` مرجع نسخه‌دار آن است.
 
 اگر health check همان deploy شکست بخورد، اسکریپت خودکار application image قبلی
 را بالا می‌آورد. rollback دستی اپ:

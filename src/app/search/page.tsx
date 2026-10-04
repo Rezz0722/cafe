@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { inArray } from 'drizzle-orm'
 import { redirect } from 'next/navigation'
+import { headers } from 'next/headers'
 import { SearchView } from '@/components/search/SearchView'
 import { computeOpenState } from '@/core/hours/openNow'
 import { trackSearch } from '@/core/analytics/track'
@@ -371,6 +372,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
   if (total === 0) {
     try {
       await trackSearch({
+        userAgent: (await headers()).get('user-agent'),
         query: privacySafeQuery(filters.q),
         requestedScope: filters.scope,
         resolvedEntity: effectiveScope,

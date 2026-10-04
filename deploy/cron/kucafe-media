@@ -2,4 +2,4 @@ SHELL=/bin/bash
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 TZ=Asia/Tehran
 
-20 3 * * * root /opt/kucafe-release/scripts/media-maintenance.sh >>/var/log/kucafe/media-maintenance.log 2>&1
+20 3 * * * root /bin/bash /opt/kucafe-release/scripts/media-maintenance.sh >>/var/log/kucafe/media-maintenance.log 2>&1
