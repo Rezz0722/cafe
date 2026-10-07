@@ -23,6 +23,8 @@ import { BulkPricePanel } from './BulkPricePanel'
 import { MenuSetupChecklist } from './MenuSetupChecklist'
 import { MenuImportPanel } from './MenuImportPanel'
 import { QrChannelsPanel } from './QrChannelsPanel'
+import { MenuStatsPanel } from './MenuStatsPanel'
+import type { MenuStats } from '@/core/analytics/menuStats'
 import type { QrChannel } from '@/core/qr/channels'
 import { menuReadiness } from '@/core/places/menuReadiness'
 import dynamic from 'next/dynamic'
@@ -324,6 +326,7 @@ export interface VenueReview {
 }
 
 interface Props {
+  menuStats?: MenuStats | null
   qrChannels?: QrChannel[]
   districts?: {id:string;name:string}[]
   brands?: {id:number;name:string}[]
@@ -363,6 +366,7 @@ export function VenuePanel({
   districts=[],
   brands=[],
   qrChannels=[],
+  menuStats=null,
 }: Props) {
   const draft = useUnsavedForms()
   const [tab, setTab] = usePanelTab<Tab>(TABS.filter(item => (item.id !== 'club' || !!clubPanel) && (item.id !== 'history' || !readOnly)).map(item => item.id), 'overview', draft.confirmDiscard)
@@ -633,6 +637,7 @@ export function VenuePanel({
       {tab === 'overview' && (
         <section className={styles.section}>
           <MenuSetupChecklist readiness={setupReadiness} onSelect={setTab} />
+          {!readOnly && menuStats && <MenuStatsPanel stats={menuStats} />}
           <div className={styles.statGrid}>
             <div className={styles.stat}>
               <span className={styles.statValue}>{fa(itemCount)}</span>

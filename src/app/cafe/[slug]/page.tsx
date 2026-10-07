@@ -484,6 +484,7 @@ export default async function CafePage({ params }: PageProps) {
                 متن معرفی و پیشنهادهای قیمتی دفن شود. خود مرورگر منو در موبایل
                 یک CTA جمع‌وجور است و با یک لمس تمام‌صفحه باز می‌شود. */}
             <MenuBrowser
+              placeId={place.id}
               discountPercent={venueDiscount?.percent??0}
               discountExpiresAt={venueDiscount?.expiresAt.toISOString()??null}
               sections={place.menu}
