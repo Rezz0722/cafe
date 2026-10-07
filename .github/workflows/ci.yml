@@ -55,5 +55,7 @@ jobs:
       - run: npm test
       - name: Sales intake and atomic ownership integration
         run: KUCAFE_LEAD_DB_TEST=1 node --import tsx --conditions=react-server --test src/core/leads/service.integration.test.ts
+      - name: Signed menu import and atomic rollback integration
+        run: KUCAFE_MENU_IMPORT_DB_TEST=1 node --import tsx --conditions=react-server --test src/core/import/venueMenuImport.integration.test.ts
       - name: Production build
         run: npm run build

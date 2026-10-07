@@ -1,5 +1,5 @@
 .card { padding: 20px; border: 1px solid var(--c-border); border-radius: 18px; background: var(--c-surface); color: var(--c-ink); margin-bottom: 20px; }
-.header { display: flex; flex-wrap: wrap; align-items: start; justify-content: space-between; gap: 12px; }
+.header { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .header h2 { margin: 0; font-size: 1.1rem; }
 .header p, .list p, .footer p { margin: 6px 0; color: var(--c-muted); line-height: 1.8; font-size: .85rem; overflow-wrap: anywhere; }
 .header strong { color: var(--c-primary-strong); white-space: nowrap; }
