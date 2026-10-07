@@ -84,6 +84,13 @@ test('real MariaDB QR scope, printed stability, redirect privacy and aggregate a
       await db.insert(venueQrLink).values(Array.from({length:49},(_,i)=>({placeId:ids[0]!,token:randomUUID().replaceAll('-',''),label:`QR ${i}`,labelKey:`qr ${i}`,kind:'channel' as const,active:false})))
       await assert.rejects(manageQrChannel(await input('create',0,'میز اضافه'),actor));assert.equal((await listQrChannels(ids[0]!,actor)).length,50)
     })
+    await t.test('channel creation in another authorized branch is independent; invalid kinds denied',async()=>{
+      const secondActor={userId:other,label:'other'}, data={placeId:ids[1]!,revision:'0',operation:'create',id:0,label:'اینستاگرام',kind:'channel'}
+      await assert.rejects(manageQrChannel({...data,kind:'external'},secondActor))
+      await manageQrChannel(data,secondActor)
+      const channels=await listQrChannels(ids[1]!,secondActor);assert.equal(channels.length,1);assert.equal(channels[0]!.kind,'channel');assert.notEqual(channels[0]!.token,token)
+      assert.equal((await listQrChannels(ids[0]!,actor)).length,50)
+    })
   } finally {
     await db.execute(sql.raw(`DROP TRIGGER IF EXISTS ${trigger}`))
     if(ids.length){const ownedQr=await db.select({id:venueQrLink.id}).from(venueQrLink).where(inArray(venueQrLink.placeId,ids));if(ownedQr.length)await db.delete(dailyStat).where(and(eq(dailyStat.metric,'qr_opens'),inArray(dailyStat.refId,ownedQr.map(row=>String(row.id))))) }
