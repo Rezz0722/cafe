@@ -29,6 +29,7 @@ import { fa, faCount, toman } from '@/lib/format'
 import { paths } from '@/routes'
 import { MenuItemImage } from './MenuItemImage'
 import styles from './MenuBrowser.module.css'
+import { MenuViewTracker } from '@/components/analytics/MenuViewTracker'
 
 export interface MenuItemProps {
   id: number
@@ -54,6 +55,7 @@ export interface MenuSectionProps {
 }
 
 interface Props {
+  placeId?: number
   discountPercent?:number
   discountExpiresAt?:string|null
   sections: MenuSectionProps[]
@@ -96,6 +98,7 @@ function CategoryCardName({ name }: { name: string }) {
 }
 
 export function MenuBrowser({
+  placeId,
   sections,
   placeName,
   logoUrl = null,
@@ -572,6 +575,7 @@ export function MenuBrowser({
               className={styles.results}
             >
               <div className={`${styles.resultHead} ${normalizedQuery ? styles.searchResultHead : styles.categoryResultHead}`}>
+                {placeId && selectedSection && <MenuViewTracker placeId={placeId} targetId={selectedSection.id} kind="section" enabled={!normalizedQuery && !query.trim() && !categoryPickerOpen && !lightbox} />}
                 {!normalizedQuery && selectedSection && (
                   <picture className={styles.resultArtwork}>
                     <source media="(max-width: 760px)" srcSet={EMPTY_COVER} />

@@ -59,5 +59,7 @@ jobs:
         run: KUCAFE_MENU_IMPORT_DB_TEST=1 node --import tsx --conditions=react-server --test src/core/import/venueMenuImport.integration.test.ts
       - name: QR scope, stable redirect and aggregate integration
         run: KUCAFE_QR_DB_TEST=1 node --import tsx --conditions=react-server --test src/core/qr/channels.integration.test.ts
+      - name: Menu aggregate privacy and ownership integration
+        run: KUCAFE_MENU_STATS_DB_TEST=1 node --import tsx --conditions=react-server --test src/core/analytics/menuStats.integration.test.ts
       - name: Production build
         run: npm run build

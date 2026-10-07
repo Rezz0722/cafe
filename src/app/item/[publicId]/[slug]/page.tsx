@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { MenuViewTracker } from '@/components/analytics/MenuViewTracker'
 import { cache } from 'react'
 import Link from 'next/link'
 import { notFound, permanentRedirect } from 'next/navigation'
@@ -133,6 +134,7 @@ export default async function MenuItemPage({ params }: PageProps) {
         </div>
 
         <div className={styles.summary}>
+          <MenuViewTracker placeId={item.place.id} targetId={item.id} kind="item" />
           <div className={styles.eyebrow}>
             <span>{item.dishName ?? item.facetLabel ?? item.sectionName}</span>
             <span className={item.available ? styles.available : styles.soldOut}>

@@ -1,0 +1,5 @@
+.lists { display: grid; gap: 20px; margin-block: 20px; }
+.list { padding-inline-start: 24px; margin-block: 12px; }
+.row { padding-block: 7px; overflow-wrap: anywhere; line-height: 1.8; }
+.count { white-space: nowrap; font-variant-numeric: tabular-nums; }
+@media (min-width: 640px) { .lists { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

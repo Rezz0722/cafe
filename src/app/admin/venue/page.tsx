@@ -16,6 +16,7 @@ import {getAdminPlaces,getAdminPlaceChoices} from '@/core/admin/catalog'
 import {getDb} from '@/db/client'
 import {district,placeBrand} from '@/db/schema'
 import { listQrChannels } from '@/core/qr/channels'
+import { getMenuStats } from '@/core/analytics/menuStats'
 
 /**
  * پنل کافه‌دار.
@@ -103,6 +104,7 @@ export default async function VenuePage({ searchParams }: PageProps) {
 
   const settings = await getSettings()
   const qrChannels = actor ? [] : await listQrChannels(placeId, { userId: user.id, label: user.name || user.id })
+  const menuStats = actor ? null : await getMenuStats(placeId, { userId: user.id, label: user.name || user.id }, settings.trackPageViews)
   const [districts,brands]=await Promise.all([getDb().select({id:district.id,name:district.name}).from(district),isAdmin?getDb().select({id:placeBrand.id,name:placeBrand.name}).from(placeBrand):Promise.resolve([])])
   const currentDiscount = await getVenueDiscount(placeId)
   const canManageClub = !actor && (isAdmin || currentPlaceRole === 'owner')
@@ -114,6 +116,7 @@ export default async function VenuePage({ searchParams }: PageProps) {
     <VenuePanel
       place={place}
       qrChannels={qrChannels}
+      menuStats={menuStats}
       districts={districts}
       brands={brands}
       reviews={reviews}
