@@ -1,0 +1,21 @@
+.panel { margin: 0 0 20px; padding: 16px; border: 1px solid var(--c-border); border-radius: 16px; background: var(--c-surface); color: var(--c-ink); }
+.panel summary { cursor: pointer; font-weight: 800; min-height: 44px; padding: 10px 0; }
+.help { margin: 10px 0; font-size: .85rem; line-height: 1.9; color: var(--c-muted); overflow-wrap: anywhere; }
+.template { display: inline-block; min-height: 44px; padding: 10px 0; color: var(--c-primary-strong); font-weight: 700; }
+.form { display: grid; gap: 14px; margin-top: 12px; min-width: 0; }
+.form label { display: grid; gap: 7px; line-height: 1.8; font-size: .9rem; min-width: 0; }
+.form select, .form textarea, .form input[type='file'] { width: 100%; min-width: 0; box-sizing: border-box; padding: 10px; min-height: 44px; border: 1px solid var(--c-border); border-radius: 10px; background: var(--c-surface); color: var(--c-ink); font: inherit; }
+.form textarea { resize: vertical; }
+.panel button { min-height: 44px; padding: 10px 14px; border: 1px solid var(--c-primary-strong); border-radius: 10px; background: var(--c-primary-soft); color: var(--c-primary-strong); font: inherit; font-weight: 700; cursor: pointer; }
+.panel button:disabled { opacity: .6; cursor: not-allowed; }
+.panel :is(button, a, input, select, textarea, summary):focus-visible { outline: 3px solid var(--c-primary-strong); outline-offset: 3px; }
+.preview { min-width: 0; }
+.preview h3 { font-size: 1rem; overflow-wrap: anywhere; }
+.preview p { line-height: 1.9; font-size: .85rem; }
+.rows { padding: 0; margin: 12px 0; list-style: none; max-height: 440px; overflow-y: auto; overscroll-behavior: contain; }
+.rows li { border-bottom: 1px solid var(--c-border); }
+.rows label, .form .confirm { display: grid; grid-template-columns: 24px minmax(0,1fr); align-items: start; gap: 10px; min-height: 44px; padding: 12px 0; cursor: pointer; }
+.rows input, .confirm input { width: 20px; height: 20px; accent-color: var(--c-primary-strong); margin: 4px 0; }
+.rows span { min-width: 0; overflow-wrap: anywhere; }
+.rows small { display: block; margin-top: 4px; color: var(--c-muted); }
+.description { white-space: pre-wrap; }

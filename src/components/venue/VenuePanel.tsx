@@ -21,6 +21,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react
 import { usePanelTab } from '@/components/admin/usePanelTab'
 import { BulkPricePanel } from './BulkPricePanel'
 import { MenuSetupChecklist } from './MenuSetupChecklist'
+import { MenuImportPanel } from './MenuImportPanel'
 import { menuReadiness } from '@/core/places/menuReadiness'
 import dynamic from 'next/dynamic'
 const LocationPicker=dynamic(()=>import('./LocationPicker').then(module=>module.LocationPicker),{ssr:false})
@@ -29,6 +30,7 @@ import { ManagedForm, useManagedActionState, useManagedFormStatus, useUnsavedFor
 import {
   bulkPriceAction,
   createMenuItemAction,
+  venueMenuImportAction,
   createMenuSectionAction,
   menuOperationAction,
   menuVariantAction,
@@ -493,7 +495,7 @@ export function VenuePanel({
 
   const selectTab = (next: Tab) => {
     if (next === tab) return
-    if (!draft.confirmDiscard()) return
+    // usePanelTab owns the discard guard; calling it here too prompts twice.
     setTab(next)
   }
   const useCurrentLocation = () => {
@@ -1002,6 +1004,7 @@ export function VenuePanel({
       {/* ── منو ──────────────────────────────────────────────────── */}
       {tab === 'menu' && (
         <section className={styles.section}>
+          {!readOnly && menuScope === 'public' && <MenuImportPanel key={place.id} placeId={place.id} revision={revision} sections={publicSections.map(section => ({ id: section.id, name: section.name }))} action={venueMenuImportAction} />}
           {canManagePriceStats && quarantinedSections.length > 0 && <div className={styles.priceStatsNotice}>
             <strong>{menuScope === 'public' ? 'منوی فعال همین شعبه' : 'داده‌های قرنطینه‌شده؛ در منوی عمومی نمایش داده نمی‌شوند'}</strong>
             <span>{fa(quarantinedSections.length)} دسته با مالکیت شعبه دیگر یا نامشخص جدا نگه داشته شده است؛ این داده‌ها حذف نشده‌اند.</span>

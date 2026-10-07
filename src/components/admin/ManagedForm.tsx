@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type FormHTMLAttributes, type SubmitEvent as ReactSubmitEvent, type ReactNode, type MouseEvent } from 'react'
 import { useFormStatus } from 'react-dom'
 
-type Result = { ok: boolean; error?: string; message?: string }
+type Result = { ok: boolean; error?: string; message?: string; preserveDraft?: boolean }
 type Action = (form: FormData) => Promise<Result>
 const PendingContext = createContext(false)
 const discardListeners = new Set<(discarded: ReadonlySet<HTMLFormElement>) => void>()
@@ -66,7 +66,7 @@ export function ManagedForm({ action, actions, children, onSubmit, ...props }: P
     try {
       const result = await handler(data)
       setFeedback(result)
-      form.dispatchEvent(new CustomEvent('managed-form-result', { bubbles: true, detail: { ok: result.ok } }))
+      form.dispatchEvent(new CustomEvent('managed-form-result', { bubbles: true, detail: { ok: result.ok && !result.preserveDraft } }))
     } catch {
       setFeedback({ok:false,error:'پاسخ عملیات نرسید؛ اطلاعات فرم حفظ شده است. پیش از ارسال دوباره وضعیت را بررسی کنید.'})
       form.dispatchEvent(new CustomEvent('managed-form-result',{bubbles:true,detail:{ok:false}}))
