@@ -55,9 +55,15 @@ const REQUIRED = [
   'menu_item_variant',
   'blogger_profile', 'club_membership', 'club_offer', 'club_code',
   'venue_lead', 'venue_lead_rate',
+  'venue_qr_link',
 ]
 const missing = REQUIRED.filter((table) => !names.has(table))
 check(`${REQUIRED.length} جدول لازم موجود است`, missing.length === 0, missing.join(', '))
+
+const [qrIndexes] = await conn.query(`SELECT INDEX_NAME, NON_UNIQUE FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'venue_qr_link'`)
+check('توکن و نام QR در شعبه unique هستند', ['venue_qr_token_uq', 'venue_qr_label_uq'].every(name => qrIndexes.some(row => row.INDEX_NAME === name && Number(row.NON_UNIQUE) === 0)))
+const [qrFks] = await conn.query(`SELECT CONSTRAINT_NAME FROM information_schema.REFERENTIAL_CONSTRAINTS WHERE CONSTRAINT_SCHEMA = DATABASE() AND TABLE_NAME = 'venue_qr_link' AND REFERENCED_TABLE_NAME = 'place'`)
+check('QR به شعبه معتبر متصل است', qrFks.some(row => row.CONSTRAINT_NAME === 'venue_qr_place_fk'))
 
 const [reviewTrustColumns] = await conn.query(
   `SELECT COLUMN_NAME FROM information_schema.COLUMNS

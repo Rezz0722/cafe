@@ -81,6 +81,21 @@ import { saveVenueDiscount, cancelVenueDiscount } from '@/core/club/venueDiscoun
 import { changeClubOffer } from '@/core/club/manage'
 import {toEnDigits} from '@/lib/format'
 import { applyVenueMenuImport, previewVenueMenuImport } from '@/core/import/venueMenuImport'
+import { manageQrChannel } from '@/core/qr/channels'
+
+export async function venueQrAction(_previous: VenueActionState, form: FormData): Promise<VenueActionState> {
+  return runManagedWrite(async () => {
+    const access = await requirePlaceAccess(num(form, 'placeId'))
+    if (!access.ok) return { ok: false, error: access.error }
+    const operation = str(form, 'operation')
+    if (operation === 'pause' && str(form, 'confirmed') !== 'yes') return { ok: false, error: 'توقف دسترسی QR چاپ‌شده را تأیید کنید.' }
+    try {
+      await manageQrChannel({ placeId: access.placeId, revision: str(form, 'revision'), operation, label: str(form, 'label'), kind: str(form, 'kind'), id: num(form, 'qrId') || 0 }, access.actor)
+      afterDbCommit(() => revalidatePath(paths.ownerPanel))
+      return { ok: true, qrAppliedRevision: Number(str(form, 'revision')) + 1, message: operation === 'create' ? 'QR ساخته شد؛ اکنون فایل چاپ را دریافت کنید.' : operation === 'pause' ? 'QR متوقف شد؛ لینک چاپ‌شده تا فعال‌سازی دوباره باز نمی‌شود.' : 'همان QR دوباره فعال شد؛ چاپ مجدد لازم نیست.' }
+    } catch (error) { return { ok: false, error: publicActionError(error, 'تغییر QR انجام نشد.') } }
+  })
+}
 
 function str(form: FormData, key: string): string {
   const value = form.get(key)

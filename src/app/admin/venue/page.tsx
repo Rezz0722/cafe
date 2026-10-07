@@ -15,6 +15,7 @@ import { getVenueDiscount } from '@/core/club/venueDiscounts'
 import {getAdminPlaces,getAdminPlaceChoices} from '@/core/admin/catalog'
 import {getDb} from '@/db/client'
 import {district,placeBrand} from '@/db/schema'
+import { listQrChannels } from '@/core/qr/channels'
 
 /**
  * پنل کافه‌دار.
@@ -101,6 +102,7 @@ export default async function VenuePage({ searchParams }: PageProps) {
   if (!place) redirect(paths.ownerPanel)
 
   const settings = await getSettings()
+  const qrChannels = actor ? [] : await listQrChannels(placeId, { userId: user.id, label: user.name || user.id })
   const [districts,brands]=await Promise.all([getDb().select({id:district.id,name:district.name}).from(district),isAdmin?getDb().select({id:placeBrand.id,name:placeBrand.name}).from(placeBrand):Promise.resolve([])])
   const currentDiscount = await getVenueDiscount(placeId)
   const canManageClub = !actor && (isAdmin || currentPlaceRole === 'owner')
@@ -111,6 +113,7 @@ export default async function VenuePage({ searchParams }: PageProps) {
   return (
     <VenuePanel
       place={place}
+      qrChannels={qrChannels}
       districts={districts}
       brands={brands}
       reviews={reviews}
