@@ -44,7 +44,7 @@ export function QrChannelsPanel({ placeId, revision, channels, published }: { pl
     {!published ? <p>برای ساخت QR ابتدا شعبه باید منتشرشده باشد.</p> : <ManagedForm action={action} className={styles.create}>
       <input type="hidden" name="placeId" value={placeId} /><input type="hidden" name="revision" value={revision} /><input type="hidden" name="operation" value="create" />
       <label>نام QR<input name="label" required maxLength={80} placeholder="مثلاً میز ۱" /></label>
-      <label>نوع QR<select name="kind"><option value="table">میز</option><option value="channel">کانال / محل نمایش</option></select></label>
+      <div><label htmlFor="qr-channel-kind">نوع QR</label><select id="qr-channel-kind" name="kind"><option value="table">میز</option><option value="channel">کانال / محل نمایش</option></select></div>
       <Submit disabled={refreshing || channels.length >= 50}>ساخت QR اختصاصی</Submit>
       {channels.length >= 50 && <p>سقف ۵۰ QR این شعبه پر شده است.</p>}
       {refreshing && <p role="status">در حال تازه‌شدن فهرست…</p>}
