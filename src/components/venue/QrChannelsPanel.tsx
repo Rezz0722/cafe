@@ -29,7 +29,6 @@ function ChannelRow({ channel, placeId, revision }: { channel: QrChannel; placeI
       <input type="hidden" name="qrId" value={channel.id} /><input type="hidden" name="operation" value={channel.active ? 'pause' : 'resume'} />
       {channel.active && <label className={styles.confirm}><input type="checkbox" name="confirmed" value="yes" checked={confirmed} onChange={event => setConfirmed(event.target.checked)} />تأیید می‌کنم لینک چاپ‌شده تا فعال‌سازی دوباره باز نمی‌شود.</label>}
       <Submit disabled={refreshing || (channel.active && !confirmed)}>{channel.active ? 'توقف این QR' : 'فعال‌سازی همان QR'}</Submit>
-      {state.error && <p role="alert">{state.error}</p>}{state.message && <p role="status">{state.message}</p>}
       {refreshing && <p role="status">در حال تازه‌شدن وضعیت…</p>}
     </ManagedForm>
   </li>
@@ -48,7 +47,6 @@ export function QrChannelsPanel({ placeId, revision, channels, published }: { pl
       <Submit disabled={refreshing || channels.length >= 50}>ساخت QR اختصاصی</Submit>
       {channels.length >= 50 && <p>سقف ۵۰ QR این شعبه پر شده است.</p>}
       {refreshing && <p role="status">در حال تازه‌شدن فهرست…</p>}
-      {state.error && <p role="alert">{state.error}</p>}{state.message && <p role="status">{state.message}</p>}
     </ManagedForm>}
     {channels.length ? <ul className={styles.list}>{channels.map(channel => <ChannelRow key={channel.id} channel={channel} placeId={placeId} revision={revision} />)}</ul> : <p>هنوز QR اختصاصی نساخته‌اید. QR عمومی پایین صفحه همچنان قابل استفاده است.</p>}
     <p className={styles.note}>SVG را با حاشیهٔ سفید و حداقل اندازهٔ ۳×۳ سانتی‌متر چاپ کنید و قبل از توزیع با گوشی واقعی تست کنید. خاموش‌بودن آمار سایت یا DNT/GPC مانع شمارش می‌شود، نه بازشدن منو.</p>
