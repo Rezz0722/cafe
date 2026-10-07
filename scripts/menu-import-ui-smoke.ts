@@ -10,6 +10,9 @@ import { createSessionToken, SESSION_COOKIE } from '../src/core/auth/session'
 
 assert.equal(new URL(process.env.DATABASE_URL || '').pathname,'/kucafe_menu_import_test','No production fixture writes')
 const base='http://127.0.0.1:3202', db=getDb(), userId=randomUUID(), fixture=randomUUID().slice(0,8), results:object[]=[]
+const applyOnly=process.argv.includes('--apply-only')
+const allowServiceWorker=process.argv.includes('--allow-service-worker')
+let completed=false
 let placeId=0
 await mkdir('var/qa/menu-import',{recursive:true})
 try {
@@ -22,7 +25,7 @@ try {
   const sessionId=await createAuthSession({userId,method:'otp',expiresAt:new Date(Date.now()+3600000)})
   const cookie={name:SESSION_COOKIE,value:createSessionToken({userId,sessionId,role:'owner',phone:'09123456781'}),url:base,httpOnly:true,sameSite:'Lax' as const}
   const text='name,price,description\nلاته,120000,هم‌نام قبلی\nآیتم جدید,۲۰۰۰۰,توضیح جدید\nخراب,-1,نامعتبر'
-  for(const [engine,launcher] of Object.entries({chromium,firefox,webkit})) {
+  for(const [engine,launcher] of Object.entries(applyOnly?{}:{chromium,firefox,webkit})) {
     const browser=await launcher.launch()
     try {for(const width of [360,390,768,1440]) {
       const context=await browser.newContext({viewport:{width,height:900},serviceWorkers:'block'});await context.addCookies([cookie])
@@ -69,7 +72,9 @@ try {
   }
   const browser=await chromium.launch()
   try {
-    const context=await browser.newContext({viewport:{width:390,height:900}});await context.addCookies([cookie]);const page=await context.newPage()
+    const context=await browser.newContext({viewport:{width:390,height:900},serviceWorkers:allowServiceWorker?'allow':'block'});await context.addCookies([cookie]);const page=await context.newPage()
+    page.on('crash',()=>console.log('QA browser page crashed'))
+    page.on('close',()=>console.log('QA browser page closed'))
     await page.goto(`${base}/admin/venue?place=${placeId}&tab=menu`,{waitUntil:'networkidle'})
     const panel=page.locator('details').filter({has:page.locator('summary').filter({hasText:'ورود گروهی آیتم‌ها'})})
     await panel.locator('summary').click();await panel.getByLabel('دستهٔ مقصد').selectOption(String(s.insertId))
@@ -78,9 +83,12 @@ try {
     await panel.getByLabel('فایل متنی CSV یا TSV').setInputFiles({name:'menu.csv',mimeType:'text/csv',buffer:Buffer.from(text)})
     await page.waitForFunction(()=>document.querySelector<HTMLTextAreaElement>('textarea[name="text"]')?.value.includes('آیتم جدید'))
     await panel.getByRole('button',{name:'نمایش پیش‌نمایش؛ بدون ثبت'}).click();await panel.getByRole('heading',{name:'پیش‌نمایش برای «قهوه تست»'}).waitFor()
+    console.log('QA uploaded-file preview received')
     await panel.locator('ol input[type="checkbox"]').nth(1).check();await panel.locator('input[name="confirmed"]').check()
+    await page.screenshot({path:'var/qa/menu-import/preview-390.png',fullPage:true})
     await panel.getByRole('button',{name:'ثبت فقط آیتم‌های انتخاب‌شده'}).click()
     await panel.getByRole('status').filter({hasText:'آیتم جدید ثبت شد'}).waitFor()
+    console.log('QA apply receipt received')
     const items=await db.select().from(menuItem).where(eq(menuItem.placeId,placeId));assert.equal(items.length,2);assert.equal(items.find(row=>row.name==='لاته')!.price,100000)
     assert.equal(items.find(row=>row.name==='آیتم جدید')!.price,20000)
     assert.equal(await panel.getByRole('heading',{name:'پیش‌نمایش برای «قهوه تست»'}).count(),0)
@@ -90,8 +98,9 @@ try {
     results.push({pass:true,checks:['invalid UTF-8 file blocks preview','valid file upload','actual server apply','old price unchanged','success receipt persists across RSC refresh','re-preview blocks duplicate']})
     await context.close()
   }finally{await browser.close()}
-  await writeFile('var/qa/menu-import/browser.json',JSON.stringify({scope:'Isolated database and real Next.js server/actions; synthetic accounts, not a real cafe pilot',results},null,2));console.log(`PASS ${results.length} full panel browser journeys`)
+  completed=true;console.log(`PASS ${results.length} full panel browser journeys`)
 } finally {
+  await writeFile(`var/qa/menu-import/browser${applyOnly?'-apply-only':''}${allowServiceWorker?'-sw':''}.json`,JSON.stringify({completed,scope:`Isolated database and real Next.js server/actions; synthetic accounts, not a real cafe pilot; service workers ${allowServiceWorker?'allowed in apply probe':'blocked'}`,results},null,2))
   await db.delete(auditLog).where(eq(auditLog.actorUserId,userId))
   if(placeId){await db.delete(menuItem).where(eq(menuItem.placeId,placeId));await db.delete(menuSection).where(eq(menuSection.placeId,placeId));await db.delete(place).where(eq(place.id,placeId))}
   await db.delete(appUser).where(eq(appUser.id,userId));await closeDb()
