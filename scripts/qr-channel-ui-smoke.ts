@@ -50,7 +50,7 @@ try {
       assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1))
       assert.equal((await context.request.get(`${base}/api/qr/cafe/qa-qr-ui-${fixture}`)).status(),200,'Old QR preserved')
       if(engine==='chromium'&&(width===390||width===1440))await panel.screenshot({path:`var/qa/qr-channels/${engine}-${width}.png`})
-      assert.deepEqual(errors,[]);results.push({engine,width,pass:true,checks:['authenticated create/pause/resume','explicit pause confirmation','SVG download no count','stable token after resume','HEAD no count and noindex redirect','old QR preserved','RTL/no overflow/keyboard focus','no runtime error']})
+      assert.deepEqual(errors,[]);results.push({engine,width,pass:true,checks:['authenticated create/pause/resume','explicit pause confirmation','SVG download no count','stable token after resume','HEAD no count and noindex redirect','old QR preserved','RTL/no overflow/keyboard focus','no runtime error']});console.log('PASS QR panel',engine,width)
       await context.close()
     }}finally{await browser.close()}
   }
@@ -61,8 +61,8 @@ try {
     const page=await context.newPage(),errors:string[]=[];page.on('pageerror',error=>errors.push(error.message))
     const qr=(await db.select().from(venueQrLink).where(eq(venueQrLink.placeId,placeId)))[0]!
     await page.goto(`${base}/q/${qr.token}`,{waitUntil:'networkidle',timeout:90000})
-    assert.ok(page.url().includes('?menu=1'));await page.getByRole('heading',{name:'دسته‌بندی‌های منو',exact:true}).waitFor()
-    await page.getByRole('button',{name:/قهوه تست/}).first().click();await page.getByText('لاته تست',{exact:true}).first().waitFor()
+    assert.ok(page.url().includes('?menu=1'));const picker=page.getByRole('dialog',{name:'دسته‌بندی‌های منو',exact:true});await picker.waitFor()
+    await picker.getByRole('button',{name:/قهوه تست/}).click();await page.getByText('لاته تست',{exact:true}).first().waitFor()
     await page.goto(`${base}/q/${qr.token}`,{waitUntil:'networkidle'});assert.equal((await db.select().from(venueQrLink).where(eq(venueQrLink.id,qr.id)))[0]!.opens,1,'Signed cookie avoids repeated opening count')
     assert.deepEqual(errors,[]);results.push({engine:'chromium',width:390,pass:true,scope:'service worker allowed; Android UA simulation, not physical device',checks:['QR redirects straight into menu category picker','category and real product displayed','repeat open deduped','no runtime error']})
     await context.close()
