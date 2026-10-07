@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "batchId": "experience-01-20261007-review3",
+  "parentPacket": "KUCAFE_EXPERIENCE_BATCH_01_20261007.json",
+  "reviewedAt": "2026-10-07",
+  "productionWrites": 0,
+  "purpose": "Dated editorial review snapshot; application result is reported separately",
+  "readyCandidates": 1,
+  "heldRecords": 5,
+  "actualDatedReviewPagesRead": 6,
+  "sourceCautions": ["Neshan today weekday labels differed between pages and were not treated as live opening-hours evidence", "Google-attributed reviews on RestaurantGuru are secondary evidence, not direct Google Maps inspection", "Reviewer names, personal contacts and verbatim reviews are omitted", "Unknown is not false"],
+  "records": [
+    {
+      "placeId": 119, "name": "نشانی", "decision": "hold",
+      "reason": "تطبیق شماره 05138673373، آدرس و مسیر منو روشن شد. نظر ۱۴۰۵/۰۴/۳۱ درباره طعم قهوه است؛ نظر اسپرسوی عربیکا ۱۴۰۵/۰۱/۱۱ و معرفی حرفه‌ای در منبع ثانویه قدیمی‌اند. شواهد جدید روش دم‌آوری، تخصص باریستا یا شرایط کار را ثابت نکردند. specialty_coffee قبلی بدون بازنویسی، نیازمند مرور تکمیلی است.",
+      "datedEvidence": [{"dateJalali":"1405/04/31","claim":"coffee-taste-not-specialty-method"},{"dateJalali":"1405/01/11","claim":"arabica-espresso-comment-not-work-policy"}],
+      "identityChecks": ["phone-exact-match", "street-exact-match", "instagram-and-menu-match"],
+      "sourceUrls": ["https://neshan.org/maps/places/ac85c1cd6cb639140e19974ad37386d1", "https://es.restaurantguru.com/Neshani-Cafe-Mashhad", "https://myrivan.com/33120"],
+      "productionApplied": false
+    },
+    {
+      "placeId": 173, "name": "ژوان", "decision": "hold",
+      "reason": "آدرس و مسیر cafe.zhovan مطابق‌اند. نظر ۱۴۰۵/۰۵/۰۹ از فضای زیبا و راحتی صندلی می‌گوید؛ اثبات امکانات عکاسی، مناسب‌بودن قرار یا خدمات تولد نیست. ساعت برای خود کافه ثبت نشده؛ ساعت شبانه‌روزیِ مکان نزدیک به ژوان نسبت داده نشد.",
+      "datedEvidence": [{"dateJalali":"1405/05/09","dateIso":"2026-07-31","ageDays":68,"claim":"attractive-space-not-photography-or-birthday-service"}],
+      "identityChecks": ["street-exact-match", "official-menu-slug-match"],
+      "sourceUrls": ["https://neshan.org/maps/places/fe38d3892922595153219782287114f3"],
+      "rejectedInferences": ["photogenic-from-generic-beautiful-space", "birthday_friendly", "open_late-from-nearby-venue-hours"],
+      "productionApplied": false
+    },
+    {
+      "placeId": 262, "name": "بلزا", "decision": "hold",
+      "reason": "شماره 09156565185، فرمانیه ۴ و handle مطابق‌اند. تازه‌ترین نظر مشاهده‌شده درباره طراحی، ۱۴۰۵/۰۱/۰۶ و ۱۹۵روزه است؛ معرفی mirror بی‌تاریخ تازگی را ثابت نمی‌کند. نتیجه اصفهان/پارس‌آباد برای این شعبه مردود است.",
+      "datedEvidence": [{"dateJalali":"1405/01/06","dateIso":"2026-03-26","ageDays":195,"claim":"old-design-praise-not-current-experience-confirmation"}],
+      "identityChecks": ["phone-exact-match", "street-exact-match", "instagram-match"],
+      "sourceUrls": ["https://neshan.org/maps/places/95ad195c7a725102238117482d4aff7e"],
+      "productionApplied": false
+    },
+    {
+      "placeId": 255, "name": "پین", "decision": "hold",
+      "reason": "شماره و مسیر pinplace با رکورد وکیل‌آباد مطابق‌اند. نظر ۱۵روزه درباره کیفیت نوشیدنی است، نه کار یا مطالعه. گزارش ۱۴۰۵/۰۲/۳۰ از سروصدا و موسیقی با گزارش قدیمی فضای جدا نسبتاً آرام تعارض دارد. تخفیف دانشجویی درخواستی، پذیرش لپ‌تاپ یا فضای مطالعه را ثابت نمی‌کند. breakfast=2/confidence=85 قبلی حفظ می‌شود، نه بازتأیید یا تضعیف خودکار.",
+      "datedEvidence": [{"dateJalali":"1405/06/31","dateIso":"2026-09-22","ageDays":15,"claim":"drink-quality-and-request-for-student-discount"},{"dateJalali":"1405/02/30","dateIso":"2026-05-20","ageDays":140,"claim":"noise-and-loud-music-reported"}],
+      "identityChecks": ["phone-exact-match", "official-menu-slug-match"],
+      "sourceUrls": ["https://neshan.org/maps/places/724e4c6dccfc1f720ad0f4746dab9787"],
+      "rejectedInferences": ["laptop_friendly", "good_for_study", "quiet"],
+      "productionApplied": false
+    },
+    {
+      "placeId": 237, "name": "ریوایو", "decision": "ready-for-editorial-candidate",
+      "attributeId": "outdoor", "candidateValue": 1,
+      "reason": "نظر ۱۴۰۵/۰۴/۰۹ صریحاً نشستن در محوطه بیرونی را گزارش می‌کند. نام و هاشمیه ۶۲ مطابق‌اند؛ مختصات عمومی Restaurant JSON-LD حدود ۲۴ متر با DB فاصله دارد. رکورد همنام دیگری در DB دیده نشد. فقط وجود گزارش‌شده فضای بیرونی پذیرفته می‌شود، نه کیفیت ویو، آرامش یا دسترسی امروز.",
+      "identityChecks": ["venue-name-and-street-match", "coordinates-near-match", "no-other-revive-record-in-current-db"],
+      "identityGeometry": {"databaseLatitude":36.3007477,"databaseLongitude":59.4961814,"sourceLatitude":36.30079328180268,"sourceLongitude":59.49644674971252,"approxDistanceMeters":24},
+      "datedEvidence": [{"dateJalali":"1405/04/09","dateIso":"2026-06-30","ageDays":99,"claim":"reviewer-explicitly-sat-in-outdoor-area"}],
+      "limitations": ["یک ناشر و یک گزارش مستقیم، نه تأیید مالک", "ورودی A صریحاً در منبع نوشته نشده؛ تطبیق بر نام، خیابان و مختصات نزدیک است", "تجربه تابستانی، تضمین سرویس بیرونی در همه فصل‌ها نیست", "همان نظر موسیقی نسبتاً بلند و نبود ویوی خاص در محوطه بیرونی را گزارش می‌کند"],
+      "sourceUrls": ["https://neshan.org/maps/places/d2e4cc92539476af745a7c3a15dfd5c6"],
+      "rejectedInferences": ["quiet", "photogenic", "birthday_friendly", "best-view"],
+      "productionApplied": false
+    },
+    {
+      "placeId": 163, "name": "پاسیو بیرون‌بر", "decision": "hold",
+      "reason": "شماره، handle و برند مطابق‌اند؛ نظر ۱۴۰۵/۰۵/۱۰ از محوطه کوچک بیرونی می‌گوید و منبع ثانویه outdoor seating درج کرده است. ولی DB رکورد مستقل سالن ۱۶۲ هم دارد و رکورد این دسته صریحاً بیرون‌بر است. شاهد سالن به رکورد بیرون‌بر منتقل نشد؛ سایت رسمی در درخواست این نوبت در دسترس نبود.",
+      "datedEvidence": [{"dateJalali":"1405/05/10","claim":"small-outdoor-area-of-brand-not-takeaway-record-confirmation"}],
+      "identityChecks": ["business-phone-exact-match", "instagram-match"],
+      "relatedPlaceId": 162,
+      "sourceUrls": ["https://neshan.org/maps/places/e222b3cdfbc7ca34f49086ca01f325bc", "https://es.restaurantguru.com/Patio-Food-Cafe-Mashhad", "https://patiofoodcafe.ir"],
+      "rejectedInferences": ["outdoor-for-takeaway-record", "quiet-from-generic-atmosphere"],
+      "productionApplied": false
+    }
+  ]
+}
