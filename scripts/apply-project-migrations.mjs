@@ -15,6 +15,7 @@ const files = [
   'drizzle/0011_venue_discounts.sql',
   'drizzle/0012_experience_engine.sql',
   'drizzle/0013_venue_leads.sql',
+  'drizzle/0014_venue_qr_links.sql',
 ]
 
 for (const file of files) {

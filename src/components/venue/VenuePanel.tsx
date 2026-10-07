@@ -22,6 +22,8 @@ import { usePanelTab } from '@/components/admin/usePanelTab'
 import { BulkPricePanel } from './BulkPricePanel'
 import { MenuSetupChecklist } from './MenuSetupChecklist'
 import { MenuImportPanel } from './MenuImportPanel'
+import { QrChannelsPanel } from './QrChannelsPanel'
+import type { QrChannel } from '@/core/qr/channels'
 import { menuReadiness } from '@/core/places/menuReadiness'
 import dynamic from 'next/dynamic'
 const LocationPicker=dynamic(()=>import('./LocationPicker').then(module=>module.LocationPicker),{ssr:false})
@@ -322,6 +324,7 @@ export interface VenueReview {
 }
 
 interface Props {
+  qrChannels?: QrChannel[]
   districts?: {id:string;name:string}[]
   brands?: {id:number;name:string}[]
   clubPanel?: ReactNode
@@ -359,6 +362,7 @@ export function VenuePanel({
   clubPanel,
   districts=[],
   brands=[],
+  qrChannels=[],
 }: Props) {
   const draft = useUnsavedForms()
   const [tab, setTab] = usePanelTab<Tab>(TABS.filter(item => (item.id !== 'club' || !!clubPanel) && (item.id !== 'history' || !readOnly)).map(item => item.id), 'overview', draft.confirmDiscard)
@@ -1274,6 +1278,7 @@ export function VenuePanel({
       {/* ── QR منوی عمومی همین شعبه ──────────────────────────────── */}
       {tab === 'qr' && (
         <section className={styles.section}>
+          {!readOnly && <QrChannelsPanel placeId={place.id} revision={revision} channels={qrChannels} published={place.status === 'published' || place.status === 'temporarily_closed'} />}
           {place.status !== 'published' && place.status !== 'temporarily_closed' ? (
             <div className={styles.galleryEmpty}><QrCode size={30} /><strong>QR هنوز قابل انتشار نیست</strong><span>ابتدا وضعیت شعبه باید منتشرشده باشد تا مقصد عمومی معتبر داشته باشد.</span></div>
           ) : <div className={styles.qrWorkspace}>

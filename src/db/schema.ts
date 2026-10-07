@@ -1157,6 +1157,18 @@ export const pageView = mysqlTable(
  * `page_view` سریع بزرگ می‌شود و شمردن زنده‌اش نمودار پنل ادمین را کند
  * می‌کند. این جدول همان اعداد را از قبل حساب‌شده نگه می‌دارد.
  */
+export const venueQrLink = mysqlTable('venue_qr_link', {
+  id: int('id').autoincrement().primaryKey(),
+  placeId: int('place_id').notNull().references(() => place.id, { onDelete: 'cascade' }),
+  token: char('token', { length: 32 }).notNull(),
+  label: varchar('label', { length: 80 }).notNull(),
+  labelKey: varchar('label_key', { length: 80 }).notNull(),
+  kind: mysqlEnum('kind', ['table', 'channel']).notNull(),
+  active: boolean('active').notNull().default(true),
+  opens: bigint('opens', { mode: 'number', unsigned: true }).notNull().default(0),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+}, t => [uniqueIndex('venue_qr_token_uq').on(t.token), uniqueIndex('venue_qr_label_uq').on(t.placeId, t.labelKey)])
+
 export const dailyStat = mysqlTable(
   'daily_stat',
   {
