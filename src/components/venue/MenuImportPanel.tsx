@@ -19,6 +19,7 @@ export function MenuImportPanel({ placeId, revision, sections, action }: {
   const [readingFile, setReadingFile] = useState(false), readSequence = useRef(0)
   const clearPreview = () => { setState({ ok: false }); setSelected([]); setConfirmed(false) }
   const preview = state.menuImportPreview?.revision === revision ? state.menuImportPreview : undefined
+  const refreshing = state.menuImportAppliedRevision !== undefined && Number(revision) < state.menuImportAppliedRevision
   const submit = async (data: FormData) => {
     const result = await action(state, data)
     setState(result)
@@ -48,7 +49,7 @@ export function MenuImportPanel({ placeId, revision, sections, action }: {
       <p id="menu-import-file-error" role={fileError ? 'alert' : undefined}>{fileError}</p>
       <label>متن منو<textarea required name="text" value={text} maxLength={MAX_MENU_IMPORT_BYTES} rows={5} dir="auto" aria-describedby="menu-import-format" onChange={event => { ++readSequence.current; setReadingFile(false); setText(event.target.value); clearPreview(); setFileError('') }} /></label>
       <p id="menu-import-format" className={styles.help}>فایل UTF-8 با حداکثر ۱۰۰ ردیف و ۶۴ کیلوبایت؛ سه ستون name، price، description به همین ترتیب. فایل XLSX را ابتدا به CSV تبدیل کنید یا سه ستون را با ردیف عنوان از Excel کپی کنید. عکس و سایزها در این مرحله وارد نمی‌شوند.</p>
-      <button type="submit" name="operation" value="preview" disabled={readingFile || !!fileError}>{readingFile ? 'در حال خواندن فایل…' : 'نمایش پیش‌نمایش؛ بدون ثبت'}</button>
+      <button type="submit" name="operation" value="preview" disabled={readingFile || refreshing || !!fileError}>{readingFile ? 'در حال خواندن فایل…' : refreshing ? 'در حال تازه‌سازی منوی ثبت‌شده…' : 'نمایش پیش‌نمایش؛ بدون ثبت'}</button>
       {preview && <section aria-labelledby="menu-import-preview-title" className={styles.preview}>
         <h3 id="menu-import-preview-title">پیش‌نمایش برای «{preview.sectionName}»</h3>
         <p role="status">{fa(preview.rows.length)} ردیف بررسی شد؛ هنوز چیزی ثبت نشده است. حداکثر {fa(MAX_MENU_IMPORT_APPLY)} آیتم جدید را انتخاب کنید.</p>

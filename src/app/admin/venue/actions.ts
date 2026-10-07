@@ -1098,7 +1098,7 @@ export async function venueMenuImportAction(_previous: VenueActionState, form: F
         if (slug) revalidatePath(paths.cafe(slug))
         for (const path of [paths.ownerPanel, paths.search, paths.home]) revalidatePath(path)
       })
-      return { ok: true, message: `${result.count.toLocaleString('fa-IR')} آیتم جدید ثبت شد؛ آیتم‌ها و قیمت‌های قبلی تغییر نکردند.` }
+      return { ok: true, menuImportAppliedRevision: Number(input.revision) + 1, message: `${result.count.toLocaleString('fa-IR')} آیتم جدید ثبت شد؛ آیتم‌ها و قیمت‌های قبلی تغییر نکردند.` }
     } catch (error) { return { ok: false, error: publicActionError(error, 'ورود منو انجام نشد؛ پیش‌نمایش را بررسی کنید.') } }
   })
 }
