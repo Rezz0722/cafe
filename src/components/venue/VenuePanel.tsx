@@ -20,6 +20,8 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { usePanelTab } from '@/components/admin/usePanelTab'
 import { BulkPricePanel } from './BulkPricePanel'
+import { MenuSetupChecklist } from './MenuSetupChecklist'
+import { menuReadiness } from '@/core/places/menuReadiness'
 import dynamic from 'next/dynamic'
 const LocationPicker=dynamic(()=>import('./LocationPicker').then(module=>module.LocationPicker),{ssr:false})
 import { AuditHistory } from '@/components/admin/AuditHistory'
@@ -413,6 +415,7 @@ export function VenuePanel({
     attributeCount: Object.keys(place.attributes).length,
   }), [place,publicSections])
   const completionParts = useMemo(() => completenessBreakdown(qualityFacts), [qualityFacts])
+  const setupReadiness = useMemo(() => menuReadiness(place), [place])
   const qualityScore = useMemo(() => computeQualityFromFacts(qualityFacts), [qualityFacts])
   const itemCount = sections.reduce((sum, section) => sum + section.items.filter((item) => !item.archivedAt).length, 0)
   const archivedCount = sections.reduce((sum, section) => sum + section.items.filter((item) => item.archivedAt).length, 0)
@@ -623,6 +626,7 @@ export function VenuePanel({
       {/* ── نمای کلی ─────────────────────────────────────────────── */}
       {tab === 'overview' && (
         <section className={styles.section}>
+          <MenuSetupChecklist readiness={setupReadiness} onSelect={setTab} />
           <div className={styles.statGrid}>
             <div className={styles.stat}>
               <span className={styles.statValue}>{fa(itemCount)}</span>
