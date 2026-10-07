@@ -5,6 +5,14 @@ import { researchAction, type ResearchBaseline, type ResearchCurrent } from './r
 const baseline: ResearchBaseline = { slug: 'example', address: 'street', revision: 0, attributes: [{ id: 'desserts', value: 2, confidence: 85, source: 'editorial', verifiedAt: '2026-09-28T00:00:00.000Z' }] }
 const current = (): ResearchCurrent => ({ ...baseline, attributes: baseline.attributes.map(a => ({ ...a })), status: 'published' })
 const target = { id: 'open_late', value: 1, confidence: 75, source: 'editorial', verifiedAt: '2026-10-07T00:00:00.000Z' }
+test('outdoor review is additive and does not ignore an existing late-night signal', () => {
+  const late = { ...current(), attributes: [...baseline.attributes, target] }
+  const expected = { ...baseline, attributes: late.attributes }
+  assert.equal(researchAction(expected, late, false, 'outdoor'), 'add')
+  assert.throws(() => researchAction(baseline, late, false, 'outdoor'))
+  const outdoor = { ...target, id: 'outdoor' }
+  assert.equal(researchAction(expected, { ...late, attributes: [...late.attributes, outdoor] }, true, 'outdoor'), 'already-applied')
+})
 test('research guard adds only a missing target and preserves stronger baseline evidence', () => {
   assert.equal(researchAction(baseline, current(), false), 'add')
   assert.equal(baseline.attributes[0]?.confidence, 85)

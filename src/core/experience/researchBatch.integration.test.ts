@@ -18,7 +18,7 @@ test('CI-only research batch: dry-run, authorization, conflicts, rollback and au
     await assert.rejects(promisify(execFile)(process.execPath, ['--import', 'tsx', '--conditions=react-server', 'scripts/apply-experience-batch1.ts', '--apply'], { env: process.env, timeout: 60000 }), /requires fresh review/)
     return
   }
-  const db = getDb(), actor = randomUUID(), ids = [219, 284]
+  const db = getDb(), actor = randomUUID(), ids = [219, 284, 237]
   assert.equal((await db.select().from(place).where(inArray(place.id, ids))).length, 0, 'Fixture IDs must not exist')
   const packet = JSON.parse(readFileSync('docs/research/KUCAFE_EXPERIENCE_BATCH_01_20261007.json', 'utf8'))
   const run = (apply = false) => promisify(execFile)(process.execPath, ['--import', 'tsx', '--conditions=react-server', 'scripts/apply-experience-batch1.ts', ...(apply ? ['--apply'] : [])], { env: { ...process.env, KUCAFE_RESEARCH_ACTOR_ID: actor }, timeout: 60000 })
@@ -27,10 +27,10 @@ test('CI-only research batch: dry-run, authorization, conflicts, rollback and au
   let created = false
   try {
     await db.insert(appUser).values({ id: actor, role: 'admin', status: 'active', name: 'CI research operator' })
-    await db.insert(attribute).ignore().values([{ id: 'desserts', labelFa: 'CI dessert', kind: 'intent' }, { id: 'open_late', labelFa: 'CI late', kind: 'amenity' }])
+    await db.insert(attribute).ignore().values([{ id: 'desserts', labelFa: 'CI dessert', kind: 'intent' }, { id: 'open_late', labelFa: 'CI late', kind: 'amenity' }, { id: 'outdoor', labelFa: 'CI outdoor', kind: 'amenity' }])
     for (const id of ids) {
       const r = packet.records.find((r: { placeId: number }) => r.placeId === id)
-      await db.insert(place).values({ id, slug: r.slug, name: 'CI research fixture', nameNormalized: 'ci', address: r.baseline.address, revision: r.baseline.revision, status: 'published' })
+      await db.insert(place).values({ id, slug: r.slug, name: 'CI research fixture', nameNormalized: 'ci', address: r.baseline.address, revision: r.baseline.revision, status: 'published', ...(id === 237 ? { lat: '36.3007477', lng: '59.4961814' } : {}) })
       created = true
       for (const a of r.baseline.attributes) await db.insert(placeAttribute).values({ placeId: id, attributeId: a.id, value: a.value, confidence: a.confidence, source: a.source, verifiedAt: new Date(a.verifiedAt) })
     }
@@ -45,8 +45,19 @@ test('CI-only research batch: dry-run, authorization, conflicts, rollback and au
       await run(true); assert.equal((await targets()).length, 2); assert.equal((await audits()).length, 2)
       await run(true); assert.equal((await targets()).length, 2); assert.equal((await audits()).length, 2)
       const original = await db.select().from(placeAttribute).where(and(inArray(placeAttribute.placeId, ids), eq(placeAttribute.attributeId, 'desserts')))
-      assert.equal(original.length, 2)
+      assert.equal(original.length, 3)
       for (const a of original) { assert.equal(a.value, 1); assert.equal(a.confidence, 75); assert.equal(a.verifiedAt?.toISOString(), '2026-09-28T12:11:13.000Z') }
+    })
+    await t.test('review3 writes outdoor only, preserves prior batch and is retry-safe', async () => {
+      const runReview3 = (apply = false) => promisify(execFile)(process.execPath, ['--import', 'tsx', '--conditions=react-server', 'scripts/apply-experience-batch1.ts', '--review=3', ...(apply ? ['--apply'] : [])], { env: { ...process.env, KUCAFE_RESEARCH_ACTOR_ID: actor }, timeout: 60000 })
+      await runReview3(); assert.equal((await audits()).length, 2)
+      await db.update(place).set({ lng: '59.5000000' }).where(eq(place.id, 237))
+      await assert.rejects(runReview3(true)); assert.equal((await audits()).length, 2)
+      await db.update(place).set({ lng: '59.4961814' }).where(eq(place.id, 237))
+      await runReview3(true); await runReview3(true)
+      const [outdoor] = await db.select().from(placeAttribute).where(and(eq(placeAttribute.placeId, 237), eq(placeAttribute.attributeId, 'outdoor')))
+      assert.equal(outdoor?.value, 1); assert.equal(outdoor?.confidence, 75)
+      assert.equal((await targets()).length, 2); assert.equal((await audits()).length, 3)
     })
   } finally {
     if (created) await db.delete(place).where(inArray(place.id, ids))
