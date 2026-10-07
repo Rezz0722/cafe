@@ -1,0 +1,213 @@
+{
+  "schemaVersion": 1,
+  "batchId": "experience-01-20261007-review2",
+  "parentPacket": "KUCAFE_EXPERIENCE_BATCH_01_20261007.json",
+  "reviewedAt": "2026-10-07",
+  "productionWrites": 0,
+  "purpose": "Editorial decision packet, not an executable import",
+  "readyCandidates": 2,
+  "heldRecords": 5,
+  "actualDatedReviewPagesRead": 7,
+  "records": [
+    {
+      "placeId": 203,
+      "name": "فلاورز",
+      "decision": "hold",
+      "reason": "نظر تازهٔ ۱۴۰۵/۰۴/۰۵ فقط برخورد را توصیف می‌کند. نظر ۱۴۰۴/۱۱/۰۱ از صدای بلند موسیقی و دشواری گفتگو می‌گوید. هویت شعبه و ساعت فعلی هنوز کافی نیستند.",
+      "datedEvidence": [
+        {
+          "dateJalali": "1405/04/05",
+          "dateIso": "2026-06-26",
+          "ageDays": 103,
+          "claim": "positive-service-comment-only"
+        },
+        {
+          "dateJalali": "1404/11/01",
+          "claim": "loud-music-reported"
+        }
+      ],
+      "rejectedInferences": [
+        "quiet",
+        "good_for_study",
+        "laptop_friendly"
+      ],
+      "sourceUrls": [
+        "https://neshan.org/maps/places/032d2b67f5c7d974652d0ba51714788f"
+      ],
+      "productionApplied": false
+    },
+    {
+      "placeId": 219,
+      "name": "آدرس",
+      "decision": "ready-for-editorial-candidate",
+      "attributeId": "open_late",
+      "candidateValue": 1,
+      "reason": "نظر مورخ ۱۴۰۵/۰۳/۱۵ صریحاً بازبودن تا چهار صبح را گزارش می‌کند؛ جدول ساعت همان منبع همسو است. شماره تجاری 05138847800 و مسیر منوی address_caferestaurant مطابق DB؛ مختصات نیز همخوان است.",
+      "identityChecks": [
+        "business-phone-exact-match",
+        "official-menu-slug-exact-match",
+        "coordinates-near-match"
+      ],
+      "datedEvidence": [
+        {
+          "dateJalali": "1405/03/15",
+          "dateIso": "2026-06-05",
+          "ageDays": 124,
+          "claim": "open-until-04:00-experienced-by-reviewer"
+        }
+      ],
+      "limitations": [
+        "ساعت امروز تضمین نشده است؛ پیش از مراجعه هماهنگی لازم است.",
+        "نظر و جدول ساعت دو ناشر مستقل نیستند."
+      ],
+      "sourceUrls": [
+        "https://neshan.org/maps/places/90fa8ad329ace1d539af77718aa7619a"
+      ],
+      "productionApplied": false
+    },
+    {
+      "placeId": 227,
+      "name": "فراتو",
+      "decision": "hold",
+      "reason": "تنها نظر نمایش‌داده‌شده با نشان مدیر کسب‌وکار در ۱۴۰۵/۰۲/۱۳ درباره ویوی دریاچه و دنج‌بودن است؛ اثبات شبانه‌روزی یا فضای باز نیست. احتمال رکورد تکراری ۲۲۸ باقی است.",
+      "datedEvidence": [
+        {
+          "dateJalali": "1405/02/13",
+          "dateIso": "2026-05-03",
+          "ageDays": 157,
+          "claim": "operator-described-view-and-cozy-space",
+          "independent": false
+        }
+      ],
+      "rejectedInferences": [
+        "open_late-from-view-comment",
+        "outdoor-from-view-comment",
+        "quiet-from-cozy-comment"
+      ],
+      "sourceUrls": [
+        "https://neshan.org/maps/places/606b30c187d344d1550fc9f6393379f1"
+      ],
+      "productionApplied": false
+    },
+    {
+      "placeId": 269,
+      "name": "سوشال",
+      "decision": "hold",
+      "reason": "نظرهای اخیر فعالیت/کیفیت را نشان می‌دهند، نه شرایط کار و مطالعه. تاریخ معرفی Telegram 5294 هنوز احراز نشده؛ تازگی نظرات به ادعای بی‌محدودیتی منتقل نمی‌شود.",
+      "datedEvidence": [
+        {
+          "dateJalali": "1405/06/31",
+          "claim": "generic-positive-comment-not-work-evidence"
+        }
+      ],
+      "rejectedInferences": [
+        "current-laptop-policy-from-generic-reviews",
+        "fast_wifi",
+        "power_outlets",
+        "quiet"
+      ],
+      "sourceUrls": [
+        "https://neshan.org/maps/places/f87d197528fb937ee791d2395e5049fa",
+        "https://t.me/s/mashadcafe?before=5299",
+        "https://t.me/mashadcafe/5294"
+      ],
+      "productionApplied": false
+    },
+    {
+      "placeId": 284,
+      "name": "نیوان",
+      "decision": "ready-for-editorial-candidate",
+      "attributeId": "open_late",
+      "candidateValue": 1,
+      "reason": "نشان و RestaurantGuru برای مجموعهٔ هفت تیر ۱۵ با شمارهٔ 05138688888 و handle همسو، بازبودن دست‌کم تا نیمه‌شب را درج می‌کنند. RestaurantGuru تاریخ به‌روزرسانی ۲۰۲۶/۰۸/۲۹ دارد و در نشان نظر ۱۴۰۵/۰۶/۲۱ دیده شد. ادعای قطعی بازبودن هر شب تا ۲ بامداد پذیرفته نشد.",
+      "identityChecks": [
+        "business-phone-exact-match",
+        "street-and-venue-name-match",
+        "independent-publisher-match"
+      ],
+      "datedEvidence": [
+        {
+          "dateIso": "2026-08-29",
+          "ageDays": 39,
+          "claim": "aggregator-page-updated-not-owner-verification"
+        },
+        {
+          "dateJalali": "1405/06/21",
+          "dateIso": "2026-09-12",
+          "ageDays": 25,
+          "claim": "recent-review-not-hours-verification"
+        }
+      ],
+      "limitations": [
+        "ساعات دو منبع بعد از نیمه‌شب یکسان نیستند.",
+        "نظر اخیر فقط شاهد فعالیت گزارش‌شده است، نه تأیید ساعت.",
+        "موسیقی بلند در منبع ثانویه گزارش شده؛ آرامش استنتاج نشد."
+      ],
+      "sourceUrls": [
+        "https://neshan.org/maps/places/a303276ffa6af66fa85e1f3c172dead6",
+        "https://restaurantguru.com/Nivan-Cafe-Restaurant-Mashhad"
+      ],
+      "productionApplied": false
+    },
+    {
+      "placeId": 286,
+      "name": "تری لانژ",
+      "decision": "hold",
+      "reason": "نظر ۱۴۰۵/۰۴/۰۱ درباره تماشای بازی و تأخیر در سرو غذاست؛ تأیید ساعت ۲ بامداد، کیفیت دورهمی یا آرامش نیست.",
+      "datedEvidence": [
+        {
+          "dateJalali": "1405/04/01",
+          "claim": "match-night-service-delay"
+        }
+      ],
+      "rejectedInferences": [
+        "quiet",
+        "good_for_gathering-from-match-attendance",
+        "open_late-from-dinner-time"
+      ],
+      "sourceUrls": [
+        "https://neshan.org/maps/places/8b08e72efd438783a203a88e7050dfe7"
+      ],
+      "productionApplied": false
+    },
+    {
+      "placeId": 397,
+      "name": "اسلوپ",
+      "decision": "hold",
+      "reason": "شاهد مستقیم تولد در نظر ۱۴۰۴/۱۲/۰۵ پیدا شد، اما ۲۲۵ روز گذشته است؛ شاهد فضای باز فصلی ۱۴۰۵/۰۱/۰۲ نیز ۱۹۹ روزه است. نظرات تازه ۱۴۰۵/۰۷/۰۶ و ۰۵ درباره کیفیت/فضا هستند، نه ادامه خدمات تولد یا ساعت. اختلاف معلم ۱/۳ و هویت شعبه هنوز باید تکمیل شود.",
+      "datedEvidence": [
+        {
+          "dateJalali": "1404/12/05",
+          "dateIso": "2026-02-24",
+          "ageDays": 225,
+          "claim": "birthday-event-experienced-by-reviewer"
+        },
+        {
+          "dateJalali": "1405/01/02",
+          "dateIso": "2026-03-22",
+          "ageDays": 199,
+          "claim": "spring-outdoor-and-celebration-review"
+        },
+        {
+          "dateJalali": "1405/07/06",
+          "dateIso": "2026-09-28",
+          "ageDays": 9,
+          "claim": "generic-positive-comment-only"
+        }
+      ],
+      "potentialAttributes": [
+        "birthday_friendly",
+        "outdoor"
+      ],
+      "rejectedInferences": [
+        "current-birthday-service-from-new-generic-review",
+        "year-round-outdoor",
+        "birthday-service-from-nowruz-decoration"
+      ],
+      "sourceUrls": [
+        "https://neshan.org/maps/places/0c1513cc0d6fcbb3059e3a999b01b5f3"
+      ],
+      "productionApplied": false
+    }
+  ]
+}
