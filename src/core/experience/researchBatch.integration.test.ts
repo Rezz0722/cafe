@@ -13,6 +13,11 @@ test('CI-only research batch: dry-run, authorization, conflicts, rollback and au
   assert.equal(process.env.GITHUB_ACTIONS, 'true')
   const url = new URL(process.env.DATABASE_URL!)
   assert.equal(url.hostname, '127.0.0.1'); assert.equal(url.pathname, '/kucafe')
+  if (Date.now() >= Date.parse('2026-12-01T00:00:00Z')) {
+    // Archived evidence must fail closed, without breaking unrelated future CI builds.
+    await assert.rejects(promisify(execFile)(process.execPath, ['--import', 'tsx', '--conditions=react-server', 'scripts/apply-experience-batch1.ts', '--apply'], { env: process.env, timeout: 60000 }), /requires fresh review/)
+    return
+  }
   const db = getDb(), actor = randomUUID(), ids = [219, 284]
   assert.equal((await db.select().from(place).where(inArray(place.id, ids))).length, 0, 'Fixture IDs must not exist')
   const packet = JSON.parse(readFileSync('docs/research/KUCAFE_EXPERIENCE_BATCH_01_20261007.json', 'utf8'))
