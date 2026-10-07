@@ -1,0 +1,651 @@
+{
+  "schemaVersion": 1,
+  "batchId": "experience-01-20261007",
+  "observedDate": "2026-10-07",
+  "productionRevision": "02a0e688b1ab54931a4f0985d8c1fd0859085031",
+  "purpose": "Read-only research triage; NOT an approved production import",
+  "productionWrites": 0,
+  "newTaxonomyEntries": 0,
+  "reviewPolicy": {
+    "unknownIsFalse": false,
+    "sourceFetchedAtIsPublishedAt": false,
+    "mirrorsAreIndependentPrimaryEvidence": false,
+    "menuProvesSubjectiveExperience": false,
+    "approvalRequiredBeforeApply": true,
+    "preserveExistingStrongerEvidence": true
+  },
+  "records": [
+    {
+      "placeId": 119,
+      "slug": "cafe-neshani",
+      "name": "کافه نشانی",
+      "baseline": {
+        "address": "بلوار صارمی - بین صارمی 34 و 36 - کافی شاپ نشانی",
+        "instagram": "cafe.neshani",
+        "revision": 0,
+        "attributes": [
+          {
+            "id": "specialty_coffee",
+            "value": 1,
+            "confidence": 75,
+            "source": "editorial",
+            "verifiedAt": "2026-09-28T12:11:12.000Z"
+          }
+        ]
+      },
+      "reviewStatus": "needs-data",
+      "researchStage": "detail-page-read",
+      "sourceUrls": [
+        "https://neshan.org/maps/places/ac85c1cd6cb639140e19974ad37386d1",
+        "https://es.restaurantguru.com/Neshani-Cafe-Mashhad"
+      ],
+      "findings": "نشانی: آدرس صارمی ۳۴–۳۶ و handle تطبیق دارند. نظر درباره آرامش، اثبات سکوت محیط یا قهوه تخصصی نیست. ساعات دو منبع همسو، ولی تاریخ تأیید ساعت مشخص نیست.",
+      "proposals": [],
+      "lookupQueries": [
+        "کافه نشانی مشهد",
+        "\"cafe.neshani\""
+      ]
+    },
+    {
+      "placeId": 158,
+      "slug": "newvegas-cafe",
+      "name": "نیو وگاس کافه غذا",
+      "baseline": {
+        "address": "جنب کوثر شمالی 28",
+        "instagram": "newvegas.cafe",
+        "revision": 0,
+        "attributes": [
+          {
+            "id": "desserts",
+            "value": 1,
+            "confidence": 75,
+            "source": "editorial",
+            "verifiedAt": "2026-09-28T12:11:12.000Z"
+          }
+        ]
+      },
+      "reviewStatus": "needs-data",
+      "researchStage": "search-triaged",
+      "sourceUrls": [],
+      "findings": "نتایج وگاس دانشجو و فست‌فود وگاس با کوثر شمالی ۲۸ تطبیق ندارند؛ mirror شبکه اجتماعی فقط سرنخ نام/handle است.",
+      "proposals": [],
+      "lookupQueries": [
+        "نیو وگاس مشهد",
+        "\"newvegas.cafe\""
+      ]
+    },
+    {
+      "placeId": 163,
+      "slug": "patio-takeaway",
+      "name": "کافه رستوران پاسیو - بیرون بر",
+      "baseline": {
+        "address": "خیابان راهنمایی ، برج سلمان ، طبقه مثبت یک",
+        "instagram": "patiofoodcafe",
+        "revision": 0,
+        "attributes": []
+      },
+      "reviewStatus": "needs-data",
+      "researchStage": "detail-page-read",
+      "sourceUrls": [
+        "https://neshan.org/maps/places/e222b3cdfbc7ca34f49086ca01f325bc",
+        "https://es.restaurantguru.com/Patio-Food-Cafe-Mashhad"
+      ],
+      "findings": "نشان و RestaurantGuru برند پاسیو در سلمان فارسی را نشان می‌دهند؛ انتساب سالن یا فضای باز به رکورد «بیرون‌بر» نیازمند تطبیق نوع سرویس است. ساعات دو منبع اختلاف دارند.",
+      "proposals": [],
+      "lookupQueries": [
+        "کافه پاسیو مشهد",
+        "\"patiofoodcafe\""
+      ]
+    },
+    {
+      "placeId": 173,
+      "slug": "cafe-zhovan",
+      "name": "کافه ژوان",
+      "baseline": {
+        "address": "طرقبه. بین امام رضا ۲۱و ۲۳",
+        "instagram": "cafe.Zhovan",
+        "revision": 0,
+        "attributes": [
+          {
+            "id": "desserts",
+            "value": 1,
+            "confidence": 75,
+            "source": "editorial",
+            "verifiedAt": "2026-09-28T12:11:12.000Z"
+          }
+        ]
+      },
+      "reviewStatus": "needs-data",
+      "researchStage": "detail-page-read",
+      "sourceUrls": [
+        "https://neshan.org/maps/places/fe38d3892922595153219782287114f3"
+      ],
+      "findings": "نام و آدرس امام رضا ۲۱–۲۳ در نشان مطابق‌اند؛ از معرفی عمومی یا رکورد ژوان تهران نمی‌توان قرار، وای‌فای یا فضای باز استنتاج کرد.",
+      "proposals": [],
+      "lookupQueries": [
+        "کافه ژوان طرقبه",
+        "\"cafe.Zhovan\""
+      ]
+    },
+    {
+      "placeId": 203,
+      "slug": "flowers-lunch",
+      "name": "کافه فلاورز",
+      "baseline": {
+        "address": "",
+        "instagram": "flowerscafe",
+        "revision": 0,
+        "attributes": [
+          {
+            "id": "desserts",
+            "value": 1,
+            "confidence": 75,
+            "source": "editorial",
+            "verifiedAt": "2026-09-28T12:11:12.000Z"
+          }
+        ]
+      },
+      "reviewStatus": "needs-data",
+      "researchStage": "detail-page-read",
+      "sourceUrls": [
+        "https://neshan.org/maps/places/032d2b67f5c7d974652d0ba51714788f",
+        "https://t.me/Torghabehnews/66838"
+      ],
+      "findings": "نشان handle flowerscafe و امام رضا ۱۷ را دارد؛ رکورد سایت آدرس ندارد و نشان سه ورودی مشابه دارد. زمان ۱۳–۲:۳۰ فقط ساعت ثبت‌شده در منبع است.",
+      "proposals": [
+        {
+          "attributeId": "open_late",
+          "proposedValue": 1,
+          "approved": false,
+          "confidence": null,
+          "verifiedAt": null
+        }
+      ],
+      "lookupQueries": [
+        "کافه فلاورز طرقبه",
+        "\"flowerscafe\""
+      ]
+    },
+    {
+      "placeId": 212,
+      "slug": "mahor-cafe-restaurant",
+      "name": "کافه رستوران ماهور",
+      "baseline": {
+        "address": "",
+        "instagram": "mahoorrestaurant_",
+        "revision": 0,
+        "attributes": [
+          {
+            "id": "desserts",
+            "value": 1,
+            "confidence": 75,
+            "source": "editorial",
+            "verifiedAt": "2026-09-28T12:11:13.000Z"
+          }
+        ]
+      },
+      "reviewStatus": "needs-data",
+      "researchStage": "search-triaged",
+      "sourceUrls": [],
+      "findings": "آدرس سایت خالی و چند ماهور هم‌نام در مشهد وجود دارد؛ نتیجه ماهور تهران یا ماهور پلاس برای این رکورد معتبر نیست.",
+      "proposals": [],
+      "lookupQueries": [
+        "کافه ماهور مشهد",
+        "\"mahoorrestaurant_\""
+      ]
+    },
+    {
+      "placeId": 219,
+      "slug": "address-caferestaurant",
+      "name": "کافه رستوران آدرس",
+      "baseline": {
+        "address": "نرسیده به نبش هاشمیه 11",
+        "instagram": "Address_caferestaurant",
+        "revision": 0,
+        "attributes": [
+          {
+            "id": "desserts",
+            "value": 1,
+            "confidence": 75,
+            "source": "editorial",
+            "verifiedAt": "2026-09-28T12:11:13.000Z"
+          }
+        ]
+      },
+      "reviewStatus": "needs-data",
+      "researchStage": "detail-page-read",
+      "sourceUrls": [
+        "https://neshan.org/maps/places/90fa8ad329ace1d539af77718aa7619a"
+      ],
+      "findings": "نشان نام آدرس و بلوار هاشمیه با ساعت ۱۲–۴ بامداد را نشان می‌دهد؛ شماره کوچه ۱۱ و handle در همان صفحه احراز نشده.",
+      "proposals": [
+        {
+          "attributeId": "open_late",
+          "proposedValue": 1,
+          "approved": false,
+          "confidence": null,
+          "verifiedAt": null
+        }
+      ],
+      "lookupQueries": [
+        "کافه آدرس مشهد",
+        "\"Address_caferestaurant\""
+      ]
+    },
+    {
+      "placeId": 227,
+      "slug": "cafe-ferato",
+      "name": "کافه فراتو",
+      "baseline": {
+        "address": "طرقبه امام رضا ۲۸ لاین برگشت",
+        "instagram": "Ferato_cafe",
+        "revision": 0,
+        "attributes": [
+          {
+            "id": "desserts",
+            "value": 1,
+            "confidence": 75,
+            "source": "editorial",
+            "verifiedAt": "2026-09-28T12:11:13.000Z"
+          }
+        ]
+      },
+      "reviewStatus": "needs-data",
+      "researchStage": "detail-page-read",
+      "sourceUrls": [
+        "https://neshan.org/maps/places/606b30c187d344d1550fc9f6393379f1"
+      ],
+      "findings": "نام و امام رضا ۲۸ در نشان همسو است؛ ساعت شبانه‌روزی نیازمند تأیید مستقل است و رکورد ۲۲۸ با نام و آدرس مشابه باید بررسی شود، نه ادغام خودکار.",
+      "proposals": [
+        {
+          "attributeId": "open_late",
+          "proposedValue": 1,
+          "approved": false,
+          "confidence": null,
+          "verifiedAt": null
+        }
+      ],
+      "lookupQueries": [
+        "کافه فراتو طرقبه",
+        "\"Ferato_cafe\""
+      ]
+    },
+    {
+      "placeId": 233,
+      "slug": "mahor-vip",
+      "name": "کافه رستوران ماهور پلاس",
+      "baseline": {
+        "address": "مشهد،طرقبه،امام رضا ۱۷",
+        "instagram": "Mahoorrestaurant_plus",
+        "revision": 0,
+        "attributes": [
+          {
+            "id": "breakfast",
+            "value": 1,
+            "confidence": 75,
+            "source": "editorial",
+            "verifiedAt": "2026-09-28T12:11:13.000Z"
+          }
+        ]
+      },
+      "reviewStatus": "needs-data",
+      "researchStage": "search-triaged",
+      "sourceUrls": [],
+      "findings": "mirror شبکه اجتماعی handle ماهور پلاس و امام رضا ۱۷ را نشان می‌دهد؛ شاهد مستقلی برای تجربه یا ساعت فعلی به‌دست نیامد.",
+      "proposals": [],
+      "lookupQueries": [
+        "ماهور پلاس طرقبه",
+        "\"Mahoorrestaurant_plus\""
+      ]
+    },
+    {
+      "placeId": 237,
+      "slug": "revive-caferestaurant",
+      "name": "کافه رستوران ریوایو",
+      "baseline": {
+        "address": "بین هاشمیه 60 و 62.مجتمع کوهسر ورودی A",
+        "instagram": "revivecaferestaurant",
+        "revision": 0,
+        "attributes": [
+          {
+            "id": "desserts",
+            "value": 1,
+            "confidence": 75,
+            "source": "editorial",
+            "verifiedAt": "2026-09-28T12:11:13.000Z"
+          }
+        ]
+      },
+      "reviewStatus": "needs-data",
+      "researchStage": "detail-page-read",
+      "sourceUrls": [
+        "https://neshan.org/maps/places/d2e4cc92539476af745a7c3a15dfd5c6"
+      ],
+      "findings": "نشان نام ریوایو و هاشمیه ۶۲ را نشان می‌دهد؛ ورودی A احراز نشده. ریوایو اصفهان و کافه ویو کوهسر منابع قابل انتساب نیستند.",
+      "proposals": [],
+      "lookupQueries": [
+        "کافه ریوایو مشهد",
+        "\"revivecaferestaurant\""
+      ]
+    },
+    {
+      "placeId": 242,
+      "slug": "bvlgari-lounge",
+      "name": "بولگاری لانژ",
+      "baseline": {
+        "address": "",
+        "instagram": null,
+        "revision": 0,
+        "attributes": [
+          {
+            "id": "desserts",
+            "value": 1,
+            "confidence": 75,
+            "source": "editorial",
+            "verifiedAt": "2026-09-28T12:11:13.000Z"
+          }
+        ]
+      },
+      "reviewStatus": "needs-data",
+      "researchStage": "search-triaged",
+      "sourceUrls": [],
+      "findings": "سایت آدرس و handle ندارد؛ بولگاری/بلوبری در mirror فقط سرنخ است و هویت شعبه تأیید نشده.",
+      "proposals": [],
+      "lookupQueries": [
+        "بولگاری لانژ طرقبه",
+        "بولگاری لانژ طرقبه -site:kucafe.ir"
+      ]
+    },
+    {
+      "placeId": 255,
+      "slug": "pinplace",
+      "name": "پین کافه",
+      "baseline": {
+        "address": "مشهد - نبش وکیل آباد ۱۸ - نرسیده به هنرستان",
+        "instagram": "Pinplace__",
+        "revision": 0,
+        "attributes": [
+          {
+            "id": "breakfast",
+            "value": 2,
+            "confidence": 85,
+            "source": "editorial",
+            "verifiedAt": "2026-09-27T15:20:11.000Z"
+          }
+        ]
+      },
+      "reviewStatus": "needs-data",
+      "researchStage": "detail-page-read",
+      "sourceUrls": [
+        "https://neshan.org/maps/places/724e4c6dccfc1f720ad0f4746dab9787"
+      ],
+      "findings": "نشان یک پین در وکیل‌آباد و دو پین در امامت دارد؛ از شعبه‌های امامت استفاده نشد. صبحانه با مقدار ۲ و confidence ۸۵ موجود حفظ می‌شود.",
+      "proposals": [],
+      "lookupQueries": [
+        "پین کافه مشهد",
+        "\"Pinplace__\""
+      ]
+    },
+    {
+      "placeId": 262,
+      "slug": "cafebelza",
+      "name": "کافه بلزا",
+      "baseline": {
+        "address": "ابتدای جاده شاندیز، بلوار فرمانیه، نبش فرمانیه 4کافه بلزا",
+        "instagram": "cafebelza",
+        "revision": 0,
+        "attributes": [
+          {
+            "id": "desserts",
+            "value": 1,
+            "confidence": 75,
+            "source": "editorial",
+            "verifiedAt": "2026-09-28T12:11:13.000Z"
+          }
+        ]
+      },
+      "reviewStatus": "needs-data",
+      "researchStage": "detail-page-read",
+      "sourceUrls": [
+        "https://neshan.org/maps/places/95ad195c7a725102238117482d4aff7e"
+      ],
+      "findings": "نشان نام، فرمانیه ۴ و cafebelza را همسو نشان می‌دهد؛ شعبه‌های نامجو/پیروزی و شهرهای دیگر رد شدند. شاهد تجربه جدید هنوز کافی نیست.",
+      "proposals": [],
+      "lookupQueries": [
+        "کافه بلزا شاندیز",
+        "\"cafebelza\""
+      ]
+    },
+    {
+      "placeId": 269,
+      "slug": "socialcafe",
+      "name": "کافه سوشال",
+      "baseline": {
+        "address": "بلوار وکیل اباد ، بین وکیل اباد ۴۷ و ۴۹",
+        "instagram": "_socialcafe",
+        "revision": 0,
+        "attributes": [
+          {
+            "id": "desserts",
+            "value": 1,
+            "confidence": 75,
+            "source": "editorial",
+            "verifiedAt": "2026-09-28T12:11:13.000Z"
+          }
+        ]
+      },
+      "reviewStatus": "needs-data",
+      "researchStage": "detail-page-read",
+      "sourceUrls": [
+        "https://neshan.org/maps/places/f87d197528fb937ee791d2395e5049fa",
+        "https://t.me/s/mashadcafe?before=5299",
+        "https://t.me/mashadcafe/5294"
+      ],
+      "findings": "معرفی عمومی mashadcafe/5294 صریحاً کار، مطالعه و نبود محدودیت زمانی را می‌گوید و وکیل‌آباد ۴۷–۴۹ و handle همسو است؛ تاریخ انتشار به‌دست نیامد. صفحه نشان همان محدوده و نظرهای اخیر دارد، نه تأیید مستقیم شرایط کار.",
+      "proposals": [
+        {
+          "attributeId": "laptop_friendly",
+          "proposedValue": 1,
+          "approved": false,
+          "confidence": null,
+          "verifiedAt": null
+        },
+        {
+          "attributeId": "good_for_study",
+          "proposedValue": 1,
+          "approved": false,
+          "confidence": null,
+          "verifiedAt": null
+        },
+        {
+          "attributeId": "long_stay_ok",
+          "proposedValue": 1,
+          "approved": false,
+          "confidence": null,
+          "verifiedAt": null
+        }
+      ],
+      "lookupQueries": [
+        "کافه سوشال مشهد",
+        "\"_socialcafe\""
+      ]
+    },
+    {
+      "placeId": 284,
+      "slug": "nivan-caferestaurant",
+      "name": "کافه رستوران نیوان",
+      "baseline": {
+        "address": "بلوار هفت تیر . نبش هفت تیر 15",
+        "instagram": "nivan_caferestaurnt",
+        "revision": 0,
+        "attributes": [
+          {
+            "id": "desserts",
+            "value": 1,
+            "confidence": 75,
+            "source": "editorial",
+            "verifiedAt": "2026-09-28T12:11:13.000Z"
+          }
+        ]
+      },
+      "reviewStatus": "needs-data",
+      "researchStage": "detail-page-read",
+      "sourceUrls": [
+        "https://neshan.org/maps/places/a303276ffa6af66fa85e1f3c172dead6"
+      ],
+      "findings": "نشان هفت تیر ۱۵ و handle nivan_caferestaurant دارد؛ handle سایت nivan_caferestaurnt متفاوت است. جدول ساعات تا ۱/۲ بامداد در برخی روزها؛ شیفت استخدامی ۱۶–۲۴ شاهد ساعت پذیرش مشتری نیست.",
+      "proposals": [
+        {
+          "attributeId": "open_late",
+          "proposedValue": 1,
+          "approved": false,
+          "confidence": null,
+          "verifiedAt": null
+        }
+      ],
+      "lookupQueries": [
+        "کافه نیوان مشهد",
+        "\"nivan_caferestaurnt\""
+      ]
+    },
+    {
+      "placeId": 286,
+      "slug": "treelounge-cafe",
+      "name": "کافه رستوران تری لانژ",
+      "baseline": {
+        "address": "امام رضا 17",
+        "instagram": "treelounge.cafe",
+        "revision": 0,
+        "attributes": [
+          {
+            "id": "desserts",
+            "value": 1,
+            "confidence": 75,
+            "source": "editorial",
+            "verifiedAt": "2026-09-28T12:11:13.000Z"
+          }
+        ]
+      },
+      "reviewStatus": "needs-data",
+      "researchStage": "detail-page-read",
+      "sourceUrls": [
+        "https://neshan.org/maps/places/8b08e72efd438783a203a88e7050dfe7"
+      ],
+      "findings": "نشان نام و امام رضا ۱۷ با ساعات ۱۳–۲ بامداد را نشان می‌دهد؛ نظر شلوغی و تأخیر هنگام بازی اجازه ادعای آرامش یا کیفیت دورهمی نمی‌دهد.",
+      "proposals": [
+        {
+          "attributeId": "open_late",
+          "proposedValue": 1,
+          "approved": false,
+          "confidence": null,
+          "verifiedAt": null
+        }
+      ],
+      "lookupQueries": [
+        "تری لانژ طرقبه",
+        "\"treelounge.cafe\""
+      ]
+    },
+    {
+      "placeId": 288,
+      "slug": "jana-lounge",
+      "name": "کافه رستوران جانا",
+      "baseline": {
+        "address": "مشهد ، ابتدای جاده شاندیز مقابل دوربرگردان اول",
+        "instagram": "Jana_lounge",
+        "revision": 0,
+        "attributes": []
+      },
+      "reviewStatus": "needs-data",
+      "researchStage": "search-triaged",
+      "sourceUrls": [],
+      "findings": "نتایج جانا وکیل‌آباد/شریعتی، اهواز و لاهیجان با آدرس ابتدای شاندیز تطبیق ندارند. outdoor قبلاً به علت فقدان شاهد رد شده و دوباره افزوده نمی‌شود.",
+      "proposals": [],
+      "lookupQueries": [
+        "کافه جانا شاندیز",
+        "\"Jana_lounge\""
+      ]
+    },
+    {
+      "placeId": 324,
+      "slug": "5amcafe",
+      "name": "کافه 5 صبحی ها",
+      "baseline": {
+        "address": "بلوار شهید دستغیب- حدفاصل دستغیب 33 و 35 ، پلاک 453.",
+        "instagram": "the5amcafe",
+        "revision": 0,
+        "attributes": [
+          {
+            "id": "desserts",
+            "value": 1,
+            "confidence": 75,
+            "source": "editorial",
+            "verifiedAt": "2026-09-28T12:11:14.000Z"
+          }
+        ]
+      },
+      "reviewStatus": "needs-data",
+      "researchStage": "search-triaged",
+      "sourceUrls": [],
+      "findings": "جست‌وجوی نام و handle عمدتاً خود KuCafe یا نتایج کتاب پنج‌صبحی‌ها را برمی‌گرداند؛ نام و منو، ساعت فعلی یا قهوه تخصصی را ثابت نمی‌کنند.",
+      "proposals": [],
+      "lookupQueries": [
+        "کافه 5 صبحی ها مشهد",
+        "\"the5amcafe\""
+      ]
+    },
+    {
+      "placeId": 379,
+      "slug": "mir-coffee",
+      "name": "قهوه میر",
+      "baseline": {
+        "address": "میدان بهارستان، بهارستان ۱۰/۱، رستری میر",
+        "instagram": "mir_coffee_roasters",
+        "revision": 0,
+        "attributes": []
+      },
+      "reviewStatus": "needs-data",
+      "researchStage": "search-triaged",
+      "sourceUrls": [
+        "https://behtarino.com/p/khepcjrqdp~کافه-قهوه-میر"
+      ],
+      "findings": "نتیجه بهترینو برای قهوه میر متعلق به یاسوج است و رد شد. عنوان رستری در دیتابیس به‌تنهایی شاهد قهوه تخصصی نیست.",
+      "proposals": [],
+      "lookupQueries": [
+        "قهوه میر مشهد",
+        "\"mir_coffee_roasters\""
+      ]
+    },
+    {
+      "placeId": 397,
+      "slug": "sloop-cafe",
+      "name": "اسلوپ کافه",
+      "baseline": {
+        "address": "طرقبه ، نبش معلم 3",
+        "instagram": null,
+        "revision": 0,
+        "attributes": []
+      },
+      "reviewStatus": "needs-data",
+      "researchStage": "detail-page-read",
+      "sourceUrls": [
+        "https://neshan.org/maps/places/0c1513cc0d6fcbb3059e3a999b01b5f3"
+      ],
+      "findings": "نشان نام اسلوپ، بلوار معلم، handle sloop_cafe و ساعت ۱۶–۲ بامداد را نشان می‌دهد؛ mirrorها معلم ۱ و معلم ۳ را متفاوت ذکر می‌کنند. دکور نوروز شاهد خدمات تولد نیست.",
+      "proposals": [
+        {
+          "attributeId": "open_late",
+          "proposedValue": 1,
+          "approved": false,
+          "confidence": null,
+          "verifiedAt": null
+        }
+      ],
+      "lookupQueries": [
+        "اسلوپ کافه طرقبه",
+        "اسلوپ کافه طرقبه -site:kucafe.ir"
+      ]
+    }
+  ],
+  "queryNote": "lookupQueries are reproducible suggested lookups, not a complete timestamped search-engine execution log."
+}
