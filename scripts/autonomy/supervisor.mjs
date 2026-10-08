@@ -28,7 +28,7 @@ function publishStatus() {
     updatedAt: state.updatedAt, scope: 'Research only; productionWrites=0; automaticDeploy=false',
     paused: state.paused || existsSync(resolve(stateDir, 'PAUSE')),
     nextEligibleAt: state.nextEligibleAt,
-    tasks: queue.tasks.map(t => ({ id: t.id, placeIds: t.placeIds, status: state.tasks[t.id]?.status ?? 'pending', claims: state.tasks[t.id]?.claims ?? 0, pr: /^https:\/\/github.com\/Rezz0722\/cafe\/pull\/\d+$/.test(state.tasks[t.id]?.pr ?? '') ? state.tasks[t.id].pr : null }))
+    tasks: queue.tasks.map(t => ({ id: t.id, placeIds: t.placeIds, status: state.tasks[t.id]?.status ?? 'pending', publication: state.tasks[t.id]?.publishStatus ?? 'not-started', claims: state.tasks[t.id]?.claims ?? 0, pr: /^https:\/\/github.com\/Rezz0722\/cafe\/pull\/\d+$/.test(state.tasks[t.id]?.pr ?? '') ? state.tasks[t.id].pr : null }))
   };
   const name = resolve(publicDir, 'status.json');
   writeFileSync(name + '.tmp', JSON.stringify(summary, null, 2) + '\n', { mode: 0o644 });
@@ -118,6 +118,23 @@ function submit(task, research, review) {
   return pr.html_url;
 }
 
+function reconcilePublications() {
+  for (const entry of Object.values(state.tasks)) {
+    if (!['pending', 'publishing', 'needs-github-reconciliation'].includes(entry.publishStatus) || (entry.reconcileAttempts ?? 0) >= 3) continue;
+    entry.publishStatus = 'needs-github-reconciliation';
+    entry.reconcileAttempts = (entry.reconcileAttempts ?? 0) + 1;
+    // Read-only reconciliation after ambiguous writes: never create a second branch/PR.
+    if (entry.proposalBranch && entry.proposalCommit) {
+      try {
+        const prs = JSON.parse(run('gh', ['api', `repos/Rezz0722/cafe/pulls?state=all&head=Rezz0722:${entry.proposalBranch}`]));
+        const pr = prs.find(p => p.head.sha === entry.proposalCommit && p.base.ref === 'production');
+        if (pr) { entry.pr = pr.html_url; entry.publishStatus = 'published'; }
+      } catch {} // Bounded; auth/missing branch must not trigger model reruns or blind writes.
+    }
+    save();
+  }
+}
+
 const command = process.argv[2] ?? 'tick';
 if (command === 'pause' || command === 'resume') { state.paused = command === 'pause'; save(); publishStatus(); console.log(command); }
 else if (command === 'status') console.log(JSON.stringify(state, null, 2));
@@ -128,6 +145,7 @@ else if (command === 'probe') {
   const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tehran' }).format(new Date());
   if (state.day !== today) { state.day = today; state.cyclesToday = 0; }
   if (existsSync(resolve(stateDir, 'PAUSE')) || state.paused || state.cyclesToday >= 4 || state.nextEligibleAt > Date.now()) process.exit(0);
+  reconcilePublications();
   const disk = statfsSync(stateDir);
   if (Number(disk.bavail) * Number(disk.bsize) < 2 * 1024 ** 3) {
     state.lastReason = 'disk-below-2GiB-no-cleanup'; state.nextEligibleAt = Date.now() + 3600000; save(); process.exit(0);
@@ -160,11 +178,13 @@ else if (command === 'probe') {
     // Reuse the secret screening for reviewer text before any external publication.
     validateResearch({ summary: review.summary, claims: [], unknown: review.issues }, []);
     entry.status = review.accepted ? (research.claims.length ? 'ready-for-review' : 'needs-evidence') : 'rejected';
+    entry.publishStatus = review.accepted ? 'pending' : 'not-required';
     entry.finishedAt = new Date().toISOString();
     try { entry.observations = observations(); } catch { entry.observations = { status: 'check-unavailable-no-model-retry' }; }
     save();
     if (review.accepted && !existsSync(resolve(stateDir, 'PAUSE'))) {
-      try { entry.pr = submit(task, research, review); }
+      entry.publishStatus = 'publishing'; save();
+      try { entry.pr = submit(task, research, review); entry.publishStatus = 'published'; }
       catch { entry.publishStatus = 'needs-github-reconciliation'; } // NEVER blindly repeat writes.
     }
     state.nextEligibleAt = Date.now() + 3600000; state.lastReason = entry.status; save();
