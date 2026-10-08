@@ -8,8 +8,15 @@ git -C "$source_repo" fetch origin production
 [[ "$(git -C "$source_repo" rev-parse origin/production)" == "$revision" ]] || exit 1
 reviewed_head="$(gh api "repos/Rezz0722/cafe/commits/$revision/pulls" --jq ".[] | select(.merged_at!=null and .base.ref==\"production\" and .merge_commit_sha==\"$revision\") | .head.sha")"
 [[ "$reviewed_head" =~ ^[a-f0-9]{40}$ ]] || { echo 'No exact protected merged PR' >&2; exit 1; }
-gh api "repos/Rezz0722/cafe/actions/runs?head_sha=$reviewed_head&per_page=20" --jq '.workflow_runs[] | select(.name=="CI" and .status=="completed" and .conclusion=="success") | .id' | rg -q '^[0-9]+$'
-[[ "$(< /var/lib/kucafe/current-revision)" == "$revision" ]] || { echo 'Wait for exact production release' >&2; exit 1; }
+gh api "repos/Rezz0722/cafe/actions/runs?head_sha=$reviewed_head&per_page=20" --jq '.workflow_runs[] | select(.name=="CI" and .status=="completed" and .conclusion=="success") | .id' | rg '^[0-9]+$' >/dev/null
+released="$(< /var/lib/kucafe/current-revision)"
+[[ "$released" =~ ^[a-f0-9]{40}$ ]] || exit 1
+if [[ "$released" != "$revision" ]]; then
+  # Controller-only deployment is independent from the Next application; never skip app changes.
+  comparison="$(gh api "repos/Rezz0722/cafe/compare/$released...$revision" --jq '{status,total_commits,files:[.files[]|{filename}]}')"
+  node --input-type=module -e 'const {isControllerOnlyComparison}=await import(process.argv[1]); if(!isControllerOnlyComparison(JSON.parse(process.argv[2]))) process.exit(1)' "$source_repo/scripts/autonomy/engineering-policy.mjs" "$comparison" || { echo 'Application changes present/uncertain: wait for exact app release' >&2; exit 1; }
+  echo 'Verified controller-only diff; independent protected controller upgrade, not app release'
+fi
 [[ -d /opt/kucafe-autonomy && -d /var/lib/kucafe-autonomy ]] || exit 1
 [[ "$(systemctl show kucafe-autonomy.service --property=ActiveState --value)" == inactive ]] || { echo 'Wait for active tick' >&2; exit 1; }
 backup_dir="/var/lib/kucafe-autonomy/releases/$revision"

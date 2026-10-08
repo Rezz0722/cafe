@@ -1,5 +1,8 @@
 import { createHash } from 'node:crypto';
 export const hash = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
+export function isControllerOnlyComparison(comparison) {
+  return ['ahead','identical'].includes(comparison?.status) && Number.isSafeInteger(comparison.total_commits) && comparison.total_commits >= 0 && comparison.total_commits <= 20 && Array.isArray(comparison.files) && comparison.files.length < 300 && comparison.files.every(f => typeof f.filename === 'string' && !f.filename.includes('..') && (f.filename.startsWith('scripts/autonomy/') || f.filename === 'docs/KUCAFE_AUTONOMY_FA.md'));
+}
 export function canCarryReview(entry, previousSources, nextSources) {
   return entry.review?.accepted === true && entry.reviewedHash === entry.patchHash && previousSources != null && nextSources != null && hash(previousSources) === hash(nextSources);
 }

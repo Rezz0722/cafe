@@ -9,7 +9,7 @@ git -C "$source_repo" fetch origin production
 [[ "$(git -C "$source_repo" rev-parse origin/production)" == "$revision" ]] || exit 1
 reviewed_head="$(gh api "repos/Rezz0722/cafe/commits/$revision/pulls" --jq ".[] | select(.merged_at!=null and .base.ref==\"production\" and .merge_commit_sha==\"$revision\") | .head.sha")"
 [[ "$reviewed_head" =~ ^[a-f0-9]{40}$ ]] || exit 1
-gh api "repos/Rezz0722/cafe/actions/runs?head_sha=$reviewed_head&per_page=20" --jq '.workflow_runs[] | select(.name=="CI" and .status=="completed" and .conclusion=="success") | .id' | rg -q '^[0-9]+$'
+gh api "repos/Rezz0722/cafe/actions/runs?head_sha=$reviewed_head&per_page=20" --jq '.workflow_runs[] | select(.name=="CI" and .status=="completed" and .conclusion=="success") | .id' | rg '^[0-9]+$' >/dev/null
 artifact_dir="$(mktemp -d /var/lib/kucafe-autonomy/dashboard-release.XXXXXX)"
 git -C "$source_repo" archive "$revision" scripts/autonomy/dashboard public/fonts/Vazirmatn-400.woff2 | tar -x -C "$artifact_dir"
 node --check "$artifact_dir/scripts/autonomy/dashboard/dashboard.mjs"

@@ -1,9 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validatePatch, selectTask, ciDecision, canMerge, canCarryReview } from './engineering-policy.mjs';
+import { validatePatch, selectTask, ciDecision, canMerge, canCarryReview, isControllerOnlyComparison } from './engineering-policy.mjs';
 const task = {paths:['src/core/example.ts','src/core/example.test.ts'],requiredTests:['src/core/example.test.ts']};
 const patch = {summary:'Pure change', files:[{path:task.paths[0],content:'export const x = 2\n'},{path:task.paths[1],content:'test("regression", () => assert.equal(x, 2))\n'}]};
 test('accepts small scoped code with regression test',()=>assert.equal(validatePatch(task,patch,{}).length,64));
+test('independent controller upgrade rejects application changes or uncertain comparisons',()=>{
+ const diff={status:'ahead',total_commits:3,files:[{filename:'scripts/autonomy/dashboard/.htaccess'},{filename:'docs/KUCAFE_AUTONOMY_FA.md'}]};
+ assert.equal(isControllerOnlyComparison(diff),true);
+ for(const invalid of [{...diff,status:'diverged'},{...diff,total_commits:21},{...diff,files:Array(300).fill(diff.files[0])},{...diff,files:[{filename:'src/app/page.tsx'}]},{...diff,files:[{filename:'scripts/autonomy/../../src/auth.ts'}]},null]) assert.equal(isControllerOnlyComparison(invalid),false);
+});
 test('review can carry across unrelated base changes only with identical full source context',()=>{
  const entry={review:{accepted:true},patchHash:'exact',reviewedHash:'exact'};
  const context={'source.ts':'original','context.ts':'dependency'};
