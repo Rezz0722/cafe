@@ -1,0 +1,28 @@
+[Unit]
+Description=KuCafe bounded autonomous research supervisor
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=/opt/kucafe-autonomy
+ExecStart=/usr/bin/flock -n /var/lib/kucafe-autonomy/run.lock /usr/bin/node /opt/kucafe-autonomy/scripts/autonomy/supervisor.mjs tick
+TimeoutStartSec=22min
+KillMode=control-group
+UMask=0077
+Nice=15
+CPUQuota=50%
+MemoryMax=1500M
+TasksMax=128
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+ReadWritePaths=/var/lib/kucafe-autonomy /root/.codex /var/www/html/kucafe-autonomy
+InaccessiblePaths=-/var/run/docker.sock -/run/mysqld -/var/backups -/root/.ssh -/opt/kucafe/.env.local -/opt/kucafe/.env.compose -/opt/kucafe-release/.env.local -/var/www/kucafe/.env.local
+
+[Install]
+WantedBy=multi-user.target

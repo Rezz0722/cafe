@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "scope": "Phase3 experience evidence research only; no DB, archive, purge, migration, SMS, UI, deploy or paid API actions",
+  "tasks": [
+    {"id":"review-a","placeIds":[119,158,163,173,203]},
+    {"id":"review-b","placeIds":[212,227,233,242,255]},
+    {"id":"review-c","placeIds":[262,269,286,288,324]},
+    {"id":"review-d","placeIds":[379,397]}
+  ]
+}
