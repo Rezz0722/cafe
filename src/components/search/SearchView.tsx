@@ -443,9 +443,7 @@ export function SearchView({
   /** فاصله روی کل کاندیداها محاسبه می‌شود؛ صفحه‌بندی بعد از این مرحله است. */
   const displayCards = useMemo(() => {
     if (!location) return cards
-    const withDistance = sortCardsByDistance(cards, location)
-    if (filters.sort !== 'distance') return withDistance
-    return withDistance
+    return sortCardsByDistance(cards, location, filters.sort)
   }, [cards, location, filters.sort])
 
   const visibleCards = useMemo(
@@ -454,8 +452,8 @@ export function SearchView({
   )
 
   const displayItems = useMemo(
-    () => location ? sortItemsByDistance(itemCards, location) : itemCards,
-    [itemCards, location],
+    () => location ? sortItemsByDistance(itemCards, location, filters.sort) : itemCards,
+    [itemCards, location, filters.sort],
   )
   const visibleItems = useMemo(
     () => clientPaginated ? pageSlice(displayItems, filters.page, pageSize) : displayItems,
