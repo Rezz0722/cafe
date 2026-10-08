@@ -1,6 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {statusLabel,stageIndex,safeGithubURL,summarize,phaseLabel} from './dashboard/view-model.mjs';
+import {statusLabel,stageIndex,safeGithubURL,summarize,phaseLabel,blockerLabel} from './dashboard/view-model.mjs';
+test('resource blockers supersede open phase and expired quota reset',()=>{
+ assert.match(blockerLabel({lastReason:'disk-below-reserve'}),/مسدود/);
+ assert.equal(phaseLabel({id:'p',status:'in-progress'},[{phase:'p',status:'needs-review'}],{lastReason:'disk-below-reserve'}),'متوقف تا رفع مانع');
+ assert.equal(blockerLabel({lastReason:null}),null);
+});
 test('dashboard never treats merged/pending deployment as production complete',()=>{
  const result=summarize({engineering:[{id:'a',status:'awaiting-deploy'},{id:'b',status:'pending'}],research:[{status:'needs-evidence',claims:0}]});
  assert.equal(result.completed,0);assert.equal(result.total,2);assert.equal(result.claims,0);assert.equal(result.reviewedResearch,1);assert.equal(result.active.id,'a');

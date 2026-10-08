@@ -1,0 +1,15 @@
+[Unit]
+Description=Bounded KuCafe compilation-cache maintenance before autonomous work
+Before=kucafe-autonomy.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/bash /opt/kucafe-autonomy/scripts/autonomy/maintain-cache.sh
+TimeoutStartSec=3min
+UMask=0077
+Nice=15
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/run/lock

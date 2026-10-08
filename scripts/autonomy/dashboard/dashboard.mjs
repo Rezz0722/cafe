@@ -1,4 +1,4 @@
-import { statusLabel, phaseLabel, safeGithubURL, summarize } from './view-model.mjs'
+import { statusLabel, phaseLabel, blockerLabel, safeGithubURL, summarize } from './view-model.mjs'
 
 const $ = id => document.getElementById(id)
 const digits = new Intl.NumberFormat('fa-IR')
@@ -51,14 +51,16 @@ function render(data) {
   $('updated').textContent = `آخرین ثبت: ${date(data.updatedAt)}`
   $('next').textContent = data.lastReason === 'daily-engineering-budget' ? 'سقف چرخه‌های روزانه مصرف شده؛ ادامه در روز بعد تهران' : Number(data.nextEligibleAt) > Date.now() ? `${data.lastReason === 'quota-reserve' ? 'برای حفظ ذخیرهٔ مصرف، ' : ''}عامل پس از ${date(data.nextEligibleAt)} مجاز به اجراست` : 'انتظار زمانی برای عامل ثبت نشده'
   const active = summary.active
+  const blocker = blockerLabel(data)
   $('active-task').textContent = data.paused ? 'ناظر در حالت توقف است' : active ? String(active.title || phaseTitle(active.phase)) : 'کار کدنویسی فعال در این ثبت دیده نمی‌شود'
   $('active-stage').textContent = active ? `مرحله: ${statusLabel(active.status)} · ${phaseTitle(active.phase)}` : 'نبود کار فعال، سلامت تایمر یا پایان کل پروژه را اثبات نمی‌کند.'
+  if (blocker) { $('active-task').textContent=blocker; $('active-stage').textContent='فعلاً کار تازه شروع نمی‌شود؛ وضعیت فازها به معنی اجرای لحظه‌ای نیست.'; $('next').textContent='تاریخ مجاز اجرای مدل، مانع منابع یا سقف روزانه را رفع نمی‌کند.'; }
   $('engineering-total').textContent = `${digits.format(engineering.length)} کار ثبت‌شده`
   $('research-total').textContent = `${digits.format(research.length)} بسته ثبت‌شده`
   $('phases').replaceChildren(...phases.map((phase, index) => {
     const item = node('li')
     const phaseStatus = badge(phase.status)
-    phaseStatus.textContent = phaseLabel(phase, engineering)
+    phaseStatus.textContent = phaseLabel(phase, engineering, data)
     item.append(node('p', 'phase-number', `مرحله ${digits.format(index + 1)}`), node('h3', '', phase.title || String(phase.id || 'فاز بدون عنوان')), phaseStatus)
     if (phase.status === 'needs-owner-data') item.append(node('p', 'task-reason', 'این مرحله به اطلاعات یا آزمون واقعی مالک وابسته است.'))
     return item
@@ -93,7 +95,7 @@ function connection() {
   if (!snapshot) return
   const at = new Date(snapshot.updatedAt).getTime()
   const stale = !Number.isFinite(at) || Date.now() - at > 2 * 60 * 60 * 1000
-  $('connection').textContent = snapshot.paused ? 'توقف ناظر در فایل وضعیت ثبت شده' : stale ? 'ثبت وضعیت قدیمی است؛ فعالیت فعلی تأیید نمی‌شود' : 'آخرین فایل وضعیت دریافت شد؛ سلامت تایمر جداگانه بررسی می‌شود'
+  $('connection').textContent = blockerLabel(snapshot) || (stale ? 'ثبت وضعیت قدیمی است؛ فعالیت فعلی تأیید نمی‌شود' : 'آخرین فایل وضعیت دریافت شد؛ سلامت تایمر جداگانه بررسی می‌شود')
 }
 async function refresh() {
   if (busy) return
