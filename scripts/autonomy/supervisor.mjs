@@ -32,6 +32,7 @@ function publishStatus() {
   };
   const name = resolve(publicDir, 'status.json');
   writeFileSync(name + '.tmp', JSON.stringify(summary, null, 2) + '\n', { mode: 0o644 });
+  chmodSync(name + '.tmp', 0o644); // Creation mode is masked by service UMask=0077.
   renameSync(name + '.tmp', name);
   run('zip', ['-j', '-q', resolve(publicDir, 'latest.tmp.zip'), name]);
   chmodSync(resolve(publicDir, 'latest.tmp.zip'), 0o644);
