@@ -111,6 +111,15 @@ function checkPR(task,e){
  if(pr.headRefOid!==e.headSha){e.status='conflict';e.reason='unreviewed-PR-head';save();return;}
  if(pr.state==='MERGED') {e.mergeSha=pr.mergeCommit.oid;e.status='awaiting-deploy';e.waitStartedAt=Date.now();save();return;}
  if(pr.state==='CLOSED'){e.status='blocked';e.reason='PR-closed-unmerged';save();return;}
+ if(pr.mergeStateStatus==='BEHIND'){
+  const current=api('git/ref/heads/production').object.sha;
+  if(current!==e.baseSha){
+   if(e.attempts>=3){e.status='conflict';e.reason='base-changed-after-bounded-repairs';save();return;}
+   e.feedback='Production base changed. Reapply the minimal fix to the fresh source and obtain a new independent review; do not overwrite new changes.';
+   e.previousPR=e.pr;e.previousHead=e.headSha;e.baseSha=current;e.plan=null;
+   e.headSha=null;e.prNumber=null;e.pr=null;e.branch=null;e.review=null;e.reviewedHash=null;e.status='retry-writing';save();return;
+  }
+ }
  const result=ciDecision(pr.statusCheckRollup);
  if(result==='failed'){
   if(e.attempts>=3){e.status='blocked';e.reason='CI-failed-after-bounded-repairs';save();return;}

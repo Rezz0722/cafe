@@ -6,7 +6,10 @@ revision="${1:?Pass protected production SHA with green CI}"
 [[ "$revision" =~ ^[a-f0-9]{40}$ && "$EUID" == 0 ]] || exit 1
 git -C "$source_repo" fetch origin production
 [[ "$(git -C "$source_repo" rev-parse origin/production)" == "$revision" ]] || exit 1
-gh api "repos/Rezz0722/cafe/actions/runs?head_sha=$revision&per_page=20" --jq '.workflow_runs[] | select(.name=="CI" and .status=="completed" and .conclusion=="success") | .id' | rg -q '^[0-9]+$'
+reviewed_head="$(gh api "repos/Rezz0722/cafe/commits/$revision/pulls" --jq ".[] | select(.merged_at!=null and .base.ref==\"production\" and .merge_commit_sha==\"$revision\") | .head.sha")"
+[[ "$reviewed_head" =~ ^[a-f0-9]{40}$ ]] || { echo 'No exact protected merged PR' >&2; exit 1; }
+gh api "repos/Rezz0722/cafe/actions/runs?head_sha=$reviewed_head&per_page=20" --jq '.workflow_runs[] | select(.name=="CI" and .status=="completed" and .conclusion=="success") | .id' | rg -q '^[0-9]+$'
+[[ "$(< /var/lib/kucafe/current-revision)" == "$revision" ]] || { echo 'Wait for exact production release' >&2; exit 1; }
 [[ -d /opt/kucafe-autonomy && -d /var/lib/kucafe-autonomy ]] || exit 1
 [[ "$(systemctl show kucafe-autonomy.service --property=ActiveState --value)" == inactive ]] || { echo 'Wait for active tick' >&2; exit 1; }
 backup_dir="/var/lib/kucafe-autonomy/releases/$revision"
