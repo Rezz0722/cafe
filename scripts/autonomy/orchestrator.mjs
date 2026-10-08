@@ -170,6 +170,7 @@ function checkDeployment(task,e){
 async function tick(){
  if(paused()){publish();return;}
  if(freeDisk()<2*1024**3){state.lastReason='disk-below-reserve';save();return;}
+ if(state.lastReason==='disk-below-reserve'){state.lastReason=null;save();}
  const task=selectTask(roadmap,state);
  if(task){
   const e=state.tasks[task.id]??{status:'pending',attempts:0};state.tasks[task.id]=e;

@@ -1,6 +1,8 @@
 [Unit]
 Description=KuCafe approved-phase research/code/review/CI/deploy orchestrator
 After=network-online.target
+After=kucafe-autonomy-maintenance.service
+Wants=kucafe-autonomy-maintenance.service
 Wants=network-online.target
 
 [Service]

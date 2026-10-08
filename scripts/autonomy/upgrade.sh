@@ -25,6 +25,7 @@ install -d -m 0700 "$backup_dir"
 tar -czf "$backup_dir/previous-source.tgz" -C /opt/kucafe-autonomy scripts/autonomy docs/KUCAFE_AUTONOMY_FA.md
 cp /etc/systemd/system/kucafe-autonomy.service "$backup_dir/previous.service"
 cp /etc/systemd/system/kucafe-autonomy.timer "$backup_dir/previous.timer"
+if [[ -f /etc/systemd/system/kucafe-autonomy-maintenance.service ]]; then cp /etc/systemd/system/kucafe-autonomy-maintenance.service "$backup_dir/previous-maintenance.service"; fi
 systemctl stop kucafe-autonomy.timer
 exec 9>/var/lib/kucafe-autonomy/run.lock
 flock -n 9 || { systemctl start kucafe-autonomy.timer; exit 1; }
@@ -32,6 +33,7 @@ rollback_on_error() {
   tar -xzf "$backup_dir/previous-source.tgz" -C /opt/kucafe-autonomy
   install -m 0644 "$backup_dir/previous.service" /etc/systemd/system/kucafe-autonomy.service
   install -m 0644 "$backup_dir/previous.timer" /etc/systemd/system/kucafe-autonomy.timer
+  if [[ -f "$backup_dir/previous-maintenance.service" ]]; then install -m 0644 "$backup_dir/previous-maintenance.service" /etc/systemd/system/kucafe-autonomy-maintenance.service; fi
   systemctl daemon-reload
   systemctl start kucafe-autonomy.timer
   echo 'Upgrade failed; previous source/units restored, checkpoints retained' >&2
@@ -39,7 +41,8 @@ rollback_on_error() {
 trap rollback_on_error ERR
 git -C "$source_repo" archive "$revision" scripts/autonomy docs/KUCAFE_AUTONOMY_FA.md docs/research/KUCAFE_EXPERIENCE_BATCH_01_20261007.json | tar -x -C /opt/kucafe-autonomy
 node --test /opt/kucafe-autonomy/scripts/autonomy/*.test.mjs
-systemd-analyze verify /opt/kucafe-autonomy/scripts/autonomy/kucafe-autonomy.service /opt/kucafe-autonomy/scripts/autonomy/kucafe-autonomy.timer
+systemd-analyze verify /opt/kucafe-autonomy/scripts/autonomy/kucafe-autonomy*.service /opt/kucafe-autonomy/scripts/autonomy/kucafe-autonomy.timer
+install -m 0644 /opt/kucafe-autonomy/scripts/autonomy/kucafe-autonomy-maintenance.service /etc/systemd/system/kucafe-autonomy-maintenance.service
 install -m 0644 /opt/kucafe-autonomy/scripts/autonomy/kucafe-autonomy.service /etc/systemd/system/kucafe-autonomy.service
 install -m 0644 /opt/kucafe-autonomy/scripts/autonomy/kucafe-autonomy.timer /etc/systemd/system/kucafe-autonomy.timer
 printf '%s\n' "$revision" > "$backup_dir/installed-revision"

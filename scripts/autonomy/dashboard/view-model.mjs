@@ -6,7 +6,7 @@ const labels = Object.freeze({
   'retry-writing': 'اصلاح مجدد کد', blocked: 'نیازمند بررسی',
   'review-rejected': 'بازبینی رد شد', conflict: 'تداخل تغییرات',
   'deployment-failed': 'انتشار ناموفق', 'needs-evidence': 'نیازمند شاهد معتبر',
-  'needs-owner-data': 'نیازمند اطلاعات مالک', 'in-progress': 'در حال اجرا',
+  'needs-owner-data': 'نیازمند اطلاعات مالک', 'in-progress': 'فاز تکمیل‌نشده',
   researching: 'در حال تحقیق', reviewed: 'بازبینی شده',
 });
 export function statusLabel(status) { return labels[status] ?? 'وضعیت نامشخص'; }
@@ -27,10 +27,15 @@ export function summarize(snapshot) {
     active: engineering.find(t => !['pending','completed','blocked','conflict','deployment-failed','review-rejected'].includes(t.status)) ?? null,
   };
 }
-export function phaseLabel(phase, engineering = []) {
+export function blockerLabel(data) {
+ if(data?.paused) return 'ناظر متوقف شده است';
+ return ({'disk-below-reserve':'مسدود: فضای آزاد سرور کافی نیست','daily-engineering-budget':'منتظر: سقف چرخه‌های روزانه مصرف شده','quota-reserve':'منتظر: ذخیرهٔ مصرف مدل','quota-unknown':'مسدود: وضعیت مصرف مدل مشخص نیست'})[data?.lastReason] ?? null;
+}
+export function phaseLabel(phase, engineering = [], data = null) {
   const tasks = engineering.filter(t => t.phase === phase.id);
   if(tasks.length && tasks.every(t => t.status === 'pending')) return statusLabel('pending');
   if(tasks.some(t => ['blocked','conflict','deployment-failed','review-rejected'].includes(t.status))) return statusLabel('blocked');
   if(tasks.length && tasks.every(t => t.status === 'completed')) return statusLabel('completed');
+  if(tasks.length && blockerLabel(data)) return 'متوقف تا رفع مانع';
   return statusLabel(phase.status);
 }
