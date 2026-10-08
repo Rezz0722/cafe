@@ -1,5 +1,8 @@
 import { createHash } from 'node:crypto';
 export const hash = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
+export function canCarryReview(entry, previousSources, nextSources) {
+  return entry.review?.accepted === true && entry.reviewedHash === entry.patchHash && previousSources != null && nextSources != null && hash(previousSources) === hash(nextSources);
+}
 export function validatePatch(task, patch, originals) {
   if (!patch || typeof patch.summary !== 'string' || !Array.isArray(patch.files) || !patch.files.length || patch.files.length > task.paths.length) throw Error('Empty or invalid patch');
   if (Buffer.byteLength(JSON.stringify(patch)) > 280000) throw Error('Patch exceeds budget');
