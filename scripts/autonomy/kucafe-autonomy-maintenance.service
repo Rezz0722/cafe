@@ -13,3 +13,6 @@ ProtectSystem=strict
 ProtectHome=true
 PrivateTmp=true
 ReadWritePaths=/run/lock
+StateDirectory=kucafe-autonomy-maintenance
+StateDirectoryMode=0700
+Environment=DOCKER_CONFIG=/var/lib/kucafe-autonomy-maintenance/docker
