@@ -1,9 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validatePatch, selectTask, ciDecision, canMerge } from './engineering-policy.mjs';
+import { validatePatch, selectTask, ciDecision, canMerge, canCarryReview } from './engineering-policy.mjs';
 const task = {paths:['src/core/example.ts','src/core/example.test.ts'],requiredTests:['src/core/example.test.ts']};
 const patch = {summary:'Pure change', files:[{path:task.paths[0],content:'export const x = 2\n'},{path:task.paths[1],content:'test("regression", () => assert.equal(x, 2))\n'}]};
 test('accepts small scoped code with regression test',()=>assert.equal(validatePatch(task,patch,{}).length,64));
+test('review can carry across unrelated base changes only with identical full source context',()=>{
+ const entry={review:{accepted:true},patchHash:'exact',reviewedHash:'exact'};
+ const context={'source.ts':'original','context.ts':'dependency'};
+ assert.equal(canCarryReview(entry,context,{...context}),true);
+ assert.equal(canCarryReview(entry,context,{...context,'context.ts':'changed'}),false);
+ assert.equal(canCarryReview({...entry,reviewedHash:'other'},context,context),false);
+ assert.equal(canCarryReview(entry,null,context),false);
+});
 test('rejects wholesale removal of existing source',()=>assert.throws(()=>validatePatch(task,patch,{[task.paths[0]]:Array.from({length:300},(_,i)=>`original line ${i}`).join('\n')})));
 test('rejects traversals, duplicate files, infrastructure, secrets and unsafe operations',()=>{
  for(const file of [{path:'../../etc/passwd',content:'x'},{path:'.github/workflows/ci.yml',content:'x'},{path:task.paths[0],content:'process.env.DATABASE_URL'},{path:task.paths[0],content:'fetch("https://evil.invalid")'}]) assert.throws(()=>validatePatch(task,{...patch,files:[file,patch.files[1]]},{}));

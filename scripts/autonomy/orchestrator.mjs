@@ -5,7 +5,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { agent, quota } from './supervisor.mjs';
 import { quotaDecision } from './policy.mjs';
-import { hash, validatePatch, selectTask, ciDecision, canMerge } from './engineering-policy.mjs';
+import { hash, validatePatch, selectTask, ciDecision, canMerge, canCarryReview } from './engineering-policy.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const dir = '/var/lib/kucafe-autonomy';
@@ -25,7 +25,7 @@ function save(){state.updatedAt=new Date().toISOString();writeFileSync(file+'.tm
 function publish(){
  if(!existsSync(publicDir))return;
  const research=existsSync(resolve(dir,'state.json'))?JSON.parse(readFileSync(resolve(dir,'state.json'),'utf8')):{tasks:{}};
- const snapshot={version:2,updatedAt:state.updatedAt,paused:existsSync(resolve(dir,'PAUSE')),nextEligibleAt:state.nextEligibleAt,
+ const snapshot={version:2,updatedAt:state.updatedAt,paused:existsSync(resolve(dir,'PAUSE')),nextEligibleAt:state.nextEligibleAt,lastReason:state.lastReason??null,
   phases:roadmap.phases.map(p=>({id:p.id,title:p.title,status:p.external?'needs-owner-data':p.research?(Object.values(research.tasks).some(t=>t.status==='needs-evidence')?'needs-evidence':'pending'):(p.tasks.every(id=>state.tasks[id]?.status==='completed')?'completed':'in-progress')})),
   engineering:roadmap.tasks.map(t=>({id:t.id,phase:t.phase,status:state.tasks[t.id]?.status??'pending',pr:state.tasks[t.id]?.pr??null,mergeSha:state.tasks[t.id]?.mergeSha??null,deployRun:state.tasks[t.id]?.deployRun??null,reason:state.tasks[t.id]?.reason??null})),
   research:Object.entries(research.tasks).map(([id,t])=>({id,status:t.status,claims:t.claims??0,pr:t.pr??null})),
@@ -73,7 +73,7 @@ async function produce(task,e){
  const patch=await model('writer',rules+'Implement real source changes, not a report. The source object is the ORIGINAL BASELINE; previous patches are feedback only and have NOT been applied. Return the ENTIRE cumulative fix against that original baseline, including implementation files still needed from a prior attempt, not just incremental repairs. Return COMPLETE replacement content for changed files ONLY, each exact allowed path. Keep changes minimal; required regression test files MUST be changed. Do not include files unchanged compared with the ORIGINAL BASELINE. No new dependencies.\n'+context+'\nPLAN:'+JSON.stringify(e.plan)+'\nPRIOR PATCH/REVIEW/CI:'+JSON.stringify({patch:e.patch??null,feedback:e.feedback??null}),resolve(work,`patch-${nextAttempt}.json`),600000,()=>{e.attempts=nextAttempt;save();});
  const patchHash=validatePatch(task,patch,originals);
  e.patch=patch;e.patchHash=patchHash;e.status='reviewing';save();
- const q=quotaDecision(await quota());if(!q.allowed){state.nextEligibleAt=q.retryAt;e.status='needs-review';save();return;}
+ const q=quotaDecision(await quota());if(!q.allowed){state.nextEligibleAt=q.retryAt;state.lastReason=q.reason;e.status='needs-review';save();return;}
  await review(task,e,originals,work);
 }
 async function review(task,e,originals,work){
@@ -84,11 +84,25 @@ async function review(task,e,originals,work){
  if(!r.accepted){e.feedback=r;e.status=e.attempts<3?'retry-writing':'review-rejected';save();return;}
  e.status='publishing';save();publishPatch(task,e);
 }
+function reconcileBase(task,e,current){
+ if(current===e.baseSha)return true;
+ const same=canCarryReview(e,sourceAt(task,e.baseSha),sourceAt(task,current));
+ if(same){
+  e.baseRefreshes=(e.baseRefreshes??0)+1;
+  if(e.baseRefreshes>3){e.status='conflict';e.reason='base-refresh-limit-reached';save();return false;}
+  e.previousPR=e.pr??e.previousPR;e.previousHead=e.headSha??e.previousHead;e.previousBase=e.baseSha;e.baseSha=current;
+  e.headSha=null;e.prNumber=null;e.pr=null;e.branch=null;e.status='publishing';save();return true;
+ }
+ if(e.attempts>=3){e.status='conflict';e.reason='review-context-changed-after-bounded-repairs';save();return false;}
+ e.feedback='Relevant production source/context changed. Reapply the entire cumulative fix to fresh originals and obtain a new independent review; do not overwrite newer changes.';
+ e.previousPR=e.pr;e.previousHead=e.headSha;e.baseSha=current;e.plan=null;e.headSha=null;e.prNumber=null;e.pr=null;e.branch=null;e.review=null;e.reviewedHash=null;e.status='retry-writing';save();return false;
+}
 function publishPatch(task,e){
  if(paused())return;
- validatePatch(task,e.patch,sourceAt(task,e.baseSha));
+ if(validatePatch(task,e.patch,sourceAt(task,e.baseSha))!==e.patchHash)throw Error('Actual patch hash changed');
  if(e.reviewedHash!==e.patchHash||!e.review.accepted)throw Error('Patch no longer reviewed');
- const branch=e.branch??`autonomy/code-${task.id}-${state.scopeHash.slice(0,8)}-${e.attempts}`;
+ if(!reconcileBase(task,e,api('git/ref/heads/production').object.sha))return;
+ const branch=e.branch??`autonomy/code-${task.id}-${state.scopeHash.slice(0,8)}-${e.attempts}-${e.baseSha.slice(0,8)}`;
  // Every mutation has a durable intended SHA; retry always reads before writing.
  if(!e.headSha){
   const base=api(`git/commits/${e.baseSha}`);
@@ -112,15 +126,6 @@ function checkPR(task,e){
  if(pr.headRefOid!==e.headSha){e.status='conflict';e.reason='unreviewed-PR-head';save();return;}
  if(pr.state==='MERGED') {e.mergeSha=pr.mergeCommit.oid;e.status='awaiting-deploy';e.waitStartedAt=Date.now();save();return;}
  if(pr.state==='CLOSED'){e.status='blocked';e.reason='PR-closed-unmerged';save();return;}
- if(pr.mergeStateStatus==='BEHIND'){
-  const current=api('git/ref/heads/production').object.sha;
-  if(current!==e.baseSha){
-   if(e.attempts>=3){e.status='conflict';e.reason='base-changed-after-bounded-repairs';save();return;}
-   e.feedback='Production base changed. Reapply the minimal fix to the fresh source and obtain a new independent review; do not overwrite new changes.';
-   e.previousPR=e.pr;e.previousHead=e.headSha;e.baseSha=current;e.plan=null;
-   e.headSha=null;e.prNumber=null;e.pr=null;e.branch=null;e.review=null;e.reviewedHash=null;e.status='retry-writing';save();return;
-  }
- }
  const result=ciDecision(pr.statusCheckRollup);
  if(result==='failed'){
   if(e.attempts>=3){e.status='blocked';e.reason='CI-failed-after-bounded-repairs';save();return;}
@@ -134,6 +139,7 @@ function checkPR(task,e){
   e.headSha=null;e.prNumber=null;e.pr=null;e.branch=null;e.status='retry-writing';save();return;
  }
  if(result!=='passed')return;
+ if(pr.mergeStateStatus==='BEHIND'){reconcileBase(task,e,api('git/ref/heads/production').object.sha);return;}
  if(!canMerge(e,pr,freeDisk())){e.reason=freeDisk()<2.5*1024**3?'merge-waiting-disk-reserve':'merge-waiting-protection-or-base';save();return;}
  e.status='merge-requested';save();
  if(paused())return;
