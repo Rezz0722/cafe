@@ -1,0 +1,11 @@
+{
+  "type":"object","additionalProperties":false,
+  "properties":{
+    "summary":{"type":"string"},
+    "claims":{"type":"array","items":{"type":"object","additionalProperties":false,"properties":{
+      "placeId":{"type":"integer"},"attribute":{"type":"string"},"branchMatch":{"type":"boolean"},
+      "evidenceUrl":{"type":"string"},"publishedAt":{"type":"string"},"excerpt":{"type":"string"}
+    },"required":["placeId","attribute","branchMatch","evidenceUrl","publishedAt","excerpt"]}},
+    "unknown":{"type":"array","items":{"type":"string"}}
+  },"required":["summary","claims","unknown"]
+}

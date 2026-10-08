@@ -1,0 +1,12 @@
+[Unit]
+Description=Resume KuCafe approved queue every hour, respecting quota/checkpoints
+
+[Timer]
+OnBootSec=5min
+OnUnitInactiveSec=1h
+Persistent=true
+RandomizedDelaySec=2min
+Unit=kucafe-autonomy.service
+
+[Install]
+WantedBy=timers.target

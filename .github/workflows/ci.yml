@@ -53,6 +53,8 @@ jobs:
         run: npm run db:migrate
       - run: npm run typecheck
       - run: npm test
+      - name: Autonomous supervisor policy tests
+        run: node --test scripts/autonomy/policy.test.mjs
       - name: Sales intake and atomic ownership integration
         run: KUCAFE_LEAD_DB_TEST=1 node --import tsx --conditions=react-server --test src/core/leads/service.integration.test.ts
       - name: Signed menu import and atomic rollback integration
