@@ -49,7 +49,7 @@ function render(data) {
   $('research-count').textContent = `${digits.format(summary.reviewedResearch)} / ${digits.format(research.length)}`
   $('claims-count').textContent = digits.format(summary.claims)
   $('updated').textContent = `آخرین ثبت: ${date(data.updatedAt)}`
-  $('next').textContent = Number(data.nextEligibleAt) > Date.now() ? `عامل پس از ${date(data.nextEligibleAt)} مجاز به اجراست` : 'انتظار زمانی برای عامل ثبت نشده'
+  $('next').textContent = data.lastReason === 'daily-engineering-budget' ? 'سقف چرخه‌های روزانه مصرف شده؛ ادامه در روز بعد تهران' : Number(data.nextEligibleAt) > Date.now() ? `${data.lastReason === 'quota-reserve' ? 'برای حفظ ذخیرهٔ مصرف، ' : ''}عامل پس از ${date(data.nextEligibleAt)} مجاز به اجراست` : 'انتظار زمانی برای عامل ثبت نشده'
   const active = summary.active
   $('active-task').textContent = data.paused ? 'ناظر در حالت توقف است' : active ? String(active.title || phaseTitle(active.phase)) : 'کار کدنویسی فعال در این ثبت دیده نمی‌شود'
   $('active-stage').textContent = active ? `مرحله: ${statusLabel(active.status)} · ${phaseTitle(active.phase)}` : 'نبود کار فعال، سلامت تایمر یا پایان کل پروژه را اثبات نمی‌کند.'

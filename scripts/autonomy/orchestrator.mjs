@@ -12,6 +12,7 @@ const dir = '/var/lib/kucafe-autonomy';
 const publicDir = '/var/www/html/kucafe-autonomy';
 const file = resolve(dir,'orchestration.json');
 const roadmap = JSON.parse(readFileSync(resolve(here,'roadmap.json'),'utf8'));
+const researchQueue = JSON.parse(readFileSync(resolve(here,'queue.json'),'utf8'));
 mkdirSync(dir,{recursive:true,mode:0o700});
 const state = existsSync(file) ? JSON.parse(readFileSync(file,'utf8')) : {version:2,scopeHash:hash(roadmap),tasks:{},nextEligibleAt:0,day:'',cyclesToday:0};
 if(state.scopeHash!==hash(roadmap)) throw Error('Approved roadmap changed: explicit reconciliation required');
@@ -28,7 +29,7 @@ function publish(){
  const snapshot={version:2,updatedAt:state.updatedAt,paused:existsSync(resolve(dir,'PAUSE')),nextEligibleAt:state.nextEligibleAt,lastReason:state.lastReason??null,
   phases:roadmap.phases.map(p=>({id:p.id,title:p.title,status:p.external?'needs-owner-data':p.research?(Object.values(research.tasks).some(t=>t.status==='needs-evidence')?'needs-evidence':'pending'):(p.tasks.every(id=>state.tasks[id]?.status==='completed')?'completed':'in-progress')})),
   engineering:roadmap.tasks.map(t=>({id:t.id,phase:t.phase,status:state.tasks[t.id]?.status??'pending',pr:state.tasks[t.id]?.pr??null,mergeSha:state.tasks[t.id]?.mergeSha??null,deployRun:state.tasks[t.id]?.deployRun??null,reason:state.tasks[t.id]?.reason??null})),
-  research:Object.entries(research.tasks).map(([id,t])=>({id,status:t.status,claims:t.claims??0,pr:t.pr??null})),
+  research:researchQueue.tasks.map(t=>({id:t.id,status:research.tasks[t.id]?.status??'pending',claims:research.tasks[t.id]?.claims??0,pr:research.tasks[t.id]?.pr??null})),
   policy:'Automatic coding/review/CI/normal merge/deployment verification for approved tasks. No DB purge/migration/billing/owner impersonation.'};
  const out=resolve(publicDir,'status.json');writeFileSync(out+'.tmp',JSON.stringify(snapshot,null,2)+'\n',{mode:0o644});chmodSync(out+'.tmp',0o644);renameSync(out+'.tmp',out);
  command('zip',['-j','-q',resolve(publicDir,'latest.tmp.zip'),out]);chmodSync(resolve(publicDir,'latest.tmp.zip'),0o644);renameSync(resolve(publicDir,'latest.tmp.zip'),resolve(publicDir,'latest.zip'));
@@ -38,10 +39,11 @@ function paused(){return existsSync(resolve(dir,'PAUSE'));}
 async function permissionForModel(){
  const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tehran'}).format(new Date());
  if(state.day!==today){state.day=today;state.cyclesToday=0;}
- if(paused()||state.cyclesToday>=4||state.nextEligibleAt>Date.now())return false;
+ if(paused()||state.nextEligibleAt>Date.now())return false;
+ if(state.cyclesToday>=4){state.lastReason='daily-engineering-budget';save();return false;}
  let q;try{q=quotaDecision(await quota());}catch{q=quotaDecision(null);}
  if(!q.allowed){state.nextEligibleAt=q.retryAt;state.lastReason=q.reason;save();return false;}
- state.cyclesToday++;save();return true;
+ state.cyclesToday++;state.lastReason=null;save();return true;
 }
 function sourceAt(task,sha){
  const context={};
