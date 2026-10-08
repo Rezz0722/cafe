@@ -1,5 +1,5 @@
 [Unit]
-Description=Resume KuCafe approved queue every hour, respecting quota/checkpoints
+Description=Resume KuCafe approved queue every five minutes, respecting quota/checkpoints
 
 [Timer]
 OnBootSec=5min
