@@ -1,5 +1,5 @@
 [Unit]
-Description=KuCafe bounded autonomous research supervisor
+Description=KuCafe approved-phase research/code/review/CI/deploy orchestrator
 After=network-online.target
 Wants=network-online.target
 
@@ -7,8 +7,8 @@ Wants=network-online.target
 Type=oneshot
 User=root
 WorkingDirectory=/opt/kucafe-autonomy
-ExecStart=/usr/bin/flock -n /var/lib/kucafe-autonomy/run.lock /usr/bin/node /opt/kucafe-autonomy/scripts/autonomy/supervisor.mjs tick
-TimeoutStartSec=22min
+ExecStart=/usr/bin/flock -n /var/lib/kucafe-autonomy/run.lock /usr/bin/node /opt/kucafe-autonomy/scripts/autonomy/orchestrator.mjs tick
+TimeoutStartSec=40min
 KillMode=control-group
 UMask=0077
 Nice=15

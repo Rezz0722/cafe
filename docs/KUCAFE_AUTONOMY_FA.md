@@ -1,4 +1,26 @@
-# ناظر خودکار چندایجنتی کو کافه
+# ارکستریشن توسعهٔ کو کافه — نسخهٔ ۲
+
+## قرارداد اجرایی فعلی؛ جایگزین محدودیت research-only نسخهٔ اول
+
+نسخهٔ دوم برای کارهای مصوب کد واقعی تولید می‌کند، بازبینی مستقل می‌گیرد، PR می‌سازد، CI میزبانی‌شدهٔ GitHub را منتظر می‌ماند، با حفاظت عادی ادغام می‌کند و انتشار دقیق همان SHA را روی سایت زنده تأیید می‌کند. ادغام به‌تنهایی پایان کار نیست.
+
+`timer → controller → planner → code writer → independent reviewer → PR → hosted CI → normal merge → protected deploy → live verification → next task`
+
+صف مصوب `scripts/autonomy/roadmap.json`: اصلاح باگ ترتیب جست‌وجو با GPS ذخیره‌شده؛ سپس جلوگیری از ورود مجدد چهار source ID خدماتی 162/248/711/731؛ ادامهٔ تحقیق ۱۷ پروندهٔ قبلی؛ و توقف صادقانهٔ پایلوت واقعی در نبود مشارکت مشتری، QR چاپی و توافق تجاری. وظایف جدید بدون دامنه، مسیر مجاز، معیار پذیرش و تطبیق checkpoint اضافه نمی‌شوند. صف محدود، کار بی‌نهایت اختراع نمی‌کند.
+
+عامل‌ها shell/exec/apps/plugins ندارند، read-only هستند و فقط JSON فایل پیشنهادی می‌دهند. مدل فرمان اجرایی یا GitHub/DB credential دریافت نمی‌کند. کنترلر تغییر را با allowlist، سقف حجم و اضافه/حذف خطوط، نبود عملیات حساس و الزام تست کنترل می‌کند؛ بازبین به hash همان patch متصل است. کد مخزن عمومی با اعتبار ChatGPT روی worker مدل اجرا نمی‌شود؛ CI جدا و میزبانی‌شده است. API پولی جدید اضافه نشده است.
+
+فقط PR خودش با HEAD دقیق بازبینی‌شده، verify و تمام checks موفق، پایهٔ production و mergeState پاک ادغام می‌شود. admin bypass و force-push وجود ندارند. اصلاح CI حداکثر سه تلاش با branch جدید است. شکست انتشار وابستگی را متوقف می‌کند؛ image rollback موجود به معنی DB migration rollback نیست. صف اولیه به تغییر pure محدود است: نه schema/auth/env/packages/workflows، نه import/DB write/purge، نه SMS یا خرید سرویس. تحقیق بدون شاهد معتبر تمام‌شده یا ویژگی تأییدشده اعلام نمی‌شود.
+
+timer فعلی پنج دقیقه پس از پایان tick با حداکثر ۳۰ ثانیه تأخیر وضعیت را می‌خواند؛ تماس مدل هر پنج دقیقه نیست. سقف روزانه چهار چرخه مهندسی و چهار بسته تحقیق، سه تلاش هر تسک و ۴۰ دقیقه سرویس است. quota پیش از مراحل مدل خوانده می‌شود؛ مصرف primary≥۸۰٪ یا secondary≥۹۰٪ انتظار تا reset واقعی، telemetry نامعلوم توقف. زیر ۲GiB tick و زیر ۲٫۵GiB merge متوقف می‌شوند. پاک‌سازی Docker/media/backup خودکار نیست. انتظار بیش از ۲۴ ساعت workflow، نیازمند reconciliation ثبت می‌شود.
+
+ارتقا با `upgrade.sh <protected-green-SHA>` فقط هنگام سرویس بیکار، با snapshot خصوصی نسخهٔ قبل و حفظ checkpoint انجام می‌شود. وضعیت مهندسی در `/var/lib/kucafe-autonomy/orchestration.json` جدا از پژوهش است. خواندن وضعیت: `node /opt/kucafe-autonomy/scripts/autonomy/orchestrator.mjs status`. توقف/PAUSE مشترک و unit commands نسخهٔ قبل معتبرند. Rollback کنترلر: توقف timer/service، بازگرداندن source/unit از `/var/lib/kucafe-autonomy/releases/<sha>`، daemon-reload و شروع timer؛ state را برای بررسی نگه دار. این کار محصول منتشرشده را rollback نمی‌کند.
+
+وضعیت زنده: `http://45.159.115.116/kucafe-autonomy/status.json`؛ دانلود: `http://45.159.115.116/kucafe-autonomy/latest.zip`.
+
+تست‌ها: `node --test scripts/autonomy/*.test.mjs`، Typecheck، CI واقعی، systemd و اولین چرخهٔ کدنویسی/انتشار جداگانه گزارش می‌شوند. تا اولین انتشار خودکار معتبر، end-to-end تأییدشده ادعا نمی‌شود. Build سبز مساوی انتشار، کیفیت تحقیق یا رشد SEO نیست.
+
+## سوابق نسخهٔ ۱ — متن زیر تاریخی است، نه قرارداد فعال نسخهٔ ۲
 
 ## دامنهٔ اولیه و صداقت وضعیت
 
