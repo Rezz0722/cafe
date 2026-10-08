@@ -1,0 +1,2 @@
+# This Apache installation has no built-in .mjs type; scope the fix to this read-only UI.
+AddType text/javascript .mjs

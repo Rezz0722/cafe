@@ -16,14 +16,14 @@ node --check "$artifact_dir/scripts/autonomy/dashboard/dashboard.mjs"
 install -d -m 0755 /var/www/html/kucafe-autonomy
 snapshot_dir="/var/lib/kucafe-autonomy/dashboard-snapshots/$revision"
 install -d -m 0700 "$snapshot_dir"
-for name in index.html dashboard.css dashboard.mjs view-model.mjs; do
+for name in index.html dashboard.css dashboard.mjs view-model.mjs .htaccess; do
   if [[ -f "/var/www/html/kucafe-autonomy/$name" && ! -e "$snapshot_dir/$name" ]]; then cp "/var/www/html/kucafe-autonomy/$name" "$snapshot_dir/$name"; fi
   install -m 0644 "$artifact_dir/scripts/autonomy/dashboard/$name" "/var/www/html/kucafe-autonomy/$name.tmp"
   mv "/var/www/html/kucafe-autonomy/$name.tmp" "/var/www/html/kucafe-autonomy/$name"
 done
 install -m 0644 "$artifact_dir/public/fonts/Vazirmatn-400.woff2" /var/www/html/kucafe-autonomy/Vazirmatn-400.woff2
 [[ "$artifact_dir" =~ ^/var/lib/kucafe-autonomy/dashboard-release\.[A-Za-z0-9]{6}$ ]] || exit 1
-for name in index.html dashboard.css dashboard.mjs view-model.mjs; do rm -- "$artifact_dir/scripts/autonomy/dashboard/$name"; done
+for name in index.html dashboard.css dashboard.mjs view-model.mjs .htaccess; do rm -- "$artifact_dir/scripts/autonomy/dashboard/$name"; done
 rm -- "$artifact_dir/public/fonts/Vazirmatn-400.woff2"
 rmdir "$artifact_dir/scripts/autonomy/dashboard" "$artifact_dir/scripts/autonomy" "$artifact_dir/scripts" "$artifact_dir/public/fonts" "$artifact_dir/public" "$artifact_dir"
 echo "Published read-only reporting dashboard from protected SHA $revision; snapshot $snapshot_dir"
