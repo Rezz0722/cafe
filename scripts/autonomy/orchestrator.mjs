@@ -70,7 +70,7 @@ async function produce(task,e){
  if(paused())return;
  const nextAttempt=(e.attempts??0)+1;
  if(nextAttempt>3){e.status='blocked';e.reason='writer-attempts-exhausted';save();return;}
- const patch=await model('writer',rules+'Implement real source changes, not a report. Return COMPLETE replacement content for changed files ONLY, each exact allowed path. Keep changes minimal; required regression test files MUST be changed. Do not include unchanged files. No new dependencies.\n'+context+'\nPLAN:'+JSON.stringify(e.plan)+'\nPRIOR PATCH/REVIEW/CI:'+JSON.stringify({patch:e.patch??null,feedback:e.feedback??null}),resolve(work,`patch-${nextAttempt}.json`),600000,()=>{e.attempts=nextAttempt;save();});
+ const patch=await model('writer',rules+'Implement real source changes, not a report. The source object is the ORIGINAL BASELINE; previous patches are feedback only and have NOT been applied. Return the ENTIRE cumulative fix against that original baseline, including implementation files still needed from a prior attempt, not just incremental repairs. Return COMPLETE replacement content for changed files ONLY, each exact allowed path. Keep changes minimal; required regression test files MUST be changed. Do not include files unchanged compared with the ORIGINAL BASELINE. No new dependencies.\n'+context+'\nPLAN:'+JSON.stringify(e.plan)+'\nPRIOR PATCH/REVIEW/CI:'+JSON.stringify({patch:e.patch??null,feedback:e.feedback??null}),resolve(work,`patch-${nextAttempt}.json`),600000,()=>{e.attempts=nextAttempt;save();});
  const patchHash=validatePatch(task,patch,originals);
  e.patch=patch;e.patchHash=patchHash;e.status='reviewing';save();
  const q=quotaDecision(await quota());if(!q.allowed){state.nextEligibleAt=q.retryAt;e.status='needs-review';save();return;}
