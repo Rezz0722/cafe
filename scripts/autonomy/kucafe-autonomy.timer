@@ -3,9 +3,9 @@ Description=Resume KuCafe approved queue every hour, respecting quota/checkpoint
 
 [Timer]
 OnBootSec=5min
-OnUnitInactiveSec=1h
+OnUnitInactiveSec=5min
 Persistent=true
-RandomizedDelaySec=2min
+RandomizedDelaySec=30s
 Unit=kucafe-autonomy.service
 
 [Install]

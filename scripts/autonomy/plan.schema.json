@@ -1,0 +1,1 @@
+{"type":"object","additionalProperties":false,"properties":{"summary":{"type":"string"},"steps":{"type":"array","items":{"type":"string"}},"risks":{"type":"array","items":{"type":"string"}}},"required":["summary","steps","risks"]}

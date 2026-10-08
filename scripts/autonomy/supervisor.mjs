@@ -21,6 +21,7 @@ function save() {
   renameSync(stateFile + '.tmp', stateFile);
 }
 function publishStatus() {
+  if (process.env.KUCAFE_AUTONOMY_EMBEDDED === '1') return;
   // Only deterministic counts/status/known GitHub URLs are public, NEVER model prose.
   const publicDir = '/var/www/html/kucafe-autonomy';
   if (!existsSync(publicDir)) return;
@@ -45,7 +46,7 @@ function run(command, args, timeout = 30000, input) {
 }
 
 /** Probe authenticated account metadata only; never log raw account/auth/credit IDs. */
-async function quota() {
+export async function quota() {
   return new Promise((resolveQuota, reject) => {
     const p = spawn('codex', ['app-server', '--listen', 'stdio://'], { stdio: ['pipe', 'pipe', 'ignore'], detached: true });
     let buffer = ''; let settled = false;
@@ -76,7 +77,7 @@ async function quota() {
   });
 }
 
-async function agent(role, prompt, output, timeoutMs) {
+export async function agent(role, prompt, output, timeoutMs) {
   return new Promise((done, fail) => {
     const disabled = ['shell_tool', 'unified_exec', 'apps', 'plugins', 'tool_suggest', 'multi_agent', 'image_generation', 'view_image', 'browser_use'];
     const p = spawn('codex', ['--no-daemon', ...disabled.flatMap(name => ['--disable', name]), '--search', 'exec', '--ignore-user-config', '--sandbox', 'read-only', '--ephemeral', '--color', 'never', '-c', 'agents.enabled=false', '-C', source, '--output-schema', resolve(here, `${role}.schema.json`), '-o', output, '-'], {
@@ -137,6 +138,7 @@ function reconcilePublications() {
   }
 }
 
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
 const command = process.argv[2] ?? 'tick';
 if (command === 'pause' || command === 'resume') { state.paused = command === 'pause'; save(); publishStatus(); console.log(command); }
 else if (command === 'status') console.log(JSON.stringify(state, null, 2));
@@ -208,3 +210,4 @@ else if (command === 'probe') {
   publishStatus();
   console.log(JSON.stringify({ task: task.id, status: entry.status, pr: entry.pr ?? null, nextEligibleAt: state.nextEligibleAt }));
 } else throw Error('Unknown command');
+}

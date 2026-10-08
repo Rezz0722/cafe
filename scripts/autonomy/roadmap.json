@@ -1,0 +1,32 @@
+{
+  "version":2,
+  "authorization":"Owner request 2026-10-08: research, code, update, advance phases through GitHub; no protection bypass, destructive DB work, paid API billing or invented external evidence",
+  "phases":[
+    {"id":"search-hardening","title":"اصلاح ترتیب واقعی جست‌وجو","tasks":["search-sort"]},
+    {"id":"catalog-integrity","title":"جلوگیری از بازگشت مجموعه‌های خدماتی","tasks":["source-exclusions"]},
+    {"id":"experience-research","title":"تکمیل تحقیق تجربه کافه‌ها","research":true},
+    {"id":"owner-pilot","title":"پایلوت واقعی کافه‌دار","external":true,"reason":"Requires real cafe/customer participation, printed QR and agreed commercial terms; cannot fabricate completion"}
+  ],
+  "tasks":[
+    {
+      "id":"search-sort","phase":"search-hardening","dependsOn":[],
+      "goal":"Fix confirmed bug: remembered geolocation currently forces distance order even when filters.sort is rating/name/price. Preserve server ordering for every non-distance sort for BOTH cafes and products; retain optional distance labels; stable distance tie-breaker and unknown-coordinate handling; no mutation of input arrays. Do not redesign UI or change server candidate retrieval.",
+      "evidence":"SearchView displayCards returns sortCardsByDistance for both sort branches; displayItems unconditionally sorts if location exists; toggleNearMe leaves location stored.",
+      "paths":["src/core/search/clientSort.ts","src/core/search/clientSort.test.ts","src/components/search/SearchView.tsx"],
+      "contextPaths":["src/core/search/filters.ts"],
+      "requiredTests":["src/core/search/clientSort.test.ts"],
+      "acceptance":["Cafe and item order preserved for non-distance sorts even with remembered GPS","Distance sort remains stable with unknown coordinates last","Regression tests cover both result kinds and immutability","Existing typecheck/tests/integration/build green","Exact merged SHA deployed and public search smoke succeeds"],
+      "smokePaths":["/","/search?sort=rating","/search?sort=name"]
+    },
+    {
+      "id":"source-exclusions","phase":"catalog-integrity","dependsOn":["search-sort"],
+      "goal":"Prevent future re-import/recreation of the FOUR confirmed archived nonvenue source IDs162,248,711,731. Add a small explicit versioned pure source exclusion policy and apply consistently in existing selectTopMenuCafes shared preview/apply selection. Full selection excludes only these four; explicitly selecting a blocked source must produce a clear error, never silently import it. Preserve current selected-mode validation, original array identity when no excluded rows, all legitimate cafes, raw items/prices, and existing archived DB rows. No DB writes, migrations, importer execution, purge or new taxonomy. This is prevention of FUTURE recreation after purge, not a claim archived rows are currently republished.",
+      "evidence":"Existing topmenu-sync.ts creates missing source IDs; archive evidence confirms IDs162/248/711/731. Existing rows retain status, but deletion without durable exclusions would permit recreation.",
+      "paths":["src/core/sync/topMenuSelection.ts","src/core/sync/topMenuSelection.test.ts","src/core/sync/topMenuExclusions.ts","src/core/sync/topMenuExclusions.test.ts"],
+      "contextPaths":["docs/research/KUCAFE_SERVICE_CLEANUP_20261008.json","src/core/sync/topMenuSync.ts"],
+      "requiredTests":["src/core/sync/topMenuExclusions.test.ts","src/core/sync/topMenuSelection.test.ts"],
+      "acceptance":["Exact four source IDs only; place IDs never confused with source IDs","Full and selected modes share exclusion enforcement","No DB rows/items/prices changed by controller","Regression tests and full hosted CI green","Exact merged SHA deployed and public smoke succeeds"],
+      "smokePaths":["/","/search"]
+    }
+  ]
+}
