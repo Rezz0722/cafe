@@ -6,7 +6,7 @@ const labels = Object.freeze({
   'retry-writing': 'اصلاح مجدد کد', blocked: 'نیازمند بررسی',
   'review-rejected': 'بازبینی رد شد', conflict: 'تداخل تغییرات',
   'deployment-failed': 'انتشار ناموفق', 'needs-evidence': 'نیازمند شاهد معتبر',
-  'needs-owner-data': 'نیازمند اطلاعات مالک', 'in-progress': 'در حال اجرا',
+  'needs-owner-data': 'نیازمند اطلاعات مالک', 'in-progress': 'فاز تکمیل‌نشده',
   researching: 'در حال تحقیق', reviewed: 'بازبینی شده',
 });
 export function statusLabel(status) { return labels[status] ?? 'وضعیت نامشخص'; }
