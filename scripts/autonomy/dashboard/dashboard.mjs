@@ -44,17 +44,18 @@ function render(data) {
   const engineering = collection(data.engineering)
   const research = collection(data.research)
   const summary = summarize({ ...data, engineering, research })
+  const engineeringComplete = summary.total > 0 && summary.completed === summary.total
+  const blocker = blockerLabel(data)
   const phaseTitle = id => phases.find(phase => phase.id === id)?.title || String(id || 'فاز ثبت نشده')
   $('code-count').textContent = `${digits.format(summary.completed)} / ${digits.format(summary.total)}`
   $('research-count').textContent = `${digits.format(summary.reviewedResearch)} / ${digits.format(research.length)}`
   $('claims-count').textContent = digits.format(summary.claims)
   $('updated').textContent = `آخرین ثبت: ${date(data.updatedAt)}`
-  $('next').textContent = data.lastReason === 'daily-engineering-budget' ? 'سقف چرخه‌های روزانه مصرف شده؛ ادامه در روز بعد تهران' : Number(data.nextEligibleAt) > Date.now() ? `${data.lastReason === 'quota-reserve' ? 'برای حفظ ذخیرهٔ مصرف، ' : ''}عامل پس از ${date(data.nextEligibleAt)} مجاز به اجراست` : 'انتظار زمانی برای عامل ثبت نشده'
+  $('next').textContent = engineeringComplete ? 'کار کدنویسی دیگری در صف مصوب فعلی ثبت نشده است.' : data.lastReason === 'daily-engineering-budget' ? 'سقف چرخه‌های روزانه مصرف شده؛ ادامه در روز بعد تهران' : Number(data.nextEligibleAt) > Date.now() ? `${data.lastReason === 'quota-reserve' ? 'برای حفظ ذخیرهٔ مصرف، ' : ''}عامل پس از ${date(data.nextEligibleAt)} مجاز به اجراست` : 'انتظار زمانی برای عامل ثبت نشده'
   const active = summary.active
-  const blocker = blockerLabel(data)
-  $('active-task').textContent = data.paused ? 'ناظر در حالت توقف است' : active ? String(active.title || phaseTitle(active.phase)) : 'کار کدنویسی فعال در این ثبت دیده نمی‌شود'
-  $('active-stage').textContent = active ? `مرحله: ${statusLabel(active.status)} · ${phaseTitle(active.phase)}` : 'نبود کار فعال، سلامت تایمر یا پایان کل پروژه را اثبات نمی‌کند.'
-  if (blocker) { $('active-task').textContent=blocker; $('active-stage').textContent='فعلاً کار تازه شروع نمی‌شود؛ وضعیت فازها به معنی اجرای لحظه‌ای نیست.'; $('next').textContent='تاریخ مجاز اجرای مدل، مانع منابع یا سقف روزانه را رفع نمی‌کند.'; }
+  $('active-task').textContent = engineeringComplete ? 'تمام کارهای کدنویسیِ صف فعلی تکمیل شده‌اند' : data.paused ? 'ناظر در حالت توقف است' : active ? String(active.title || phaseTitle(active.phase)) : 'کار کدنویسی فعال در این ثبت دیده نمی‌شود'
+  $('active-stage').textContent = active ? `مرحله: ${statusLabel(active.status)} · ${phaseTitle(active.phase)}` : engineeringComplete ? `${digits.format(summary.completed)} کار از ${digits.format(summary.total)} کار مصوب، منتشر و روی سایت تأیید شده‌اند. پژوهش و پایلوت وضعیت جداگانه دارند.` : 'نبود کار فعال، سلامت تایمر یا پایان کل پروژه را اثبات نمی‌کند.'
+  if (blocker && !engineeringComplete) { $('active-task').textContent=blocker; $('active-stage').textContent='فعلاً کار تازه شروع نمی‌شود؛ وضعیت فازها به معنی اجرای لحظه‌ای نیست.'; $('next').textContent='تاریخ مجاز اجرای مدل، مانع منابع یا سقف روزانه را رفع نمی‌کند.'; }
   $('engineering-total').textContent = `${digits.format(engineering.length)} کار ثبت‌شده`
   $('research-total').textContent = `${digits.format(research.length)} بسته ثبت‌شده`
   $('phases').replaceChildren(...phases.map((phase, index) => {
@@ -86,6 +87,7 @@ function renderTasks(id, tasks, isResearch, phaseTitle) {
     appendGithub(links, task.pr, 'مشاهدهٔ Pull Request')
     appendGithub(links, task.deployRun, 'مشاهدهٔ اجرای انتشار')
     if (links.childElementCount) item.append(links)
+    if (task.status === 'completed' && task.verifiedAt) item.append(node('p', 'task-meta', `تأیید انتشار: ${date(task.verifiedAt)}`))
     if (task.mergeSha) item.append(node('p', 'task-meta', `شناسهٔ ادغام: ${String(task.mergeSha).slice(0, 12)}`))
     return item
   }))
