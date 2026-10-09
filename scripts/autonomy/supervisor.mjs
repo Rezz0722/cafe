@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { resolve, dirname } from 'node:path';
 import { createHash } from 'node:crypto';
 import { quotaDecision, validateResearch, eligibleTask } from './policy.mjs';
+import { recordActivity } from './activity.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const stateDir = process.env.KUCAFE_AUTONOMY_STATE ?? '/var/lib/kucafe-autonomy';
@@ -15,7 +16,11 @@ const queue = JSON.parse(readFileSync(resolve(here, 'queue.json'), 'utf8'));
 const scopeHash = createHash('sha256').update(JSON.stringify(queue)).digest('hex');
 const state = existsSync(stateFile) ? JSON.parse(readFileSync(stateFile, 'utf8')) : { scopeHash, tasks: {}, day: '', cyclesToday: 0, nextEligibleAt: 0, paused: false };
 if (state.scopeHash !== scopeHash) throw Error('Queue changed; reconcile checkpoint explicitly');
+const recordedStatuses = new Map(Object.entries(state.tasks).map(([id,entry]) => [id,entry.status]));
 function save() {
+  for (const [id,entry] of Object.entries(state.tasks)) {
+    if (recordedStatuses.get(id) !== entry.status) { recordActivity('research-stage', { task:id, status:entry.status }); recordedStatuses.set(id,entry.status); }
+  }
   state.updatedAt = new Date().toISOString();
   writeFileSync(stateFile + '.tmp', JSON.stringify(state, null, 2) + '\n', { mode: 0o600 });
   renameSync(stateFile + '.tmp', stateFile);
@@ -157,7 +162,7 @@ else if (command === 'probe') {
   // Timer kills all descendants on shutdown. A previous running task becomes bounded retry.
   for (const t of Object.values(state.tasks)) if (['researching','reviewing'].includes(t.status)) t.status = t.attempts < 3 ? 'retry' : 'blocked';
   const task = eligibleTask(queue.tasks, state);
-  if (!task) { state.lastReason = 'queue-finished-or-blocked'; save(); publishStatus(); process.exit(0); }
+  if (!task) { state.lastReason = 'queue-finished-or-blocked'; recordActivity('research-empty'); save(); publishStatus(); process.exit(0); }
   let decision;
   try { decision = quotaDecision(await quota()); } catch { decision = quotaDecision(null); }
   if (!decision.allowed) { state.lastReason = decision.reason; state.nextEligibleAt = decision.retryAt; save(); publishStatus(); process.exit(0); }

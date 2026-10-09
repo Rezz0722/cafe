@@ -1,4 +1,4 @@
-import { statusLabel, phaseLabel, blockerLabel, safeGithubURL, summarize } from './view-model.mjs'
+import { statusLabel, phaseLabel, blockerLabel, safeGithubURL, summarize, activityLabel } from './view-model.mjs'
 
 const $ = id => document.getElementById(id)
 const digits = new Intl.NumberFormat('fa-IR')
@@ -93,6 +93,18 @@ function renderTasks(id, tasks, isResearch, phaseTitle) {
   }))
   if (!tasks.length) list.append(node('li', 'empty', 'هنوز کاری در این بخش ثبت نشده است؛ گزارش آخرین وضعیت را می‌توانید از پایین صفحه دریافت کنید.'))
 }
+function renderActivity(data) {
+  const rows = collection(data?.events).slice(-15).reverse()
+  $('activity').replaceChildren(...rows.map(event => {
+    const item = node('li')
+    const time = document.createElement('time')
+    time.dateTime = typeof event.at === 'string' ? event.at : ''
+    time.textContent = date(event.at)
+    item.append(node('span', '', activityLabel(event)), time)
+    return item
+  }))
+  if (!rows.length) $('activity').append(node('li', 'empty', 'هنوز رویدادی از سرویس ثبت نشده است.'))
+}
 function connection() {
   if (!snapshot) return
   const at = new Date(snapshot.updatedAt).getTime()
@@ -115,6 +127,11 @@ async function refresh() {
     lastSuccessfulFetch = Date.now()
     render(data)
     connection()
+    try {
+      const activityResponse = await fetch('./activity.json', { cache: 'no-store', signal: controller.signal, credentials: 'omit' })
+      if (!activityResponse.ok) throw new Error('activity unavailable')
+      renderActivity(await activityResponse.json())
+    } catch { $('activity').replaceChildren(node('li', 'empty', 'رویدادهای سرویس فعلاً در دسترس نیستند؛ وضعیت بالا آخرین snapshot ثبت‌شده است.')) }
     $('error').hidden = true
   } catch {
     $('connection').textContent = 'دریافت وضعیت تازه ناموفق بود'
@@ -130,7 +147,7 @@ async function refresh() {
 function schedule() {
   clearInterval(timer)
   timer = null
-  if (!document.hidden) timer = setInterval(refresh, 30000)
+  if (!document.hidden) timer = setInterval(refresh, 15000)
 }
 $('refresh').addEventListener('click', refresh)
 document.addEventListener('visibilitychange', () => { schedule(); if (!document.hidden) refresh() })

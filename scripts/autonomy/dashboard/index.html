@@ -8,7 +8,7 @@
     <title>ناظر توسعهٔ کو کافه</title>
     <link rel="icon" href="https://kucafe.ir/favicon.ico">
     <link rel="stylesheet" href="./dashboard.css">
-    <script type="module" src="./dashboard.mjs?v=20261009-completion"></script>
+    <script type="module" src="./dashboard.mjs?v=20261009-live-console"></script>
   </head>
   <body>
     <a class="skip-link" href="#main">رفتن به وضعیت پروژه</a>
@@ -27,6 +27,12 @@
         <p class="eyebrow">وضعیت صف مصوب</p><h2 id="active-heading">وضعیت کدنویسی</h2>
         <p id="active-task" class="active-title">منتظر دریافت اطلاعات</p><p id="active-stage" class="muted">پیشرفت از فایل وضعیت خوانده می‌شود؛ سلامت تایمر از این صفحه قابل اثبات نیست.</p>
       </section>
+      <section class="panel" aria-labelledby="activity-heading">
+        <div class="section-heading"><h2 id="activity-heading">رویدادهای واقعی ناظر</h2><span class="muted">ثبت‌شده توسط سرویس؛ تازه‌سازی هر ۱۵ ثانیه</span></div>
+        <p class="muted">وقتی صف کدنویسی تمام است، اجرای دوره‌ای لزوماً تغییر تازه‌ای در سایت ایجاد نمی‌کند.</p>
+        <ol id="activity" class="activity-list"><li class="empty">در حال دریافت رویدادها…</li></ol>
+        <a class="console-link" href="https://kucafe.ir/admin/autonomy">ارسال پیام و دیدن پاسخ در کنسول مدیر</a>
+      </section>
       <section class="summaries" aria-label="خلاصهٔ پیشرفت">
         <article class="panel"><h2>کارهای کدنویسی</h2><p id="code-count" class="metric" dir="ltr">—</p><p class="muted">تکمیل‌شده از کل صف ثبت‌شده</p></article>
         <article class="panel"><h2>بسته‌های تحقیق</h2><p id="research-count" class="metric" dir="ltr">—</p><p class="muted">بسته‌های بررسی‌شده؛ نه کافه‌های تأییدشده</p></article>
@@ -38,6 +44,6 @@
       <aside class="panel owner-note"><h2>موارد وابسته به مالک</h2><p>کافهٔ واقعی پایلوت، تعیین قیمت و زمان پاسخ‌گویی و آزمون QR با گوشی واقعی، با اجرای خودکار قابل جایگزینی نیستند. فاز «نیازمند اطلاعات مالک» تکمیل‌شده محسوب نمی‌شود.</p><p>این صفحه فقط خواندنی است؛ هیچ عملیات حذف، ادغام یا انتشار از اینجا اجرا نمی‌شود.</p></aside>
       <noscript><p class="error">برای نمایش داشبورد JavaScript لازم است. می‌توانید <a href="./status.json">فایل وضعیت</a> یا <a href="./latest.zip">گزارش دانلودی</a> را باز کنید.</p></noscript>
     </main>
-    <footer><nav aria-label="گزارش‌ها"><a href="./latest.zip">دانلود آخرین گزارش</a><a href="../kucafe-orchestration-v2-20261008.zip">گزارش معماری</a><a href="./status.json">مشاهدهٔ JSON</a></nav><p>در تب فعال هر ۳۰ ثانیه بررسی می‌شود. پایان CI با انتشار موفق در سایت متفاوت است.</p></footer>
+    <footer><nav aria-label="گزارش‌ها"><a href="./latest.zip">دانلود آخرین گزارش</a><a href="../kucafe-orchestration-v2-20261008.zip">گزارش معماری</a><a href="./status.json">مشاهدهٔ JSON</a></nav><p>در تب فعال هر ۱۵ ثانیه بررسی می‌شود. پایان CI با انتشار موفق در سایت متفاوت است.</p></footer>
   </body>
 </html>

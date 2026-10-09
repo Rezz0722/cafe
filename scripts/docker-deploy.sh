@@ -19,6 +19,12 @@ docker compose version >/dev/null
 [[ -r "$env_file" ]] || { echo "Production env is not readable: $env_file" >&2; exit 1; }
 [[ -d "$media_dir" && "$media_dir" != / ]] || { echo "Unsafe or missing media directory: $media_dir" >&2; exit 1; }
 mkdir -p "$backup_dir/db" "$state_dir" "$(dirname "$lock_file")"
+# Dedicated, non-public owner inbox shared only with the admin app and root controller.
+# Never mount the controller checkpoint, Codex auth, or GitHub credentials into the app.
+install -d -o 10001 -g 10001 -m 0700 /var/lib/kucafe-autonomy/owner-console
+install -d -o 10001 -g 10001 -m 0700 /var/lib/kucafe-autonomy/owner-console/messages
+install -d -o 10001 -g 10001 -m 0700 /var/lib/kucafe-autonomy/owner-console/replies
+[[ -d /var/www/html/kucafe-autonomy ]] || { echo 'Autonomy public snapshot directory is missing.' >&2; exit 1; }
 exec 9>"$lock_file"
 flock -n 9 || { echo 'Another KuCafe deployment is running.' >&2; exit 75; }
 

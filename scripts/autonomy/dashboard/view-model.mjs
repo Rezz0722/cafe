@@ -39,3 +39,22 @@ export function phaseLabel(phase, engineering = [], data = null) {
   if(tasks.length && blockerLabel(data)) return 'متوقف تا رفع مانع';
   return statusLabel(phase.status);
 }
+const activityTypes = Object.freeze({
+  'cycle-start':'نوبت زمان‌بندی‌شدهٔ ناظر آغاز شد',
+  'cycle-end':'نوبت ناظر پایان یافت؛ این رویداد به‌تنهایی نشانهٔ تغییر سایت نیست',
+  'engineering-empty':'در صف مصوب فعلی کار کدنویسی باز باقی نمانده است',
+  'research-empty':'بستهٔ تحقیق قابل‌اقدام باقی نمانده؛ شاهد تازه لازم است',
+  'message-received':'پیام مدیر برای پاسخ‌گویی دریافت شد',
+  'message-answer':'پاسخ پیام مدیر ثبت شد',
+  'message-deferred':'پاسخ پیام مدیر فعلاً به تعویق افتاد',
+});
+const roles = Object.freeze({plan:'برنامه‌ریز',writer:'نویسندهٔ کد','code-review':'بازبین مستقل','owner-chat':'پاسخ‌گوی مدیر'});
+export function activityLabel(event) {
+  if (!event || typeof event !== 'object') return 'رویداد نامشخص';
+  if (activityTypes[event.type]) return activityTypes[event.type];
+  if (event.type === 'engineering-stage') return `کار کدنویسی ${String(event.task || '')}: ${statusLabel(event.status)}`;
+  if (event.type === 'research-stage') return `بستهٔ تحقیق ${String(event.task || '')}: ${statusLabel(event.status)}`;
+  if (event.type === 'model-start') return `عامل ${roles[event.role] || 'نامشخص'} شروع به کار کرد`;
+  if (event.type === 'model-end') return `اجرای عامل ${roles[event.role] || 'نامشخص'} پایان یافت؛ نتیجه را از وضعیت کار بررسی کنید`;
+  return 'رویداد نامشخص';
+}
