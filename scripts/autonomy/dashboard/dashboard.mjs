@@ -1,4 +1,4 @@
-import { statusLabel, phaseLabel, blockerLabel, safeGithubURL, summarize, activityLabel } from './view-model.mjs?v=20261009-progress'
+import { statusLabel, phaseLabel, blockerLabel, safeGithubURL, summarize, activityLabel } from './view-model.mjs?v=20261009-owner-work'
 
 const $ = id => document.getElementById(id)
 const digits = new Intl.NumberFormat('fa-IR')
@@ -54,6 +54,10 @@ function render(data) {
   const messageWait = data.ownerMessage
   $('message-status').hidden = messageWait?.status !== 'deferred'
   if (messageWait?.status === 'deferred') $('message-status').textContent = messageWait.reason === 'quota-reserve' && messageWait.retryAt ? `پاسخ پیام مدیر به‌خاطر ذخیرهٔ سهمیهٔ مدل، زودتر از ${date(messageWait.retryAt)} ممکن نیست؛ این زمان، قولِ پاسخ قطعی نیست.` : 'پاسخ پیام مدیر فعلاً به تعویق افتاده است؛ دلیل و زمان قطعی پاسخ در دسترس نیست.'
+  if (data.ownerWork?.status === 'deferred') {
+    $('message-status').hidden = false
+    $('message-status').textContent = data.ownerWork.retryAt ? `برنامه‌ریزی درخواست توسعه تا پیش از ${date(data.ownerWork.retryAt)} مجاز نیست؛ درخواست محفوظ است و این زمان قولِ اجرا نیست.` : 'برنامه‌ریزی درخواست توسعه فعلاً به تعویق افتاده؛ درخواست محفوظ است و هنوز تسک اجرایی تأیید نشده.'
+  }
   $('next').textContent = engineeringComplete ? 'کار کدنویسی دیگری در صف مصوب فعلی ثبت نشده است.' : data.lastReason === 'daily-engineering-budget' ? 'سقف چرخه‌های روزانه مصرف شده؛ ادامه در روز بعد تهران' : Number(data.nextEligibleAt) > Date.now() ? `${data.lastReason === 'quota-reserve' ? 'برای حفظ ذخیرهٔ مصرف، ' : ''}عامل پس از ${date(data.nextEligibleAt)} مجاز به اجراست` : 'انتظار زمانی برای عامل ثبت نشده'
   const active = summary.active
   $('active-task').textContent = engineeringComplete ? 'تمام کارهای کدنویسیِ صف فعلی تکمیل شده‌اند' : data.paused ? 'ناظر در حالت توقف است' : active ? String(active.title || phaseTitle(active.phase)) : 'کار کدنویسی فعال در این ثبت دیده نمی‌شود'
@@ -112,7 +116,7 @@ function connection() {
   if (!snapshot) return
   const at = new Date(snapshot.updatedAt).getTime()
   const stale = !Number.isFinite(at) || Date.now() - at > 15 * 60 * 1000
-  $('connection').textContent = blockerLabel(snapshot) || (stale ? 'ثبت وضعیت قدیمی است؛ فعالیت فعلی تأیید نمی‌شود' : 'آخرین فایل وضعیت دریافت شد؛ سلامت تایمر جداگانه بررسی می‌شود')
+  $('connection').textContent = snapshot.runnerHealth?.status === 'offline' || snapshot.runnerHealth?.status === 'missing' ? 'Runner انتشار GitHub آفلاین است؛ CI/Deploy منتظر می‌ماند' : blockerLabel(snapshot) || (stale ? 'ثبت وضعیت قدیمی است؛ فعالیت فعلی تأیید نمی‌شود' : 'آخرین فایل وضعیت دریافت شد؛ سلامت تایمر جداگانه بررسی می‌شود')
 }
 async function refresh() {
   if (busy) return
