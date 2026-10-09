@@ -5,7 +5,7 @@ import Link from 'next/link'
 import styles from './AutonomyConsole.module.css'
 
 type Task = { id: string; phase?: string; status: string; verifiedAt?: string | null; pr?: string | null }
-type Snapshot = { updatedAt?: string; paused?: boolean; lastReason?: string | null; engineering?: Task[]; research?: Task[] }
+type Snapshot = { updatedAt?: string; paused?: boolean; lastReason?: string | null; engineering?: Task[]; research?: Task[]; ownerMessage?: { status: string; reason?: string | null; retryAt?: number | null } }
 type Event = { id: string; at: string; type: string; task?: string | null; status?: string | null; role?: string | null }
 type Message = { id: string; text: string; createdAt: string; answer: string | null; answeredAt: string | null }
 type ConsoleData = { snapshot: Snapshot; activity: { events?: Event[] }; messages: Message[]; fetchedAt: string }
@@ -83,6 +83,7 @@ export function AutonomyConsole() {
   const events = Array.isArray(data?.activity?.events) ? data.activity.events.slice(-25).reverse() : []
   const latestEventAt = events.length ? Date.parse(events[0].at) : NaN
   const activityDelayed = !Number.isFinite(latestEventAt) || Date.now() - latestEventAt > 15 * 60 * 1000
+  const messageWait = snapshot?.ownerMessage
 
   return <main className={styles.wrap} dir="rtl">
     <header className={styles.head}>
@@ -109,6 +110,7 @@ export function AutonomyConsole() {
       <section className={styles.card} aria-labelledby="chat-heading">
         <div className={styles.sectionHead}><h2 id="chat-heading">پیام به ناظر</h2><span>فقط برای مدیر واردشده</span></div>
         <p className={styles.hint} id="chat-help">سؤال یا درخواستت را بنویس. پیام ثبت می‌شود و ناظر در نوبت بعدی، اگر دسترسی مدل برقرار باشد، پاسخ می‌دهد. درخواست جدید به‌تنهایی مجوز اجرای تغییر حساس یا گسترش صف کدنویسی نیست.</p>
+        {messageWait?.status === 'deferred' && <p className={styles.delayed} role="status">{messageWait.reason === 'quota-reserve' && messageWait.retryAt ? `پاسخ در انتظار ذخیرهٔ سهمیهٔ مدل است؛ زودتر از ${at(new Date(messageWait.retryAt).toISOString())} ممکن نیست. این زمان، قول پاسخ قطعی نیست.` : 'پاسخ‌گویی فعلاً به تعویق افتاده است؛ زمان قطعی ثبت نشده.'}</p>}
         <form onSubmit={send} className={styles.form}>
           <label htmlFor="owner-message">پیام شما</label>
           <textarea id="owner-message" value={text} onChange={event => setText(event.target.value)} maxLength={2000} minLength={2} required rows={4} aria-describedby="chat-help chat-feedback" placeholder="الان دقیقاً چه کاری مانده و چرا شروع نشده؟" />

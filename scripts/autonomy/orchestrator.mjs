@@ -35,6 +35,7 @@ function publish(){
  if(!existsSync(publicDir))return;
  const research=existsSync(resolve(dir,'state.json'))?JSON.parse(readFileSync(resolve(dir,'state.json'),'utf8')):{tasks:{}};
  const snapshot={version:2,updatedAt:state.updatedAt,paused:existsSync(resolve(dir,'PAUSE')),nextEligibleAt:state.nextEligibleAt,lastReason:state.lastReason??null,
+  ownerMessage:state.ownerMessage??{status:'idle'},
   phases:roadmap.phases.map(p=>({id:p.id,title:p.title,status:p.external?'needs-owner-data':p.research?(Object.values(research.tasks).some(t=>t.status==='needs-evidence')?'needs-evidence':'pending'):(p.tasks.every(id=>state.tasks[id]?.status==='completed')?'completed':'in-progress')})),
   engineering:roadmap.tasks.map(t=>({id:t.id,phase:t.phase,status:state.tasks[t.id]?.status??'pending',pr:state.tasks[t.id]?.pr??null,mergeSha:state.tasks[t.id]?.mergeSha??null,deployRun:state.tasks[t.id]?.deployRun??null,verifiedAt:state.tasks[t.id]?.verifiedAt??null,reason:state.tasks[t.id]?.reason??null})),
   research:researchQueue.tasks.map(t=>({id:t.id,status:research.tasks[t.id]?.status??'pending',claims:research.tasks[t.id]?.claims??0,pr:research.tasks[t.id]?.pr??null})),
@@ -199,7 +200,7 @@ async function tick(){
  }
  // While hosted CI/deploy waits or code tasks finish, continue approved research independently.
  const e=task?state.tasks[task.id]:null;
- await answerNextOwnerMessage({agent,quota,quotaDecision,snapshot:{updatedAt:state.updatedAt,engineering:roadmap.tasks.map(t=>({id:t.id,status:state.tasks[t.id]?.status??'pending'})),research:researchQueue.tasks.map(t=>({id:t.id})),lastReason:state.lastReason??null}});
+ state.ownerMessage=await answerNextOwnerMessage({agent,quota,quotaDecision,snapshot:{updatedAt:state.updatedAt,engineering:roadmap.tasks.map(t=>({id:t.id,status:state.tasks[t.id]?.status??'pending'})),research:researchQueue.tasks.map(t=>({id:t.id})),lastReason:state.lastReason??null}});
  if(!paused()&&(!task||['awaiting-ci','awaiting-deploy','completed','blocked','review-rejected'].includes(e.status))){
   const r=spawnSync('node',[resolve(here,'supervisor.mjs'),'tick'],{timeout:20*60000,encoding:'utf8',maxBuffer:100000,env:{...process.env,KUCAFE_AUTONOMY_EMBEDDED:'1'}});
   if(r.status!==0)state.lastResearchReason='research-tick-incomplete';
