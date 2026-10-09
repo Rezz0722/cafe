@@ -1,0 +1,16 @@
+{
+  "type": "object",
+  "properties": {
+    "decision": { "type": "string", "enum": ["task", "needs-data", "research-needed", "unsafe"] },
+    "answer": { "type": "string" },
+    "goal": { "type": "string" },
+    "evidence": { "type": "string" },
+    "paths": { "type": "array", "items": { "type": "string" } },
+    "contextPaths": { "type": "array", "items": { "type": "string" } },
+    "requiredTests": { "type": "array", "items": { "type": "string" } },
+    "acceptance": { "type": "array", "items": { "type": "string" } },
+    "smokePaths": { "type": "array", "items": { "type": "string" } }
+  },
+  "required": ["decision", "answer", "goal", "evidence", "paths", "contextPaths", "requiredTests", "acceptance", "smokePaths"],
+  "additionalProperties": false
+}

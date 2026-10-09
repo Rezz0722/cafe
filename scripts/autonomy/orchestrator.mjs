@@ -8,6 +8,9 @@ import { quotaDecision } from './policy.mjs';
 import { hash, validatePatch, selectTask, ciDecision, canMerge, canCarryReview } from './engineering-policy.mjs';
 import { recordActivity } from './activity.mjs';
 import { answerNextOwnerMessage } from './owner-chat.mjs';
+import { processNextOwnerWork, loadDynamicTasks } from './owner-work.mjs';
+import { safeOwnerFileList } from './owner-work-policy.mjs';
+import { runnerHealth } from './runner-health.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const dir = '/var/lib/kucafe-autonomy';
@@ -15,6 +18,20 @@ const publicDir = '/var/www/html/kucafe-autonomy';
 const file = resolve(dir,'orchestration.json');
 const roadmap = JSON.parse(readFileSync(resolve(here,'roadmap.json'),'utf8'));
 const researchQueue = JSON.parse(readFileSync(resolve(here,'queue.json'),'utf8'));
+const dynamicTaskFile = resolve(dir,'owner-work-tasks.json');
+function currentRoadmap(){
+ const dynamic = loadDynamicTasks(dynamicTaskFile, []);
+ state.dynamicTaskHashes ??={};
+ for(const task of dynamic){
+  const fingerprint=hash(task);
+  if(state.dynamicTaskHashes[task.id]&&state.dynamicTaskHashes[task.id]!==fingerprint)throw Error('Dynamic task changed after admission');
+  state.dynamicTaskHashes[task.id]=fingerprint;
+ }
+ if(Object.keys(state.dynamicTaskHashes).some(id=>!dynamic.some(task=>task.id===id)))throw Error('Admitted dynamic task missing');
+ return { ...roadmap,
+  phases:dynamic.length?[...roadmap.phases,{id:'owner-work',title:'درخواست‌های توسعهٔ مدیر',tasks:dynamic.map(t=>t.id)}]:roadmap.phases,
+  tasks:[...roadmap.tasks,...dynamic] };
+}
 mkdirSync(dir,{recursive:true,mode:0o700});
 const state = existsSync(file) ? JSON.parse(readFileSync(file,'utf8')) : {version:2,scopeHash:hash(roadmap),tasks:{},nextEligibleAt:0,day:'',cyclesToday:0};
 if(state.scopeHash!==hash(roadmap)) throw Error('Approved roadmap changed: explicit reconciliation required');
@@ -26,6 +43,7 @@ function command(cmd,args,input,timeout=45000){
 }
 function api(endpoint,payload,method){return JSON.parse(command('gh',['api',`repos/Rezz0722/cafe/${endpoint}`,...(payload||method?['--method',method??'POST','--input','-']:[])],payload||method?JSON.stringify(payload??{}):undefined));}
 function save(){
+ currentRoadmap(); // Persist newly admitted task fingerprints in this checkpoint.
  for(const [id,entry] of Object.entries(state.tasks)) {
   if(recordedStatuses.get(id)!==entry.status){recordActivity('engineering-stage',{task:id,status:entry.status});recordedStatuses.set(id,entry.status);}
  }
@@ -33,11 +51,13 @@ function save(){
 }
 function publish(){
  if(!existsSync(publicDir))return;
+ const current=currentRoadmap();
  const research=existsSync(resolve(dir,'state.json'))?JSON.parse(readFileSync(resolve(dir,'state.json'),'utf8')):{tasks:{}};
  const snapshot={version:2,updatedAt:state.updatedAt,paused:existsSync(resolve(dir,'PAUSE')),nextEligibleAt:state.nextEligibleAt,lastReason:state.lastReason??null,
   ownerMessage:state.ownerMessage??{status:'idle'},
-  phases:roadmap.phases.map(p=>({id:p.id,title:p.title,status:p.external?'needs-owner-data':p.research?(Object.values(research.tasks).some(t=>t.status==='needs-evidence')?'needs-evidence':'pending'):(p.tasks.every(id=>state.tasks[id]?.status==='completed')?'completed':'in-progress')})),
-  engineering:roadmap.tasks.map(t=>({id:t.id,phase:t.phase,status:state.tasks[t.id]?.status??'pending',pr:state.tasks[t.id]?.pr??null,mergeSha:state.tasks[t.id]?.mergeSha??null,deployRun:state.tasks[t.id]?.deployRun??null,verifiedAt:state.tasks[t.id]?.verifiedAt??null,reason:state.tasks[t.id]?.reason??null})),
+  phases:current.phases.map(p=>({id:p.id,title:p.title,status:p.external?'needs-owner-data':p.research?(Object.values(research.tasks).some(t=>t.status==='needs-evidence')?'needs-evidence':'pending'):(p.tasks.every(id=>state.tasks[id]?.status==='completed')?'completed':'in-progress')})),
+  engineering:current.tasks.map(t=>({id:t.id,phase:t.phase,status:state.tasks[t.id]?.status??'pending',pr:state.tasks[t.id]?.pr??null,mergeSha:state.tasks[t.id]?.mergeSha??null,deployRun:state.tasks[t.id]?.deployRun??null,verifiedAt:state.tasks[t.id]?.verifiedAt??null,reason:state.tasks[t.id]?.reason??null})),
+  ownerWork:state.ownerWork??{status:'idle'},runnerHealth:state.runnerHealth??{status:'unknown'},
   research:researchQueue.tasks.map(t=>({id:t.id,status:research.tasks[t.id]?.status??'pending',claims:research.tasks[t.id]?.claims??0,pr:research.tasks[t.id]?.pr??null})),
   policy:'Automatic coding/review/CI/normal merge/deployment verification for approved tasks. No DB purge/migration/billing/owner impersonation.'};
  const out=resolve(publicDir,'status.json');writeFileSync(out+'.tmp',JSON.stringify(snapshot,null,2)+'\n',{mode:0o644});chmodSync(out+'.tmp',0o644);renameSync(out+'.tmp',out);
@@ -58,7 +78,7 @@ function sourceAt(task,sha){
  const context={};
  for(const path of [...task.paths,...task.contextPaths]){
   try{const f=api(`contents/${path}?ref=${sha}`);if(f.type!=='file'||f.size>140000||f.encoding!=='base64')throw Error('Unsafe source');context[path]=Buffer.from(f.content,'base64').toString('utf8');}
-  catch(error){if(error.notFound&&task.paths.includes(path)&&path.includes('topMenuExclusions'))context[path]='';else throw error;}
+  catch(error){if(error.notFound&&task.paths.includes(path)&&(path.includes('topMenuExclusions')||(task.sourceMessageId&&task.requiredTests.includes(path))))context[path]='';else throw error;}
  }
  if(Buffer.byteLength(JSON.stringify(context))>200000)throw Error('Context exceeds budget');
  return context;
@@ -77,6 +97,7 @@ async function produce(task,e){
  const work=resolve(dir,'engineering',task.id);mkdirSync(work,{recursive:true,mode:0o700});
  if(!e.baseSha){e.baseSha=api('git/ref/heads/production').object.sha;e.status='planning';save();}
  const originals=sourceAt(task,e.baseSha);
+ if(task.sourceMessageId&&hash(originals)!==task.approvedContextHash){e.status='conflict';e.reason='owner-plan-source-changed';save();return;}
  const context=JSON.stringify({task,source:originals});
  if(!e.plan){e.plan=await model('plan',rules+'Plan the smallest implementation and regression tests. Do not implement yet.\n'+context,resolve(work,'plan.json'),180000);e.status='writing';save();}
  if(paused())return;
@@ -130,7 +151,7 @@ function publishPatch(task,e){
  let prs=api(`pulls?state=all&head=Rezz0722:${branch}`);
  let pr=prs.find(p=>p.head.sha===e.headSha&&p.base.ref==='production');
  if(paused())return;
- if(!pr)pr=api('pulls',{title:`Auto: ${task.goal.slice(0,90)}`,head:branch,base:'production',body:`Approved task ${task.id}. Planner + independent code writer + reviewer. Patch hash ${e.patchHash}. Scope: ${task.paths.join(', ')}. Full hosted CI required; normal exact-head merge only. No migrations/DB writes/paid APIs.`});
+ if(!pr)pr=api('pulls',{title:task.sourceMessageId?'Auto: bounded owner-requested change':`Auto: ${task.goal.slice(0,90)}`,head:branch,base:'production',body:`Approved task ${task.id}. Planner + independent code writer + reviewer. Patch hash ${e.patchHash}. Scope: ${task.paths.join(', ')}. Full hosted CI required; normal exact-head merge only. No migrations/DB writes/paid APIs.`});
  e.pr=pr.html_url;e.prNumber=pr.number;e.status='awaiting-ci';e.waitStartedAt=Date.now();save();
 }
 function checkPR(task,e){
@@ -181,9 +202,10 @@ async function tick(){
  recordActivity('cycle-start');
  try {
  if(paused()){publish();return;}
+ try{state.runnerHealth=runnerHealth(api('actions/runners'));}catch{state.runnerHealth={status:'unknown',busy:false,observedAt:new Date().toISOString()};}
  if(freeDisk()<2*1024**3){state.lastReason='disk-below-reserve';save();return;}
  if(state.lastReason==='disk-below-reserve'){state.lastReason=null;save();}
- const task=selectTask(roadmap,state);
+ const task=selectTask(currentRoadmap(),state);
  if(!task)recordActivity('engineering-empty');
  if(task){
   const e=state.tasks[task.id]??{status:'pending',attempts:0};state.tasks[task.id]=e;
@@ -200,7 +222,10 @@ async function tick(){
  }
  // While hosted CI/deploy waits or code tasks finish, continue approved research independently.
  const e=task?state.tasks[task.id]:null;
- state.ownerMessage=await answerNextOwnerMessage({agent,quota,quotaDecision,snapshot:{updatedAt:state.updatedAt,engineering:roadmap.tasks.map(t=>({id:t.id,status:state.tasks[t.id]?.status??'pending'})),research:researchQueue.tasks.map(t=>({id:t.id})),lastReason:state.lastReason??null}});
+ state.ownerWork=await processNextOwnerWork({agent,quota,quotaDecision,
+  getPaths:()=>{const tree=api('git/trees/production?recursive=1');if(tree.truncated||!Array.isArray(tree.tree))throw Error('Incomplete GitHub tree');return safeOwnerFileList(tree.tree.filter(row=>row.type==='blob').map(row=>row.path));},
+  getBaseSha:()=>api('git/ref/heads/production').object.sha,sourceAt});
+ state.ownerMessage=await answerNextOwnerMessage({agent,quota,quotaDecision,snapshot:{updatedAt:state.updatedAt,engineering:currentRoadmap().tasks.map(t=>({id:t.id,status:state.tasks[t.id]?.status??'pending'})),research:researchQueue.tasks.map(t=>({id:t.id})),lastReason:state.lastReason??null}});
  if(!paused()&&(!task||['awaiting-ci','awaiting-deploy','completed','blocked','review-rejected'].includes(e.status))){
   const r=spawnSync('node',[resolve(here,'supervisor.mjs'),'tick'],{timeout:20*60000,encoding:'utf8',maxBuffer:100000,env:{...process.env,KUCAFE_AUTONOMY_EMBEDDED:'1'}});
   if(r.status!==0)state.lastResearchReason='research-tick-incomplete';

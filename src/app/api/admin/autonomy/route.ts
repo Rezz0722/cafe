@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdminRead } from '@/core/admin/access'
 import { queueConsoleMessage, readConsole } from '@/core/autonomy/consoleStore'
-import { sameOrigin, validateConsoleMessage } from '@/core/autonomy/consolePolicy'
+import { sameOrigin, validateConsoleMessage, validateConsoleMessageKind } from '@/core/autonomy/consolePolicy'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -39,7 +39,9 @@ export async function POST(request: NextRequest) {
   } catch { return json({ error: 'بدنهٔ درخواست معتبر نیست.' }, 400) }
   const text = validateConsoleMessage(body && typeof body === 'object' && !Array.isArray(body) ? (body as Record<string, unknown>).message : null)
   if (!text) return json({ error: 'پیام باید بین ۲ تا ۲۰۰۰ نویسه باشد.' }, 400)
-  try { return json({ ok: true, queued: await queueConsoleMessage(text, access.user.id) }, 202) }
+  const kind = validateConsoleMessageKind(body && typeof body === 'object' && !Array.isArray(body) ? (body as Record<string, unknown>).kind ?? 'question' : null)
+  if (!kind) return json({ error: 'نوع درخواست معتبر نیست.' }, 400)
+  try { return json({ ok: true, queued: await queueConsoleMessage(text, access.user.id, kind) }, 202) }
   catch (error) {
     if (error instanceof Error && error.message === 'too-many-pending') return json({ error: 'حداکثر پنج پیام بی‌پاسخ در صف است؛ پس از پاسخ‌گویی دوباره ارسال کنید.' }, 429)
     return json({ error: 'ثبت پیام ممکن نشد؛ دوباره تلاش کنید.' }, 503)

@@ -86,7 +86,7 @@ export async function quota() {
 export async function agent(role, prompt, output, timeoutMs) {
   return new Promise((done, fail) => {
     const disabled = ['shell_tool', 'unified_exec', 'apps', 'plugins', 'tool_suggest', 'multi_agent', 'image_generation', 'view_image', 'browser_use'];
-    const p = spawn('codex', ['--no-daemon', ...disabled.flatMap(name => ['--disable', name]), '--search', 'exec', '--ignore-user-config', '--sandbox', 'read-only', '--ephemeral', '--color', 'never', '--json', '-c', 'agents.enabled=false', '-C', source, '--output-schema', resolve(here, `${role}.schema.json`), '-o', output, '-'], {
+    const p = spawn('codex', ['--no-daemon', ...disabled.flatMap(name => ['--disable', name]), ...(role === 'research' ? ['--search'] : []), 'exec', '--ignore-user-config', '--sandbox', 'read-only', '--ephemeral', '--color', 'never', '--json', '-c', 'agents.enabled=false', '-C', source, '--output-schema', resolve(here, `${role}.schema.json`), '-o', output, '-'], {
       cwd: source, detached: true, stdio: ['pipe', 'pipe', 'ignore'],
       env: { PATH: process.env.PATH, HOME: process.env.HOME, LANG: 'C.UTF-8' }
     });

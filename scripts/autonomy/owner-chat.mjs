@@ -11,7 +11,8 @@ export function validateOwnerMessage(value) {
   if (typeof value.id !== 'string' || !namePattern.test(`${value.id}.json`)) return null;
   if (typeof value.text !== 'string' || value.text.length < 2 || value.text.length > 2000) return null;
   if (typeof value.createdAt !== 'string' || !Number.isFinite(Date.parse(value.createdAt))) return null;
-  return { id: value.id, text: value.text, createdAt: value.createdAt };
+  if (value.kind !== undefined && !['question', 'work'].includes(value.kind)) return null;
+  return { id: value.id, text: value.text, createdAt: value.createdAt, kind: value.kind ?? 'question' };
 }
 
 export async function answerNextOwnerMessage({ agent, quota, quotaDecision, snapshot, bridgeDir = bridge, record = recordActivity }) {
@@ -24,7 +25,7 @@ export async function answerNextOwnerMessage({ agent, quota, quotaDecision, snap
     let message;
     try { message = validateOwnerMessage(JSON.parse(readFileSync(resolve(inbox, name), 'utf8'))); }
     catch { continue; }
-    if (!message || `${message.id}.json` !== name) continue;
+    if (!message || message.kind !== 'question' || `${message.id}.json` !== name) continue;
     let decision;
     try { decision = quotaDecision(await quota()); } catch { decision = { allowed: false }; }
     if (!decision.allowed) { record('message-deferred', { status: decision.reason }); return { status: 'deferred', reason: decision.reason || 'quota-unknown', retryAt: Number.isFinite(decision.retryAt) ? decision.retryAt : null }; }

@@ -5,15 +5,16 @@ import Link from 'next/link'
 import styles from './AutonomyConsole.module.css'
 
 type Task = { id: string; phase?: string; status: string; verifiedAt?: string | null; pr?: string | null }
-type Snapshot = { updatedAt?: string; paused?: boolean; lastReason?: string | null; engineering?: Task[]; research?: Task[]; ownerMessage?: { status: string; reason?: string | null; retryAt?: number | null } }
+type Snapshot = { updatedAt?: string; paused?: boolean; lastReason?: string | null; engineering?: Task[]; research?: Task[]; ownerMessage?: { status: string; reason?: string | null; retryAt?: number | null }; ownerWork?: { status: string; reason?: string | null; retryAt?: number | null; taskId?: string | null }; runnerHealth?: { status: string; busy?: boolean; observedAt?: string } }
 type Event = { id: string; at: string; type: string; task?: string | null; status?: string | null; role?: string | null }
-type Message = { id: string; text: string; createdAt: string; answer: string | null; answeredAt: string | null }
+type Message = { id: string; text: string; kind: 'question' | 'work'; createdAt: string; answer: string | null; answeredAt: string | null; workStatus: string | null; taskId: string | null }
 type ConsoleData = { snapshot: Snapshot; activity: { events?: Event[] }; messages: Message[]; fetchedAt: string }
 
 const fa = new Intl.NumberFormat('fa-IR')
 const dateFormatter = new Intl.DateTimeFormat('fa-IR', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Tehran' })
 const taskLabels: Record<string, string> = { 'search-sort': 'اصلاح ترتیب جست‌وجو', 'source-exclusions': 'جلوگیری از بازگشت مجموعه‌های خدماتی', 'review-a': 'پژوهش ۱', 'review-b': 'پژوهش ۲', 'review-c': 'پژوهش ۳', 'review-d': 'پژوهش ۴' }
-const statusLabels: Record<string, string> = { completed: 'منتشر و تأیید شده', planning: 'در حال برنامه‌ریزی', writing: 'در حال کدنویسی', reviewing: 'در حال بازبینی', 'awaiting-ci': 'منتظر CI', 'awaiting-deploy': 'منتظر انتشار', researching: 'در حال تحقیق', 'needs-evidence': 'نیازمند شاهد معتبر', pending: 'در صف', blocked: 'مسدود', retry: 'تلاش دوباره' }
+const taskName = (id: string) => taskLabels[id] || (id.startsWith('owner-') ? 'درخواست توسعهٔ مدیر' : id)
+const statusLabels: Record<string, string> = { completed: 'منتشر و تأیید شده', planning: 'در حال برنامه‌ریزی', writing: 'در حال کدنویسی', reviewing: 'در حال بازبینی', 'awaiting-ci': 'منتظر CI', 'awaiting-deploy': 'منتظر انتشار', researching: 'در حال تحقیق', 'needs-evidence': 'نیازمند شاهد معتبر', pending: 'در صف', blocked: 'مسدود', retry: 'تلاش دوباره', queued: 'به صف اضافه شد', 'needs-data': 'نیازمند داده', 'research-needed': 'نیازمند تحقیق', unsafe: 'خارج از محدودهٔ خودکار', 'needs-operator': 'نیازمند بررسی اپراتور' }
 
 function at(value?: string | null) {
   const parsed = value ? new Date(value) : null
@@ -24,7 +25,7 @@ function eventText(event: Event) {
   if (event.type === 'cycle-end') return 'نوبت ناظر پایان یافت؛ لزوماً تغییری در سایت ایجاد نشده'
   if (event.type === 'engineering-empty') return 'کار کدنویسیِ باز در صف مصوب باقی نمانده'
   if (event.type === 'research-empty') return 'پژوهشِ قابل اقدام باقی نمانده؛ شواهد تازه لازم است'
-  if (event.type === 'engineering-stage' || event.type === 'research-stage') return `${taskLabels[event.task || ''] || event.task || 'کار'}: ${statusLabels[event.status || ''] || event.status || 'وضعیت نامشخص'}`
+  if (event.type === 'engineering-stage' || event.type === 'research-stage') return `${taskName(event.task || 'کار')}: ${statusLabels[event.status || ''] || event.status || 'وضعیت نامشخص'}`
   if (event.type === 'model-start') return `عامل ${event.role || 'نامشخص'} شروع کرد`
   if (event.type === 'model-end') return `اجرای عامل ${event.role || 'نامشخص'} پایان یافت؛ نتیجه را در وضعیت کار ببینید`
   if (event.type === 'model-progress') {
@@ -34,6 +35,8 @@ function eventText(event: Event) {
   if (event.type === 'message-received') return 'ناظر پیام مدیر را دریافت کرد'
   if (event.type === 'message-answer') return 'پاسخ پیام مدیر ثبت شد'
   if (event.type === 'message-deferred') return 'پاسخ پیام مدیر به تعویق افتاد'
+  if (event.type === 'work-deferred') return 'برنامه‌ریزی درخواست توسعه به تعویق افتاد'
+  if (event.type === 'work-stage') return `درخواست توسعه: ${statusLabels[event.status || ''] || event.status || 'وضعیت نامشخص'}`
   return 'رویداد ثبت‌شده با نوع نامشخص'
 }
 
@@ -41,6 +44,7 @@ export function AutonomyConsole() {
   const [data, setData] = useState<ConsoleData | null>(null)
   const [error, setError] = useState('')
   const [text, setText] = useState('')
+  const [messageKind, setMessageKind] = useState<'question' | 'work'>('question')
   const [sending, setSending] = useState(false)
   const [notice, setNotice] = useState('')
   const busy = useRef(false)
@@ -69,11 +73,11 @@ export function AutonomyConsole() {
     if (sending) return
     setSending(true); setNotice('')
     try {
-      const response = await fetch('/api/admin/autonomy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: text }) })
+      const response = await fetch('/api/admin/autonomy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: text, kind: messageKind }) })
       const result = await response.json() as { error?: string }
       if (!response.ok) throw new Error(result.error || 'پیام ثبت نشد.')
       setText('')
-      setNotice('پیام ثبت شد. پاسخ پس از نوبت بعدی ناظر و در صورت دسترسی مدل همین‌جا نمایش داده می‌شود.')
+      setNotice(messageKind === 'work' ? 'درخواست ثبت شد. برنامه‌ریز در نوبت بعدی محدوده و ریسک آن را بررسی می‌کند؛ ثبت درخواست به معنی شروع کدنویسی نیست.' : 'پیام ثبت شد. پاسخ پس از نوبت بعدی ناظر و در صورت دسترسی مدل همین‌جا نمایش داده می‌شود.')
       await refresh()
     } catch (reason) { setNotice(reason instanceof Error ? reason.message : 'ثبت پیام ناموفق بود.') }
     finally { setSending(false) }
@@ -88,6 +92,7 @@ export function AutonomyConsole() {
   const latestEventAt = events.length ? Date.parse(events[0].at) : NaN
   const activityDelayed = !Number.isFinite(latestEventAt) || Date.now() - latestEventAt > 15 * 60 * 1000
   const messageWait = snapshot?.ownerMessage
+  const workWait = snapshot?.ownerWork
 
   return <main className={styles.wrap} dir="rtl">
     <header className={styles.head}>
@@ -99,10 +104,12 @@ export function AutonomyConsole() {
       <div className={styles.sectionHead}><h2 id="now-heading">الان چه خبر است؟</h2><span>آخرین ثبت: {at(snapshot?.updatedAt)}</span></div>
       {!data ? <p role="status">در حال دریافت دادهٔ واقعی ناظر…</p> : <>
         <p className={activityDelayed ? styles.delayed : styles.fresh} role="status">{activityDelayed ? 'رویداد تازه‌ای در ۱۵ دقیقهٔ اخیر ثبت نشده؛ اجرای فعلی قابل تأیید نیست.' : `آخرین رویداد سرویس: ${at(events[0]?.at)}. این فقط تازگی گزارش را نشان می‌دهد، نه سلامت قطعی تایمر.`}</p>
-        <p className={styles.primaryStatus}>{snapshot?.paused ? 'ناظر متوقف شده است' : active ? `${taskLabels[active.id] || active.id} — ${statusLabels[active.status] || active.status}` : allDone ? 'اکنون کار کدنویسی در جریان نیست؛ صف مصوب فعلی تمام شده است' : 'در این ثبت کار کدنویسی فعالی دیده نمی‌شود'}</p>
+        <p className={styles.primaryStatus}>{snapshot?.paused ? 'ناظر متوقف شده است' : active ? `${taskName(active.id)} — ${statusLabels[active.status] || active.status}` : allDone ? 'اکنون کار کدنویسی در جریان نیست؛ صف مصوب فعلی تمام شده است' : 'در این ثبت کار کدنویسی فعالی دیده نمی‌شود'}</p>
         <p className={styles.explain}>{allDone ? `${fa.format(completed)} کار از ${fa.format(engineering.length)} کار کدنویسیِ مصوب منتشر و تأیید شده‌اند. این پایان کل پروژه نیست.` : `کدنویسی تکمیل‌شده: ${fa.format(completed)} از ${fa.format(engineering.length)}.`}</p>
         <p className={styles.explain}>پژوهش و پایلوت هنوز تکمیل نشده‌اند. پژوهشِ بی‌شاهد به‌عنوان نتیجهٔ معتبر یا تغییر سایت حساب نمی‌شود.</p>
         {snapshot?.lastReason && <p className={styles.reason}>دلیل ثبت‌شدهٔ آخرین توقف/انتظار: <code dir="ltr">{snapshot.lastReason}</code></p>}
+        {snapshot?.runnerHealth && <p className={snapshot.runnerHealth.status === 'online' ? styles.fresh : styles.delayed}>Runner انتشار GitHub: {snapshot.runnerHealth.status === 'online' ? snapshot.runnerHealth.busy ? 'آنلاین و مشغول' : 'آنلاین و آماده' : snapshot.runnerHealth.status === 'offline' ? 'آفلاین؛ CI/انتشار منتظر می‌ماند' : 'وضعیت قابل‌تأیید نیست'} · بررسی: {at(snapshot.runnerHealth.observedAt)}</p>}
+        {workWait?.status === 'deferred' && <p className={styles.delayed}>برنامه‌ریزی درخواست توسعه فعلاً به تعویق افتاده است{workWait.retryAt ? `؛ زودتر از ${at(new Date(workWait.retryAt).toISOString())} مجاز نیست` : ''}. درخواست محفوظ می‌ماند و اجرای کد هنوز شروع نشده است.</p>}
       </>}
     </section>
     <div className={styles.columns}>
@@ -113,15 +120,30 @@ export function AutonomyConsole() {
       </section>
       <section className={styles.card} aria-labelledby="chat-heading">
         <div className={styles.sectionHead}><h2 id="chat-heading">پیام به ناظر</h2><span>فقط برای مدیر واردشده</span></div>
-        <p className={styles.hint} id="chat-help">سؤال یا درخواستت را بنویس. پیام ثبت می‌شود و ناظر در نوبت بعدی، اگر دسترسی مدل برقرار باشد، پاسخ می‌دهد. درخواست جدید به‌تنهایی مجوز اجرای تغییر حساس یا گسترش صف کدنویسی نیست.</p>
+        <p className={styles.hint} id="chat-help">برای سؤال، پاسخ وضعیت بگیر؛ برای تغییر محصول، «درخواست توسعه» را انتخاب کن. برنامه‌ریز فقط تغییر کوچک و قابل‌آزمون را پس از بازبینی مستقل وارد صف کدنویسی می‌کند. درخواست حساس یا بی‌شاهد اجرا نمی‌شود.</p>
         {messageWait?.status === 'deferred' && <p className={styles.delayed} role="status">{messageWait.reason === 'quota-reserve' && messageWait.retryAt ? `پاسخ در انتظار ذخیرهٔ سهمیهٔ مدل است؛ زودتر از ${at(new Date(messageWait.retryAt).toISOString())} ممکن نیست. این زمان، قول پاسخ قطعی نیست.` : 'پاسخ‌گویی فعلاً به تعویق افتاده است؛ زمان قطعی ثبت نشده.'}</p>}
         <form onSubmit={send} className={styles.form}>
+          <label htmlFor="owner-message-kind">نوع پیام</label>
+          <select id="owner-message-kind" value={messageKind} onChange={event => setMessageKind(event.target.value as 'question' | 'work')}>
+            <option value="question">سؤال از ناظر</option>
+            <option value="work">درخواست توسعهٔ محصول</option>
+          </select>
           <label htmlFor="owner-message">پیام شما</label>
           <textarea id="owner-message" value={text} onChange={event => setText(event.target.value)} maxLength={2000} minLength={2} required rows={4} aria-describedby="chat-help chat-feedback" placeholder="الان دقیقاً چه کاری مانده و چرا شروع نشده؟" />
           <button type="submit" disabled={sending || text.trim().length < 2}>{sending ? 'در حال ثبت…' : 'ارسال پیام'}</button>
           <p id="chat-feedback" role="status">{notice || 'پاسخِ تأییدنشده یا ساختگی نمایش داده نمی‌شود.'}</p>
         </form>
-        <ol className={styles.messages}>{data?.messages.length ? data.messages.map(message => <li key={message.id}><p className={styles.question}>{message.text}</p><time dateTime={message.createdAt}>{at(message.createdAt)}</time><p className={message.answer ? styles.answer : styles.pending}>{message.answer || 'در صف پاسخ؛ هنوز جوابی ثبت نشده است.'}</p>{message.answeredAt && <time dateTime={message.answeredAt}>پاسخ: {at(message.answeredAt)}</time>}</li>) : <li className={styles.hint}>هنوز پیامی ثبت نشده است.</li>}</ol>
+        <ol className={styles.messages}>{data?.messages.length ? data.messages.map(message => {
+          const linkedTask = engineering.find(task => task.id === message.taskId)
+          return <li key={message.id}>
+            <p className={styles.question}>{message.kind === 'work' ? 'درخواست توسعه · ' : 'سؤال · '}{message.text}</p>
+            <time dateTime={message.createdAt}>{at(message.createdAt)}</time>
+            <p className={message.answer ? styles.answer : styles.pending}>{message.answer || (message.kind === 'work' ? 'در صف برنامه‌ریزی؛ هنوز تسک اجرایی ثبت نشده است.' : 'در صف پاسخ؛ هنوز جوابی ثبت نشده است.')}</p>
+            {message.workStatus && <p className={styles.workState}>وضعیت درخواست: {message.workStatus === 'queued' ? 'طرح محدود به صف اضافه شد' : message.workStatus === 'needs-data' ? 'نیازمند دادهٔ بیشتر' : message.workStatus === 'research-needed' ? 'نیازمند تحقیق با شاهد' : message.workStatus === 'unsafe' ? 'خارج از محدودهٔ اجرای خودکار' : 'نیازمند بررسی اپراتور'}</p>}
+            {linkedTask && <p className={styles.workState}>وضعیت اجرای تسک: {statusLabels[linkedTask.status] || linkedTask.status}{linkedTask.pr && /^https:\/\/github\.com\/Rezz0722\/cafe\/pull\/\d+$/.test(linkedTask.pr) && <> · <a href={linkedTask.pr} target="_blank" rel="noopener noreferrer">مشاهدهٔ PR</a></>}</p>}
+            {message.answeredAt && <time dateTime={message.answeredAt}>پاسخ: {at(message.answeredAt)}</time>}
+          </li>
+        }) : <li className={styles.hint}>هنوز پیامی ثبت نشده است.</li>}</ol>
       </section>
     </div>
     <p className={styles.footnote}>این کنسول سلامت تایمر را صرفاً از روی رسیدن رویدادهای تازه نشان می‌دهد؛ دسترسی به دادهٔ خصوصی، مجوز اجرای خودکار عملیات پرریسک نیست.</p>

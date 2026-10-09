@@ -8,6 +8,9 @@ const labels = Object.freeze({
   'deployment-failed': 'انتشار ناموفق', 'needs-evidence': 'نیازمند شاهد معتبر',
   'needs-owner-data': 'نیازمند اطلاعات مالک', 'in-progress': 'فاز تکمیل‌نشده',
   researching: 'در حال تحقیق', reviewed: 'بازبینی شده',
+  queued: 'به صف اضافه شد', 'research-needed': 'نیازمند تحقیق با شاهد',
+  'needs-data': 'نیازمند دادهٔ بیشتر', unsafe: 'خارج از محدودهٔ اجرای خودکار',
+  'needs-operator': 'نیازمند بررسی اپراتور',
 });
 export function statusLabel(status) { return labels[status] ?? 'وضعیت نامشخص'; }
 export function stageIndex(status) {
@@ -47,8 +50,9 @@ const activityTypes = Object.freeze({
   'message-received':'پیام مدیر برای پاسخ‌گویی دریافت شد',
   'message-answer':'پاسخ پیام مدیر ثبت شد',
   'message-deferred':'پاسخ پیام مدیر فعلاً به تعویق افتاد',
+  'work-deferred':'برنامه‌ریزی درخواست مدیر موقتاً به تعویق افتاد',
 });
-const roles = Object.freeze({plan:'برنامه‌ریز',writer:'نویسندهٔ کد','code-review':'بازبین مستقل','owner-chat':'پاسخ‌گوی مدیر'});
+const roles = Object.freeze({plan:'برنامه‌ریز', 'owner-plan':'برنامه‌ریز درخواست مدیر', writer:'نویسندهٔ کد','code-review':'بازبین مستقل','owner-chat':'پاسخ‌گوی مدیر'});
 const progress = Object.freeze({
   'turn-started':'نوبت مدل آغاز شد', 'turn-completed':'پاسخ مدل آماده شد', 'turn-failed':'نوبت مدل ناموفق بود',
   'analyzing-started':'در حال تحلیل', 'analyzing-completed':'تحلیل مرحله‌ای تمام شد',
@@ -60,6 +64,7 @@ export function activityLabel(event) {
   if (activityTypes[event.type]) return activityTypes[event.type];
   if (event.type === 'engineering-stage') return `کار کدنویسی ${String(event.task || '')}: ${statusLabel(event.status)}`;
   if (event.type === 'research-stage') return `بستهٔ تحقیق ${String(event.task || '')}: ${statusLabel(event.status)}`;
+  if (event.type === 'work-stage') return `درخواست توسعه ${String(event.task || '')}: ${statusLabel(event.status)}`;
   if (event.type === 'model-start') return `عامل ${roles[event.role] || 'نامشخص'} شروع به کار کرد`;
   if (event.type === 'model-end') return `اجرای عامل ${roles[event.role] || 'نامشخص'} پایان یافت؛ نتیجه را از وضعیت کار بررسی کنید`;
   if (event.type === 'model-progress') return `${roles[event.role] || 'عامل'}: ${progress[event.status] || 'پیشرفت داخلی ثبت شد'}`;
