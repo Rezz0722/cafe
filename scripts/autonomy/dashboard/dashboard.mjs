@@ -1,4 +1,4 @@
-import { statusLabel, phaseLabel, blockerLabel, safeGithubURL, summarize, activityLabel } from './view-model.mjs?v=20261009-live-console'
+import { statusLabel, phaseLabel, blockerLabel, safeGithubURL, summarize, activityLabel } from './view-model.mjs?v=20261009-progress'
 
 const $ = id => document.getElementById(id)
 const digits = new Intl.NumberFormat('fa-IR')

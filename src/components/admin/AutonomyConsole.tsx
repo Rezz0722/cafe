@@ -27,6 +27,10 @@ function eventText(event: Event) {
   if (event.type === 'engineering-stage' || event.type === 'research-stage') return `${taskLabels[event.task || ''] || event.task || 'کار'}: ${statusLabels[event.status || ''] || event.status || 'وضعیت نامشخص'}`
   if (event.type === 'model-start') return `عامل ${event.role || 'نامشخص'} شروع کرد`
   if (event.type === 'model-end') return `اجرای عامل ${event.role || 'نامشخص'} پایان یافت؛ نتیجه را در وضعیت کار ببینید`
+  if (event.type === 'model-progress') {
+    const progress: Record<string, string> = { 'turn-started': 'نوبت مدل آغاز شد', 'analyzing-started': 'در حال تحلیل', 'analyzing-completed': 'تحلیل مرحله‌ای تمام شد', 'searching-started': 'در حال جست‌وجوی منبع', 'searching-completed': 'جست‌وجوی مرحله‌ای تمام شد', 'preparing-output-started': 'در حال آماده‌کردن خروجی', 'preparing-output-completed': 'خروجی مرحله‌ای آماده شد', 'turn-completed': 'پاسخ مدل آماده شد', 'turn-failed': 'نوبت مدل ناموفق بود' }
+    return `${event.role || 'عامل'}: ${progress[event.status || ''] || 'پیشرفت داخلی ثبت شد'}`
+  }
   if (event.type === 'message-received') return 'ناظر پیام مدیر را دریافت کرد'
   if (event.type === 'message-answer') return 'پاسخ پیام مدیر ثبت شد'
   if (event.type === 'message-deferred') return 'پاسخ پیام مدیر به تعویق افتاد'

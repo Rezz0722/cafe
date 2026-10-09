@@ -5,6 +5,7 @@ import { resolve, dirname } from 'node:path';
 import { createHash } from 'node:crypto';
 import { quotaDecision, validateResearch, eligibleTask } from './policy.mjs';
 import { recordActivity } from './activity.mjs';
+import { parseAgentEventLine } from './agent-events.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const stateDir = process.env.KUCAFE_AUTONOMY_STATE ?? '/var/lib/kucafe-autonomy';
@@ -85,9 +86,27 @@ export async function quota() {
 export async function agent(role, prompt, output, timeoutMs) {
   return new Promise((done, fail) => {
     const disabled = ['shell_tool', 'unified_exec', 'apps', 'plugins', 'tool_suggest', 'multi_agent', 'image_generation', 'view_image', 'browser_use'];
-    const p = spawn('codex', ['--no-daemon', ...disabled.flatMap(name => ['--disable', name]), '--search', 'exec', '--ignore-user-config', '--sandbox', 'read-only', '--ephemeral', '--color', 'never', '-c', 'agents.enabled=false', '-C', source, '--output-schema', resolve(here, `${role}.schema.json`), '-o', output, '-'], {
-      cwd: source, detached: true, stdio: ['pipe', 'ignore', 'ignore'],
+    const p = spawn('codex', ['--no-daemon', ...disabled.flatMap(name => ['--disable', name]), '--search', 'exec', '--ignore-user-config', '--sandbox', 'read-only', '--ephemeral', '--color', 'never', '--json', '-c', 'agents.enabled=false', '-C', source, '--output-schema', resolve(here, `${role}.schema.json`), '-o', output, '-'], {
+      cwd: source, detached: true, stdio: ['pipe', 'pipe', 'ignore'],
       env: { PATH: process.env.PATH, HOME: process.env.HOME, LANG: 'C.UTF-8' }
+    });
+    let eventBuffer = '';
+    let progressCount = 0;
+    p.stdout.on('data', chunk => {
+      eventBuffer += chunk.toString('utf8');
+      // JSONL contains private prompts, tool arguments and model text. Keep only
+      // fixed labels; do not retain or log malformed/oversized lines.
+      if (eventBuffer.length > 256 * 1024 && !eventBuffer.includes('\n')) { eventBuffer = ''; return; }
+      let end;
+      while ((end = eventBuffer.indexOf('\n')) >= 0) {
+        const line = eventBuffer.slice(0, end); eventBuffer = eventBuffer.slice(end + 1);
+        const status = parseAgentEventLine(line);
+        if (status && (progressCount < 80 || status === 'turn-failed' || status === 'turn-completed')) {
+          progressCount++;
+          recordActivity('model-progress', { role, status });
+        }
+      }
+      if (eventBuffer.length > 256 * 1024) eventBuffer = '';
     });
     let timedOut = false;
     const timer = setTimeout(() => { timedOut = true; try { process.kill(-p.pid, 'SIGTERM'); } catch {} }, timeoutMs);

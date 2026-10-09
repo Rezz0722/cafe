@@ -8,7 +8,7 @@ const publicFile = '/var/www/html/kucafe-autonomy/activity.json';
 const allowedTypes = new Set([
   'cycle-start', 'cycle-end', 'engineering-stage', 'engineering-empty',
   'research-stage', 'research-empty', 'model-start', 'model-end',
-  'message-received', 'message-answer', 'message-deferred',
+  'message-received', 'message-answer', 'message-deferred', 'model-progress',
 ]);
 const token = value => typeof value === 'string' && /^[a-z0-9][a-z0-9-]{0,60}$/.test(value) ? value : null;
 
