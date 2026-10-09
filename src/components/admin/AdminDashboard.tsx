@@ -250,6 +250,7 @@ export function AdminDashboard({ data }: { data: AdminData }) {
           </p>
         </div>
         <div className={styles.headActions}>
+          <Link href="/admin/autonomy" className={styles.headLink}>ناظر توسعه</Link>
           <Link href="/admin/leads" className={styles.headLink}>درخواست‌های پنل</Link>
           <Link href={paths.adminExperiences} className={styles.headLink}>
             پوشش تجربه‌ها

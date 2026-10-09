@@ -6,6 +6,8 @@ import { fileURLToPath } from 'node:url';
 import { agent, quota } from './supervisor.mjs';
 import { quotaDecision } from './policy.mjs';
 import { hash, validatePatch, selectTask, ciDecision, canMerge, canCarryReview } from './engineering-policy.mjs';
+import { recordActivity } from './activity.mjs';
+import { answerNextOwnerMessage } from './owner-chat.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const dir = '/var/lib/kucafe-autonomy';
@@ -16,13 +18,19 @@ const researchQueue = JSON.parse(readFileSync(resolve(here,'queue.json'),'utf8')
 mkdirSync(dir,{recursive:true,mode:0o700});
 const state = existsSync(file) ? JSON.parse(readFileSync(file,'utf8')) : {version:2,scopeHash:hash(roadmap),tasks:{},nextEligibleAt:0,day:'',cyclesToday:0};
 if(state.scopeHash!==hash(roadmap)) throw Error('Approved roadmap changed: explicit reconciliation required');
+const recordedStatuses = new Map(Object.entries(state.tasks).map(([id,entry]) => [id,entry.status]));
 function command(cmd,args,input,timeout=45000){
  const r=spawnSync(cmd,args,{encoding:'utf8',timeout,maxBuffer:3*1024*1024,input});
  if(r.error||r.status!==0) {const error=Error(`${cmd} operation failed`);error.notFound=cmd==='gh' && /HTTP 404/.test(r.stderr??'');throw error;}
  return r.stdout.trim();
 }
 function api(endpoint,payload,method){return JSON.parse(command('gh',['api',`repos/Rezz0722/cafe/${endpoint}`,...(payload||method?['--method',method??'POST','--input','-']:[])],payload||method?JSON.stringify(payload??{}):undefined));}
-function save(){state.updatedAt=new Date().toISOString();writeFileSync(file+'.tmp',JSON.stringify(state,null,2)+'\n',{mode:0o600});renameSync(file+'.tmp',file);publish();}
+function save(){
+ for(const [id,entry] of Object.entries(state.tasks)) {
+  if(recordedStatuses.get(id)!==entry.status){recordActivity('engineering-stage',{task:id,status:entry.status});recordedStatuses.set(id,entry.status);}
+ }
+ state.updatedAt=new Date().toISOString();writeFileSync(file+'.tmp',JSON.stringify(state,null,2)+'\n',{mode:0o600});renameSync(file+'.tmp',file);publish();
+}
 function publish(){
  if(!existsSync(publicDir))return;
  const research=existsSync(resolve(dir,'state.json'))?JSON.parse(readFileSync(resolve(dir,'state.json'),'utf8')):{tasks:{}};
@@ -60,7 +68,8 @@ async function model(role,prompt,output,timeout,beforeStart){
  if(!q.allowed){state.nextEligibleAt=q.retryAt;state.lastReason=q.reason;save();throw Error('Quota reserve reached; checkpoint retained');}
  if(paused())throw Error('Paused before model');
  beforeStart?.();
- return agent(role,prompt,output,timeout);
+ recordActivity('model-start',{role});
+ try{return await agent(role,prompt,output,timeout);}finally{recordActivity('model-end',{role});}
 }
 
 async function produce(task,e){
@@ -168,10 +177,13 @@ function checkDeployment(task,e){
 }
 
 async function tick(){
+ recordActivity('cycle-start');
+ try {
  if(paused()){publish();return;}
  if(freeDisk()<2*1024**3){state.lastReason='disk-below-reserve';save();return;}
  if(state.lastReason==='disk-below-reserve'){state.lastReason=null;save();}
  const task=selectTask(roadmap,state);
+ if(!task)recordActivity('engineering-empty');
  if(task){
   const e=state.tasks[task.id]??{status:'pending',attempts:0};state.tasks[task.id]=e;
   if(['awaiting-ci','awaiting-deploy','merge-requested'].includes(e.status)&&e.waitStartedAt&&Date.now()-e.waitStartedAt>24*3600000){e.status='blocked';e.reason='workflow-wait-exceeded-24h-needs-reconciliation';save();return;}
@@ -187,12 +199,14 @@ async function tick(){
  }
  // While hosted CI/deploy waits or code tasks finish, continue approved research independently.
  const e=task?state.tasks[task.id]:null;
+ await answerNextOwnerMessage({agent,quota,quotaDecision,snapshot:{updatedAt:state.updatedAt,engineering:roadmap.tasks.map(t=>({id:t.id,status:state.tasks[t.id]?.status??'pending'})),research:researchQueue.tasks.map(t=>({id:t.id})),lastReason:state.lastReason??null}});
  if(!paused()&&(!task||['awaiting-ci','awaiting-deploy','completed','blocked','review-rejected'].includes(e.status))){
   const r=spawnSync('node',[resolve(here,'supervisor.mjs'),'tick'],{timeout:20*60000,encoding:'utf8',maxBuffer:100000,env:{...process.env,KUCAFE_AUTONOMY_EMBEDDED:'1'}});
   if(r.status!==0)state.lastResearchReason='research-tick-incomplete';
  }
  save();
  console.log(JSON.stringify({task:task?.id??null,status:e?.status??'research-or-external-gate',updatedAt:state.updatedAt}));
+ } finally {recordActivity('cycle-end');}
 }
 const mode=process.argv[2]??'tick';
 if(mode==='status')console.log(JSON.stringify(state,null,2));

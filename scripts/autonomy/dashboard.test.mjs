@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {statusLabel,stageIndex,safeGithubURL,summarize,phaseLabel,blockerLabel} from './dashboard/view-model.mjs';
+import {statusLabel,stageIndex,safeGithubURL,summarize,phaseLabel,blockerLabel,activityLabel} from './dashboard/view-model.mjs';
 test('resource blockers supersede open phase and expired quota reset',()=>{
  assert.match(blockerLabel({lastReason:'disk-below-reserve'}),/مسدود/);
  assert.equal(phaseLabel({id:'p',status:'in-progress'},[{phase:'p',status:'needs-review'}],{lastReason:'disk-below-reserve'}),'متوقف تا رفع مانع');
@@ -19,4 +19,9 @@ test('waiting dependencies are shown queued and unknown values not invented',()=
  assert.equal(phaseLabel({id:'p',status:'in-progress'},[{phase:'p',status:'pending'}]),'در صف');
  assert.equal(statusLabel('made-up'),'وضعیت نامشخص');assert.equal(summarize(null).total,0);
  assert.equal(summarize({research:[{claims:-1},{claims:1.5},{claims:'3'}]}).claims,0);
+});
+test('activity wording does not claim cycle completion changed production',()=>{
+ assert.match(activityLabel({type:'cycle-end'}),/به‌تنهایی/);
+ assert.match(activityLabel({type:'engineering-empty'}),/کار کدنویسی باز باقی نمانده/);
+ assert.match(activityLabel({type:'model-end',role:'writer'}),/نتیجه را از وضعیت کار بررسی کنید/);
 });

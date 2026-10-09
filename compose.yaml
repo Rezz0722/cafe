@@ -24,6 +24,13 @@ services:
       - type: bind
         source: ${KUCAFE_MEDIA_DIR:-/var/www/kucafe/public/media}
         target: /app/public/media
+      - type: bind
+        source: ${KUCAFE_AUTONOMY_PUBLIC_DIR:-/var/www/html/kucafe-autonomy}
+        target: /app/autonomy-public
+        read_only: true
+      - type: bind
+        source: ${KUCAFE_AUTONOMY_CONSOLE_DIR:-/var/lib/kucafe-autonomy/owner-console}
+        target: /app/autonomy-console
     restart: unless-stopped
     stop_grace_period: 30s
     healthcheck:
