@@ -26,6 +26,64 @@ test('unknown or missing source rejects partial apply', () => {
   assert.throws(() => selectTopMenuCafes(cafes, parseTopMenuSelection('selected', [12, 999])))
 })
 
+const excludedCafes = [162, 248, 711, 731].map(id => ({ 'شناسه': id, 'نام مجموعه': `منبع ${id}` }))
+
+test('full selection excludes exactly confirmed sources without mutating raw data', () => {
+  const rawItems = [{ name: 'قهوه', price: 123456 }, { name: 'چای', price: null }]
+  const first = { ...cafes[0]!, rawItems }
+  const source = [excludedCafes[0]!, first, excludedCafes[1]!, cafes[1]!, ...excludedCafes.slice(2)]
+  const before = JSON.stringify(source)
+  const result = selectTopMenuCafes(source, { scope: 'all', sourceIds: [] })
+  assert.deepEqual(result, [first, cafes[1]])
+  assert.notEqual(result, source)
+  assert.equal(result[0], first)
+  assert.equal(result[1], cafes[1])
+  assert.equal(first.rawItems, rawItems)
+  assert.equal(JSON.stringify(source), before)
+  assert.deepEqual(selectTopMenuCafes(excludedCafes, { scope: 'all', sourceIds: [] }), [])
+  const empty: typeof cafes = []
+  assert.equal(selectTopMenuCafes(empty, { scope: 'all', sourceIds: [] }), empty)
+})
+
+test('every excluded selected source errors whether present or absent', () => {
+  for (const id of [162, 248, 711, 731]) {
+    for (const source of [[], cafes, [...cafes, ...excludedCafes]]) {
+      const before = JSON.stringify(source)
+      for (const ids of [[id], [25, id], [id, id], [999, id]]) {
+        assert.throws(() => selectTopMenuCafes(source, { scope: 'selected', sourceIds: ids }),
+          { message: `شناسه‌های منبع انتخاب‌شده به‌دلیل تأیید غیرکافه بودن از همگام‌سازی مستثنا هستند: ${id}؛ هیچ تغییری اعمال نشد.` })
+      }
+      assert.equal(JSON.stringify(source), before)
+    }
+  }
+})
+
+test('blocked errors identify all requested excluded IDs once in selection order', () => {
+  assert.throws(() => selectTopMenuCafes(cafes, {
+    scope: 'selected', sourceIds: [731, 162, 731, 248, 711],
+  }), { message: 'شناسه‌های منبع انتخاب‌شده به‌دلیل تأیید غیرکافه بودن از همگام‌سازی مستثنا هستند: 731، 162، 248، 711؛ هیچ تغییری اعمال نشد.' })
+})
+
+test('selection validation still runs before exclusion enforcement', () => {
+  assert.throws(() => selectTopMenuCafes(cafes, { scope: 'selected', sourceIds: [162, 0] }),
+    { message: 'شناسهٔ کافه‌های انتخاب‌شده معتبر نیست.' })
+  assert.throws(() => selectTopMenuCafes(cafes, { scope: 'selected', sourceIds: Array(1001).fill(162) }),
+    { message: 'حداقل یک کافه را انتخاب کنید؛ حداکثر ۱۰۰۰ کافه.' })
+  assert.throws(() => selectTopMenuCafes(cafes, { scope: 'all', sourceIds: [162] }),
+    { message: 'انتخاب همه با فهرست کافه‌ها ناسازگار است.' })
+})
+
+test('archived place IDs remain legitimate source IDs and selected order is preserved', () => {
+  const allowed = [92, 172, 403, 425, 161, 163, 247, 249, 710, 712, 730, 732]
+    .map(id => ({ 'شناسه': id, 'نام مجموعه': `کافه ${id}` }))
+  assert.equal(selectTopMenuCafes(allowed, { scope: 'all', sourceIds: [] }), allowed)
+  const result = selectTopMenuCafes([...excludedCafes, ...allowed], {
+    scope: 'selected', sourceIds: allowed.map(cafe => cafe['شناسه']).reverse(),
+  })
+  assert.deepEqual(result, allowed)
+  result.forEach((cafe, index) => assert.equal(cafe, allowed[index]))
+})
+
 // ── حضور در منبع ────────────────────────────────────────────────────────────
 // رگرسیونِ واقعی: منبع سه مجموعه را حذف کرده بود، آن‌ها در کاتالوگِ دیتابیس
 // ماندند، و یک انتخابِ ۳۵۲تایی کل اجرا را می‌کشت.
