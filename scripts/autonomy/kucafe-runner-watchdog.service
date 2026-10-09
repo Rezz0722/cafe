@@ -1,0 +1,16 @@
+[Unit]
+Description=Bounded health recovery for KuCafe GitHub production runner
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/bin/bash /opt/kucafe-autonomy/scripts/autonomy/runner-watchdog.sh
+TimeoutStartSec=1min
+UMask=0077
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=true
+ReadWritePaths=/var/lib/kucafe-autonomy /run/lock

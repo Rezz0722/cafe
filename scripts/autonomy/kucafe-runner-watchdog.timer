@@ -1,0 +1,11 @@
+[Unit]
+Description=Check KuCafe GitHub production runner every five minutes
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=5min
+Persistent=true
+Unit=kucafe-runner-watchdog.service
+
+[Install]
+WantedBy=timers.target
