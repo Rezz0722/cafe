@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
   if (!text) return json({ error: 'پیام باید بین ۲ تا ۲۰۰۰ نویسه باشد.' }, 400)
   try { return json({ ok: true, queued: await queueConsoleMessage(text, access.user.id) }, 202) }
   catch (error) {
-    if (error instanceof Error && ['inbox-full', 'too-many-pending'].includes(error.message)) return json({ error: 'صف پیام‌ها پر است؛ پس از پاسخ‌گویی دوباره ارسال کنید.' }, 429)
+    if (error instanceof Error && error.message === 'too-many-pending') return json({ error: 'حداکثر پنج پیام بی‌پاسخ در صف است؛ پس از پاسخ‌گویی دوباره ارسال کنید.' }, 429)
     return json({ error: 'ثبت پیام ممکن نشد؛ دوباره تلاش کنید.' }, 503)
   }
 }

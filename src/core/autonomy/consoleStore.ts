@@ -1,7 +1,7 @@
 import 'server-only'
 
 import { randomUUID } from 'node:crypto'
-import { readFile, readdir, writeFile } from 'node:fs/promises'
+import { access, readFile, readdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { MESSAGE_FILE } from './consolePolicy'
 
@@ -42,10 +42,9 @@ export async function readConsole() {
 
 export async function queueConsoleMessage(text: string, actorId: string) {
   const files = (await readdir(join(privateDir, 'messages'))).filter(name => MESSAGE_FILE.test(name))
-  if (files.length >= 100) throw new Error('inbox-full')
   let pending = 0
   for (const name of files) {
-    try { await readFile(join(privateDir, 'replies', name)); }
+    try { await access(join(privateDir, 'replies', name)); }
     catch { pending += 1 }
   }
   if (pending >= 5) throw new Error('too-many-pending')
