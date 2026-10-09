@@ -51,6 +51,9 @@ function render(data) {
   $('research-count').textContent = `${digits.format(summary.reviewedResearch)} / ${digits.format(research.length)}`
   $('claims-count').textContent = digits.format(summary.claims)
   $('updated').textContent = `آخرین ثبت: ${date(data.updatedAt)}`
+  const messageWait = data.ownerMessage
+  $('message-status').hidden = messageWait?.status !== 'deferred'
+  if (messageWait?.status === 'deferred') $('message-status').textContent = messageWait.reason === 'quota-reserve' && messageWait.retryAt ? `پاسخ پیام مدیر به‌خاطر ذخیرهٔ سهمیهٔ مدل، زودتر از ${date(messageWait.retryAt)} ممکن نیست؛ این زمان، قولِ پاسخ قطعی نیست.` : 'پاسخ پیام مدیر فعلاً به تعویق افتاده است؛ دلیل و زمان قطعی پاسخ در دسترس نیست.'
   $('next').textContent = engineeringComplete ? 'کار کدنویسی دیگری در صف مصوب فعلی ثبت نشده است.' : data.lastReason === 'daily-engineering-budget' ? 'سقف چرخه‌های روزانه مصرف شده؛ ادامه در روز بعد تهران' : Number(data.nextEligibleAt) > Date.now() ? `${data.lastReason === 'quota-reserve' ? 'برای حفظ ذخیرهٔ مصرف، ' : ''}عامل پس از ${date(data.nextEligibleAt)} مجاز به اجراست` : 'انتظار زمانی برای عامل ثبت نشده'
   const active = summary.active
   $('active-task').textContent = engineeringComplete ? 'تمام کارهای کدنویسیِ صف فعلی تکمیل شده‌اند' : data.paused ? 'ناظر در حالت توقف است' : active ? String(active.title || phaseTitle(active.phase)) : 'کار کدنویسی فعال در این ثبت دیده نمی‌شود'

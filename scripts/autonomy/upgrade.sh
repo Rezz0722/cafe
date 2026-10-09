@@ -18,15 +18,18 @@ if [[ "$released" != "$revision" ]]; then
   echo 'Verified controller-only diff; independent protected controller upgrade, not app release'
 fi
 [[ -d /opt/kucafe-autonomy && -d /var/lib/kucafe-autonomy ]] || exit 1
-[[ "$(systemctl show kucafe-autonomy.service --property=ActiveState --value)" == inactive ]] || { echo 'Wait for active tick' >&2; exit 1; }
 backup_dir="/var/lib/kucafe-autonomy/releases/$revision"
 [[ ! -e "$backup_dir" ]] || { echo 'Existing snapshot: reconcile before repeating' >&2; exit 1; }
+# Stop future timer firings BEFORE checking activity or copying source. The old
+# order left a race where a tick could start while the new controller was unpacked.
+systemctl stop kucafe-autonomy.timer
+trap 'systemctl start kucafe-autonomy.timer' ERR
+[[ "$(systemctl show kucafe-autonomy.service --property=ActiveState --value)" == inactive ]] || { systemctl start kucafe-autonomy.timer; echo 'Wait for active tick' >&2; exit 1; }
 install -d -m 0700 "$backup_dir"
 tar -czf "$backup_dir/previous-source.tgz" -C /opt/kucafe-autonomy scripts/autonomy docs/KUCAFE_AUTONOMY_FA.md
 cp /etc/systemd/system/kucafe-autonomy.service "$backup_dir/previous.service"
 cp /etc/systemd/system/kucafe-autonomy.timer "$backup_dir/previous.timer"
 if [[ -f /etc/systemd/system/kucafe-autonomy-maintenance.service ]]; then cp /etc/systemd/system/kucafe-autonomy-maintenance.service "$backup_dir/previous-maintenance.service"; fi
-systemctl stop kucafe-autonomy.timer
 exec 9>/var/lib/kucafe-autonomy/run.lock
 flock -n 9 || { systemctl start kucafe-autonomy.timer; exit 1; }
 rollback_on_error() {
