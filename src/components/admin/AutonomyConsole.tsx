@@ -81,6 +81,8 @@ export function AutonomyConsole() {
   const allDone = engineering.length > 0 && completed === engineering.length
   const active = engineering.find(task => !['completed', 'pending', 'blocked', 'conflict', 'deployment-failed'].includes(task.status))
   const events = Array.isArray(data?.activity?.events) ? data.activity.events.slice(-25).reverse() : []
+  const latestEventAt = events.length ? Date.parse(events[0].at) : NaN
+  const activityDelayed = !Number.isFinite(latestEventAt) || Date.now() - latestEventAt > 15 * 60 * 1000
 
   return <main className={styles.wrap} dir="rtl">
     <header className={styles.head}>
@@ -91,6 +93,7 @@ export function AutonomyConsole() {
     <section className={styles.statusCard} aria-labelledby="now-heading">
       <div className={styles.sectionHead}><h2 id="now-heading">الان چه خبر است؟</h2><span>آخرین ثبت: {at(snapshot?.updatedAt)}</span></div>
       {!data ? <p role="status">در حال دریافت دادهٔ واقعی ناظر…</p> : <>
+        <p className={activityDelayed ? styles.delayed : styles.fresh} role="status">{activityDelayed ? 'رویداد تازه‌ای در ۱۵ دقیقهٔ اخیر ثبت نشده؛ اجرای فعلی قابل تأیید نیست.' : `آخرین رویداد سرویس: ${at(events[0]?.at)}. این فقط تازگی گزارش را نشان می‌دهد، نه سلامت قطعی تایمر.`}</p>
         <p className={styles.primaryStatus}>{snapshot?.paused ? 'ناظر متوقف شده است' : active ? `${taskLabels[active.id] || active.id} — ${statusLabels[active.status] || active.status}` : allDone ? 'اکنون کار کدنویسی در جریان نیست؛ صف مصوب فعلی تمام شده است' : 'در این ثبت کار کدنویسی فعالی دیده نمی‌شود'}</p>
         <p className={styles.explain}>{allDone ? `${fa.format(completed)} کار از ${fa.format(engineering.length)} کار کدنویسیِ مصوب منتشر و تأیید شده‌اند. این پایان کل پروژه نیست.` : `کدنویسی تکمیل‌شده: ${fa.format(completed)} از ${fa.format(engineering.length)}.`}</p>
         <p className={styles.explain}>پژوهش و پایلوت هنوز تکمیل نشده‌اند. پژوهشِ بی‌شاهد به‌عنوان نتیجهٔ معتبر یا تغییر سایت حساب نمی‌شود.</p>

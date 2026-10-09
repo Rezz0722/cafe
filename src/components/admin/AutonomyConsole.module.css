@@ -17,6 +17,7 @@
 .sectionHead h2{font-size:19px;text-wrap:balance}
 .sectionHead span,.hint,.explain,.footnote{color:var(--c-ink-3);font-size:13px;line-height:1.9}
 .primaryStatus{font-size:20px;font-weight:800;line-height:1.7;margin:12px 0 4px;text-wrap:balance}
+.fresh,.delayed{font-size:13px;margin:10px 0 0;line-height:1.8}.fresh{color:var(--c-ink-3)}.delayed{border:1px solid var(--c-border);border-radius:10px;padding:8px 10px;color:var(--c-ink)}
 .explain{margin:4px 0}
 .reason{margin-top:12px;font-size:13px;overflow-wrap:anywhere}
 .reason code{background:var(--c-surface-4);border-radius:5px;padding:2px 5px}

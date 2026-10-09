@@ -108,7 +108,7 @@ function renderActivity(data) {
 function connection() {
   if (!snapshot) return
   const at = new Date(snapshot.updatedAt).getTime()
-  const stale = !Number.isFinite(at) || Date.now() - at > 2 * 60 * 60 * 1000
+  const stale = !Number.isFinite(at) || Date.now() - at > 15 * 60 * 1000
   $('connection').textContent = blockerLabel(snapshot) || (stale ? 'ثبت وضعیت قدیمی است؛ فعالیت فعلی تأیید نمی‌شود' : 'آخرین فایل وضعیت دریافت شد؛ سلامت تایمر جداگانه بررسی می‌شود')
 }
 async function refresh() {
