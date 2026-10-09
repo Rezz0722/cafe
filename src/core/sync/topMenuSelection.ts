@@ -1,4 +1,5 @@
 import type { RawCafe } from '../import/source'
+import { isTopMenuSourceExcluded } from './topMenuExclusions'
 
 export interface TopMenuSelection { scope: 'all' | 'selected'; sourceIds: number[] }
 export interface TopMenuTarget {
@@ -43,7 +44,12 @@ export function parseTopMenuSelection(scope: unknown, ids: unknown): TopMenuSele
 
 export function selectTopMenuCafes(cafes: RawCafe[], selection: TopMenuSelection): RawCafe[] {
   const parsed = parseTopMenuSelection(selection.scope, selection.sourceIds)
-  if (parsed.scope === 'all') return cafes
+  if (parsed.scope === 'all') {
+    if (!cafes.some(cafe => isTopMenuSourceExcluded(Number(cafe['شناسه'])))) return cafes
+    return cafes.filter(cafe => !isTopMenuSourceExcluded(Number(cafe['شناسه'])))
+  }
+  const blocked = parsed.sourceIds.filter(isTopMenuSourceExcluded)
+  if (blocked.length) throw new Error(`شناسه‌های منبع انتخاب‌شده به‌دلیل تأیید غیرکافه بودن از همگام‌سازی مستثنا هستند: ${blocked.join('، ')}؛ هیچ تغییری اعمال نشد.`)
   const requested = new Set(parsed.sourceIds)
   const selected = cafes.filter(cafe => requested.has(Number(cafe['شناسه'])))
   const found = new Set(selected.map(cafe => Number(cafe['شناسه'])))
