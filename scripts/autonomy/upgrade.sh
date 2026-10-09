@@ -14,7 +14,17 @@ released="$(< /var/lib/kucafe/current-revision)"
 if [[ "$released" != "$revision" ]]; then
   # Controller-only deployment is independent from the Next application; never skip app changes.
   comparison="$(gh api "repos/Rezz0722/cafe/compare/$released...$revision" --jq '{status,total_commits,files:[.files[]|{filename}]}')"
-  node --input-type=module -e 'const {isControllerOnlyComparison}=await import(process.argv[1]); if(!isControllerOnlyComparison(JSON.parse(process.argv[2]))) process.exit(1)' "$source_repo/scripts/autonomy/engineering-policy.mjs" "$comparison" || { echo 'Application changes present/uncertain: wait for exact app release' >&2; exit 1; }
+  # Evaluate the policy from the exact protected revision. The source checkout may
+  # still be on an older branch after fetch, so importing it would reject a valid
+  # controller-only release (or apply stale rules to a new one).
+  git -C "$source_repo" show "$revision:scripts/autonomy/engineering-policy.mjs" |
+    node --input-type=module -e '
+      const chunks=[];
+      for await (const chunk of process.stdin) chunks.push(chunk);
+      const source=Buffer.concat(chunks).toString("utf8");
+      const {isControllerOnlyComparison}=await import("data:text/javascript;base64,"+Buffer.from(source).toString("base64"));
+      if(!isControllerOnlyComparison(JSON.parse(process.argv[1]))) process.exit(1);
+    ' "$comparison" || { echo 'Application changes present/uncertain: wait for exact app release' >&2; exit 1; }
   echo 'Verified controller-only diff; independent protected controller upgrade, not app release'
 fi
 [[ -d /opt/kucafe-autonomy && -d /var/lib/kucafe-autonomy ]] || exit 1
