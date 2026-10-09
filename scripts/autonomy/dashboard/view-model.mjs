@@ -49,6 +49,12 @@ const activityTypes = Object.freeze({
   'message-deferred':'پاسخ پیام مدیر فعلاً به تعویق افتاد',
 });
 const roles = Object.freeze({plan:'برنامه‌ریز',writer:'نویسندهٔ کد','code-review':'بازبین مستقل','owner-chat':'پاسخ‌گوی مدیر'});
+const progress = Object.freeze({
+  'turn-started':'نوبت مدل آغاز شد', 'turn-completed':'پاسخ مدل آماده شد', 'turn-failed':'نوبت مدل ناموفق بود',
+  'analyzing-started':'در حال تحلیل', 'analyzing-completed':'تحلیل مرحله‌ای تمام شد',
+  'searching-started':'در حال جست‌وجوی منبع', 'searching-completed':'جست‌وجوی مرحله‌ای تمام شد',
+  'preparing-output-started':'در حال آماده‌کردن خروجی', 'preparing-output-completed':'خروجی مرحله‌ای آماده شد',
+});
 export function activityLabel(event) {
   if (!event || typeof event !== 'object') return 'رویداد نامشخص';
   if (activityTypes[event.type]) return activityTypes[event.type];
@@ -56,5 +62,6 @@ export function activityLabel(event) {
   if (event.type === 'research-stage') return `بستهٔ تحقیق ${String(event.task || '')}: ${statusLabel(event.status)}`;
   if (event.type === 'model-start') return `عامل ${roles[event.role] || 'نامشخص'} شروع به کار کرد`;
   if (event.type === 'model-end') return `اجرای عامل ${roles[event.role] || 'نامشخص'} پایان یافت؛ نتیجه را از وضعیت کار بررسی کنید`;
+  if (event.type === 'model-progress') return `${roles[event.role] || 'عامل'}: ${progress[event.status] || 'پیشرفت داخلی ثبت شد'}`;
   return 'رویداد نامشخص';
 }
