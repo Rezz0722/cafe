@@ -26,6 +26,10 @@
 
 timer فعلی پنج دقیقه پس از پایان tick با حداکثر ۳۰ ثانیه تأخیر وضعیت را می‌خواند؛ تماس مدل هر پنج دقیقه نیست. سقف روزانه چهار چرخه مهندسی و چهار بسته تحقیق، سه تلاش هر تسک و ۴۰ دقیقه سرویس است. quota پیش از مراحل مدل خوانده می‌شود؛ مصرف primary≥۸۰٪ یا secondary≥۹۰٪ انتظار تا reset واقعی، telemetry نامعلوم توقف. زیر ۲GiB tick و زیر ۲٫۵GiB merge متوقف می‌شوند. پاک‌سازی Docker/media/backup خودکار نیست. انتظار بیش از ۲۴ ساعت workflow، نیازمند reconciliation ثبت می‌شود.
 
+برای پیام جدید مدیر، `kucafe-autonomy-inbox.path` تغییر دایرکتوری inbox را به همان سرویسِ قفل‌دار وصل می‌کند؛ لازم نیست تا tick پنج‌دقیقه‌ای منتظر بماند. اگر کنترلر در حال اجرای کار طولانی باشد یا سهمیه اجازه ندهد، پیام محفوظ و timer پشتیبان می‌ماند. مسیر inbox از مرورگر عمومی قابل‌نوشتن نیست و سرویس سقف شروع ۱۰ بار در دقیقه دارد.
+
+GitHub Runner ممکن است در systemd فعال بماند اما در GitHub آفلاین شود؛ نمونهٔ واقعی ۱۸ مهر پس از timeout ارتباط long-poll رخ داد و با restart در حالت idle رفع شد. `kucafe-runner-watchdog.timer` مستقل هر پنج دقیقه وضعیت GitHub را می‌خواند. تنها پس از دو مشاهدهٔ آفلاین، نبود job محلی/فعال و آزادبودن قفل‌های fetch/deploy، runner مشخص را restart می‌کند. در قطعی API اقدامی نمی‌کند؛ حداکثر دو restart در روز تهران و فاصلهٔ حداقل ۳۰ دقیقه دارد. این watchdog نه job فعال را قطع می‌کند نه نتیجهٔ CI/deploy را موفق اعلام می‌کند. وضعیت آنلاین/آفلاین در snapshot کنسول قابل‌مشاهده است؛ سلامت systemd به‌تنهایی کافی نیست.
+
 ارتقا با `upgrade.sh <protected-green-SHA>` فقط هنگام سرویس بیکار، با snapshot خصوصی نسخهٔ قبل و حفظ checkpoint انجام می‌شود. وضعیت مهندسی در `/var/lib/kucafe-autonomy/orchestration.json` جدا از پژوهش است. خواندن وضعیت: `node /opt/kucafe-autonomy/scripts/autonomy/orchestrator.mjs status`. توقف/PAUSE مشترک و unit commands نسخهٔ قبل معتبرند. Rollback کنترلر: توقف timer/service، بازگرداندن source/unit از `/var/lib/kucafe-autonomy/releases/<sha>`، daemon-reload و شروع timer؛ state را برای بررسی نگه دار. این کار محصول منتشرشده را rollback نمی‌کند.
 
 وضعیت زنده: `http://45.159.115.116/kucafe-autonomy/status.json`؛ دانلود: `http://45.159.115.116/kucafe-autonomy/latest.zip`.
