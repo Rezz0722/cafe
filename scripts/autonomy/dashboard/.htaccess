@@ -1,2 +1,7 @@
 # This Apache installation has no built-in .mjs type; scope the fix to this read-only UI.
 AddType text/javascript .mjs
+
+# Always revalidate the read-only dashboard shell and code after a reviewed release.
+<FilesMatch "\.(html|mjs|css)$">
+  Header set Cache-Control "no-cache, must-revalidate"
+</FilesMatch>
