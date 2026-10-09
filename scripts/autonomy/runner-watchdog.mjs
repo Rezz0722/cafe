@@ -23,6 +23,7 @@ const old = existsSync(stateFile) ? JSON.parse(readFileSync(stateFile, 'utf8')) 
 let runner;
 try { runner = status(); } catch { console.log('GitHub runner status unavailable; no recovery action'); process.exit(0); }
 const worker = spawnSync('pgrep', ['-f', '^/opt/actions-runner-kucafe/bin/Runner.Worker'], { encoding: 'utf8', timeout: 5000 });
+if (worker.error || ![0, 1].includes(worker.status)) { console.log('Local worker check uncertain; no recovery action'); process.exit(0); }
 const workerActive = worker.status === 0;
 // A shell wrapper checks both deployment locks before this point. Recheck the
 // local worker immediately before considering a restart; GitHub busy wins too.
