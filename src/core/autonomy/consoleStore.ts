@@ -18,6 +18,9 @@ export type ConsoleMessage = {
   kind: ConsoleMessageKind
   workStatus: string | null
   taskId: string | null
+  roadmapStatus: string | null
+  roadmapPhases: Array<{ title: string; goal: string; decision: string; status: string; reason: string; taskId: string | null }>
+  sourceRoadmapId: string | null
 }
 
 async function readJson(path: string): Promise<unknown> {
@@ -38,9 +41,16 @@ export async function readConsole() {
         id: original.id, text: original.text, createdAt: original.createdAt,
         answer: reply?.id === original.id && typeof reply.answer === 'string' ? reply.answer : null,
         answeredAt: reply?.id === original.id && typeof reply.answeredAt === 'string' ? reply.answeredAt : null,
-        kind: original.kind === 'work' ? 'work' : 'question',
+        kind: original.kind === 'work' || original.kind === 'roadmap' ? original.kind : 'question',
         workStatus: reply?.id === original.id && typeof reply.workStatus === 'string' ? reply.workStatus : null,
         taskId: reply?.id === original.id && typeof reply.taskId === 'string' ? reply.taskId : null,
+        roadmapStatus: reply?.id === original.id && typeof reply.roadmapStatus === 'string' ? reply.roadmapStatus : null,
+        roadmapPhases: reply?.id === original.id && Array.isArray(reply.phases) ? reply.phases.filter((phase): phase is { title: string; goal: string; decision: string; status: string; reason: string; taskId: string | null } => (
+          !!phase && typeof phase === 'object' && typeof phase.title === 'string' && typeof phase.goal === 'string' &&
+          typeof phase.decision === 'string' && typeof phase.status === 'string' && typeof phase.reason === 'string' &&
+          (phase.taskId === null || typeof phase.taskId === 'string')
+        )).slice(0, 6) : [],
+        sourceRoadmapId: typeof original.sourceRoadmapId === 'string' ? original.sourceRoadmapId : null,
       })
     } catch { /* Skip malformed or incomplete files; never show fabricated data. */ }
   }

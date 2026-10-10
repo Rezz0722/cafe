@@ -1,0 +1,23 @@
+{
+  "type": "object",
+  "properties": {
+    "summary": { "type": "string" },
+    "phases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string" },
+          "goal": { "type": "string" },
+          "reason": { "type": "string" },
+          "decision": { "type": "string", "enum": ["candidate", "needs-evidence", "needs-decision", "unsafe"] },
+          "acceptance": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["title", "goal", "reason", "decision", "acceptance"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["summary", "phases"],
+  "additionalProperties": false
+}

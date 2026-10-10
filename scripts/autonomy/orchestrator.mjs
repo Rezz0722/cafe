@@ -9,6 +9,7 @@ import { hash, validatePatch, selectTask, ciDecision, canMerge, canCarryReview }
 import { recordActivity } from './activity.mjs';
 import { answerNextOwnerMessage } from './owner-chat.mjs';
 import { processNextOwnerWork, loadDynamicTasks } from './owner-work.mjs';
+import { processNextOwnerRoadmap } from './owner-roadmap.mjs';
 import { safeOwnerFileList } from './owner-work-policy.mjs';
 import { runnerHealth } from './runner-health.mjs';
 
@@ -57,7 +58,7 @@ function publish(){
   ownerMessage:state.ownerMessage??{status:'idle'},
   phases:current.phases.map(p=>({id:p.id,title:p.title,status:p.external?'needs-owner-data':p.research?(Object.values(research.tasks).some(t=>t.status==='needs-evidence')?'needs-evidence':'pending'):(p.tasks.every(id=>state.tasks[id]?.status==='completed')?'completed':'in-progress')})),
   engineering:current.tasks.map(t=>({id:t.id,phase:t.phase,status:state.tasks[t.id]?.status??'pending',pr:state.tasks[t.id]?.pr??null,mergeSha:state.tasks[t.id]?.mergeSha??null,deployRun:state.tasks[t.id]?.deployRun??null,verifiedAt:state.tasks[t.id]?.verifiedAt??null,reason:state.tasks[t.id]?.reason??null})),
-  ownerWork:state.ownerWork??{status:'idle'},runnerHealth:state.runnerHealth??{status:'unknown'},
+  ownerWork:state.ownerWork??{status:'idle'},ownerRoadmap:state.ownerRoadmap??{status:'idle'},runnerHealth:state.runnerHealth??{status:'unknown'},
   research:researchQueue.tasks.map(t=>({id:t.id,status:research.tasks[t.id]?.status??'pending',claims:research.tasks[t.id]?.claims??0,pr:research.tasks[t.id]?.pr??null})),
   policy:'Automatic coding/review/CI/normal merge/deployment verification for approved tasks. No DB purge/migration/billing/owner impersonation.'};
  const out=resolve(publicDir,'status.json');writeFileSync(out+'.tmp',JSON.stringify(snapshot,null,2)+'\n',{mode:0o644});chmodSync(out+'.tmp',0o644);renameSync(out+'.tmp',out);
@@ -225,7 +226,9 @@ async function tick(){
  state.ownerWork=await processNextOwnerWork({agent,quota,quotaDecision,
   getPaths:()=>{const tree=api('git/trees/production?recursive=1');if(tree.truncated||!Array.isArray(tree.tree))throw Error('Incomplete GitHub tree');return safeOwnerFileList(tree.tree.filter(row=>row.type==='blob').map(row=>row.path));},
   getBaseSha:()=>api('git/ref/heads/production').object.sha,sourceAt});
- state.ownerMessage=await answerNextOwnerMessage({agent,quota,quotaDecision,snapshot:{updatedAt:state.updatedAt,engineering:currentRoadmap().tasks.map(t=>({id:t.id,status:state.tasks[t.id]?.status??'pending'})),research:researchQueue.tasks.map(t=>({id:t.id})),lastReason:state.lastReason??null}});
+ state.ownerRoadmap=await processNextOwnerRoadmap({agent,quota,quotaDecision,engineering:state.tasks});
+ const researchState=existsSync(resolve(dir,'state.json'))?JSON.parse(readFileSync(resolve(dir,'state.json'),'utf8')):{tasks:{}};
+ state.ownerMessage=await answerNextOwnerMessage({agent,quota,quotaDecision,snapshot:{updatedAt:state.updatedAt,engineering:currentRoadmap().tasks.map(t=>({id:t.id,status:state.tasks[t.id]?.status??'pending'})),research:researchQueue.tasks.map(t=>({id:t.id,status:researchState.tasks[t.id]?.status??'pending'})),ownerRoadmap:state.ownerRoadmap,lastReason:state.lastReason??null}});
  if(!paused()&&(!task||['awaiting-ci','awaiting-deploy','completed','blocked','review-rejected'].includes(e.status))){
   const r=spawnSync('node',[resolve(here,'supervisor.mjs'),'tick'],{timeout:20*60000,encoding:'utf8',maxBuffer:100000,env:{...process.env,KUCAFE_AUTONOMY_EMBEDDED:'1'}});
   if(r.status!==0)state.lastResearchReason='research-tick-incomplete';

@@ -7,6 +7,9 @@ test('owner messages are bounded and normalized', () => {
   assert.equal(validateConsoleMessage('x'.repeat(2001)), null)
   assert.equal(validateConsoleMessage('x'), null)
   assert.equal(validateConsoleMessage('bad\u0000text'), null)
+  assert.equal(validateConsoleMessage('x'.repeat(12000), 'roadmap')?.length, 12000)
+  assert.equal(validateConsoleMessage('x'.repeat(12001), 'roadmap'), null)
+  assert.equal(validateConsoleMessage('bad\u0000text', 'roadmap'), null)
 })
 test('message writes require the configured public origin, even behind an HTTP reverse proxy', () => {
   assert.equal(sameOrigin('https://kucafe.ir', 'https://kucafe.ir'), true)
@@ -25,6 +28,7 @@ test('message writes require the configured public origin, even behind an HTTP r
 test('only question or bounded work request types enter the owner inbox', () => {
   assert.equal(validateConsoleMessageKind('question'), 'question')
   assert.equal(validateConsoleMessageKind('work'), 'work')
+  assert.equal(validateConsoleMessageKind('roadmap'), 'roadmap')
   assert.equal(validateConsoleMessageKind('deploy-now'), null)
   assert.equal(validateConsoleMessageKind(null), null)
 })

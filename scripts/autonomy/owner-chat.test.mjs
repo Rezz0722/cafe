@@ -9,6 +9,8 @@ const valid = { id: '1791510000000-12345678-1234-1234-1234-123456789abc', text: 
 test('only bounded owner messages enter the status assistant', () => {
   assert.deepEqual(validateOwnerMessage(valid), { ...valid, kind: 'question' });
   assert.equal(validateOwnerMessage({ ...valid, kind: 'work' }).kind, 'work');
+  assert.equal(validateOwnerMessage({ ...valid, kind: 'roadmap', text: 'x'.repeat(12000) }).kind, 'roadmap');
+  assert.equal(validateOwnerMessage({ ...valid, kind: 'roadmap', text: 'x'.repeat(12001) }), null);
   assert.equal(validateOwnerMessage({ ...valid, kind: 'deploy-now' }), null);
   assert.equal(validateOwnerMessage({ ...valid, id: '../../secrets' }), null);
   assert.equal(validateOwnerMessage({ ...valid, text: 'x'.repeat(2001) }), null);
