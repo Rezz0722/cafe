@@ -9,6 +9,24 @@ from unittest.mock import patch
 spec = importlib.util.spec_from_file_location("topmarket_test", Path(__file__).resolve().parents[1] / "topmarket.py")
 scraper = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(scraper)
+
+class NoDigitalMenuResponse:
+    ok = False
+    status_code = 403
+
+    def json(self):
+        return {"message": "مجموعه مورد نظر فاقد منو دیجیتال می باشد"}
+
+    def raise_for_status(self):
+        raise AssertionError("Detailed source error should be used first")
+
+with patch.object(scraper.SESSION, "get", return_value=NoDigitalMenuResponse()):
+    try:
+        scraper.api_get("/providers/326/menu")
+        raise AssertionError("403 must not be treated as an empty valid menu")
+    except RuntimeError as error:
+        assert "فاقد منو دیجیتال" in str(error)
+
 providers = [{"id": 11, "username": "first"}, {"id": 22, "username": "second"}, {"id": 33, "username": "third"}]
 with tempfile.TemporaryDirectory(prefix="kucafe-python-selection-") as directory:
     ids = Path(directory) / "ids.json"

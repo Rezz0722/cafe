@@ -21,6 +21,7 @@ docker compose version >/dev/null
 mkdir -p "$backup_dir/db" "$state_dir" "$(dirname "$lock_file")"
 exec 9>"$lock_file"
 flock -n 9 || { echo 'Another KuCafe deployment is running.' >&2; exit 75; }
+install -d -m 0700 -o 10001 -g 10001 "$state_dir/topmenu-sync" "$backup_dir/topmenu-sync"
 
 if [[ -n "$(git -C "$project_dir" status --porcelain --untracked-files=no)" ]]; then
   echo 'Tracked files are dirty; refusing a non-reproducible deployment.' >&2
@@ -30,7 +31,7 @@ fi
 previous_tag=""
 [[ -f "$state_dir/current-image" ]] && previous_tag="$(<"$state_dir/current-image")"
 compose=(docker compose --project-directory "$project_dir" -f "$project_dir/compose.yaml")
-export KUCAFE_ENV_FILE="$env_file" KUCAFE_MEDIA_DIR="$media_dir" KUCAFE_BACKUP_DIR="$backup_dir" KUCAFE_PORT="$port"
+export KUCAFE_ENV_FILE="$env_file" KUCAFE_MEDIA_DIR="$media_dir" KUCAFE_BACKUP_DIR="$backup_dir" KUCAFE_DEPLOY_STATE_DIR="$state_dir" KUCAFE_PORT="$port"
 
 rollback_app() {
   local exit_code=$?
@@ -38,6 +39,11 @@ rollback_app() {
   if [[ -n "$previous_tag" ]] && docker image inspect "kucafe/app:$previous_tag" >/dev/null 2>&1; then
     echo "Rolling application container back to $previous_tag" >&2
     KUCAFE_IMAGE_TAG="$previous_tag" "${compose[@]}" up -d --no-build app || true
+    if [[ "$(docker image inspect --format '{{ index .Config.Labels "ir.kucafe.topmenu-worker" }}' "kucafe/maintenance:$previous_tag" 2>/dev/null || true)" == 1 ]]; then
+      KUCAFE_IMAGE_TAG="$previous_tag" "${compose[@]}" up -d --no-build topmenu-worker || true
+    else
+      "${compose[@]}" stop topmenu-worker || true
+    fi
   fi
   # Failed candidates are reproducible from Git and must not accumulate on a
   # space-constrained production host. Docker still refuses to remove an image
@@ -90,6 +96,17 @@ for _ in {1..40}; do
 done
 [[ "$healthy" == 1 ]] || { echo 'New container did not become healthy.' >&2; false; }
 
+KUCAFE_IMAGE_TAG="$tag" "${compose[@]}" up -d --no-build topmenu-worker
+worker_id="$(KUCAFE_IMAGE_TAG="$tag" "${compose[@]}" ps -q topmenu-worker)"
+[[ -n "$worker_id" ]] || { echo 'TopMenu worker container did not start.' >&2; false; }
+worker_healthy=0
+for _ in {1..20}; do
+  worker_status="$(docker inspect --format '{{.State.Health.Status}}' "$worker_id" 2>/dev/null || true)"
+  if [[ "$worker_status" == healthy ]]; then worker_healthy=1; break; fi
+  sleep 3
+done
+[[ "$worker_healthy" == 1 ]] || { echo 'TopMenu worker did not become healthy.' >&2; false; }
+
 # After the one-time Apache cutover, include the real public path in every
 # deployment gate. Before cutover Apache still points at PM2, so this check is
 # intentionally conditional.
@@ -101,11 +118,10 @@ fi
 printf '%s\n' "$tag" > "$state_dir/current-image"
 printf '%s\n' "$revision" > "$state_dir/current-revision"
 trap - ERR
-# Keep the current app plus one immediate Docker rollback, and only the current
-# maintenance image. Three final images stay below the five-image ceiling and
-# fit the server's measured disk capacity.
+# Keep current and one rollback image for both app and worker. Four final images
+# stay below the five-image ceiling and allow a matching worker rollback.
 KUCAFE_IMAGE_RETENTION=2 KUCAFE_IMAGE_REPOSITORIES=kucafe/app \
   bash "$project_dir/scripts/docker-retain-images.sh"
-KUCAFE_IMAGE_RETENTION=1 KUCAFE_IMAGE_REPOSITORIES=kucafe/maintenance \
+KUCAFE_IMAGE_RETENTION=2 KUCAFE_IMAGE_REPOSITORIES=kucafe/maintenance \
   bash "$project_dir/scripts/docker-retain-images.sh"
-echo "KuCafe $tag is healthy on 127.0.0.1:$port"
+echo "KuCafe $tag and TopMenu worker are healthy on 127.0.0.1:$port"

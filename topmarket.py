@@ -160,6 +160,16 @@ PROVIDER_CSV_FIELDNAMES = [
 
 def api_get(path, params=None):
     resp = SESSION.get(f"{BASE}{path}", params=params, timeout=(10, 45))
+    if not resp.ok:
+        # TopMenuMarket uses 403 also for a provider that has no digital menu.
+        # Keep the source's explanation in the per-provider failure manifest;
+        # a bare HTTP code is not enough to distinguish this from a rate limit.
+        try:
+            message = resp.json().get("message")
+        except (ValueError, AttributeError):
+            message = None
+        if isinstance(message, str) and message.strip():
+            raise RuntimeError(f"{path} -> HTTP {resp.status_code}: {message.strip()[:200]}")
     resp.raise_for_status()
     payload = resp.json()
     if payload.get("status") != 200:
