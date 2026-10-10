@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "batchId": "experience-01-20261010-review4",
+  "reviewedAt": "2026-10-10",
+  "productionWrites": 0,
+  "purpose": "Editorial evidence snapshot; only the fixed released maintenance script can apply the single approved candidate",
+  "readyCandidates": 1,
+  "heldRecords": 8,
+  "records": [
+    {
+      "placeId": 243,
+      "name": "هامون",
+      "slug": "happyhome",
+      "instagram": "cafe_ketab_hamoon",
+      "decision": "ready-for-editorial-candidate",
+      "attributeId": "quiet",
+      "candidateValue": 1,
+      "baseline": {
+        "address": "ملک آباد - گویا 1 - پلاک 23",
+        "revision": 0,
+        "attributes": [
+          { "id": "breakfast", "value": 2, "confidence": 85, "source": "editorial", "verifiedAt": "2026-09-27T15:20:11.000Z" },
+          { "id": "desserts", "value": 1, "confidence": 75, "source": "editorial", "verifiedAt": "2026-09-28T12:11:13.000Z" },
+          { "id": "good_for_study", "value": 1, "confidence": 70, "source": "editorial", "verifiedAt": "2026-09-27T15:20:11.000Z" }
+        ]
+      },
+      "identityGeometry": {
+        "databaseLatitude": 36.3122031,
+        "databaseLongitude": 59.5465314,
+        "sourceLatitude": 36.31210918260578,
+        "sourceLongitude": 59.54669488416791,
+        "distanceMeters": 18,
+        "source": "public Neshan JSON-LD GeoCoordinates, not map viewport center"
+      },
+      "identityChecks": ["street-and-house-number-match", "official-instagram-exact-match", "coordinates-near-match"],
+      "datedEvidence": [
+        { "dateJalali": "1405/06/28", "dateIso": "2026-09-19", "ageDays": 21, "claim": "reviewer-explicitly-described-a-calm-place", "supports": "quiet-candidate-only" },
+        { "dateJalali": "1405/05/17", "dateIso": "2026-08-08", "ageDays": 63, "claim": "cozy-and-friendly-description", "supports": "context-only-not-independent-proof-of-quiet" },
+        { "dateJalali": "1405/01/18", "dateIso": "2026-04-07", "ageDays": 186, "claim": "older-calm-description", "supports": "historical-only-outside-180-day-window" }
+      ],
+      "reviewsRead": { "topLevelVisible": 14, "entireListingClaimed": false, "limitation": "Further scrolling did not expose the remaining rated entries; ratings are not necessarily written reviews." },
+      "sourceUrls": ["https://neshan.org/maps/places/fbb8459645c9bd5850b7383c422cab8b"],
+      "contextSources": [
+        { "url": "https://t.me/s/toossky?before=4888", "eventDate": "2026-09-01", "claim": "organizer announced a cultural astronomy event at the exact address", "supports": "identity-and-event-context-only" },
+        { "url": "https://t.me/mashadcafe/5674", "publicationDate": null, "claim": "work-study policy lead with unverified publication date", "supports": "none-until-date-and-current-policy-confirmed" }
+      ],
+      "limitations": ["One fresh explicit quiet review is not owner verification or a guarantee across all hours.", "Cultural events can change noise levels; no all-day silence claim.", "Food/service complaints and a negative atmosphere opinion were also read; these are not hidden or converted to quiet evidence.", "verifiedAt is editorial review time, not review publication time."],
+      "rejectedInferences": ["laptop_friendly", "fast_wifi", "power_outlets", "long_stay_ok", "good_for_gathering-from-one-ticketed-event", "photogenic-from-generic-beauty-description"],
+      "productionApplied": false
+    },
+    { "placeId": 158, "name": "نیو وگاس کافه غذا", "decision": "hold", "reason": "صفحهٔ وگاس صارمی در نشان، منوی vegas.food و هندل vegas.foodstore دارد؛ با newvegas.cafe و کوثر شمالی ۲۸ یکی نیست. ساعت و ویژگی‌های آن منتقل نمی‌شوند.", "sourceUrls": ["https://neshan.org/maps/places/34f24053c0e22c4223e42e5507784320"], "searchQueries": ["نیو وگاس مشهد"], "productionApplied": false },
+    { "placeId": 212, "name": "کافه رستوران ماهور", "decision": "hold", "reason": "چند مکان هم‌نام در نشان یافت شد؛ رکورد سایت آدرس و مختصات ندارد و اتصال به یک شعبه احراز نشد.", "sourceUrls": ["https://neshan.org/maps/search/کافه%20ماهور%20مشهد"], "productionApplied": false },
+    { "placeId": 233, "name": "ماهور پلاس", "decision": "hold", "reason": "جست‌وجوی نشان نتیجهٔ منطبق امام رضا ۱۷ نداد؛ ذکر در نمونه‌کار پیمانکار، تجربهٔ فعلی کافه را ثابت نمی‌کند.", "sourceUrls": ["https://neshan.org/maps/search/ماهور%20پلاس%20طرقبه", "https://avagostaar.ir/?add-to-cart=1869"], "productionApplied": false },
+    { "placeId": 242, "name": "بولگاری لانژ", "decision": "hold", "reason": "آدرس/مختصات/اینستاگرام رکورد خالی است؛ راهنمای قدیمی و احتمال تغییر نام، هویت فعلی را احراز نمی‌کنند.", "sourceUrls": ["https://neshan.org/maps/search/بولگاری%20طرقبه", "https://darmashhadkojast.com/mashhad-hookah-cafe/"], "productionApplied": false },
+    { "placeId": 288, "name": "کافه رستوران جانا", "decision": "hold", "reason": "نتایج جانا در وکیل‌آباد/شریعتی با رکورد ابتدای جاده شاندیز و Jana_lounge تطبیق کافی ندارند.", "sourceUrls": ["https://neshan.org/maps/search/کافه%20جانا%20شاندیز"], "productionApplied": false },
+    { "placeId": 324, "name": "کافه ۵ صبحی‌ها", "decision": "hold", "reason": "جست‌وجوی نشان شاهد مستقل مطابق دستغیب ۳۳ تا ۳۵ و the5amcafe نداد. نتیجهٔ خود کو کافه شاهد مستقل نیست.", "sourceUrls": ["https://neshan.org/maps/search/کافه%205صبحی%20مشهد"], "productionApplied": false },
+    { "placeId": 379, "name": "قهوه میر", "decision": "hold", "reason": "نتایج نشان به نام‌ها/خیابان‌های دیگر مربوط بودند؛ اتصال به رستری بهارستان ۱۰/۱ و mir_coffee_roasters احراز نشد.", "sourceUrls": ["https://neshan.org/maps/search/قهوه%20میر%20مشهد"], "productionApplied": false },
+    { "placeId": 269, "name": "سوشال", "decision": "hold", "reason": "هفت نظر تاریخ‌دار در صفحهٔ مطابق وکیل‌آباد ۴۷ تا ۴۹ خوانده شد؛ هیچ‌یک شرایط کار/مطالعه را تصریح نکرد. تاریخ پست ۵۲۹۴ همچنان احراز نشده است.", "sourceUrls": ["https://neshan.org/maps/places/f87d197528fb937ee791d2395e5049fa", "https://t.me/mashadcafe/5294"], "productionApplied": false }
+  ],
+  "additionalLeads": [
+    { "placeId": 174, "name": "ری‌را", "decision": "research-next", "reason": "هویت کتاب‌کافه به‌تنهایی مجوز افزودن quiet یا laptop نیست." },
+    { "placeId": 190, "name": "راوی", "decision": "research-next", "sourceUrls": ["https://pixmer.com/post/ravi_book_cafe_location"], "reason": "منبع عکاسی قدیمی است؛ برای ویژگی تازه کافی نیست." },
+    { "placeId": 213, "name": "آفتاب", "decision": "hold-branch-mismatch", "sourceUrls": ["https://foodism.app/collection/مشهد/کافه-مناسب-مطالعه-و-کار-با-لپتاپ"], "reason": "آدرس بازار گلستان در راهنمای قدیمی با قائم ۴ رکورد سایت یکسان نیست." },
+    { "placeId": 274, "name": "ارغوان", "decision": "verify-current-activity", "sourceUrls": ["https://t.me/s/mashadcafe?before=5692", "https://www.iranintl.com/202608120248"], "reason": "گزارش تاریخی تعطیلی/پلمپ با آدرس و هندل منطبق دیده شد؛ وضعیت امروز یا بازگشایی معلوم نیست. هیچ آرشیو، تغییر وضعیت یا حذف ویژگی اجرا نمی‌شود." }
+  ],
+  "accessLimitations": ["Instagram pages were not directly readable.", "No direct Google Maps or Snappfood reviews were obtained in this review; no Google/food-delivery evidence is claimed.", "Telegram public text available through web search did not expose a verified timestamp for the work-policy lead."]
+}
