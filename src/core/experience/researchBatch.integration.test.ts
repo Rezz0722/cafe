@@ -18,19 +18,21 @@ test('CI-only research batch: dry-run, authorization, conflicts, rollback and au
     await assert.rejects(promisify(execFile)(process.execPath, ['--import', 'tsx', '--conditions=react-server', 'scripts/apply-experience-batch1.ts', '--apply'], { env: process.env, timeout: 60000 }), /requires fresh review/)
     return
   }
-  const db = getDb(), actor = randomUUID(), ids = [219, 284, 237]
+  const db = getDb(), actor = randomUUID(), ids = [219, 284, 237, 243]
   assert.equal((await db.select().from(place).where(inArray(place.id, ids))).length, 0, 'Fixture IDs must not exist')
   const packet = JSON.parse(readFileSync('docs/research/KUCAFE_EXPERIENCE_BATCH_01_20261007.json', 'utf8'))
+  const review4 = JSON.parse(readFileSync('docs/research/KUCAFE_EXPERIENCE_REVIEW4_20261010.json', 'utf8'))
+  const hamoon = review4.records.find((r: { placeId: number }) => r.placeId === 243)
   const run = (apply = false) => promisify(execFile)(process.execPath, ['--import', 'tsx', '--conditions=react-server', 'scripts/apply-experience-batch1.ts', ...(apply ? ['--apply'] : [])], { env: { ...process.env, KUCAFE_RESEARCH_ACTOR_ID: actor }, timeout: 60000 })
   const targets = () => db.select().from(placeAttribute).where(and(inArray(placeAttribute.placeId, ids), eq(placeAttribute.attributeId, 'open_late')))
   const audits = () => db.select().from(auditLog).where(eq(auditLog.actorUserId, actor))
   let created = false
   try {
     await db.insert(appUser).values({ id: actor, role: 'admin', status: 'active', name: 'CI research operator' })
-    await db.insert(attribute).ignore().values([{ id: 'desserts', labelFa: 'CI dessert', kind: 'intent' }, { id: 'open_late', labelFa: 'CI late', kind: 'amenity' }, { id: 'outdoor', labelFa: 'CI outdoor', kind: 'amenity' }])
+    await db.insert(attribute).ignore().values([{ id: 'desserts', labelFa: 'CI dessert', kind: 'intent' }, { id: 'open_late', labelFa: 'CI late', kind: 'amenity' }, { id: 'outdoor', labelFa: 'CI outdoor', kind: 'amenity' }, { id: 'quiet', labelFa: 'CI quiet', kind: 'vibe' }, { id: 'breakfast', labelFa: 'CI breakfast', kind: 'intent' }, { id: 'good_for_study', labelFa: 'CI study', kind: 'intent' }])
     for (const id of ids) {
-      const r = packet.records.find((r: { placeId: number }) => r.placeId === id)
-      await db.insert(place).values({ id, slug: r.slug, name: 'CI research fixture', nameNormalized: 'ci', address: r.baseline.address, revision: r.baseline.revision, status: 'published', ...(id === 237 ? { lat: '36.3007477', lng: '59.4961814' } : {}) })
+      const r = id === 243 ? hamoon : packet.records.find((r: { placeId: number }) => r.placeId === id)
+      await db.insert(place).values({ id, slug: r.slug, name: id === 243 ? r.name : 'CI research fixture', nameNormalized: 'ci', instagram: id === 243 ? r.instagram : null, address: r.baseline.address, revision: r.baseline.revision, status: 'published', ...(id === 237 ? { lat: '36.3007477', lng: '59.4961814' } : id === 243 ? { lat: String(r.identityGeometry.databaseLatitude), lng: String(r.identityGeometry.databaseLongitude) } : {}) })
       created = true
       for (const a of r.baseline.attributes) await db.insert(placeAttribute).values({ placeId: id, attributeId: a.id, value: a.value, confidence: a.confidence, source: a.source, verifiedAt: new Date(a.verifiedAt) })
     }
@@ -45,7 +47,7 @@ test('CI-only research batch: dry-run, authorization, conflicts, rollback and au
       await run(true); assert.equal((await targets()).length, 2); assert.equal((await audits()).length, 2)
       await run(true); assert.equal((await targets()).length, 2); assert.equal((await audits()).length, 2)
       const original = await db.select().from(placeAttribute).where(and(inArray(placeAttribute.placeId, ids), eq(placeAttribute.attributeId, 'desserts')))
-      assert.equal(original.length, 3)
+      assert.equal(original.length, 4)
       for (const a of original) { assert.equal(a.value, 1); assert.equal(a.confidence, 75); assert.equal(a.verifiedAt?.toISOString(), '2026-09-28T12:11:13.000Z') }
     })
     await t.test('review3 writes outdoor only, preserves prior batch and is retry-safe', async () => {
@@ -58,6 +60,30 @@ test('CI-only research batch: dry-run, authorization, conflicts, rollback and au
       const [outdoor] = await db.select().from(placeAttribute).where(and(eq(placeAttribute.placeId, 237), eq(placeAttribute.attributeId, 'outdoor')))
       assert.equal(outdoor?.value, 1); assert.equal(outdoor?.confidence, 75)
       assert.equal((await targets()).length, 2); assert.equal((await audits()).length, 3)
+    })
+    await t.test('review4 fails closed on expiry, requires backup, checks identity and preserves stronger attributes', async () => {
+      const runReview4 = (apply = false, backup = true, extra: string[] = []) => promisify(execFile)(process.execPath, ['--import', 'tsx', '--conditions=react-server', 'scripts/apply-experience-batch1.ts', '--review=4', ...(apply ? ['--apply'] : []), ...extra], { env: { ...process.env, KUCAFE_RESEARCH_ACTOR_ID: actor, KUCAFE_BACKUP_VERIFIED: backup ? '1' : '0' }, timeout: 60000 })
+      if (Date.now() < Date.parse('2026-10-10T00:00:00Z') || Date.now() >= Date.parse('2026-11-01T00:00:00Z')) {
+        await assert.rejects(runReview4(true), /requires fresh review/)
+        return
+      }
+      const hamoonAttributes = () => db.select().from(placeAttribute).where(eq(placeAttribute.placeId, 243))
+      const before = await hamoonAttributes()
+      await runReview4(); assert.deepEqual(await hamoonAttributes(), before); assert.equal((await audits()).length, 3)
+      await assert.rejects(runReview4(true, false), /backup/)
+      await assert.rejects(runReview4(true, true, ['--review=3']), /one review/)
+      for (const [key, changed, original] of [['name', 'wrong name', hamoon.name], ['instagram', 'wrong_branch', hamoon.instagram], ['lng', '59.5500000', String(hamoon.identityGeometry.databaseLongitude)]] as const) {
+        await db.update(place).set({ [key]: changed }).where(eq(place.id, 243))
+        await assert.rejects(runReview4(true)); assert.deepEqual(await hamoonAttributes(), before); assert.equal((await audits()).length, 3)
+        await db.update(place).set({ [key]: original }).where(eq(place.id, 243))
+      }
+      await db.execute(`CREATE TRIGGER ci_quiet_failure BEFORE INSERT ON audit_log FOR EACH ROW BEGIN IF NEW.entity_id='243' AND NEW.action='place.attributes.patch' THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='CI deliberate audit failure'; END IF; END`)
+      try { await assert.rejects(runReview4(true)); assert.deepEqual(await hamoonAttributes(), before); assert.equal((await audits()).length, 3) } finally { await db.execute('DROP TRIGGER ci_quiet_failure') }
+      await runReview4(true); await runReview4(true)
+      const after = await hamoonAttributes(), quiet = after.find(a => a.attributeId === 'quiet')
+      assert.equal(quiet?.value, 1); assert.equal(quiet?.confidence, 75); assert.equal(quiet?.source, 'editorial')
+      assert.deepEqual(after.filter(a => a.attributeId !== 'quiet'), before)
+      assert.equal((await audits()).length, 4); assert.equal((await targets()).length, 2)
     })
   } finally {
     if (created) await db.delete(place).where(inArray(place.id, ids))

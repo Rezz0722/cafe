@@ -17,6 +17,17 @@ test('research guard adds only a missing target and preserves stronger baseline 
   assert.equal(researchAction(baseline, current(), false), 'add')
   assert.equal(baseline.attributes[0]?.confidence, 85)
 })
+test('quiet candidate preserves study and stronger breakfast evidence and requires its own audit', () => {
+  const study = { ...target, id: 'good_for_study', confidence: 70 }
+  const expected = { ...baseline, attributes: [...baseline.attributes, study] }
+  const before = { ...current(), attributes: expected.attributes }
+  const quiet = { ...target, id: 'quiet' }
+  assert.equal(researchAction(expected, before, false, 'quiet'), 'add')
+  const after = { ...before, attributes: [...before.attributes, quiet] }
+  assert.throws(() => researchAction(expected, after, false, 'quiet'))
+  assert.equal(researchAction(expected, after, true, 'quiet'), 'already-applied')
+  assert.throws(() => researchAction(expected, { ...after, attributes: [quiet] }, true, 'quiet'))
+})
 test('research guard rejects changed identity, publication, revision and existing evidence', () => {
   for (const patch of [{ slug: 'other' }, { address: 'other' }, { revision: 1 }, { status: 'draft' }, { attributes: [] }]) assert.throws(() => researchAction(baseline, { ...current(), ...patch }, false))
 })
