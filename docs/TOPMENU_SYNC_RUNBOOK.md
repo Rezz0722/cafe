@@ -15,6 +15,7 @@ admin panel's live progress/report for individual source failures. The worker
 heartbeat must be newer than one minute. The same state volume survives image
 replacement, but an interrupted in-progress job is marked failed rather than
 automatically replayed — especially important for an apply operation.
+The admin API refuses to queue a new job when the heartbeat is missing or stale.
 
 ## Source failures and data safety
 

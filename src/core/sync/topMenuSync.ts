@@ -243,6 +243,12 @@ export async function startTopMenuSync(
   options: { selection: TopMenuSelection; expectedRunId?: string } = { selection: { scope: 'all', sourceIds: [] } },
 ): Promise<{ ok: boolean; error?: string }> {
   await mkdir(ROOT, { recursive: true })
+  if (process.env.TOPMENU_SYNC_EXECUTION_MODE === 'worker') {
+    const heartbeat = Number(await readFile(join(ROOT, 'worker-heartbeat'), 'utf8').catch(() => '0'))
+    if (!Number.isFinite(heartbeat) || Date.now() - heartbeat > 60_000 || heartbeat > Date.now() + 10_000) {
+      return { ok: false, error: 'سرویس اسکرپر در دسترس نیست؛ هیچ عملیاتی در صف قرار نگرفت. وضعیت worker را بررسی کنید.' }
+    }
+  }
   const lockPath = join(ROOT, 'start.lock')
   try {
     const lock = await open(lockPath, 'wx', 0o600)

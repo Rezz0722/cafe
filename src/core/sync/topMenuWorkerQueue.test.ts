@@ -12,6 +12,8 @@ test('production mode persists a job and never spawns from the web process', asy
     const { startTopMenuSync, readTopMenuSyncState } = await import('./topMenuSync')
     const actor = { userId: 'test', label: 'test' }
     const selection = { scope: 'all' as const, sourceIds: [] }
+    assert.equal((await startTopMenuSync('scrape', actor, { selection })).ok, false)
+    await writeFile(join(root, 'worker-heartbeat'), String(Date.now()))
     assert.deepEqual(await startTopMenuSync('scrape', actor, { selection }), { ok: true })
     const state = await readTopMenuSyncState()
     assert.equal(state.status, 'scraping')

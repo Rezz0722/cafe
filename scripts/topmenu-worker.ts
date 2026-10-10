@@ -1,6 +1,6 @@
 /** Dedicated, single-owner consumer for admin-approved TopMenu jobs. */
 import { spawn } from 'node:child_process'
-import { mkdir, writeFile } from 'node:fs/promises'
+import { chmod, mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import {
   readTopMenuSyncState,
@@ -55,8 +55,9 @@ const startup = await readTopMenuSyncState()
 if ((startup.status === 'scraping' || startup.status === 'applying') && startup.pid) {
   await markFailed(startup, 'worker هنگام اجرای قبلی متوقف شد. برای جلوگیری از اعمال تکراری، عملیات خودکار ادامه نیافت؛ دوباره بررسی و اجرا کنید.')
 }
-const updateHeartbeat = async () => writeFile(heartbeat, String(Date.now()), { mode: 0o600 })
+const updateHeartbeat = async () => writeFile(heartbeat, String(Date.now()), { mode: 0o644 })
 await updateHeartbeat()
+await chmod(heartbeat, 0o644)
 const timer = setInterval(() => { updateHeartbeat().catch(error => console.error('[topmenu-worker] heartbeat', error)) }, 10_000)
 try {
   while (!stopping) {
