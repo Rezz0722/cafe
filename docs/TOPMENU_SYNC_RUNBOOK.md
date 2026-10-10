@@ -29,5 +29,8 @@ menu, bypass the source's access controls, or assume a 403 is a rate limit.
 
 Before an apply, the worker writes a separate backup under
 `/var/backups/kucafe/topmenu-sync`. The deploy script keeps the current and
-previous app/maintenance images for rollback. The worker runs as UID 10001;
-the deploy script prepares only its two dedicated writable directories.
+previous app/maintenance images for rollback. The worker runs as root inside
+its container only because the existing image tree is root-owned; it has no
+Docker socket, all capabilities except file ownership/access are dropped, and
+privilege escalation is disabled. Shared state snapshots are chowned to the web UID 10001. The deploy
+script prepares only its two dedicated writable directories.

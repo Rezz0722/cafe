@@ -1,7 +1,7 @@
 import 'server-only'
 
 import { spawn } from 'node:child_process'
-import { mkdir, open, readFile, rename, stat, unlink, writeFile, readdir } from 'node:fs/promises'
+import { chown, mkdir, open, readFile, rename, stat, unlink, writeFile, readdir } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import { randomUUID } from 'node:crypto'
 import { isNotNull } from 'drizzle-orm'
@@ -197,6 +197,11 @@ export async function writeTopMenuSyncState(state: TopMenuSyncState): Promise<vo
   await mkdir(ROOT, { recursive: true })
   const temporary = join(ROOT, `.state-${randomUUID()}.json`)
   await writeFile(temporary, JSON.stringify(state, null, 2), { encoding: 'utf8', mode: 0o600 })
+  // The worker needs root only for the existing root-owned media tree. Its
+  // atomic state snapshots must remain readable/writable by the web UID.
+  if (process.env.TOPMENU_SYNC_EXECUTION_MODE === 'worker' && process.getuid?.() === 0) {
+    await chown(temporary, 10001, 10001)
+  }
   await rename(temporary, STATE)
   if(state.runId && /^[a-zA-Z0-9_-]{1,100}$/.test(state.runId)){
     try{
@@ -204,6 +209,7 @@ export async function writeTopMenuSyncState(state: TopMenuSyncState): Promise<vo
     await mkdir(directory,{recursive:true})
     const snapshot=join(directory,`.job-${randomUUID()}.json`)
     await writeFile(snapshot,JSON.stringify(state),{encoding:'utf8',mode:0o600})
+    if(process.env.TOPMENU_SYNC_EXECUTION_MODE==='worker'&&process.getuid?.()===0)await chown(snapshot,10001,10001)
     await rename(snapshot,join(directory,'job.json'))
     }catch{console.warn('[topmenu-sync] job history snapshot could not be saved; primary state is intact')}
   }

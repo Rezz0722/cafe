@@ -61,7 +61,12 @@ services:
       - type: bind
         source: ${KUCAFE_MEDIA_DIR:-/var/www/kucafe/public/media}
         target: /app/public/media
-    user: "10001:10001"
+    # Existing downloaded media directories are root-owned. This service has
+    # no Docker socket; shared job state is explicitly chowned to web UID.
+    user: "0:10001"
+    cap_drop: ["ALL"]
+    cap_add: ["CHOWN", "DAC_OVERRIDE"]
+    security_opt: ["no-new-privileges:true"]
     command: ["flock", "-n", "/app/var/topmenu-sync/worker.lock", "node", "--import", "tsx", "--conditions=react-server", "scripts/topmenu-worker.ts"]
     restart: unless-stopped
     stop_grace_period: 30s

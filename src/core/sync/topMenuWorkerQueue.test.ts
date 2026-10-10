@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { mkdtemp, readFile, rm, utimes, writeFile } from 'node:fs/promises'
+import { mkdtemp, readFile, rm, stat, utimes, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
@@ -17,6 +17,10 @@ test('production mode persists a job and never spawns from the web process', asy
     assert.equal(state.status, 'scraping')
     assert.equal(state.pid, undefined)
     assert.ok(state.runId)
+    if (process.getuid?.() === 0) {
+      assert.equal((await stat(join(root, 'state.json'))).uid, 10001)
+      assert.equal((await stat(join(root, 'runs', state.runId!, 'job.json'))).uid, 10001)
+    }
     assert.deepEqual(JSON.parse(await readFile(join(root, 'runs', state.runId!, 'scrape-selection.json'), 'utf8')), selection)
     assert.equal((await startTopMenuSync('scrape', actor, { selection })).ok, false)
     await writeFile(join(root, 'state.json'), JSON.stringify({ runId: null, status: 'idle' }))
