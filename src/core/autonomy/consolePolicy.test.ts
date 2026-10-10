@@ -8,10 +8,19 @@ test('owner messages are bounded and normalized', () => {
   assert.equal(validateConsoleMessage('x'), null)
   assert.equal(validateConsoleMessage('bad\u0000text'), null)
 })
-test('message writes require exact browser origin', () => {
+test('message writes require the configured public origin, even behind an HTTP reverse proxy', () => {
   assert.equal(sameOrigin('https://kucafe.ir', 'https://kucafe.ir'), true)
+  assert.equal(sameOrigin('https://kucafe.ir', 'https://kucafe.ir/'), true)
+  assert.equal(sameOrigin('https://kucafe.ir', 'https://kucafe.ir/menu'), true)
+  assert.equal(sameOrigin('http://127.0.0.1:3000', 'http://127.0.0.1:3000'), true)
+  assert.equal(sameOrigin('https://kucafe.ir', 'http://127.0.0.1:3000'), false)
   assert.equal(sameOrigin(null, 'https://kucafe.ir'), false)
+  assert.equal(sameOrigin('null', 'https://kucafe.ir'), false)
   assert.equal(sameOrigin('https://evil.invalid', 'https://kucafe.ir'), false)
+  assert.equal(sameOrigin('https://kucafe.ir.evil.invalid', 'https://kucafe.ir'), false)
+  assert.equal(sameOrigin('https://kucafe.ir', undefined), false)
+  assert.equal(sameOrigin('https://kucafe.ir', 'not-a-url'), false)
+  assert.equal(sameOrigin('https://kucafe.ir', 'https://user:pass@kucafe.ir'), false)
 })
 test('only question or bounded work request types enter the owner inbox', () => {
   assert.equal(validateConsoleMessageKind('question'), 'question')

@@ -13,6 +13,15 @@ export function validateConsoleMessage(value: unknown): string | null {
   return text
 }
 
-export function sameOrigin(origin: string | null, expected: string): boolean {
-  return origin === expected
+export function sameOrigin(origin: string | null, publicSiteUrl: string | undefined): boolean {
+  if (!origin || !publicSiteUrl) return false
+  try {
+    const site = new URL(publicSiteUrl)
+    if (!['http:', 'https:'].includes(site.protocol) || site.username || site.password) return false
+    // The browser's Origin names the public HTTPS site. Behind the reverse
+    // proxy, NextRequest.nextUrl may instead describe the internal HTTP hop.
+    return origin === site.origin
+  } catch {
+    return false
+  }
 }

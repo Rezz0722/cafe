@@ -27,7 +27,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   const access = await admin()
   if (!access.ok) return json({ error: access.error }, access.status)
-  if (!sameOrigin(request.headers.get('origin'), request.nextUrl.origin)) return json({ error: 'مبدأ درخواست معتبر نیست.' }, 403)
+  if (!sameOrigin(request.headers.get('origin'), process.env.NEXT_PUBLIC_SITE_URL)) return json({ error: 'مبدأ درخواست معتبر نیست.' }, 403)
   if (!request.headers.get('content-type')?.toLowerCase().startsWith('application/json')) return json({ error: 'نوع درخواست معتبر نیست.' }, 415)
   const declaredSize = Number(request.headers.get('content-length') || '0')
   if (declaredSize > 4096) return json({ error: 'پیام بیش از حد مجاز است.' }, 413)
