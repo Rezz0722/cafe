@@ -1,9 +1,0 @@
-[Unit]
-Description=Wake KuCafe autonomy controller when the owner sends a message
-
-[Path]
-PathChanged=/var/lib/kucafe-autonomy/owner-console/messages
-Unit=kucafe-autonomy.service
-
-[Install]
-WantedBy=multi-user.target
