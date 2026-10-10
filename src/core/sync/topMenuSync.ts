@@ -1,7 +1,7 @@
 import 'server-only'
 
 import { spawn } from 'node:child_process'
-import { mkdir, open, readFile, rename, stat, unlink, writeFile, readdir } from 'node:fs/promises'
+import { chown, mkdir, open, readFile, rename, stat, unlink, writeFile, readdir } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import { randomUUID } from 'node:crypto'
 import { isNotNull } from 'drizzle-orm'
@@ -16,6 +16,7 @@ import {
   type TopMenuSelection,
   type TopMenuTarget,
 } from './topMenuSelection'
+import { failedTopMenuSourceIds, failedTopMenuSelectionIds } from './topMenuFailures'
 
 export type TopMenuSyncStatus = 'idle' | 'scraping' | 'ready' | 'applying' | 'completed' | 'failed'
 
@@ -196,6 +197,11 @@ export async function writeTopMenuSyncState(state: TopMenuSyncState): Promise<vo
   await mkdir(ROOT, { recursive: true })
   const temporary = join(ROOT, `.state-${randomUUID()}.json`)
   await writeFile(temporary, JSON.stringify(state, null, 2), { encoding: 'utf8', mode: 0o600 })
+  // The worker needs root only for the existing root-owned media tree. Its
+  // atomic state snapshots must remain readable/writable by the web UID.
+  if (process.env.TOPMENU_SYNC_EXECUTION_MODE === 'worker' && process.getuid?.() === 0) {
+    await chown(temporary, 10001, 10001)
+  }
   await rename(temporary, STATE)
   if(state.runId && /^[a-zA-Z0-9_-]{1,100}$/.test(state.runId)){
     try{
@@ -203,6 +209,7 @@ export async function writeTopMenuSyncState(state: TopMenuSyncState): Promise<vo
     await mkdir(directory,{recursive:true})
     const snapshot=join(directory,`.job-${randomUUID()}.json`)
     await writeFile(snapshot,JSON.stringify(state),{encoding:'utf8',mode:0o600})
+    if(process.env.TOPMENU_SYNC_EXECUTION_MODE==='worker'&&process.getuid?.()===0)await chown(snapshot,10001,10001)
     await rename(snapshot,join(directory,'job.json'))
     }catch{console.warn('[topmenu-sync] job history snapshot could not be saved; primary state is intact')}
   }
@@ -236,6 +243,12 @@ export async function startTopMenuSync(
   options: { selection: TopMenuSelection; expectedRunId?: string } = { selection: { scope: 'all', sourceIds: [] } },
 ): Promise<{ ok: boolean; error?: string }> {
   await mkdir(ROOT, { recursive: true })
+  if (process.env.TOPMENU_SYNC_EXECUTION_MODE === 'worker') {
+    const heartbeat = Number(await readFile(join(ROOT, 'worker-heartbeat'), 'utf8').catch(() => '0'))
+    if (!Number.isFinite(heartbeat) || Date.now() - heartbeat > 60_000 || heartbeat > Date.now() + 10_000) {
+      return { ok: false, error: 'سرویس اسکرپر در دسترس نیست؛ هیچ عملیاتی در صف قرار نگرفت. وضعیت worker را بررسی کنید.' }
+    }
+  }
   const lockPath = join(ROOT, 'start.lock')
   try {
     const lock = await open(lockPath, 'wx', 0o600)
@@ -244,12 +257,18 @@ export async function startTopMenuSync(
     if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error
     const owner = Number(await readFile(lockPath, 'utf8').catch(() => '0'))
     const age = Date.now() - (await stat(lockPath)).mtimeMs
-    if (age > 30000 && !processIsAlive(owner)) { await unlink(lockPath); return startTopMenuSync(mode, actor, options) }
+    // In worker mode the lock survives container replacement, while process IDs
+    // are recycled in the new PID namespace. Never trust a matching PID there.
+    if (age > 30000 && (process.env.TOPMENU_SYNC_EXECUTION_MODE === 'worker' || !processIsAlive(owner))) {
+      await unlink(lockPath).catch(error => { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error })
+      return startTopMenuSync(mode, actor, options)
+    }
     return { ok: false, error: 'شروع عملیات دیگری در جریان است؛ چند لحظه بعد دوباره بررسی کنید.' }
   }
   try {
   const current = await readTopMenuSyncState()
-  if ((current.status === 'scraping' || current.status === 'applying') && processIsAlive(current.pid)) {
+  if ((current.status === 'scraping' || current.status === 'applying') &&
+    (process.env.TOPMENU_SYNC_EXECUTION_MODE === 'worker' || processIsAlive(current.pid))) {
     return { ok: false, error: 'یک عملیات همگام‌سازی هنوز در حال اجراست.' }
   }
   if (mode === 'apply' && (current.status !== 'ready' || !current.report || !current.runId)) {
@@ -288,6 +307,9 @@ export async function startTopMenuSync(
     const snapshot = await readSnapshot(current)
     if (!snapshot.length) return { ok: false, error: 'فایل کامل گزارش در دسترس نیست؛ اسکرپ تازه اجرا کنید.' }
     selectTopMenuCafes(snapshot, selection)
+    const failed = await failedTopMenuSourceIds(join(ROOT, 'runs', current.runId!))
+    const blocked = failedTopMenuSelectionIds(failed, selection)
+    if (blocked.length) return { ok: false, error: `اطلاعات ${blocked.length.toLocaleString('fa-IR')} کافه از منبع کامل دریافت نشده است (${blocked.slice(0, 10).join('، ')}). این کافه‌ها را از انتخاب بردارید یا پس از رفع خطای منبع دوباره اسکرپ کنید؛ هیچ داده‌ای اعمال نشد.` }
   }
   const runId = mode === 'scrape'
     ? `${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}-${randomUUID().slice(0, 8)}`
@@ -303,6 +325,7 @@ export async function startTopMenuSync(
     ...(mode === 'scrape' ? { selection } : { applySelection: selection }),
   }
   await writeTopMenuSyncState(next)
+  if (process.env.TOPMENU_SYNC_EXECUTION_MODE === 'worker') return { ok: true }
   const child = spawn(
     process.execPath,
     ['--import', 'tsx', '--conditions=react-server', 'scripts/topmenu-sync.ts', mode, runId],

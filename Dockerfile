@@ -48,8 +48,9 @@ CMD ["node", "server.js"]
 FROM deps AS maintenance
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      ca-certificates curl default-mysql-client imagemagick rsync tini \
+      ca-certificates curl default-mysql-client imagemagick python3 python3-requests rsync tini util-linux \
     && rm -rf /var/lib/apt/lists/*
+LABEL ir.kucafe.topmenu-worker="1"
 WORKDIR /app
 COPY . .
 RUN npm run postinstall

@@ -20,10 +20,15 @@ services:
       HOSTNAME: 127.0.0.1
       PORT: ${KUCAFE_PORT:-3100}
       NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://kucafe.ir}
+      TOPMENU_SYNC_ROOT: /app/var/topmenu-sync
+      TOPMENU_SYNC_EXECUTION_MODE: worker
     volumes:
       - type: bind
         source: ${KUCAFE_MEDIA_DIR:-/var/www/kucafe/public/media}
         target: /app/public/media
+      - type: bind
+        source: ${KUCAFE_DEPLOY_STATE_DIR:-/var/lib/kucafe}/topmenu-sync
+        target: /app/var/topmenu-sync
     restart: unless-stopped
     stop_grace_period: 30s
     healthcheck:
@@ -35,6 +40,45 @@ services:
     labels:
       ir.kucafe.project: kucafe
       ir.kucafe.component: application
+
+  topmenu-worker:
+    image: kucafe/maintenance:${KUCAFE_IMAGE_TAG:-local}
+    network_mode: host
+    env_file:
+      - ${KUCAFE_ENV_FILE:-.env.production}
+    environment:
+      NODE_ENV: production
+      TOPMENU_SYNC_ROOT: /app/var/topmenu-sync
+      TOPMENU_SYNC_EXECUTION_MODE: worker
+      TOPMENU_SYNC_BACKUP_DIR: /backups
+    volumes:
+      - type: bind
+        source: ${KUCAFE_DEPLOY_STATE_DIR:-/var/lib/kucafe}/topmenu-sync
+        target: /app/var/topmenu-sync
+      - type: bind
+        source: ${KUCAFE_BACKUP_DIR:-/var/backups/kucafe}/topmenu-sync
+        target: /backups
+      - type: bind
+        source: ${KUCAFE_MEDIA_DIR:-/var/www/kucafe/public/media}
+        target: /app/public/media
+    # Existing downloaded media directories are root-owned. This service has
+    # no Docker socket; shared job state is explicitly chowned to web UID.
+    user: "0:10001"
+    cap_drop: ["ALL"]
+    cap_add: ["CHOWN", "DAC_OVERRIDE"]
+    security_opt: ["no-new-privileges:true"]
+    command: ["flock", "-n", "/app/var/topmenu-sync/worker.lock", "node", "--import", "tsx", "--conditions=react-server", "scripts/topmenu-worker.ts"]
+    restart: unless-stopped
+    stop_grace_period: 30s
+    healthcheck:
+      test: ["CMD", "node", "scripts/topmenu-worker-health.mjs"]
+      interval: 15s
+      timeout: 4s
+      start_period: 20s
+      retries: 4
+    labels:
+      ir.kucafe.project: kucafe
+      ir.kucafe.component: topmenu-worker
 
   maintenance:
     image: kucafe/maintenance:${KUCAFE_IMAGE_TAG:-local}

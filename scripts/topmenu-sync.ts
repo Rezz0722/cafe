@@ -1,6 +1,6 @@
 import { spawn } from 'node:child_process'
 import { createWriteStream } from 'node:fs'
-import { copyFile, mkdir, readFile, readdir } from 'node:fs/promises'
+import { copyFile, mkdir, readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { once } from 'node:events'
 import { eq, inArray, isNotNull, sql } from 'drizzle-orm'
@@ -56,6 +56,7 @@ import { importedItemPublicId } from '../src/core/items/identity.ts'
 import { matchDish, matchFacet } from '../src/core/taxonomy/menuTaxonomy.ts'
 import { classifyMenuBranchScope } from '../src/core/places/branchScope.ts'
 import { parseTopMenuSelection, selectTopMenuCafes, type TopMenuSelection } from '../src/core/sync/topMenuSelection.ts'
+import { failedTopMenuSourceIds, failedTopMenuSelectionIds } from '../src/core/sync/topMenuFailures.ts'
 
 const mode = process.argv[2]
 const runId = process.argv[3]
@@ -345,8 +346,7 @@ async function buildReport(cafes: RawCafe[]): Promise<TopMenuSyncReport> {
     }
   }
 
-  const failedFile = (await readdir(join(topMenuSyncRoot, 'runs', runId))).find((name) => name.startsWith('failed_') && name.endsWith('.json'))
-  const failedCafes = failedFile ? (JSON.parse(await readFile(join(topMenuSyncRoot, 'runs', runId, failedFile), 'utf8')) as unknown[]).length : 0
+  const failedCafes = (await failedTopMenuSourceIds(join(topMenuSyncRoot, 'runs', runId))).length
   return {
     reportVersion: 2,
     totalChanges: totalUpdatedItems + totalNewItems + totalArchivedItems + newCafes.length,
@@ -429,10 +429,12 @@ async function apply() {
   const selection = await runSelection('apply')
   const cafes = selectTopMenuCafes(JSON.parse(await readFile(join(runDir, 'cafes_full_latest.json'), 'utf8')) as RawCafe[], selection)
   validateSource(cafes)
+  const blocked = failedTopMenuSelectionIds(await failedTopMenuSourceIds(runDir), selection)
+  if (blocked.length) throw new Error(`دادهٔ ${blocked.length} کافه از منبع ناقص است (${blocked.slice(0, 10).join('، ')}). هیچ داده‌ای اعمال نشد.`)
   const selectedReport = await buildReport(cafes)
   if (selectedReport.totalConflicts > 0) throw new Error(`${selectedReport.totalConflicts} تداخل شناسه در کافه‌های انتخاب‌شده وجود دارد؛ هیچ داده‌ای تغییر نکرد.`)
 
-  const backup = join('backups', `kucafe-before-topmenu-${runId}.sql.gz`)
+  const backup = join(process.env.TOPMENU_SYNC_BACKUP_DIR || 'backups', `kucafe-before-topmenu-${runId}.sql.gz`)
   const backupChild = spawn(process.execPath, ['scripts/backup-db.mjs', backup], { cwd: process.cwd(), env: process.env, stdio: 'ignore' })
   const [backupCode] = await once(backupChild, 'close') as [number]
   if (backupCode !== 0) throw new Error('بکاپ قبل از اعمال تغییرات ساخته نشد؛ هیچ داده‌ای تغییر نکرد.')
