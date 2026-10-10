@@ -1,0 +1,47 @@
+{
+  "batchId": "provider-demo-cleanup-20261010",
+  "operation": "archive-only",
+  "reviewedAt": "2026-10-10",
+  "targets": [
+    {
+      "id": 159,
+      "slug": "topmenu",
+      "sourceId": 2,
+      "status": "published",
+      "revision": 0,
+      "menuRows": 88,
+      "menuHash": "944ac27520f7b9ad6a2d42cb328f497a3589e7a2b4d12378aff16504a611d517",
+      "reason": "Imported record uses the topmenu source identity and top_menu_market handle. Its own description advertises a digital-menu and storefront service, and the catalogue contains a test product. It is a provider/demo listing, not an independently verified cafe.",
+      "sourceUrls": ["https://topmenumarket.com/"]
+    },
+    {
+      "id": 218,
+      "slug": "test-topmenu",
+      "sourceId": 396,
+      "status": "published",
+      "revision": 0,
+      "menuRows": 17,
+      "menuHash": "36c05ceaae8cadd60c8a79756a0d1102bb3a2b66c3a66a51f9fd21180c6198bc",
+      "reason": "Imported identity is test_topmenu, place name is 'مجموعه تستی', and the description is Lorem Ipsum placeholder text. This is a test listing, not a verified public cafe.",
+      "sourceUrls": []
+    },
+    {
+      "id": 349,
+      "slug": "tm-plus",
+      "sourceId": 647,
+      "status": "published",
+      "revision": 0,
+      "menuRows": 17,
+      "menuHash": "33cf68df161e559cfac913c95ab4e1070c2832a1c1ad6521be5ac9a51a108215",
+      "reason": "Imported record shares top_menu_market handle with the menu provider and its own description advertises digital-menu and storefront services. No independent cafe identity is evidenced.",
+      "sourceUrls": ["https://topmenumarket.com/"]
+    }
+  ],
+  "followUpOnly": [
+    {"id": 365, "reason": "English Top Menu record has not passed exact-identity review."},
+    {"id": 409, "reason": "Wholesale-looking record needs more evidence before any archive."},
+    {"id": 413, "reason": "Ceramics-looking name and empty menu alone are insufficient."},
+    {"id": 367, "reason": "Possible signage portfolio needs independent identity evidence."}
+  ],
+  "preservation": "No hard deletes. Menu/media/users/claims/reviews/attributes stay untouched. Archive requires exact identity, revision, owner absence, catalogue hash and a fresh verified backup; all writes and audit are atomic. Matching source IDs are excluded from re-import."
+}
