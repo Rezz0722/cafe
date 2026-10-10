@@ -10,6 +10,7 @@ const allowedTypes = new Set([
   'research-stage', 'research-empty', 'model-start', 'model-end',
   'message-received', 'message-answer', 'message-deferred', 'model-progress',
   'work-stage', 'work-deferred',
+  'roadmap-stage', 'roadmap-deferred',
 ]);
 const token = value => typeof value === 'string' && /^[a-z0-9][a-z0-9-]{0,60}$/.test(value) ? value : null;
 
