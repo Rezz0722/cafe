@@ -18,3 +18,10 @@ test('retry must match exact batch audit and revision, not an unrelated draft', 
   assert.throws(() => catalogArchiveAction(baseline, archived, 39, 'hash', 0, 'other'))
   assert.throws(() => catalogArchiveAction(baseline, current, 39, 'hash', 0, 'non-venue-cleanup-20261008'))
 })
+test('a second reviewed batch can be retried only against its own audit', () => {
+  const batch = 'provider-demo-cleanup-20261010'
+  const archived = { ...current, status: 'draft', revision: 1 }
+  assert.equal(catalogArchiveAction(baseline, current, 39, 'hash', 0, null, batch), 'archive')
+  assert.equal(catalogArchiveAction(baseline, archived, 39, 'hash', 0, batch, batch), 'already-archived')
+  assert.throws(() => catalogArchiveAction(baseline, archived, 39, 'hash', 0, 'non-venue-cleanup-20261008', batch))
+})
