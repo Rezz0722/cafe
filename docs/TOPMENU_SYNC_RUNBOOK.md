@@ -17,6 +17,13 @@ replacement, but an interrupted in-progress job is marked failed rather than
 automatically replayed — especially important for an apply operation.
 The admin API refuses to queue a new job when the heartbeat is missing or stale.
 
+The scraper is started with unbuffered Python stdout so its progress lines
+reach `scrape.log` while it runs. The panel treats `[N/total]` as the start of
+provider N, so the completed count is N-1 until the final `تمام شد.` line.
+Item and failure counts are computed from the bounded log read, not just the
+200 lines shown in the panel; if the log exceeds that read limit, the panel
+labels those counts as coming from the bounded log tail.
+
 ## Source failures and data safety
 
 TopMenuMarket currently returns HTTP 403 with a JSON message saying a provider

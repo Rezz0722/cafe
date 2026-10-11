@@ -21,6 +21,7 @@ await writeFile(join(root, 'runs', runId, 'failed_20261011_160841.json'), JSON.s
   id: targets[1].sourceId, name: targets[1].name,
   errors: [`menu: /providers/${targets[1].sourceId}/menu -> HTTP 403: مجموعه مورد نظر فاقد منو دیجیتال می باشد`],
 }]))
+await writeFile(join(root, 'runs', runId, 'scrape.log'), '[1/2] کافه اول (first) ...\n    1 آیتم منو پیدا شد.\n[2/2] کافه دوم (second) ...\n')
 await writeFile(join(root, 'state.json'), JSON.stringify({ runId, status: 'ready', report: { sourceCafes: 2, matchedCafes: 2,
   matchedItems: 0, unchangedItems: 0, failedCafes: 1, totalChanges: 0, totalNewCafes: 0, totalNewItems: 0, totalNewSections: 0,
   totalUpdatedItems: 0, totalMovedItems: 0, totalReactivatedItems: 0, totalArchivedItems: 0, totalConflicts: 0,
@@ -47,6 +48,9 @@ try {
     page.on('dialog', dialog => dialog.accept())
     await page.goto(`${base}/admin`, { waitUntil: 'domcontentloaded', timeout: 120000 })
     await page.getByRole('button', { name: 'عملیات', exact: true }).click()
+    const progress = page.getByRole('progressbar', { name: 'پیشرفت اسکرپ' })
+    await progress.waitFor()
+    assert.equal(await progress.getAttribute('aria-valuenow'), '50')
     const scrape = page.getByRole('group', { name: '۱. کدام کافه‌ها اسکرپ شوند؟' })
     const apply = page.getByRole('group', { name: '۲. تغییرات کدام کافه‌ها اعمال شوند؟' })
     await scrape.waitFor()

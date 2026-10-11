@@ -52,7 +52,7 @@ export interface TopMenuLogTail {
 async function readTail(
   runId: string,
   name: TopMenuLogName,
-): Promise<{ lines: string[]; truncated: boolean; bytes: number; updatedAt: string | null } | null> {
+): Promise<{ lines: string[]; progressText: string; truncated: boolean; bytes: number; updatedAt: string | null } | null> {
   if (!/^[A-Za-z0-9_-]{1,100}$/.test(runId)) return null
   const path = join(topMenuSyncRoot, 'runs', runId, LOG_FILES[name])
   let size: number
@@ -66,14 +66,16 @@ async function readTail(
   }
 
   const length = Math.min(size, MAX_LOG_BYTES)
-  if (length === 0) return { lines: [], truncated: false, bytes: 0, updatedAt }
+  if (length === 0) return { lines: [], progressText: '', truncated: false, bytes: 0, updatedAt }
 
   const handle = await open(path, 'r')
   try {
     const buffer = Buffer.alloc(length)
     await handle.read(buffer, 0, length, size - length)
+    const progressText = buffer.toString('utf8')
     return {
-      lines: buffer.toString('utf8').split('\n').map(line => line.replace(/\r$/, '')).filter(Boolean).slice(-MAX_LINES),
+      lines: progressText.split('\n').map(line => line.replace(/\r$/, '')).filter(Boolean).slice(-MAX_LINES),
+      progressText,
       truncated: size > length,
       bytes: size,
       updatedAt,
@@ -112,7 +114,9 @@ export async function readTopMenuLogTail(requested?: TopMenuLogName): Promise<To
 
   const log = available[0]!
   const tail = read[log]!
-  const progress = parseTopMenuLog(tail.lines.join('\n'))
+  // Parse every line in the bounded read, not only the 200 displayed lines:
+  // otherwise cumulative item/failure counts silently reset during long runs.
+  const progress = parseTopMenuLog(tail.progressText)
   return {
     runId,
     status: state.status,

@@ -392,7 +392,9 @@ async function scrape() {
       await writeFile(idsFile, JSON.stringify(selection.sourceIds), { mode: 0o600 })
       args.push('--provider-ids-file', idsFile)
     }
-    const child = spawn('python3', args, { cwd: process.cwd(), stdio: ['ignore', 'pipe', 'pipe'] })
+    // stdout is a pipe, not a terminal: without -u Python buffers progress
+    // until the buffer fills or the scrape exits, making the live UI appear stuck.
+    const child = spawn('python3', ['-u', ...args], { cwd: process.cwd(), stdio: ['ignore', 'pipe', 'pipe'] })
     child.stdout.pipe(log)
     child.stderr.pipe(log)
     const [code] = await once(child, 'close') as [number]
