@@ -29,7 +29,23 @@ provider-list request is authoritative. A selected scrape still reads that
 directory, but its `providers_info_latest.json` and `cafes_full_latest.json`
 contain only selected cafes and must never mark unselected cafes as removed.
 Old runs without the complete-directory artifact mean availability is
-unknown; the scraper itself remains the final guard for missing source IDs.
+unknown. A selected scrape compares its requested IDs with the verified full
+directory from **that same run**. IDs removed from the source and confirmed
+non-venues are skipped individually and recorded as `report.skippedSources`;
+the rest continue. A malformed/incomplete directory is still a hard failure,
+not permission to guess that providers vanished. Missing full records are
+skipped only when their IDs appear in the per-provider failure manifest;
+otherwise the report is rejected as incomplete. An all-missing selection
+produces an empty report, never an implicit all-provider scrape. Apply remains
+strict and never accepts an absent or failed selected provider.
+The worker passes the reviewed non-venue IDs to Python in a per-run file, so
+even a full scrape does not spend provider requests on those IDs. The saved
+directory still contains the full source list for reconciliation.
+
+The scrape button starts this report-only operation directly; no browser-native
+confirmation dialog or manual "remove missing providers" button is needed.
+Database writes still require the separate apply step, typed confirmation and
+backup.
 
 ## Source failures and data safety
 

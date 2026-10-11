@@ -2,8 +2,8 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
   annotateSourceAvailability,
-  isTargetCheckboxDisabled,
   parseTopMenuSelection,
+  reconcileTopMenuScrape,
   selectTopMenuCafes,
   staleSelectionIds,
   type TopMenuTarget,
@@ -120,35 +120,48 @@ test('staleSelectionIds names only the removed ones, in selection order', () => 
   assert.deepEqual(staleSelectionIds(marked, [165]), [])
 })
 
-test('unknown availability is never blocked — the scraper guard decides', () => {
-  // inSource تعریف‌نشده یعنی «نمی‌دانیم»، نه «حذف شده». گاردِ سخت‌گیرِ
-  // topmarket.py باید تنها جایی بماند که این حالت را متوقف می‌کند.
+test('unknown availability does not block selection; the current full directory decides', () => {
   const unknown = [{ sourceId: 7, placeId: null, name: 'نامعلوم', username: '' }] satisfies TopMenuTarget[]
   assert.deepEqual(staleSelectionIds(unknown, [7]), [])
-  assert.throws(() => selectTopMenuCafes([], parseTopMenuSelection('selected', [7])))
+  assert.deepEqual(reconcileTopMenuScrape([], parseTopMenuSelection('selected', [7]), [11], []), {
+    cafes: [], skipped: { excluded: [], missing: [7], incomplete: [] },
+  })
 })
 
-// ── قفل چک‌باکس ─────────────────────────────────────────────────────────────
-// رگرسیونِ واقعیِ دوم: `disabled` روی ردیفِ تیک‌خورده، ادمین را در انتخابی گیر
-// انداخت که نه قابل اصلاح بود و نه قابل اجرا.
+// ── ادامهٔ سالم با انتخابِ شامل شناسه‌های منقضی ─────────────────────────────
 
-test('a removed café already ticked stays untickable — no dead end', () => {
-  // اگر این قفل بود، تنها راهِ خروج از انتخابی می‌شد که سرور رد می‌کند.
-  const ticked = annotateSourceAvailability(catalog, [165])[0]!
-  assert.equal(ticked.inSource, false)
-  assert.equal(isTargetCheckboxDisabled(ticked, [ticked.sourceId]), false)
-  assert.equal(isTargetCheckboxDisabled(ticked, [ticked.sourceId, 165]), false)
+test('stale or excluded sources never block healthy selected cafes', () => {
+  assert.deepEqual(reconcileTopMenuScrape(cafes, { scope: 'selected', sourceIds: [12, 325, 162, 25] }, [12, 25], []), {
+    cafes, skipped: { excluded: [162], missing: [325], incomplete: [] },
+  })
 })
 
-test('a removed café not yet ticked cannot be newly ticked', () => {
-  const removed = annotateSourceAvailability(catalog, [165])[0]!
-  assert.equal(isTargetCheckboxDisabled(removed, []), true)
-  assert.equal(isTargetCheckboxDisabled(removed, [165]), true)
+test('a source restored after the last admin snapshot is processed', () => {
+  assert.deepEqual(reconcileTopMenuScrape(cafes, { scope: 'selected', sourceIds: [12, 25] }, [12, 25], []).cafes, cafes)
 })
 
-test('healthy and unknown cafés are never locked', () => {
-  const healthy = annotateSourceAvailability(catalog, [165])[2]!
-  const unknown = { sourceId: 7, placeId: null, name: 'نامعلوم', username: '' } satisfies TopMenuTarget
-  assert.equal(isTargetCheckboxDisabled(healthy, []), false)
-  assert.equal(isTargetCheckboxDisabled(unknown, []), false)
+test('an absent snapshot requires an explicit per-provider failure', () => {
+  assert.throws(() => reconcileTopMenuScrape([cafes[0]!], { scope: 'selected', sourceIds: [12, 25] }, [12, 25], []), /بدون ثبت خطای دریافت/)
+  assert.deepEqual(reconcileTopMenuScrape([cafes[0]!], { scope: 'selected', sourceIds: [12, 25] }, [12, 25], [25]), {
+    cafes: [cafes[0]], skipped: { excluded: [], missing: [], incomplete: [25] },
+  })
+})
+
+test('all missing IDs yield an empty scrape, never an implicit full scrape', () => {
+  assert.deepEqual(reconcileTopMenuScrape([], { scope: 'selected', sourceIds: [325, 608] }, [12, 25], []), {
+    cafes: [], skipped: { excluded: [], missing: [325, 608], incomplete: [] },
+  })
+})
+
+test('full scrape also needs accounted-for missing records and excludes non-venues', () => {
+  const source = [12, 25, 162]
+  assert.throws(() => reconcileTopMenuScrape([cafes[0]!], { scope: 'all', sourceIds: [] }, source, []), /بدون ثبت خطای دریافت/)
+  assert.deepEqual(reconcileTopMenuScrape([cafes[0]!], { scope: 'all', sourceIds: [] }, source, [25]), {
+    cafes: [cafes[0]], skipped: { excluded: [162], missing: [], incomplete: [25] },
+  })
+})
+
+test('unexpected source records are rejected instead of entering the report', () => {
+  assert.throws(() => reconcileTopMenuScrape(cafes, { scope: 'selected', sourceIds: [12] }, [12, 25], []), /انتخاب‌نشده/)
+  assert.throws(() => reconcileTopMenuScrape(cafes, { scope: 'all', sourceIds: [] }, [12], []), /خارج از فهرست معتبر/)
 })

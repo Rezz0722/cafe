@@ -2,6 +2,11 @@ import type { RawCafe } from '../import/source'
 import { isTopMenuSourceExcluded } from './topMenuExclusions'
 
 export interface TopMenuSelection { scope: 'all' | 'selected'; sourceIds: number[] }
+export interface TopMenuSkippedSources {
+  excluded: number[]
+  missing: number[]
+  incomplete: number[]
+}
 export interface TopMenuTarget {
   sourceId: number
   placeId: number | null
@@ -12,7 +17,7 @@ export interface TopMenuTarget {
    * آیا این مجموعه در آخرین فهرستِ منبع دیده شده است؟
    *
    * `true`  = در فهرست منبع هست (یا از خودِ snapshot آمده).
-   * `false` = در دیتابیس هست ولی منبع آن را حذف کرده — قابل اسکرپ نیست.
+   * `false` = در آخرین فهرست کاملِ خوانده‌شده نبود؛ اجرای تازه دوباره بررسی می‌کند.
    * `undefined` = فهرست منبع در دسترس نبوده، پس درباره‌اش چیزی نمی‌دانیم.
    *
    * ═══ چرا `undefined` وجود دارد و `false` نیست ═══
@@ -23,8 +28,7 @@ export interface TopMenuTarget {
    * همگام‌سازی را از راهی که اصلاً ربطی به خرابیِ فایل ندارد می‌بندد.
    *
    * پس نبودِ شواهد، هرگز تبدیل به «شاهدِ نبود» نمی‌شود: در حالت نامعلوم، مقدار
-   * `undefined` می‌ماند و رفتار سیستم دقیقاً مثل قبل است — گاردِ `selectTopMenuCafes`
-   * و fail-fast اسکرپر، هر دو دست‌نخورده باقی می‌مانند.
+   * `undefined` می‌ماند. تصمیم قطعی فقط با فهرست کاملِ اجرای تازه گرفته می‌شود.
    */
   inSource?: boolean
 }
@@ -58,19 +62,54 @@ export function selectTopMenuCafes(cafes: RawCafe[], selection: TopMenuSelection
 }
 
 /**
+ * Scraping tolerates changes in a verified source directory; applying data does
+ * not. An incomplete snapshot is tolerated only when that provider is also in
+ * the scraper's per-provider failure manifest. Unknown omissions stay fatal.
+ */
+export function reconcileTopMenuScrape(
+  cafes: RawCafe[], selection: TopMenuSelection, sourceIds: readonly number[], failedIds: readonly number[],
+): { cafes: RawCafe[]; skipped: TopMenuSkippedSources } {
+  const parsed = parseTopMenuSelection(selection.scope, selection.sourceIds)
+  const available = new Set(sourceIds)
+  const recorded = new Set(cafes.map(cafe => Number(cafe['شناسه'])))
+  const failed = new Set(failedIds)
+  const unexpected = [...recorded].filter(id => !available.has(id))
+  if (unexpected.length) throw new Error(`رکورد خارج از فهرست معتبر منبع در خروجی اسکرپ دیده شد (${unexpected.slice(0, 10).join('، ')}). هیچ داده‌ای اعمال نشد.`)
+  if (parsed.scope === 'all') {
+    const excluded = sourceIds.filter(isTopMenuSourceExcluded)
+    const incomplete = sourceIds.filter(id => !isTopMenuSourceExcluded(id) && !recorded.has(id))
+    const unexplained = incomplete.filter(id => !failed.has(id))
+    if (unexplained.length) throw new Error(`دادهٔ ${unexplained.length} کافهٔ موجود در منبع بدون ثبت خطای دریافت ناقص است (${unexplained.slice(0, 10).join('، ')}). هیچ داده‌ای اعمال نشد.`)
+    return { cafes: selectTopMenuCafes(cafes, parsed), skipped: { excluded, missing: [], incomplete } }
+  }
+  const excluded = parsed.sourceIds.filter(isTopMenuSourceExcluded)
+  const missing = parsed.sourceIds.filter(id => !isTopMenuSourceExcluded(id) && !available.has(id))
+  const eligible = parsed.sourceIds.filter(id => !isTopMenuSourceExcluded(id) && available.has(id))
+  const selectedSet = new Set(eligible)
+  const unrequested = [...recorded].filter(id => !selectedSet.has(id))
+  if (unrequested.length) throw new Error(`رکورد انتخاب‌نشده در خروجی اسکرپ دیده شد (${unrequested.slice(0, 10).join('، ')}). هیچ داده‌ای اعمال نشد.`)
+  const absentFromSnapshot = eligible.filter(id => !recorded.has(id))
+  const unexplained = absentFromSnapshot.filter(id => !failed.has(id))
+  if (unexplained.length) throw new Error(`دادهٔ ${unexplained.length} کافهٔ موجود در منبع بدون ثبت خطای دریافت ناقص است (${unexplained.slice(0, 10).join('، ')}). هیچ داده‌ای اعمال نشد.`)
+  const complete = eligible.filter(id => recorded.has(id))
+  return {
+    cafes: complete.length ? selectTopMenuCafes(cafes, { scope: 'selected', sourceIds: complete }) : [],
+    skipped: { excluded, missing, incomplete: absentFromSnapshot },
+  }
+}
+
+/**
  * برچسب‌گذاریِ کاتالوگ با وضعیت حضور در منبع.
  *
  * ═══ مسئله‌ای که این حل می‌کند ═══
  *
- * کاتالوگِ ادمین از دیتابیس ساخته می‌شود (هر `place` که `source_id` دارد). منبع
- * هم مستقل است و مجموعه‌ها را حذف می‌کند. نتیجه: کافه‌ای که منبع حذفش کرده در
- * کاتالوگ می‌ماند، تیک می‌خورد، و بعد `topmarket.py` کل اجرا را می‌کشد چون آن
- * شناسه در فهرست منبع نیست. یعنی سه مجموعه‌ی حذف‌شده، ۳۴۹ مجموعه‌ی سالم را هم
- * قفل می‌کنند — و کاربر پیامی می‌بیند که اسم هیچ کافه‌ای در آن نیست.
+ * کاتالوگِ ادمین از دیتابیس ساخته می‌شود (هر `place` که `source_id` دارد)، اما
+ * منبع مستقل است و ممکن است مجموعه‌ها را حذف کند. این برچسب به ادمین نشان
+ * می‌دهد کدام شناسه در آخرین فهرست نبود؛ اجرای تازه هر شناسه را دوباره می‌سنجد
+ * و غایب‌ها را بدون متوقف‌کردن بقیه کنار می‌گذارد.
  *
- * این تابع آن سه را *می‌شناساند* (نه اینکه حذفشان کند) تا ادمین بتواند تیکشان را
- * بردارد. حذفِ خودکار غلط است: ممکن است منبع موقتاً فهرست را ناقص بدهد و ما
- * بی‌دلیل کافه‌های سالم را از دسترس خارج کنیم.
+ * این تابع فقط وضعیت آخرین فهرست را نشان می‌دهد. برای اجرای تازه، تنها فهرست
+ * کامل و اعتبارسنجی‌شدهٔ همان اجرا می‌تواند مبنای کنارگذاشتن شناسه باشد.
  *
  * @param targets کاتالوگِ فعلی
  * @param sourceIds شناسه‌هایی که در snapshot/فهرست اخیرِ منبع دیده شده‌اند؛
@@ -88,29 +127,11 @@ export function annotateSourceAvailability(
 }
 
 /**
- * آیا چک‌باکسِ این ردیف غیرفعال است؟
- *
- * ═══ چرا فقط وقتی تیک نخورده ═══
- *
- * یک ردیفِ حذف‌شده از منبع باید نتواند *تازه* انتخاب شود — ولی اگر از قبل
- * در انتخاب بوده، باید بتوان آن را **برداشت**. `disabled` در HTML هر دو حالت
- * را می‌بندد، و آن‌وقت ادمین در انتخابی گیر می‌افتد که نه می‌تواند آن سه را
- * بردارد و نه اسکرپ را اجرا کند (سرور درخواست را رد می‌کند). عملاً یک بن‌بست با
- * رابط کاربریِ درست.
- *
- * پس قفل، فقط راه *ورود* را می‌بندد؛ راه خروج همیشه باز است.
- */
-export function isTargetCheckboxDisabled(target: TopMenuTarget, selected: readonly number[]): boolean {
-  return target.inSource === false && !selected.includes(target.sourceId)
-}
-
-/**
  * شناسه‌هایی از یک انتخاب که می‌دانیم در منبع نیستند.
  *
  * فقط `inSource === false` برمی‌گردد. `undefined` عمداً نادیده گرفته می‌شود: در
- * حالت نامعلوم، ادمین باید بتواند انتخابش را بفرستد و گاردِ سمتِ اسکرپر تصمیم
- * بگیرد — این تابع جای آن گارد را نمی‌گیرد، فقط کاری می‌کند که خطا *قبل* از
- * پنج دقیقه اسکرپ و با نام کافه برسد.
+ * حالت نامعلوم و حتی غیبتِ قبلی هر دو اجازهٔ ارسال دارند؛ فهرست کاملِ همین
+ * اجرای جدید تشخیص می‌دهد کدام شناسه‌ها واقعاً باید کنار گذاشته شوند.
  */
 export function staleSelectionIds(targets: TopMenuTarget[], sourceIds: readonly number[]): number[] {
   const stale = new Set(targets.filter(target => target.inSource === false).map(target => target.sourceId))

@@ -1,6 +1,6 @@
 import { spawn } from 'node:child_process'
 import { createWriteStream } from 'node:fs'
-import { copyFile, mkdir, readFile } from 'node:fs/promises'
+import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { once } from 'node:events'
 import { eq, inArray, isNotNull, sql } from 'drizzle-orm'
@@ -55,8 +55,10 @@ import { hashUrl } from '../src/core/media/store.ts'
 import { importedItemPublicId } from '../src/core/items/identity.ts'
 import { matchDish, matchFacet } from '../src/core/taxonomy/menuTaxonomy.ts'
 import { classifyMenuBranchScope } from '../src/core/places/branchScope.ts'
-import { parseTopMenuSelection, selectTopMenuCafes, type TopMenuSelection } from '../src/core/sync/topMenuSelection.ts'
+import { parseTopMenuSelection, reconcileTopMenuScrape, selectTopMenuCafes, type TopMenuSelection, type TopMenuSkippedSources } from '../src/core/sync/topMenuSelection.ts'
 import { assertTopMenuFailureManifest, failedTopMenuSourceIds, failedTopMenuSelectionIds } from '../src/core/sync/topMenuFailures.ts'
+import { readTopMenuRunSourcePresence } from '../src/core/sync/topMenuSourcePresence.ts'
+import { isTopMenuSourceExcluded, TOP_MENU_EXCLUDED_SOURCE_IDS } from '../src/core/sync/topMenuExclusions.ts'
 
 const mode = process.argv[2]
 const runId = process.argv[3]
@@ -381,15 +383,20 @@ async function scrape() {
   const runDir = join(topMenuSyncRoot, 'runs', runId)
   await mkdir(runDir, { recursive: true })
   const selection = await runSelection('scrape')
+  const eligibleIds = selection.scope === 'selected' ? selection.sourceIds.filter(id => !isTopMenuSourceExcluded(id)) : []
+  if (selection.scope === 'selected' && !eligibleIds.length)
+    throw new Error('هیچ کافهٔ قابل اسکرپی در انتخاب نیست؛ همهٔ موارد انتخابی غیرکافه یا دمو هستند.')
   if (process.env.TOPMENU_SYNC_SOURCE_FILE) {
     await copyFile(process.env.TOPMENU_SYNC_SOURCE_FILE, join(runDir, 'cafes_full_latest.json'))
   } else {
     const log = createWriteStream(join(runDir, 'scrape.log'), { flags: 'a' })
     const args = ['topmarket.py', '--out', runDir, '--delay', '1.2']
+    const excludedFile = join(runDir, 'excluded-provider-ids.json')
+    await writeFile(excludedFile, JSON.stringify(TOP_MENU_EXCLUDED_SOURCE_IDS), { mode: 0o600 })
+    args.push('--exclude-provider-ids-file', excludedFile)
     if (selection.scope === 'selected') {
       const idsFile = join(runDir, 'provider-ids.json')
-      const { writeFile } = await import('node:fs/promises')
-      await writeFile(idsFile, JSON.stringify(selection.sourceIds), { mode: 0o600 })
+      await writeFile(idsFile, JSON.stringify(eligibleIds), { mode: 0o600 })
       args.push('--provider-ids-file', idsFile)
     }
     // stdout is a pipe, not a terminal: without -u Python buffers progress
@@ -402,11 +409,22 @@ async function scrape() {
     if (code !== 0) throw new Error(`اسکرپر با کد ${code} متوقف شد؛ لاگ اجرا را بررسی کنید.`)
   }
 
-  const cafes = selectTopMenuCafes(JSON.parse(await readFile(join(runDir, 'cafes_full_latest.json'), 'utf8')) as RawCafe[], selection)
+  const rawCafes = JSON.parse(await readFile(join(runDir, 'cafes_full_latest.json'), 'utf8')) as RawCafe[]
+  let cafes: RawCafe[]
+  let skippedSources: TopMenuSkippedSources = { excluded: [], missing: [], incomplete: [] }
+  if (process.env.TOPMENU_SYNC_SOURCE_FILE) {
+    cafes = selectTopMenuCafes(rawCafes, selection)
+  } else {
+    const sourceIds = await readTopMenuRunSourcePresence(topMenuSyncRoot, runId)
+    if (!sourceIds) throw new Error('فهرست کامل و معتبر مجموعه‌های منبع برای این اجرا ثبت نشده است؛ گزارش ناقص پذیرفته نمی‌شود.')
+    const result = reconcileTopMenuScrape(rawCafes, selection, sourceIds, await failedTopMenuSourceIds(runDir))
+    cafes = result.cafes
+    skippedSources = result.skipped
+  }
   validateSource(cafes)
-  const { writeFile } = await import('node:fs/promises')
   await writeFile(join(runDir, 'cafes_full_latest.json'), JSON.stringify(cafes), 'utf8')
   const report = await buildReport(cafes)
+  report.skippedSources = skippedSources
   const current = await readTopMenuSyncState()
   await writeTopMenuSyncState({ ...current, runId, selection, status: 'ready', pid: undefined, finishedAt: new Date().toISOString(), report })
 }

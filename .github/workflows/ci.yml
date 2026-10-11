@@ -53,6 +53,11 @@ jobs:
         run: npm run db:migrate
       - run: npm run typecheck
       - run: npm test
+      - name: TopMenuMarket scraper contract (mocked source, no live requests)
+        run: |
+          python3 -m venv "$RUNNER_TEMP/topmenu-smoke-venv"
+          "$RUNNER_TEMP/topmenu-smoke-venv/bin/python" -m pip install --disable-pip-version-check requests==2.32.5
+          "$RUNNER_TEMP/topmenu-smoke-venv/bin/python" scripts/topmenu-selection-python-smoke.py
       - name: Sales intake and atomic ownership integration
         run: KUCAFE_LEAD_DB_TEST=1 node --import tsx --conditions=react-server --test src/core/leads/service.integration.test.ts
       - name: Signed menu import and atomic rollback integration
