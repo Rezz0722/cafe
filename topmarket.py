@@ -424,14 +424,13 @@ def save_json(path, data):
 
 def save_complete_source_directory(out_dir, providers):
     source_ids = [provider["id"] for provider in providers]
-    if source_ids and len(source_ids) == len(set(source_ids)) and all(
+    if not source_ids or len(source_ids) != len(set(source_ids)) or not all(
         type(pid) is int and 0 < pid <= 2147483647 for pid in source_ids
     ):
-        save_json(out_dir / "source_provider_ids_latest.json", {
-            "version": 1, "complete": True, "total": len(source_ids), "sourceIds": source_ids,
-        })
-    else:
-        print("فهرست شناسه‌های منبع معتبر نیست؛ وضعیت حضور مجموعه‌ها نامعلوم می‌ماند.")
+        raise RuntimeError("فهرست شناسه‌های منبع ناقص، تکراری یا نامعتبر است؛ اسکرپ متوقف شد")
+    save_json(out_dir / "source_provider_ids_latest.json", {
+        "version": 1, "complete": True, "total": len(source_ids), "sourceIds": source_ids,
+    })
 
 
 def save_csv(path, rows, fieldnames):
@@ -459,6 +458,8 @@ def main():
     )
     parser.add_argument("--provider-ids-file", default=None,
                         help="فایل JSON شناسه کافه‌های انتخاب‌شده؛ فقط منوی همین کافه‌ها دریافت می‌شود")
+    parser.add_argument("--exclude-provider-ids-file", default=None,
+                        help="فایل JSON شناسه مجموعه‌های تأییدشدهٔ غیرکافه/دمو؛ از دریافت جزئیات حذف می‌شوند")
     parser.add_argument(
         "--per-provider-files",
         action="store_true",
@@ -475,6 +476,14 @@ def main():
     )
     args = parser.parse_args()
     REQUEST_DELAY = max(0.5, min(args.delay, 10.0))
+    excluded_ids = set()
+    if args.exclude_provider_ids_file:
+        excluded = json.loads(Path(args.exclude_provider_ids_file).read_text(encoding="utf-8"))
+        if not isinstance(excluded, list) or len(excluded) > 1000 or any(
+            type(pid) is not int or pid <= 0 or pid > 2147483647 for pid in excluded
+        ):
+            parser.error("فهرست شناسه‌های مستثنا معتبر نیست")
+        excluded_ids = set(excluded)
 
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -492,14 +501,14 @@ def main():
             parser.error("شناسه‌های انتخاب‌شده معتبر نیستند؛ انتخاب خالی به معنای همه نیست")
         requested = set(selected_ids)
         full_source_providers = list_all_providers()
-        # Even if one requested ID disappeared, keep the verified full list so
-        # the admin can remove stale selections without another blind run.
+        # A selected provider can disappear between the admin page load and
+        # this verified directory fetch. Skip only those IDs, not the run.
         save_complete_source_directory(out_dir, full_source_providers)
         providers = [provider for provider in full_source_providers if provider["id"] in requested]
         found = {provider["id"] for provider in providers}
         if requested != found:
             missing = sorted(requested - found)
-            parser.error(f"{len(missing)} کافهٔ انتخاب‌شده در فهرست منبع نیستند (شناسه‌ها: {', '.join(map(str, missing[:12]))})؛ عملیات متوقف شد")
+            print(f"هشدار: {len(missing)} شناسهٔ انتخابی در فهرست کامل منبع نیست و فقط همین موارد کنار گذاشته شد: {', '.join(map(str, missing[:20]))}")
         print(f"فقط {len(providers)} کافه انتخاب‌شده دریافت می‌شود.")
     elif args.username:
         print(f"در حال گرفتن اطلاعات provider «{args.username}» ...")
@@ -509,6 +518,12 @@ def main():
         providers = list_all_providers(limit=args.limit)
         if args.limit is None:
             save_complete_source_directory(out_dir, providers)
+
+    if excluded_ids:
+        excluded_count = sum(provider["id"] in excluded_ids for provider in providers)
+        providers = [provider for provider in providers if provider["id"] not in excluded_ids]
+        if excluded_count:
+            print(f"{excluded_count} مجموعهٔ تأییدشدهٔ غیرکافه/دمو پیش از دریافت جزئیات کنار گذاشته شد.")
 
     print(f"تعداد کافه/رستوران‌هایی که پردازش می‌شن: {len(providers)}")
 

@@ -12,8 +12,8 @@ import {
   annotateSourceAvailability,
   parseTopMenuSelection,
   selectTopMenuCafes,
-  staleSelectionIds,
   type TopMenuSelection,
+  type TopMenuSkippedSources,
   type TopMenuTarget,
 } from './topMenuSelection'
 import { assertTopMenuFailureManifest, failedTopMenuSourceIds, failedTopMenuSelectionIds, readTopMenuFailures, type TopMenuSourceFailure } from './topMenuFailures'
@@ -53,6 +53,7 @@ export interface TopMenuSyncReport {
   matchedItems: number
   unchangedItems: number
   failedCafes: number
+  skippedSources?: TopMenuSkippedSources
   newCafes: { sourceId: number; name: string; username: string; sections: number; items: number }[]
   newItems: { sourceId: number; sourceCafeId?: number; placeName: string; sectionName: string; name: string; price: number | null }[]
   conflicts: { sourceId: number; sourceCafeId?: number; placeName: string; name: string; reason: string }[]
@@ -169,11 +170,9 @@ export async function readTopMenuTargets(state: TopMenuSyncState) {
   for (const target of reportTargets) if (!catalog.has(target.sourceId)) catalog.set(target.sourceId, target)
 
   /*
-   * کاتالوگِ اسکرپ از دیتابیس می‌آید، ولی منبع هم مستقل است و مجموعه حذف می‌کند.
-   * بدون این علامت‌گذاری، مجموعه‌ای که منبع حذفش کرده در انتخاب ادمین می‌ماند و
-   * `topmarket.py` کل اجرا را می‌کشد — یعنی چند مجموعه‌ی حذف‌شده، صدها مجموعه‌ی
-   * سالم را هم قفل می‌کنند. اینجا فقط *نشان‌دهی* می‌کنیم؛ گاردِ خودِ اسکرپر و
-   * `selectTopMenuCafes` دست‌نخورده می‌مانند.
+   * کاتالوگِ اسکرپ از دیتابیس می‌آید، اما منبع مستقل است و ممکن است مجموعه
+   * حذف کند. اینجا فقط آخرین وضعیت را نشان می‌دهیم؛ ردکردن موارد غایب از
+   * فهرست کامل و اعتبارسنجی‌شدهٔ خودِ اجرای جدید انجام می‌شود.
    */
   const presence = await readTopMenuSourcePresence(ROOT, state.runId)
   const sorted = [...catalog.values()]
@@ -267,31 +266,16 @@ export async function startTopMenuSync(
     return { ok: false, error: 'گزارش عوض شده است؛ صفحه را تازه و کافه‌ها را دوباره انتخاب کنید.' }
   const selection = parseTopMenuSelection(options.selection.scope, options.selection.sourceIds)
   if (selection.scope === 'selected') {
-    const excluded = selection.sourceIds.filter(isTopMenuSourceExcluded)
-    if (excluded.length) return { ok: false, error: `شناسه‌های ${excluded.join('، ')} غیرکافه یا دمو هستند و از اسکرپ مستثنا شده‌اند؛ صفحه را تازه و انتخاب را اصلاح کنید.` }
-    const targets = await readTopMenuTargets(current)
-    const pool = mode === 'apply' ? targets.reportTargets : targets.catalog
-    const known = new Set(pool.map(target => target.sourceId))
-    if (selection.sourceIds.some(id => !known.has(id))) return { ok: false, error: 'کافهٔ انتخاب‌شده در فهرست معتبر این عملیات نیست؛ صفحه را تازه کنید.' }
-    /*
-     * مجموعه‌ای که در آخرین فهرست منبع نبوده، اسکرپ‌شدنی نیست و
-     * `topmarket.py` به همین دلیل کل اجرا را می‌کشد. الان — پیش از پنج دقیقه
-     * اسکرپ — با *نام* می‌گوییم کدام‌ها را باید از انتخاب برداشت.
-     *
-     * فقط `inSource === false` جلوی درخواست را می‌گیرد. حالت نامعلوم
-     * (`undefined`) عبور می‌دهد و تصمیم را به گاردِ خودِ اسکرپر می‌سپارد — این
-     * گارد عمداً سخت‌گیر است و نباید دور زده شود.
-     */
-    const stale = staleSelectionIds(pool, selection.sourceIds)
-    if (stale.length) {
-      const names = stale
-        .map(id => pool.find(target => target.sourceId === id))
-        .filter((target): target is TopMenuTarget => Boolean(target))
-        .map(target => target.name)
-      return {
-        ok: false,
-        error: `${stale.length.toLocaleString('fa-IR')} کافه دیگر در فهرست TopMenuMarket نیست: ${names.join('، ')}. از انتخاب بردارشان و دوباره اجرا کن.`,
-      }
+    if (mode === 'scrape' && selection.sourceIds.every(isTopMenuSourceExcluded))
+      return { ok: false, error: 'هیچ کافهٔ قابل اسکرپی در انتخاب نیست؛ همهٔ موارد انتخابی غیرکافه یا دمو هستند.' }
+    // An admin's scrape selection may outlive the catalog page or include a
+    // newly discovered source ID. The live, verified provider directory is the
+    // authoritative check; only apply must be limited to report targets.
+    if (mode === 'apply') {
+      const targets = await readTopMenuTargets(current)
+      const known = new Set(targets.reportTargets.map(target => target.sourceId))
+      if (selection.sourceIds.some(id => !known.has(id)))
+        return { ok: false, error: 'کافهٔ انتخاب‌شده در گزارش معتبر این عملیات نیست؛ صفحه را تازه کنید.' }
     }
   }
   if (mode === 'apply') {

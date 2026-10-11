@@ -11,6 +11,8 @@ import { createAuthSession, revokeSession } from '../src/core/auth/userRepo'
 import { createSessionToken, SESSION_COOKIE } from '../src/core/auth/session'
 const artifact = process.argv[2]
 assert.match(artifact ?? '', /^\.next-topmenu-[A-Za-z0-9-]+$/)
+const qaDir = process.env.TOPMENU_QA_OUTPUT_DIR || 'var/qa/topmenu-selection'
+assert.match(qaDir, /^var\/qa\/[A-Za-z0-9_-]+$/)
 const db = getDb(), userId = randomUUID(), root = await mkdtemp('/tmp/kucafe-topmenu-ui-')
 const base = 'http://127.0.0.1:9095', runId = 'qa-ui-selection'
 const targets = [{ sourceId: 2000000101, name: 'کافه آزمون انتخاب اول با نام طولانی برای کنترل عرض موبایل' }, { sourceId: 2000000102, name: 'کافه آزمون انتخاب دوم' }]
@@ -35,17 +37,17 @@ try {
   sessionId = await createAuthSession({ userId, method: 'password', expiresAt: new Date(Date.now() + 600000), userAgent: 'selective-sync-qa' })
   const token = createSessionToken({ sessionId, userId, phone: '', role: 'admin' }, 600)
   for (let tries = 0; tries < 30; tries++) { try { if ((await fetch(base)).ok) break } catch {} await new Promise(resolve => setTimeout(resolve, 500)) }
-  await mkdir('var/qa/topmenu-selection', { recursive: true })
+  await mkdir(qaDir, { recursive: true })
   for (const width of [320, 390, 1440]) {
     const context = await browser.newContext({ viewport: { width, height: 900 }, isMobile: width < 700, hasTouch: width < 700, colorScheme: width === 390 ? 'dark' : 'light' })
     await context.addCookies([{ name: SESSION_COOKIE, value: token, url: base, httpOnly: true }])
-    const page = await context.newPage(), errors: string[] = [], sent: Record<string, unknown>[] = []
+    const page = await context.newPage(), errors: string[] = [], sent: Record<string, unknown>[] = [], dialogs: string[] = []
     page.on('pageerror', error => errors.push(error.message))
     await page.route('**/api/admin/topmenu-sync', async route => {
       sent.push(route.request().postDataJSON())
       await route.fulfill({ status: 409, contentType: 'application/json', body: JSON.stringify({ ok: false, error: 'درخواست آزمون دریافت شد؛ عملیات واقعی اجرا نمی‌شود.' }) })
     })
-    page.on('dialog', dialog => dialog.accept())
+    page.on('dialog', dialog => { dialogs.push(dialog.message()); void dialog.accept() })
     await page.goto(`${base}/admin`, { waitUntil: 'domcontentloaded', timeout: 120000 })
     await page.getByRole('button', { name: 'عملیات', exact: true }).click()
     const progress = page.getByRole('progressbar', { name: 'پیشرفت اسکرپ' })
@@ -72,13 +74,15 @@ try {
     assert.ok(await selected.isChecked())
     await page.getByRole('button', { name: 'اسکرپ ۱ کافهٔ انتخاب‌شده' }).click()
     await page.getByText('درخواست آزمون دریافت شد؛ عملیات واقعی اجرا نمی‌شود.', { exact: true }).waitFor()
+    assert.equal(dialogs.length, 0, 'report-only scrape starts on click without a browser dialog')
     assert.equal(sent[0].scope, 'selected'); assert.deepEqual(sent[0].sourceIds, [targets[0].sourceId])
-    await scrape.screenshot({ path: `var/qa/topmenu-selection/scrape-picker-${width}.png` })
+    await scrape.screenshot({ path: `${qaDir}/scrape-picker-${width}.png` })
     assert.ok(await page.getByRole('button', { name: 'بکاپ و اعمال تغییرات انتخاب‌شده' }).isDisabled())
     await apply.getByRole('checkbox').first().check()
     await page.locator('input[name="confirm"]').fill('همگام‌سازی کامل')
     const applyResponse = page.waitForResponse(response => response.url().endsWith('/api/admin/topmenu-sync'))
     await page.getByRole('button', { name: 'بکاپ و اعمال تغییرات انتخاب‌شده' }).click(); await applyResponse
+    assert.equal(dialogs.length, 1, 'database apply still needs explicit confirmation')
     assert.equal(sent[1].mode, 'apply'); assert.equal(sent[1].runId, runId); assert.deepEqual(sent[1].sourceIds, [targets[0].sourceId])
     await apply.getByRole('radio', { name: 'همهٔ کافه‌های همین گزارش' }).check()
     assert.ok(await page.getByRole('button', { name: 'بکاپ و اعمال تغییرات انتخاب‌شده' }).isDisabled())
@@ -86,14 +90,14 @@ try {
     const download = await context.request.get(`${base}/api/admin/topmenu-report?runId=${runId}`)
     assert.equal(download.status(), 200)
     assert.deepEqual((await download.json()).failedSources[0].reasons, ['منو: HTTP 403 — مجموعه مورد نظر فاقد منو دیجیتال می باشد'])
-    await apply.screenshot({ path: `var/qa/topmenu-selection/apply-picker-${width}.png` })
+    await apply.screenshot({ path: `${qaDir}/apply-picker-${width}.png` })
     await scrape.getByRole('radio', { name: 'همهٔ کافه‌های منبع، شامل کافه‌های جدید' }).check()
     const fullResponse = page.waitForResponse(response => response.url().endsWith('/api/admin/topmenu-sync'))
     await page.getByRole('button', { name: 'اسکرپ همه و ساخت گزارش' }).click(); await fullResponse
     assert.equal(sent[2].scope, 'all'); assert.deepEqual(sent[2].sourceIds, [])
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1))
     assert.deepEqual(errors, [])
-    await page.screenshot({ path: `var/qa/topmenu-selection/admin-${width}.png`, fullPage: true })
+    await page.screenshot({ path: `${qaDir}/admin-${width}.png`, fullPage: true })
     await context.close(); console.log(`✓ ${width}: checkbox/search persistence, selected scrape/apply payload, explicit all, empty disabled, no overflow or runtime errors`)
   }
   const context = await browser.newContext()

@@ -131,6 +131,8 @@ export function OperationsPanel({ topMenuSync: initialSync }: { topMenuSync: Top
   const [syncError, setSyncError] = useState<string | null>(null)
   const [syncMessage, setSyncMessage] = useState<string | null>(null)
   const report = topMenuSync.report
+  const skipped = report?.skippedSources
+  const skippedCount = (skipped?.excluded.length ?? 0) + (skipped?.missing.length ?? 0) + (skipped?.incomplete.length ?? 0)
   const busy = topMenuSync.status === 'scraping' || topMenuSync.status === 'applying'
   const [scrapeScope, setScrapeScope] = useState<'all' | 'selected'>(() => busy ? topMenuSync.selection?.scope ?? 'selected' : 'selected')
   const [scrapeIds, setScrapeIds] = useState<number[]>(() => topMenuSync.selection?.scope === 'selected'
@@ -214,7 +216,7 @@ export function OperationsPanel({ topMenuSync: initialSync }: { topMenuSync: Top
         <div className={styles.syncActions}>
           <form onSubmit={(event) => {
             event.preventDefault()
-            if (window.confirm(scrapeScope === 'all' ? 'اسکرپ همهٔ کافه‌های TopMenuMarket شروع شود؟' : `فقط ${fa(scrapeIds.length)} کافهٔ انتخاب‌شده اسکرپ شوند؟ هنوز هیچ تغییری در دیتابیس اعمال نمی‌شود.`)) void startSync('scrape')
+            void startSync('scrape')
           }}>
             <button type="submit" className={styles.runHeavy} disabled={syncPending || busy || (scrapeScope === 'selected' && !scrapeIds.length)}>
               {syncPending ? 'در حال ارسال…' : scrapeScope === 'all' ? 'اسکرپ همه و ساخت گزارش' : `اسکرپ ${fa(scrapeIds.length)} کافهٔ انتخاب‌شده`}
@@ -243,6 +245,12 @@ export function OperationsPanel({ topMenuSync: initialSync }: { topMenuSync: Top
               <span><strong>{fa(report.totalConflicts ?? 0)}</strong> تداخل شناسه</span>
               <span><strong>{fa(report.failedCafes)}</strong> خطای اسکرپ</span>
             </div>
+            {skipped && skippedCount > 0 && <p role="status" className={styles.pickerStaleNote}>
+              {fa(skippedCount)} شناسه بدون توقف اسکرپ کنار گذاشته شد. کافه‌های دریافت‌شده برای بررسی در همین گزارش مانده‌اند.
+              {skipped.missing.length > 0 && <span> غایب از فهرست فعلی منبع: {skipped.missing.slice(0, 20).map(fa).join('، ')}{skipped.missing.length > 20 ? ' و موارد دیگر' : ''}.</span>}
+              {skipped.excluded.length > 0 && <span> غیرکافه یا دمو: {skipped.excluded.slice(0, 20).map(fa).join('، ')}{skipped.excluded.length > 20 ? ' و موارد دیگر' : ''}.</span>}
+              {skipped.incomplete.length > 0 && <span> دریافت رکورد ناقص و ثبت‌شده در خطاها: {skipped.incomplete.slice(0, 20).map(fa).join('، ')}{skipped.incomplete.length > 20 ? ' و موارد دیگر' : ''}.</span>}
+            </p>}
             {topMenuSync.failureManifestError && <p role="alert" className={styles.error}>جزئیات خطاهای اسکرپ با گزارش هم‌خوان نیست. اعمال تغییرات متوقف است؛ اسکرپ تازه اجرا کنید.</p>}
             {report.failedCafes > 0 && !topMenuSync.failureManifestError && <div className={styles.pickerStaleNote}>
               <p role="status">دریافت منوی {fa(report.failedCafes)} کافه ناموفق بود. اعمال «همهٔ کافه‌ها» ممکن نیست؛ فقط کافه‌های سالم را انتخاب کنید.</p>
