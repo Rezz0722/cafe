@@ -56,7 +56,7 @@ import { importedItemPublicId } from '../src/core/items/identity.ts'
 import { matchDish, matchFacet } from '../src/core/taxonomy/menuTaxonomy.ts'
 import { classifyMenuBranchScope } from '../src/core/places/branchScope.ts'
 import { parseTopMenuSelection, selectTopMenuCafes, type TopMenuSelection } from '../src/core/sync/topMenuSelection.ts'
-import { failedTopMenuSourceIds, failedTopMenuSelectionIds } from '../src/core/sync/topMenuFailures.ts'
+import { assertTopMenuFailureManifest, failedTopMenuSourceIds, failedTopMenuSelectionIds } from '../src/core/sync/topMenuFailures.ts'
 
 const mode = process.argv[2]
 const runId = process.argv[3]
@@ -429,7 +429,9 @@ async function apply() {
   const selection = await runSelection('apply')
   const cafes = selectTopMenuCafes(JSON.parse(await readFile(join(runDir, 'cafes_full_latest.json'), 'utf8')) as RawCafe[], selection)
   validateSource(cafes)
-  const blocked = failedTopMenuSelectionIds(await failedTopMenuSourceIds(runDir), selection)
+  const failed = await failedTopMenuSourceIds(runDir)
+  assertTopMenuFailureManifest(current.report.failedCafes, failed)
+  const blocked = failedTopMenuSelectionIds(failed, selection)
   if (blocked.length) throw new Error(`دادهٔ ${blocked.length} کافه از منبع ناقص است (${blocked.slice(0, 10).join('، ')}). هیچ داده‌ای اعمال نشد.`)
   const selectedReport = await buildReport(cafes)
   if (selectedReport.totalConflicts > 0) throw new Error(`${selectedReport.totalConflicts} تداخل شناسه در کافه‌های انتخاب‌شده وجود دارد؛ هیچ داده‌ای تغییر نکرد.`)

@@ -3,7 +3,7 @@ import { test } from 'node:test'
 import { mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { failedTopMenuSourceIds, failedTopMenuSelectionIds } from './topMenuFailures'
+import { assertTopMenuFailureManifest, failedTopMenuSourceIds, failedTopMenuSelectionIds } from './topMenuFailures'
 
 test('failed source responses block only affected selected cafes and full sync', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'kucafe-topmenu-failures-'))
@@ -18,6 +18,8 @@ test('failed source responses block only affected selected cafes and full sync',
     assert.deepEqual(failedTopMenuSelectionIds(ids, { scope: 'all', sourceIds: [] }), [171, 326])
     assert.deepEqual(failedTopMenuSelectionIds(ids, { scope: 'selected', sourceIds: [171] }), [171])
     assert.deepEqual(failedTopMenuSelectionIds(ids, { scope: 'selected', sourceIds: [500] }), [])
+    assert.doesNotThrow(() => assertTopMenuFailureManifest(3, ids))
+    assert.throws(() => assertTopMenuFailureManifest(4, ids), /هم‌خوان نیست/)
   } finally {
     await rm(dir, { recursive: true, force: true })
   }
