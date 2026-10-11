@@ -246,9 +246,12 @@ export function OperationsPanel({ topMenuSync: initialSync }: { topMenuSync: Top
             {topMenuSync.failureManifestError && <p role="alert" className={styles.error}>جزئیات خطاهای اسکرپ با گزارش هم‌خوان نیست. اعمال تغییرات متوقف است؛ اسکرپ تازه اجرا کنید.</p>}
             {report.failedCafes > 0 && !topMenuSync.failureManifestError && <div className={styles.pickerStaleNote}>
               <p role="status">دریافت منوی {fa(report.failedCafes)} کافه ناموفق بود. اعمال «همهٔ کافه‌ها» ممکن نیست؛ فقط کافه‌های سالم را انتخاب کنید.</p>
-              <details><summary>کافه‌های خطادار</summary><ul>{failedSourceIds.map(sourceId => {
+              <details><summary>کافه‌های خطادار و علت</summary><ul>{failedSourceIds.map(sourceId => {
+                const failure = topMenuSync.failedSources?.find(item => item.id === sourceId)
                 const target = (topMenuSync.reportTargets ?? []).find(item => item.sourceId === sourceId) ?? (topMenuSync.catalog ?? []).find(item => item.sourceId === sourceId)
-                return <li key={sourceId}>{target?.name ?? `شناسهٔ منبع ${fa(sourceId)}`}</li>
+                return <li key={sourceId}><strong>{failure?.name || target?.name || `شناسهٔ منبع ${fa(sourceId)}`}</strong>
+                  <ul>{(failure?.reasons.length ? failure.reasons : ['جزئیات خطا ثبت نشده است؛ لاگ اجرا را بررسی کنید.']).map((reason, index) => <li key={index} dir="auto">{reason}</li>)}</ul>
+                </li>
               })}</ul></details>
             </div>}
 

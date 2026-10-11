@@ -16,7 +16,7 @@ import {
   type TopMenuSelection,
   type TopMenuTarget,
 } from './topMenuSelection'
-import { assertTopMenuFailureManifest, failedTopMenuSourceIds, failedTopMenuSelectionIds } from './topMenuFailures'
+import { assertTopMenuFailureManifest, failedTopMenuSourceIds, failedTopMenuSelectionIds, readTopMenuFailures, type TopMenuSourceFailure } from './topMenuFailures'
 
 export type TopMenuSyncStatus = 'idle' | 'scraping' | 'ready' | 'applying' | 'completed' | 'failed'
 
@@ -76,6 +76,7 @@ export interface TopMenuSyncState {
   report?: TopMenuSyncReport
   /** Derived for the admin UI, never trusted instead of the on-disk manifest. */
   failedSourceIds?: number[]
+  failedSources?: TopMenuSourceFailure[]
   failureManifestError?: boolean
   applied?: {
     createdCafes: number
@@ -105,25 +106,33 @@ export async function readTopMenuSyncState(): Promise<TopMenuSyncState> {
   }
 }
 
+/** Failed-source details are admin-only report data; the manifest remains the apply gate. */
+export async function readTopMenuFailureDetails(runId: string | null, expected: number): Promise<{
+  failedSourceIds: number[]; failedSources: TopMenuSourceFailure[]; failureManifestError: boolean
+}> {
+  if (!runId || !/^[A-Za-z0-9_-]{1,100}$/.test(runId))
+    return { failedSourceIds: [], failedSources: [], failureManifestError: true }
+  try {
+    const failedSources = await readTopMenuFailures(join(ROOT, 'runs', runId))
+    const failedSourceIds = failedSources.map(failure => failure.id)
+    assertTopMenuFailureManifest(expected, failedSourceIds)
+    return { failedSourceIds, failedSources, failureManifestError: false }
+  } catch {
+    return { failedSourceIds: [], failedSources: [], failureManifestError: true }
+  }
+}
+
 /** نسخهٔ سبک برای ارسال به مرورگر؛ گزارش کامل فقط روی سرور و برای apply می‌ماند. */
 export async function readTopMenuSyncSummary(): Promise<TopMenuSyncState> {
   const state = await readTopMenuSyncState()
   const { catalog, reportTargets } = await readTopMenuTargets(state)
   if (!state.report) return { ...state, catalog, reportTargets }
-  let failedSourceIds: number[] = []
-  let failureManifestError = false
-  try {
-    failedSourceIds = await failedTopMenuSourceIds(join(ROOT, 'runs', state.runId!))
-    assertTopMenuFailureManifest(state.report.failedCafes, failedSourceIds)
-  } catch {
-    failureManifestError = true
-  }
+  const failureDetails = await readTopMenuFailureDetails(state.runId, state.report.failedCafes)
   return {
     ...state,
     catalog,
     reportTargets,
-    failedSourceIds,
-    failureManifestError,
+    ...failureDetails,
     report: {
       ...state.report,
       changes: state.report.changes.slice(0, 200),

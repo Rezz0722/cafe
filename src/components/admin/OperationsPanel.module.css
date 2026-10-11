@@ -27,7 +27,10 @@
 .pickerRow[data-locked]{cursor:not-allowed}
 .pickerRow[data-stale]:not([data-locked]){cursor:pointer}
 .pickerStale{display:block;margin-top:2px;color:var(--c-danger,#a32020);font-size:11px;font-style:normal;font-weight:700}
-.pickerStaleNote{margin:0;padding:9px 11px;border-radius:10px;background:#fdecea;color:#a5281b;font-size:.72rem;line-height:1.8}
+.pickerStaleNote{margin:0;padding:9px 11px;border:1px solid var(--c-danger);border-radius:10px;background:var(--c-danger-bg,#fdecea);color:var(--c-danger,#a5281b);font-size:.72rem;line-height:1.8;overflow-wrap:anywhere}
+.pickerStaleNote p{margin:0}
+.pickerStaleNote summary{min-height:44px;padding-block:12px;cursor:pointer;font-weight:800}
+.pickerStaleNote ul{margin:0;padding-inline-start:20px}
 .pickerRow>span{display:grid;gap:4px;min-width:0;overflow-wrap:anywhere}
 .pickerRow b{font-size:14px;line-height:1.7}.pickerRow small{font-size:11px;color:var(--c-ink-2);line-height:1.6}
 .selectionNote{margin:0;font-size:12px;color:var(--c-ink-2);line-height:1.9}
