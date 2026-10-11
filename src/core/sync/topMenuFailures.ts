@@ -23,3 +23,10 @@ export function failedTopMenuSelectionIds(failed: readonly number[], selection: 
   const selected = selection.scope === 'selected' ? new Set(selection.sourceIds) : null
   return failed.filter(id => !isTopMenuSourceExcluded(id) && (!selected || selected.has(id)))
 }
+
+/** A missing/truncated failure manifest must never make a partial report look safe. */
+export function assertTopMenuFailureManifest(expected: number, ids: readonly number[]): void {
+  if (!Number.isSafeInteger(expected) || expected < 0 || expected !== ids.length) {
+    throw new Error('جزئیات خطاهای اسکرپ با گزارش هم‌خوان نیست؛ هیچ داده‌ای اعمال نشد. اسکرپ تازه اجرا کنید.')
+  }
+}

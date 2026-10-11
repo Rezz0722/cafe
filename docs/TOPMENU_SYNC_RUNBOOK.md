@@ -24,8 +24,13 @@ has no digital menu for some listed providers. This is source-side availability,
 not evidence that KuCafe has an empty menu. The scraper records the source
 message in `failed_*.json` and the admin report counts failures. Apply refuses
 any failed provider in the chosen scope, before backup or database writes.
-After reviewing the report, an admin may choose only successfully fetched
-providers or rescrape later. Never relabel a failed response as a valid empty
+The count in the report must match the failure manifest; a missing or truncated
+manifest blocks apply rather than silently treating a partial scrape as clean.
+The admin panel lists failed providers by name or source ID, excludes them from
+bulk selection, and lets an admin remove previously selected failures. Applying
+the entire report is disabled when it includes failures. After reviewing the
+report, an admin may choose only successfully fetched providers or rescrape
+later. Never relabel a failed response as a valid empty
 menu, bypass the source's access controls, or assume a 403 is a rate limit.
 
 Before an apply, the worker writes a separate backup under

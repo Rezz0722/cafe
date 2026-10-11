@@ -138,6 +138,9 @@ export function OperationsPanel({ topMenuSync: initialSync }: { topMenuSync: Top
   const [applyScope, setApplyScope] = useState<'all' | 'selected'>('selected')
   const [applyIds, setApplyIds] = useState<number[]>(() => topMenuSync.selection?.scope === 'selected'
     ? topMenuSync.selection.sourceIds.filter(id => topMenuSync.reportTargets?.some(target => target.sourceId === id)) : [])
+  const failedSourceIds = topMenuSync.failedSourceIds ?? []
+  const selectedFailed = applyIds.filter(id => failedSourceIds.includes(id))
+  const applyBlocked = Boolean(topMenuSync.failureManifestError || (applyScope === 'all' && report?.failedCafes) || selectedFailed.length)
   const selectedRun=useRef(topMenuSync.runId)
   const [selectionReport,setSelectionReport]=useState<{summary:Record<string,number>;limitations:string[]}|null>(null)
   const [selectionError,setSelectionError]=useState('')
@@ -240,6 +243,14 @@ export function OperationsPanel({ topMenuSync: initialSync }: { topMenuSync: Top
               <span><strong>{fa(report.totalConflicts ?? 0)}</strong> تداخل شناسه</span>
               <span><strong>{fa(report.failedCafes)}</strong> خطای اسکرپ</span>
             </div>
+            {topMenuSync.failureManifestError && <p role="alert" className={styles.error}>جزئیات خطاهای اسکرپ با گزارش هم‌خوان نیست. اعمال تغییرات متوقف است؛ اسکرپ تازه اجرا کنید.</p>}
+            {report.failedCafes > 0 && !topMenuSync.failureManifestError && <div className={styles.pickerStaleNote}>
+              <p role="status">دریافت منوی {fa(report.failedCafes)} کافه ناموفق بود. اعمال «همهٔ کافه‌ها» ممکن نیست؛ فقط کافه‌های سالم را انتخاب کنید.</p>
+              <details><summary>کافه‌های خطادار</summary><ul>{failedSourceIds.map(sourceId => {
+                const target = (topMenuSync.reportTargets ?? []).find(item => item.sourceId === sourceId) ?? (topMenuSync.catalog ?? []).find(item => item.sourceId === sourceId)
+                return <li key={sourceId}>{target?.name ?? `شناسهٔ منبع ${fa(sourceId)}`}</li>
+              })}</ul></details>
+            </div>}
 
             {report.cafes.length > 0 && <details open className={styles.reportSection}><summary>کافه‌های دارای تغییر ({fa(report.cafes.length)})</summary><div className={styles.changeList}>{report.cafes.map((cafe) => <div key={cafe.placeId}><strong>{cafe.name}</strong><span>{fa(cafe.newItems ?? 0)} آیتم جدید · {fa(cafe.movedItems ?? 0)} جابه‌جایی · {fa(cafe.archivedItems ?? 0)} آرشیو · {fa(cafe.priceIncreases)} افزایش · {fa(cafe.priceDecreases)} کاهش · {fa(cafe.availabilityChanges)} موجودی</span></div>)}</div></details>}
             {report.changes.length > 0 && <details className={styles.reportSection}><summary>قیمت‌ها و موجودی‌های جدید (نمایش {fa(report.changes.length)} از {fa(report.totalChanges)} مورد)</summary><div className={styles.priceTable}>{report.changes.map((change) => <div key={change.itemId}><span><strong>{change.itemName}</strong><small>{change.placeName}</small></span><span dir="ltr">{change.oldPrice === null ? '—' : toman(change.oldPrice)} → {change.newPrice === null ? '—' : toman(change.newPrice)}</span>{change.oldAvailable !== change.newAvailable && <em>{change.newAvailable ? 'موجود شده' : 'ناموجود شده'}</em>}</div>)}</div></details>}
@@ -251,7 +262,7 @@ export function OperationsPanel({ topMenuSync: initialSync }: { topMenuSync: Top
               <>
               <SyncCafePicker title="۲. تغییرات کدام کافه‌ها اعمال شوند؟" targets={topMenuSync.reportTargets ?? []}
                 scope={applyScope} selected={applyIds} onScope={setApplyScope} onSelected={setApplyIds}
-                disabled={syncPending || busy} allLabel="همهٔ کافه‌های همین گزارش" />
+                disabled={syncPending || busy} allLabel="همهٔ کافه‌های همین گزارش" blockedSourceIds={failedSourceIds} />
               {selectionError&&<p role="alert" className={styles.error}>{selectionError}</p>}
               {selectionReport&&<section className={styles.reportSection}><h3>فقط کافه‌های تیک‌خورده</h3><p>{fa(selectionReport.summary.sourceCafes)} کافه · {fa(selectionReport.summary.priceIncreases)} افزایش قیمت · {fa(selectionReport.summary.priceDecreases)} کاهش قیمت · {fa(selectionReport.summary.newItems)} آیتم جدید · {fa(selectionReport.summary.archivedItems)} آیتم آرشیوی</p>{selectionReport.limitations.map(text=><p key={text}>{text}</p>)}<a href={`/api/admin/topmenu-report?runId=${encodeURIComponent(topMenuSync.runId!)}&sourceIds=${applyIds.join(',')}`} download>دانلود جزئیات همین انتخاب</a></section>}
               <form className={styles.applyBox} onSubmit={(event) => {
@@ -263,7 +274,7 @@ export function OperationsPanel({ topMenuSync: initialSync }: { topMenuSync: Top
               }}>
                 <p>فقط مجموعه‌های انتخاب‌شده همگام می‌شوند. کافهٔ جدید با منوی کامل ساخته می‌شود؛ موارد حذف‌شده از منبع در همان کافه آرشیو می‌شوند. آیتم‌های دستی دست‌نخورده می‌مانند. آمار بالا برای کل گزارش است، نه فقط انتخاب فعلی.</p>
                 <input aria-label="عبارت تأیید همگام‌سازی" name="confirm" placeholder="همگام‌سازی کامل" required />
-                <button type="submit" className={styles.runHeavy} disabled={syncPending || busy || (applyScope === 'selected' && !applyIds.length) || !topMenuSync.reportTargets?.length}>
+                <button type="submit" className={styles.runHeavy} disabled={syncPending || busy || applyBlocked || (applyScope === 'selected' && !applyIds.length) || !topMenuSync.reportTargets?.length}>
                   {syncPending ? 'در حال ارسال…' : 'بکاپ و اعمال تغییرات انتخاب‌شده'}
                 </button>
               </form>

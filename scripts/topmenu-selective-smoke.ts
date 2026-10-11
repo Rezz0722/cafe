@@ -3,7 +3,8 @@
  */
 import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
-import { execFile } from 'node:child_process'
+import { execFile, spawn } from 'node:child_process'
+import { once } from 'node:events'
 import { promisify } from 'node:util'
 import { mkdir, mkdtemp, readFile, rm, unlink, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
@@ -112,6 +113,41 @@ try {
     assert.equal((await startTopMenuSync('apply', actor, { ...options, expectedRunId: 'old-report' })).ok, false)
     assert.equal((await readTopMenuSyncState()).status, 'ready')
     console.log('✓ Job start: one of two concurrent requests starts; selected manifest respected; stale report rejected')
+    process.env.TOPMENU_SYNC_EXECUTION_MODE = 'worker'
+    const worker = spawn(process.execPath, ['--import', 'tsx', '--conditions=react-server', 'scripts/topmenu-worker.ts'], {
+      env: process.env, stdio: 'ignore',
+    })
+    try {
+      let heartbeat = false
+      for (let tries = 0; tries < 100 && !heartbeat; tries++) {
+        heartbeat = Number(await readFile(join(root, 'worker-heartbeat'), 'utf8').catch(() => '0')) > Date.now() - 10_000
+        if (!heartbeat) await new Promise(resolve => setTimeout(resolve, 100))
+      }
+      assert.ok(heartbeat, 'worker heartbeat did not start')
+      assert.equal(worker.exitCode, null, 'worker exited before accepting a job')
+      assert.equal((await startTopMenuSync('scrape', actor, options)).ok, true)
+      latest = await readTopMenuSyncState()
+      for (let tries = 0; latest.status === 'scraping' && tries < 100; tries++) {
+        await new Promise(resolve => setTimeout(resolve, 200)); latest = await readTopMenuSyncState()
+      }
+      assert.equal(latest.status, 'ready', latest.error)
+      assert.equal(latest.report?.sourceCafes, 1)
+      const completeState = latest
+      await writeFile(join(root, 'state.json'), JSON.stringify({ ...latest, report: { ...latest.report, failedCafes: 1 } }))
+      const incomplete = await startTopMenuSync('apply', actor, options)
+      assert.equal(incomplete.ok, false)
+      assert.match(incomplete.error ?? '', /جزئیات خطاهای اسکرپ/)
+      assert.equal((await readTopMenuSyncState()).status, 'ready')
+      await writeFile(join(root, 'state.json'), JSON.stringify(completeState))
+      console.log('✓ Dedicated worker consumes queued scrape and produces report; missing failure manifest blocks apply')
+    } finally {
+      if (worker.exitCode === null && worker.signalCode === null) {
+        const stopped = once(worker, 'close')
+        worker.kill('SIGTERM')
+        await stopped
+      }
+      delete process.env.TOPMENU_SYNC_EXECUTION_MODE
+    }
   } finally { await closeDb() }
 } finally {
   if (created) await administrator.query(`DROP DATABASE \`${database}\``)

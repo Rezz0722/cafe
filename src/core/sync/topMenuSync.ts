@@ -16,7 +16,7 @@ import {
   type TopMenuSelection,
   type TopMenuTarget,
 } from './topMenuSelection'
-import { failedTopMenuSourceIds, failedTopMenuSelectionIds } from './topMenuFailures'
+import { assertTopMenuFailureManifest, failedTopMenuSourceIds, failedTopMenuSelectionIds } from './topMenuFailures'
 
 export type TopMenuSyncStatus = 'idle' | 'scraping' | 'ready' | 'applying' | 'completed' | 'failed'
 
@@ -74,6 +74,9 @@ export interface TopMenuSyncState {
   catalog?: TopMenuTarget[]
   reportTargets?: TopMenuTarget[]
   report?: TopMenuSyncReport
+  /** Derived for the admin UI, never trusted instead of the on-disk manifest. */
+  failedSourceIds?: number[]
+  failureManifestError?: boolean
   applied?: {
     createdCafes: number
     createdSections: number
@@ -107,10 +110,20 @@ export async function readTopMenuSyncSummary(): Promise<TopMenuSyncState> {
   const state = await readTopMenuSyncState()
   const { catalog, reportTargets } = await readTopMenuTargets(state)
   if (!state.report) return { ...state, catalog, reportTargets }
+  let failedSourceIds: number[] = []
+  let failureManifestError = false
+  try {
+    failedSourceIds = await failedTopMenuSourceIds(join(ROOT, 'runs', state.runId!))
+    assertTopMenuFailureManifest(state.report.failedCafes, failedSourceIds)
+  } catch {
+    failureManifestError = true
+  }
   return {
     ...state,
     catalog,
     reportTargets,
+    failedSourceIds,
+    failureManifestError,
     report: {
       ...state.report,
       changes: state.report.changes.slice(0, 200),
@@ -307,7 +320,13 @@ export async function startTopMenuSync(
     const snapshot = await readSnapshot(current)
     if (!snapshot.length) return { ok: false, error: 'فایل کامل گزارش در دسترس نیست؛ اسکرپ تازه اجرا کنید.' }
     selectTopMenuCafes(snapshot, selection)
-    const failed = await failedTopMenuSourceIds(join(ROOT, 'runs', current.runId!))
+    let failed: number[]
+    try {
+      failed = await failedTopMenuSourceIds(join(ROOT, 'runs', current.runId!))
+      assertTopMenuFailureManifest(current.report!.failedCafes, failed)
+    } catch {
+      return { ok: false, error: 'جزئیات خطاهای اسکرپ ناقص یا ناسازگار است؛ هیچ داده‌ای اعمال نشد. اسکرپ تازه اجرا کنید.' }
+    }
     const blocked = failedTopMenuSelectionIds(failed, selection)
     if (blocked.length) return { ok: false, error: `اطلاعات ${blocked.length.toLocaleString('fa-IR')} کافه از منبع کامل دریافت نشده است (${blocked.slice(0, 10).join('، ')}). این کافه‌ها را از انتخاب بردارید یا پس از رفع خطای منبع دوباره اسکرپ کنید؛ هیچ داده‌ای اعمال نشد.` }
   }
