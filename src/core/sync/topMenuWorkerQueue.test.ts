@@ -9,7 +9,7 @@ test('production mode persists a job and never spawns from the web process', asy
   process.env.TOPMENU_SYNC_ROOT = root
   process.env.TOPMENU_SYNC_EXECUTION_MODE = 'worker'
   try {
-    const { startTopMenuSync, readTopMenuSyncState } = await import('./topMenuSync')
+    const { startTopMenuSync, readTopMenuSyncState, readTopMenuFailureDetails } = await import('./topMenuSync')
     const actor = { userId: 'test', label: 'test' }
     const selection = { scope: 'all' as const, sourceIds: [] }
     assert.equal((await startTopMenuSync('scrape', actor, { selection })).ok, false)
@@ -24,6 +24,11 @@ test('production mode persists a job and never spawns from the web process', asy
       assert.equal((await stat(join(root, 'runs', state.runId!, 'job.json'))).uid, 10001)
     }
     assert.deepEqual(JSON.parse(await readFile(join(root, 'runs', state.runId!, 'scrape-selection.json'), 'utf8')), selection)
+    await writeFile(join(root, 'runs', state.runId!, 'failed_20261011_160841.json'), JSON.stringify([
+      { id: 326, name: 'رستوران ارم', errors: ['menu: /providers/326/menu -> HTTP 403: مجموعه مورد نظر فاقد منو دیجیتال می باشد'] },
+    ]))
+    assert.equal((await readTopMenuFailureDetails(state.runId, 1)).failedSources[0]?.reasons[0], 'منو: HTTP 403 — مجموعه مورد نظر فاقد منو دیجیتال می باشد')
+    assert.equal((await readTopMenuFailureDetails(state.runId, 2)).failureManifestError, true)
     assert.equal((await startTopMenuSync('scrape', actor, { selection })).ok, false)
     await writeFile(join(root, 'state.json'), JSON.stringify({ runId: null, status: 'idle' }))
     const lockPath = join(root, 'start.lock')

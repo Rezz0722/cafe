@@ -27,7 +27,10 @@ any failed provider in the chosen scope, before backup or database writes.
 The count in the report must match the failure manifest; a missing or truncated
 manifest blocks apply rather than silently treating a partial scrape as clean.
 The admin panel lists failed providers by name or source ID, excludes them from
-bulk selection, and lets an admin remove previously selected failures. Applying
+bulk selection, and lets an admin remove previously selected failures. The
+failure list and admin-only JSON download include bounded, readable reasons
+(for example, a source 403 saying the provider has no digital menu); raw
+exception details remain in the run log. Applying
 the entire report is disabled when it includes failures. After reviewing the
 report, an admin may choose only successfully fetched providers or rescrape
 later. Never relabel a failed response as a valid empty

@@ -10,19 +10,23 @@ import { appUser, place } from '../src/db/schema'
 import { createAuthSession, revokeSession } from '../src/core/auth/userRepo'
 import { createSessionToken, SESSION_COOKIE } from '../src/core/auth/session'
 const artifact = process.argv[2]
-assert.match(artifact ?? '', /^\.next-topmenu-[A-Za-z0-9]+$/)
+assert.match(artifact ?? '', /^\.next-topmenu-[A-Za-z0-9-]+$/)
 const db = getDb(), userId = randomUUID(), root = await mkdtemp('/tmp/kucafe-topmenu-ui-')
 const base = 'http://127.0.0.1:9095', runId = 'qa-ui-selection'
 const targets = [{ sourceId: 2000000101, name: 'کافه آزمون انتخاب اول با نام طولانی برای کنترل عرض موبایل' }, { sourceId: 2000000102, name: 'کافه آزمون انتخاب دوم' }]
 assert.equal((await db.select({ id: place.id }).from(place).where(inArray(place.sourceId, targets.map(target => target.sourceId)))).length, 0)
 await mkdir(join(root, 'runs', runId), { recursive: true })
 await writeFile(join(root, 'runs', runId, 'cafes_full_latest.json'), JSON.stringify(targets.map(target => ({ 'شناسه': target.sourceId, 'نام مجموعه': target.name, 'منو': [] }))))
+await writeFile(join(root, 'runs', runId, 'failed_20261011_160841.json'), JSON.stringify([{
+  id: targets[1].sourceId, name: targets[1].name,
+  errors: [`menu: /providers/${targets[1].sourceId}/menu -> HTTP 403: مجموعه مورد نظر فاقد منو دیجیتال می باشد`],
+}]))
 await writeFile(join(root, 'state.json'), JSON.stringify({ runId, status: 'ready', report: { sourceCafes: 2, matchedCafes: 2,
-  matchedItems: 0, unchangedItems: 0, failedCafes: 0, totalChanges: 0, totalNewCafes: 0, totalNewItems: 0, totalNewSections: 0,
+  matchedItems: 0, unchangedItems: 0, failedCafes: 1, totalChanges: 0, totalNewCafes: 0, totalNewItems: 0, totalNewSections: 0,
   totalUpdatedItems: 0, totalMovedItems: 0, totalReactivatedItems: 0, totalArchivedItems: 0, totalConflicts: 0,
   priceChanges: 0, priceIncreases: 0, priceDecreases: 0, availabilityChanges: 0, newCafes: [], newItems: [], conflicts: [], changes: [], cafes: [] } }))
 const server = spawn(process.execPath, ['node_modules/next/dist/bin/next', 'start', '--hostname', '127.0.0.1', '--port', '9095'],
- { cwd: '/var/www/kucafe', env: { ...process.env, NODE_ENV: 'production', NEXT_DIST_DIR: artifact, TOPMENU_SYNC_ROOT: root }, stdio: 'ignore' })
+ { cwd: process.cwd(), env: { ...process.env, NODE_ENV: 'production', NEXT_DIST_DIR: artifact, TOPMENU_SYNC_ROOT: root }, stdio: 'ignore' })
 const browser = await chromium.launch({ channel: 'chromium', headless: true, args: ['--enable-unsafe-swiftshader'] })
 let sessionId: string | undefined
 try {
@@ -32,7 +36,7 @@ try {
   for (let tries = 0; tries < 30; tries++) { try { if ((await fetch(base)).ok) break } catch {} await new Promise(resolve => setTimeout(resolve, 500)) }
   await mkdir('var/qa/topmenu-selection', { recursive: true })
   for (const width of [320, 390, 1440]) {
-    const context = await browser.newContext({ viewport: { width, height: 900 }, isMobile: width < 700, hasTouch: width < 700 })
+    const context = await browser.newContext({ viewport: { width, height: 900 }, isMobile: width < 700, hasTouch: width < 700, colorScheme: width === 390 ? 'dark' : 'light' })
     await context.addCookies([{ name: SESSION_COOKIE, value: token, url: base, httpOnly: true }])
     const page = await context.newPage(), errors: string[] = [], sent: Record<string, unknown>[] = []
     page.on('pageerror', error => errors.push(error.message))
@@ -46,6 +50,16 @@ try {
     const scrape = page.getByRole('group', { name: '۱. کدام کافه‌ها اسکرپ شوند؟' })
     const apply = page.getByRole('group', { name: '۲. تغییرات کدام کافه‌ها اعمال شوند؟' })
     await scrape.waitFor()
+    const failureDisclosure = page.getByText('کافه‌های خطادار و علت')
+    await failureDisclosure.focus()
+    await page.keyboard.press('Enter')
+    const failureReason = page.getByText('منو: HTTP 403 — مجموعه مورد نظر فاقد منو دیجیتال می باشد')
+    await failureReason.waitFor()
+    await page.keyboard.press('Enter')
+    assert.ok(await failureReason.isHidden())
+    await page.keyboard.press('Enter')
+    await failureReason.waitFor()
+    assert.ok(await apply.getByRole('checkbox', { name: new RegExp(targets[1].name) }).isDisabled())
     assert.ok(await page.getByRole('button', { name: 'اسکرپ ۰ کافهٔ انتخاب‌شده' }).isDisabled())
     await scrape.getByRole('searchbox').fill(targets[0].name)
     const selected = scrape.getByRole('checkbox', { name: new RegExp(targets[0].name) }); await selected.check()
@@ -62,6 +76,12 @@ try {
     const applyResponse = page.waitForResponse(response => response.url().endsWith('/api/admin/topmenu-sync'))
     await page.getByRole('button', { name: 'بکاپ و اعمال تغییرات انتخاب‌شده' }).click(); await applyResponse
     assert.equal(sent[1].mode, 'apply'); assert.equal(sent[1].runId, runId); assert.deepEqual(sent[1].sourceIds, [targets[0].sourceId])
+    await apply.getByRole('radio', { name: 'همهٔ کافه‌های همین گزارش' }).check()
+    assert.ok(await page.getByRole('button', { name: 'بکاپ و اعمال تغییرات انتخاب‌شده' }).isDisabled())
+    await apply.getByRole('radio', { name: 'انتخاب کافه‌ها' }).check()
+    const download = await context.request.get(`${base}/api/admin/topmenu-report?runId=${runId}`)
+    assert.equal(download.status(), 200)
+    assert.deepEqual((await download.json()).failedSources[0].reasons, ['منو: HTTP 403 — مجموعه مورد نظر فاقد منو دیجیتال می باشد'])
     await apply.screenshot({ path: `var/qa/topmenu-selection/apply-picker-${width}.png` })
     await scrape.getByRole('radio', { name: 'همهٔ کافه‌های منبع، شامل کافه‌های جدید' }).check()
     const fullResponse = page.waitForResponse(response => response.url().endsWith('/api/admin/topmenu-sync'))
