@@ -24,6 +24,13 @@ Item and failure counts are computed from the bounded log read, not just the
 200 lines shown in the panel; if the log exceeds that read limit, the panel
 labels those counts as coming from the bounded log tail.
 
+For source availability, only `source_provider_ids_latest.json` from a full
+provider-list request is authoritative. A selected scrape still reads that
+directory, but its `providers_info_latest.json` and `cafes_full_latest.json`
+contain only selected cafes and must never mark unselected cafes as removed.
+Old runs without the complete-directory artifact mean availability is
+unknown; the scraper itself remains the final guard for missing source IDs.
+
 ## Source failures and data safety
 
 TopMenuMarket currently returns HTTP 403 with a JSON message saying a provider
