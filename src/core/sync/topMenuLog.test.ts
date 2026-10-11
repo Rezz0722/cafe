@@ -22,7 +22,7 @@ test('current café and totals come from the real progress lines', () => {
     '[3/3] باغ مهستان (mahestan) ...',
   ].join('\n'))
   assert.equal(progress.stage, 'scraping')
-  assert.equal(progress.done, 3)
+  assert.equal(progress.done, 2)
   assert.equal(progress.total, 3)
   assert.equal(progress.currentName, 'باغ مهستان')
   assert.equal(progress.currentUsername, 'mahestan')
@@ -32,7 +32,7 @@ test('current café and totals come from the real progress lines', () => {
 test('a truncated tail still reports the café it stopped on', () => {
   // دقیقاً همان چیزی که هنگام اسکرپِ زنده به ما می‌رسد: لاگ وسط یک مجموعه بریده.
   const progress = parseTopMenuLog(['[1/3] اول (one) ...', '    10 آیتم منو پیدا شد.', '[2/3] دوم (two) ...'].join('\n'))
-  assert.equal(progress.done, 2)
+  assert.equal(progress.done, 1)
   assert.equal(progress.currentName, 'دوم')
   assert.equal(progress.itemsFound, 10)
 })
@@ -60,7 +60,7 @@ test('the last index is not mistaken for completion', () => {
   // می‌شوند، پس «در حال نوشتن خروجی» ادعایی است که این لاگ پشتیبانی‌اش نمی‌کند.
   const progress = parseTopMenuLog(['[1/3] الف (a) ...', '[2/3] ب (b) ...', '[3/3] ج (c) ...'].join('\n'))
   assert.equal(progress.stage, 'scraping')
-  assert.equal(progress.done, 3)
+  assert.equal(progress.done, 2)
 })
 
 test('completion is detected and moves the stage past scraping', () => {

@@ -81,7 +81,8 @@ export function parseTopMenuLog(text: string): TopMenuProgress {
     if (item) {
       // مجموعه‌ی قبلی همین‌جا تمام می‌شود.
       if (currentFailed) { result.failedCafes++; currentFailed = false }
-      result.done = Number(item[1])
+      // [N/total] announces the START of N, not its completion.
+      result.done = Math.max(0, Number(item[1]) - 1)
       result.total = Number(item[2])
       result.currentName = item[3] || null
       result.currentUsername = item[4] || null
@@ -99,6 +100,7 @@ export function parseTopMenuLog(text: string): TopMenuProgress {
     if (DONE_LINE.test(line)) {
       if (currentFailed) { result.failedCafes++; currentFailed = false }
       result.stage = 'done'
+      result.done = result.total
       continue
     }
   }
@@ -107,7 +109,6 @@ export function parseTopMenuLog(text: string): TopMenuProgress {
   if (currentFailed && result.stage === 'scraping') result.failedCafes++
 
   // «تمام شد» بعد از هر چیزی یعنی فاز اسکرپ بسته شده، حتی اگر تعداد کل نیامده باشد.
-  if (result.stage === 'done' && result.done === null) result.done = result.total
   /*
    * `done >= total` عمداً «finishing» نمی‌شود. عددِ `[3/3]` یعنی مجموعه‌ی آخر *شروع*
    * شده، نه تمام؛ فایل‌های JSON بعد از حلقه نوشته می‌شوند و ما تا دیدنِ خطِ

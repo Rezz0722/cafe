@@ -120,7 +120,8 @@ export function TopMenuLiveProgress({ runId, status }: { runId: string | null; s
 
   const progress = tail?.progress
   const remaining = formatRemaining(tail?.remainingMs ?? null)
-  const stale = !!tail?.updatedAt && Date.now() - Date.parse(tail.updatedAt) > POLL_MS * 2
+  const stale = (status === 'scraping' || status === 'applying')
+    && !!tail?.updatedAt && Date.now() - Date.parse(tail.updatedAt) > POLL_MS * 2
 
   return <section className={styles.logPanel}>
     <div className={styles.logPanelHead}>
@@ -137,14 +138,14 @@ export function TopMenuLiveProgress({ runId, status }: { runId: string | null; s
         <span>{TOP_MENU_STAGE_LABELS[progress.stage as TopMenuStage] ?? progress.stage}</span>
         {progress.currentName && <b>{progress.currentName}</b>}
         {progress.currentUsername && <small dir="ltr">{progress.currentUsername}</small>}
-        {stale && <em className={styles.logStale}>لاگ ۲۴ ثانیه به‌روز نشده — ممکن است اجرا متوقف شده باشد.</em>}
+        {stale && <em className={styles.logStale}>لاگ فعلاً خط تازه‌ای ندارد؛ ممکن است درخواست منبع هنوز در حال پاسخ باشد.</em>}
       </p>
 
       <ProgressBar progress={progress} />
 
       <dl className={styles.logStats}>
-        <div><dt>آیتم منو</dt><dd>{fa(progress.itemsFound)}</dd></div>
-        <div><dt>مجموعه‌های خطادار</dt><dd className={progress.failedCafes ? styles.logBad : undefined}>{fa(progress.failedCafes)}</dd></div>
+        <div><dt>آیتم منو{tail.truncated && ' در دنبالهٔ لاگ'}</dt><dd>{fa(progress.itemsFound)}</dd></div>
+        <div><dt>مجموعه‌های خطادار{tail.truncated && ' در دنبالهٔ لاگ'}</dt><dd className={progress.failedCafes ? styles.logBad : undefined}>{fa(progress.failedCafes)}</dd></div>
         <div><dt>زمان باقی‌مانده</dt><dd>{remaining ?? '—'}</dd></div>
         <div><dt>حجم لاگ</dt><dd>{(tail.bytes / 1024).toFixed(0)} کیلوبایت{tail.truncated && ' (دنباله)'}</dd></div>
       </dl>
