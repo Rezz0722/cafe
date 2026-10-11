@@ -17,6 +17,8 @@ import {
   type TopMenuTarget,
 } from './topMenuSelection'
 import { assertTopMenuFailureManifest, failedTopMenuSourceIds, failedTopMenuSelectionIds, readTopMenuFailures, type TopMenuSourceFailure } from './topMenuFailures'
+import { readTopMenuSourcePresence } from './topMenuSourcePresence'
+import { isTopMenuSourceExcluded } from './topMenuExclusions'
 
 export type TopMenuSyncStatus = 'idle' | 'scraping' | 'ready' | 'applying' | 'completed' | 'failed'
 
@@ -157,45 +159,10 @@ async function readSnapshot(state: TopMenuSyncState): Promise<RawCafe[]> {
   } catch { return [] }
 }
 
-/**
- * شناسه‌های مجموعه‌هایی که آخرین فهرستِ کاملِ منبع در آن‌ها دیده شده‌اند.
- *
- * snapshotِ اجرای جاری «فهرست کامل» نیست — نتیجه‌ی انتخاب ادمین است. اگر ادمین
- * ۳ کافه را تیک زده باشد، snapshot فقط همان ۳ تا را دارد و بقیه‌ی ۳۴۹ کافه در آن
- * غایب‌اند. پس برای پاسخ به «آیا این کافه هنوز در منبع هست؟» باید فایلی خوانده
- * شود که *همه‌ی* providerها را دارد: `providers_info_latest.json` یا
- * `cafes_full_latest.json` از آخرین اجرایی که چنین فایلی ساخته.
- *
- * بین چند run، تازه‌ترین را می‌گیریم. `null` یعنی هیچ فهرست کاملی پیدا نشد یا
- * خوانده نشد — و `null` یعنی «نمی‌دانیم»، نه «همه پاک شده‌اند».
- */
-async function readSourcePresenceIds(state: TopMenuSyncState): Promise<number[] | null> {
-  const candidates: string[] = []
-  if (state.runId && /^[A-Za-z0-9_-]{1,100}$/.test(state.runId)) {
-    candidates.push(join(ROOT, 'runs', state.runId, 'providers_info_latest.json'))
-  }
-  let entries: string[] = []
-  try { entries = (await readdir(join(ROOT, 'runs'))).filter(name => /^[A-Za-z0-9_-]{1,100}$/.test(name)) } catch { return null }
-  candidates.push(...entries.sort().reverse().map(name => join(ROOT, 'runs', name, 'providers_info_latest.json')))
-  candidates.push(...entries.sort().reverse().map(name => join(ROOT, 'runs', name, 'cafes_full_latest.json')))
-
-  for (const path of candidates) {
-    try {
-      const value = JSON.parse(await readFile(path, 'utf8'))
-      if (!Array.isArray(value) || !value.length) continue
-      const ids = value
-        .map((row: unknown) => (row && typeof row === 'object' ? Number((row as Record<string, unknown>)['شناسه']) : NaN))
-        .filter((id: number) => Number.isSafeInteger(id) && id > 0)
-      if (ids.length) return [...new Set(ids)]
-    } catch { continue }
-  }
-  return null
-}
-
 /** Complete lightweight catalog, independent of the truncated price-change sample. */
 export async function readTopMenuTargets(state: TopMenuSyncState) {
   const rows = await getDb().select({ placeId: place.id, sourceId: place.sourceId, name: place.name, username: place.sourceUsername }).from(place).where(isNotNull(place.sourceId))
-  const catalog = new Map<number, TopMenuTarget>(rows.filter(row => row.sourceId! > 0).map(row => [row.sourceId!, { ...row, sourceId: row.sourceId!, username: row.username ?? '' }]))
+  const catalog = new Map<number, TopMenuTarget>(rows.filter(row => row.sourceId! > 0 && !isTopMenuSourceExcluded(row.sourceId!)).map(row => [row.sourceId!, { ...row, sourceId: row.sourceId!, username: row.username ?? '' }]))
   const snapshot = await readSnapshot(state)
   const reportTargets = snapshot.map(cafe => ({ sourceId: Number(cafe['شناسه']), placeId: catalog.get(Number(cafe['شناسه']))?.placeId ?? null,
     name: catalog.get(Number(cafe['شناسه']))?.name ?? cafe['نام مجموعه'], username: cafe['یوزرنیم'] ?? '', items: flattenCafeItems(cafe).length, inSource: true as const }))
@@ -208,7 +175,7 @@ export async function readTopMenuTargets(state: TopMenuSyncState) {
    * سالم را هم قفل می‌کنند. اینجا فقط *نشان‌دهی* می‌کنیم؛ گاردِ خودِ اسکرپر و
    * `selectTopMenuCafes` دست‌نخورده می‌مانند.
    */
-  const presence = await readSourcePresenceIds(state)
+  const presence = await readTopMenuSourcePresence(ROOT, state.runId)
   const sorted = [...catalog.values()]
     .map(target => annotateSourceAvailability([target], presence ?? [])[0]!)
     .sort((a, b) => a.name.localeCompare(b.name, 'fa'))
@@ -300,6 +267,8 @@ export async function startTopMenuSync(
     return { ok: false, error: 'گزارش عوض شده است؛ صفحه را تازه و کافه‌ها را دوباره انتخاب کنید.' }
   const selection = parseTopMenuSelection(options.selection.scope, options.selection.sourceIds)
   if (selection.scope === 'selected') {
+    const excluded = selection.sourceIds.filter(isTopMenuSourceExcluded)
+    if (excluded.length) return { ok: false, error: `شناسه‌های ${excluded.join('، ')} غیرکافه یا دمو هستند و از اسکرپ مستثنا شده‌اند؛ صفحه را تازه و انتخاب را اصلاح کنید.` }
     const targets = await readTopMenuTargets(current)
     const pool = mode === 'apply' ? targets.reportTargets : targets.catalog
     const known = new Set(pool.map(target => target.sourceId))

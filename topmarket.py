@@ -181,18 +181,29 @@ def list_all_providers(limit=None):
     """همه‌ی providerها رو با پیمایش صفحه‌به‌صفحه برمی‌گردونه."""
     providers = []
     page = 1
+    expected_total = None
+    expected_last_page = None
     while True:
         payload = api_get("/providers", params={"page": page})
-        batch = payload.get("data", [])
+        batch = payload.get("data")
+        paginator = (payload.get("additional") or {}).get("paginator") or {}
+        last_page = paginator.get("last_page")
+        total = paginator.get("total")
+        if not isinstance(batch, list) or type(last_page) is not int or last_page < page \
+                or type(total) is not int or total <= 0:
+            raise RuntimeError("فهرست مجموعه‌های منبع یا اطلاعات صفحه‌بندی معتبر نیست")
+        if expected_total is None:
+            expected_total, expected_last_page = total, last_page
+        elif total != expected_total or last_page != expected_last_page:
+            raise RuntimeError("تعداد یا صفحه‌بندی مجموعه‌های منبع حین دریافت تغییر کرد")
         providers.extend(batch)
         if limit and len(providers) >= limit:
             return providers[:limit]
 
-        paginator = (payload.get("additional") or {}).get("paginator") or {}
-        last_page = paginator.get("last_page", page)
-        total = paginator.get("total", len(providers))
         print(f"  صفحه {page}/{last_page} از providerها گرفته شد (مجموع تاکنون: {len(providers)} از {total})")
         if page >= last_page:
+            if len(providers) != total:
+                raise RuntimeError(f"فهرست مجموعه‌های منبع ناقص است: {len(providers)} از {total}")
             break
         page += 1
         time.sleep(REQUEST_DELAY)
@@ -411,6 +422,18 @@ def save_json(path, data):
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 
+def save_complete_source_directory(out_dir, providers):
+    source_ids = [provider["id"] for provider in providers]
+    if source_ids and len(source_ids) == len(set(source_ids)) and all(
+        type(pid) is int and 0 < pid <= 2147483647 for pid in source_ids
+    ):
+        save_json(out_dir / "source_provider_ids_latest.json", {
+            "version": 1, "complete": True, "total": len(source_ids), "sourceIds": source_ids,
+        })
+    else:
+        print("فهرست شناسه‌های منبع معتبر نیست؛ وضعیت حضور مجموعه‌ها نامعلوم می‌ماند.")
+
+
 def save_csv(path, rows, fieldnames):
     with path.open("w", encoding="utf-8-sig", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
@@ -468,10 +491,15 @@ def main():
         ):
             parser.error("شناسه‌های انتخاب‌شده معتبر نیستند؛ انتخاب خالی به معنای همه نیست")
         requested = set(selected_ids)
-        providers = [provider for provider in list_all_providers() if provider["id"] in requested]
+        full_source_providers = list_all_providers()
+        # Even if one requested ID disappeared, keep the verified full list so
+        # the admin can remove stale selections without another blind run.
+        save_complete_source_directory(out_dir, full_source_providers)
+        providers = [provider for provider in full_source_providers if provider["id"] in requested]
         found = {provider["id"] for provider in providers}
         if requested != found:
-            parser.error("بعضی کافه‌های انتخاب‌شده در فهرست منبع موجود نیستند؛ عملیات متوقف شد")
+            missing = sorted(requested - found)
+            parser.error(f"{len(missing)} کافهٔ انتخاب‌شده در فهرست منبع نیستند (شناسه‌ها: {', '.join(map(str, missing[:12]))})؛ عملیات متوقف شد")
         print(f"فقط {len(providers)} کافه انتخاب‌شده دریافت می‌شود.")
     elif args.username:
         print(f"در حال گرفتن اطلاعات provider «{args.username}» ...")
@@ -479,6 +507,8 @@ def main():
     else:
         print("در حال گرفتن لیست کامل کافه/رستوران‌ها ...")
         providers = list_all_providers(limit=args.limit)
+        if args.limit is None:
+            save_complete_source_directory(out_dir, providers)
 
     print(f"تعداد کافه/رستوران‌هایی که پردازش می‌شن: {len(providers)}")
 
