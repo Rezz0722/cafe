@@ -41,7 +41,7 @@ import {
 import { getMyReviewFor, listReviewableMenuItems, listSavedPlaceIds } from '@/core/user/userData'
 import { fa, faCount, toman } from '@/lib/format'
 import { authUrl, paths } from '@/routes'
-import { ageInDays, placeIdentity, publicReviewerName } from '@/core/places/presentation'
+import { menuPriceTrust, placeIdentity, publicReviewerName } from '@/core/places/presentation'
 import styles from './page.module.css'
 import { listOffers, membershipFor } from '@/core/club/service'
 
@@ -261,15 +261,19 @@ export default async function CafePage({ params }: PageProps) {
   const labels = getMapLabels({ zoom: 14, limit: 24 })
   const kindLabel = KIND_LABELS[place.kind] ?? 'کافه'
   const identity = placeIdentity(place)
-  const priceAgeDays = ageInDays(place.priceLastUpdatedAt ?? place.lastVerifiedAt)
-  const priceIsStale = place.priceStatsItemCount > 0 && (
-    place.priceStaleItemCount > 0 || (priceAgeDays !== null && priceAgeDays > dataPolicy.stalePriceDays)
-  )
-  const priceDate = place.priceLastUpdatedAt ?? place.lastVerifiedAt
+  const { latestRecordedChangeAt: priceDate, isStale: priceIsStale } = menuPriceTrust({
+    priceLastUpdatedAt: place.priceLastUpdatedAt,
+    priceStatsItemCount: place.priceStatsItemCount,
+    priceStaleItemCount: place.priceStaleItemCount,
+    stalePriceDays: dataPolicy.stalePriceDays,
+  })
   const formattedPriceDate = priceDate
     ? new Intl.DateTimeFormat('fa-IR', { dateStyle: 'medium', timeZone: locale.timeZone }).format(priceDate)
     : null
   const sourceLabel = SOURCE_LABELS[place.source] ?? 'دادهٔ ثبت‌شده در کو کافه'
+  const formattedSourceSyncDate = place.lastSourceSyncAt
+    ? new Intl.DateTimeFormat('fa-IR', { dateStyle: 'medium', timeZone: locale.timeZone }).format(place.lastSourceSyncAt)
+    : null
 
   /* گالری فقط از تصاویر مدیریت‌شدهٔ همین شعبه می‌آید. تصویر خوراکی یا لوگو
      دیگر به‌جای عکس محیط جا زده نمی‌شود. لوگو فقط وقتی هیچ عکس واقعی ثبت
@@ -689,7 +693,7 @@ export default async function CafePage({ params }: PageProps) {
           </aside>
         </div>
         <section className={`${styles.dataTrust} ${priceIsStale ? styles.dataTrustStale : ''}`} aria-label="منبع و تازگی اطلاعات">
-          <div className={styles.trustLead}><span className={styles.trustIcon} aria-hidden="true"><Database size={20}/></span><div><strong>{sourceLabel}</strong><span>{formattedPriceDate?`آخرین به‌روزرسانی قیمت: ${formattedPriceDate}`:'زمان به‌روزرسانی ثبت نشده است'}{priceIsStale?' · برخی قیمت‌ها نیاز به بازبینی دارند':''}</span></div></div>
+          <div className={styles.trustLead}><span className={styles.trustIcon} aria-hidden="true"><Database size={20}/></span><div><strong>منشأ اولیهٔ اطلاعات: {sourceLabel}</strong><span>{formattedPriceDate?`جدیدترین تغییر ثبت‌شدهٔ قیمت: ${formattedPriceDate}`:'زمان تغییر قیمت ثبت نشده است'}</span>{formattedSourceSyncDate&&<span>آخرین همگام‌سازی منبع: {formattedSourceSyncDate}</span>}{priceIsStale&&<span>برخی قیمت‌ها نیاز به بازبینی دارند.</span>}</div></div>
           {place.priceStatsItemCount>0 && <details><summary>مبنای آمار قیمت</summary><p>بر پایهٔ {faCount(place.priceStatsItemCount)} آیتم مشمول؛ خدمات و قیمت‌های خارج از قواعد محاسبه کنار گذاشته می‌شوند. بازهٔ قیمت از میانه و ردهٔ قیمت جداست.{place.priceMinItemName&&place.priceMaxItemName?` کمینه: ${place.priceMinItemName}؛ بیشینه: ${place.priceMaxItemName}.`:''}</p></details>}
         </section>
       </main>

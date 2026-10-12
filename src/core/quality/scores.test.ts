@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { completenessBreakdown, computeQualityFromFacts } from './scores'
+import { completenessBreakdown, computeFreshnessScore, computeQualityFromFacts } from './scores'
+import type { Place } from '@/core/places/types'
 
 const complete = {
   hasCoords: true,
@@ -31,4 +32,12 @@ test('تصویر و ویژگی امتیاز مرحله‌ای و قابل توض
   const parts = completenessBreakdown(facts)
   assert.match(parts.find((part) => part.id === 'photos')?.detail ?? '', /1 از 3/)
   assert.match(parts.find((part) => part.id === 'attributes')?.detail ?? '', /3 از 6/)
+})
+
+test('تاریخ تأیید کلی، فیلدهای بی‌منشأ را به‌اشتباه تازه نمی‌کند', () => {
+  const now = new Date('2026-10-12T12:00:00Z')
+  const place = { lastVerifiedAt: now.toISOString(), provenance: [] } as unknown as Place
+  assert.equal(computeFreshnessScore(place, now), 0)
+  place.provenance = [{ field: 'menu', source: 'owner', confidence: 80, observedAt: now.toISOString() }]
+  assert.equal(computeFreshnessScore(place, now), 20)
 })

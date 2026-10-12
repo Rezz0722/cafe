@@ -197,6 +197,8 @@ export interface PlaceDetail extends PlaceCard {
   /** تعداد آیتم و بازه‌ی قیمت — برای نمایش خلاصه بدون شمردن در UI. */
   menuItemCount: number
   lastVerifiedAt: Date | null
+  /** زمان اعمال منبع خارجی؛ تأیید انسانی نیست. */
+  lastSourceSyncAt: Date | null
   updatedAt: Date
   /** میانگین خام نظرها؛ برای نمایش و Structured Data، نه رتبه‌بندی. */
   rawRating: number | null
@@ -676,6 +678,7 @@ export async function getPlaceDetail(
       logoWidth: mediaTable.width,
       logoHeight: mediaTable.height,
       lastVerifiedAt: placeTable.lastVerifiedAt,
+      lastSourceSyncAt: placeTable.lastSourceSyncAt,
       updatedAt: placeTable.updatedAt,
     })
     .from(placeTable)
@@ -925,6 +928,7 @@ export async function getPlaceDetail(
     })),
     menuItemCount: items.length,
     lastVerifiedAt: row.lastVerifiedAt,
+    lastSourceSyncAt: row.lastSourceSyncAt,
     updatedAt: row.updatedAt,
   }
 }

@@ -548,7 +548,7 @@ async function apply() {
     protectedFields: 0,
   }
   const affected = new Set<number>()
-  const verifiedAt = new Date()
+  const appliedAt = new Date()
   const targetPlaceRows = await db.select({ id: placeTable.id }).from(placeTable)
     .where(inArray(placeTable.sourceId, cafes.map(cafe => Number(cafe['شناسه']))))
   const targetPlaceIds = targetPlaceRows.map(row => row.id)
@@ -648,7 +648,7 @@ async function apply() {
             hasAddress: !!address, hasPhone: phones.length > 0, hasInstagram: !!instagram,
             hasDescription: !!about, hasMenu: flatItems.length > 0, photoCount: cafe['لوگو'] ? 1 : 0, attributeCount: 0,
           }),
-          source: 'import', lastVerifiedAt: verifiedAt,
+          source: 'import', lastSourceSyncAt: appliedAt,
         }).$returningId()
         const placeId = created!.id
         placeRow = (await tx.select().from(placeTable).where(eq(placeTable.id, placeId)).limit(1))[0]!
@@ -663,7 +663,7 @@ async function apply() {
         if (hours.shifts.length) await tx.insert(placeHoursTable).values(hours.shifts.map((shift) => ({ placeId, dow: shift.dow, shiftIndex: shift.shiftIndex, opensAt: shift.opensAt, closesAt: shift.closesAt, crossesMidnight: shift.crossesMidnight, closed: shift.closed })))
       } else {
         context = { thousandUnit: placeRow.priceUnitFixed, threshold: policy.thousandUnitThreshold }
-        await tx.update(placeTable).set({ lastVerifiedAt: verifiedAt }).where(eq(placeTable.id, placeRow.id))
+        await tx.update(placeTable).set({ lastSourceSyncAt: appliedAt }).where(eq(placeTable.id, placeRow.id))
       }
 
       const placeId = placeRow.id
@@ -713,7 +713,7 @@ async function apply() {
           if (!existing) {
             const dishSlug = matchDish(values.name, facetId, { price: values.price, sectionName: section.name })
             const dishId = dishSlug ? dishBySlug.get(dishSlug) ?? null : null
-            inserts.push({ publicId: importedItemPublicId(sourceItemId, cafeSourceId, section.sortOrder, itemIndex), placeId, sectionId: targetSection.id, sourceId: sourceItemId, ...values, mediaId, dishId, sortOrder: itemIndex, archivedAt: null, priceUpdatedAt: verifiedAt })
+            inserts.push({ publicId: importedItemPublicId(sourceItemId, cafeSourceId, section.sortOrder, itemIndex), placeId, sectionId: targetSection.id, sourceId: sourceItemId, ...values, mediaId, dishId, sortOrder: itemIndex, archivedAt: null, priceUpdatedAt: appliedAt })
             continue
           }
           if (existing.placeId !== placeId) { stats.skipped++; continue }
@@ -732,7 +732,7 @@ async function apply() {
             || existing.featured !== effective.featured || existing.mediaId !== effective.mediaId
             || existing.dishId !== dishId || existing.sortOrder !== effective.sortOrder
           if (!changed) continue
-          await tx.update(menuItemTable).set({ sectionId: effective.sectionId, name: effective.name, nameEn: effective.nameEn, nameNormalized: normalizeFa(effective.name), description: effective.description, price: effective.price, priceUnknown: effective.priceUnknown, available: effective.available, featured: effective.featured, mediaId: effective.mediaId, dishId, sortOrder: effective.sortOrder, archivedAt: effective.archivedAt, priceUpdatedAt: existing.price !== effective.price ? verifiedAt : existing.priceUpdatedAt }).where(eq(menuItemTable.id, existing.id))
+          await tx.update(menuItemTable).set({ sectionId: effective.sectionId, name: effective.name, nameEn: effective.nameEn, nameNormalized: normalizeFa(effective.name), description: effective.description, price: effective.price, priceUnknown: effective.priceUnknown, available: effective.available, featured: effective.featured, mediaId: effective.mediaId, dishId, sortOrder: effective.sortOrder, archivedAt: effective.archivedAt, priceUpdatedAt: existing.price !== effective.price ? appliedAt : existing.priceUpdatedAt }).where(eq(menuItemTable.id, existing.id))
           stats.updatedItems++
           if (moved) stats.movedItems++
           if (reactivated) stats.reactivatedItems++
@@ -746,7 +746,7 @@ async function apply() {
         const archiveIds = (itemsByPlace.get(placeId) ?? []).filter((item) => item.sourceId !== null && !sourceItemIds.has(item.sourceId) && item.archivedAt === null && !itemFields.get(item.id)?.has('archivedAt')).map((item) => item.id)
         stats.protectedFields += (itemsByPlace.get(placeId) ?? []).filter((item) => item.sourceId !== null && !sourceItemIds.has(item.sourceId) && item.archivedAt === null && itemFields.get(item.id)?.has('archivedAt')).length
         for (let index = 0; index < archiveIds.length; index += CHUNK) {
-          await tx.update(menuItemTable).set({ archivedAt: verifiedAt }).where(inArray(menuItemTable.id, archiveIds.slice(index, index + CHUNK)))
+          await tx.update(menuItemTable).set({ archivedAt: appliedAt }).where(inArray(menuItemTable.id, archiveIds.slice(index, index + CHUNK)))
         }
         stats.archivedItems += archiveIds.length
       }

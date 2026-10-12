@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
   ageInDays,
+  menuPriceTrust,
   placeIdentity,
   presentMenuSectionName,
   publicReviewerName,
@@ -41,4 +42,25 @@ test('سن داده منفی نمی‌شود', () => {
   assert.equal(ageInDays(new Date('2026-09-12T12:00:00Z'), now), 2)
   assert.equal(ageInDays(new Date('2026-09-15T12:00:00Z'), now), 0)
   assert.equal(ageInDays(null, now), null)
+})
+
+test('Sync تازه زمان تغییر یا تأیید قیمتِ نامعلوم را جعل نمی‌کند', () => {
+  const now = new Date('2026-10-12T12:00:00Z')
+  const unknown = menuPriceTrust({
+    priceLastUpdatedAt: null, priceStatsItemCount: 2,
+    priceStaleItemCount: 2, stalePriceDays: 120,
+  }, now)
+  assert.equal(unknown.latestRecordedChangeAt, null)
+  assert.equal(unknown.isStale, true)
+
+  const old = menuPriceTrust({
+    priceLastUpdatedAt: new Date('2026-05-01T12:00:00Z'), priceStatsItemCount: 2,
+    priceStaleItemCount: 1, stalePriceDays: 120,
+  }, now)
+  assert.equal(old.isStale, true)
+  assert.equal(old.latestRecordedChangeAt?.toISOString(), '2026-05-01T12:00:00.000Z')
+  assert.equal(menuPriceTrust({
+    priceLastUpdatedAt: new Date('2026-10-10T12:00:00Z'), priceStatsItemCount: 0,
+    priceStaleItemCount: 0, stalePriceDays: 120,
+  }, now).isStale, false)
 })

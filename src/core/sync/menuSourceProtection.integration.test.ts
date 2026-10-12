@@ -46,6 +46,12 @@ test('real disposable MariaDB: owner edits survive two TopMenu preview/apply cyc
     const [p] = await db.insert(place).values({ slug: `qa-p1-${fixture}`, name: 'QA Cafe', nameNormalized: 'qa cafe', sourceId: cafeSourceId, status: 'published', priceUnitFixed: true })
     const [other] = await db.insert(place).values({ slug: `qa-p1-other-${fixture}`, name: 'Other QA Cafe', nameNormalized: 'other qa cafe', status: 'published' })
     placeId = p.insertId; otherPlaceId = other.insertId
+    const legacySyncTime = new Date('2026-09-01T12:00:00Z')
+    await db.update(place).set({ source: 'import', lastVerifiedAt: legacySyncTime }).where(eq(place.id, placeId))
+    execFileSync(process.execPath, ['scripts/run-sql.mjs', 'drizzle/0016_menu_source_sync_time.sql'], { cwd: process.cwd(), env: process.env, stdio: 'pipe' })
+    const legacyPlace = (await db.select().from(place).where(eq(place.id, placeId)))[0]!
+    assert.equal(legacyPlace.lastSourceSyncAt?.getTime(), legacySyncTime.getTime(), 'legacy import sync gets a separate date')
+    assert.equal(legacyPlace.lastVerifiedAt?.getTime(), legacySyncTime.getTime(), 'migration does not erase uncertain historical data')
     const [s] = await db.insert(menuSection).values({ placeId, name: 'QA قهوه', sourceName: 'QA قهوه' })
     sectionId = s.insertId
     const [i] = await db.insert(menuItem).values({ placeId, sectionId, publicId: `qa_p1_${fixture}`, sourceId: itemSourceId, name: 'QA لاته منبع', nameNormalized: 'qa لاته منبع', price: 100000, available: true })
@@ -53,6 +59,7 @@ test('real disposable MariaDB: owner edits survive two TopMenu preview/apply cyc
     await db.insert(menuItem).values({ placeId, sectionId, publicId: `qa_p1_manual_${fixture}`, name: 'آیتم دستی', nameNormalized: 'آیتم دستی', price: 70000 })
     await db.insert(menuSection).values({ placeId: otherPlaceId, name: 'QA قهوه' })
     assert.equal((await updateMenuItem(itemId, { name: 'لاته مالک', price: 135000, available: false }, actor)).ok, true)
+    const ownerPriceUpdatedAt = (await snapshot()).priceUpdatedAt
     assert.equal((await updateMenuSection(placeId, sectionId, 'دسته مالک', actor)).ok, true)
     const overrides = await db.select().from(menuItemFieldOverride).where(eq(menuItemFieldOverride.itemId, itemId))
     assert.deepEqual(overrides.map(row => row.fieldName).sort(), ['available', 'name', 'price'])
@@ -71,9 +78,13 @@ test('real disposable MariaDB: owner edits survive two TopMenu preview/apply cyc
       assert.equal(preview.report.protectedChanges.find((change: {field: string}) => change.field === 'price')?.source, price * 1000)
       if (index === 2) assert.equal(preview.report.totalChanges, 0, 'identical snapshot is idempotent')
       run('apply', runId, sourceFile)
+      const syncedPlace = (await db.select().from(place).where(eq(place.id, placeId)))[0]!
+      assert.ok(syncedPlace.lastSourceSyncAt && syncedPlace.lastSourceSyncAt > legacySyncTime, 'source sync has its own timestamp')
+      assert.equal(syncedPlace.lastVerifiedAt?.getTime(), legacySyncTime.getTime(), 'source sync never claims human verification')
       const item = await snapshot()
       assert.equal(item.name, 'لاته مالک')
       assert.equal(item.price, 135000)
+      assert.equal(item.priceUpdatedAt?.getTime(), ownerPriceUpdatedAt?.getTime(), 'unchanged owner price keeps its actual edit timestamp')
       assert.equal(item.available, false)
       assert.equal(item.description, description)
       assert.equal(item.sectionId, sectionId)
