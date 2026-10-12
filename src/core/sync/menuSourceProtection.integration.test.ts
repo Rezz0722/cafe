@@ -71,6 +71,8 @@ test('real disposable MariaDB: owner edits survive two TopMenu preview/apply cyc
       assert.equal(preview.report.protectedChanges.find((change: {field: string}) => change.field === 'price')?.source, price * 1000)
       if (index === 2) assert.equal(preview.report.totalChanges, 0, 'identical snapshot is idempotent')
       run('apply', runId, sourceFile)
+      const [syncAudit] = await db.select().from(auditLog).where(eq(auditLog.entityId, runId)).limit(1)
+      assert.equal(syncAudit?.action, 'topmenu.full_sync', 'each committed snapshot has a durable audit record')
       const item = await snapshot()
       assert.equal(item.name, 'لاته مالک')
       assert.equal(item.price, 135000)
