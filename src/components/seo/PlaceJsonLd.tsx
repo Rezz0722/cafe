@@ -83,7 +83,7 @@ const DEFAULT_LOCALE: JsonLdLocale = {
   countryCode: 'IR',
 }
 
-export function PlaceJsonLd({
+export function buildPlaceJsonLdData({
   place,
   locale = DEFAULT_LOCALE,
 }: {
@@ -113,20 +113,23 @@ export function PlaceJsonLd({
 
   const data: Record<string, unknown> = {
     '@context': 'https://schema.org',
-    '@type': KIND_TO_SCHEMA[place.kind ?? 'cafe'] ?? 'LocalBusiness',
+    // Imported `kind` defaults to cafe even for unreviewed, locationless
+    // sources. Do not assert CafeOrCoffeeShop until a venue address exists.
+    '@type': place.address.trim() ? KIND_TO_SCHEMA[place.kind ?? 'cafe'] ?? 'LocalBusiness' : 'LocalBusiness',
     '@id': url,
     name: place.name,
     url,
-    address: {
-      '@type': 'PostalAddress',
-      streetAddress: place.address,
-      addressLocality: locale.cityName,
-      addressRegion: locale.regionName,
-      addressCountry: locale.countryCode,
-    },
-    priceRange: PRICE_RANGE[place.priceTier ?? 2] ?? '$$',
   }
 
+  // A source listing with no address does not establish a city or street.
+  if (place.address.trim()) data.address = {
+    '@type': 'PostalAddress',
+    streetAddress: place.address.trim(),
+    addressLocality: locale.cityName,
+    addressRegion: locale.regionName,
+    addressCountry: locale.countryCode,
+  }
+  if (place.priceTier !== undefined && PRICE_RANGE[place.priceTier]) data.priceRange = PRICE_RANGE[place.priceTier]
   if (place.description) data.description = place.description
   if (place.phone) data.telephone = place.phone
   if (place.imageUrl) data.image = absoluteUrl(place.imageUrl)
@@ -192,9 +195,11 @@ export function PlaceJsonLd({
     }
   }
 
-  return (
-    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(data) }} />
-  )
+  return data
+}
+
+export function PlaceJsonLd(props: { place: PlaceJsonLdProps; locale?: JsonLdLocale }) {
+  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(buildPlaceJsonLdData(props)) }} />
 }
 
 /** breadcrumb — به گوگل ساختار سایت را نشان می‌دهد. */

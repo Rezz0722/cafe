@@ -154,21 +154,28 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const [place, locale] = await Promise.all([getPlaceDetail(slug), getLocalePolicy()])
   if (!place) return { title: 'پیدا نشد' }
 
+  const address = place.address.trim()
+  const hasLocation = Boolean(address || place.districtName)
   const where = place.districtName
     ? `${place.districtName}، ${locale.cityName}`
     : locale.cityName
   const qualifier = seoPageQualifier(place.slug, place.branchName)
-  const title = `${place.name}${qualifier ? `، ${qualifier}` : ''} — ${KIND_LABELS[place.kind] ?? 'کافه'} در ${where}`
+  const identity = `${place.name}${qualifier ? `، ${qualifier}` : ''}`
+  const title = hasLocation
+    ? `${identity} — ${KIND_LABELS[place.kind] ?? 'کافه'} در ${where}`
+    : `${identity} — ${place.priceStatsItemCount > 0 ? 'منو و قیمت' : place.menuItemCount > 0 ? 'منو' : 'اطلاعات مجموعه'}`
 
   // توضیحات از داده‌ی واقعی ساخته می‌شود نه از یک قالب ثابت: عددِ منو و
   // میانگین قیمت همان چیزی است که در نتیجه‌ی جست‌وجو تصمیم‌ساز است.
   const bits: string[] = []
-  if (place.menuItemCount > 0) bits.push(`${fa(place.menuItemCount)} آیتم منو با قیمت`)
+  if (place.menuItemCount > 0) bits.push(`${fa(place.menuItemCount)} آیتم منو`)
   if (place.priceMedian) bits.push(`میانهٔ قیمت ${toman(place.priceMedian)}`)
-  bits.push('ساعت کاری، نقشه و مسیریابی')
+  if (place.hours.some(shift => !shift.closed && shift.opensAt && shift.closesAt)) bits.push('ساعت کاری ثبت‌شده')
+  if (address) bits.push('آدرس')
+  if (place.coords) bits.push('نقشه و مسیریابی')
 
   const about = place.about?.replace(/\s+/g, ' ').trim() ?? ''
-  const factualDescription = `${place.name} در ${where}. ${bits.join(' · ')}. مشاهدهٔ منو و قیمت ثبت‌شده، ساعت کاری، آدرس، نقشه و مسیریابی در کو کافه.`
+  const factualDescription = `${place.name}${hasLocation ? ` در ${where}` : ''}. ${bits.length ? `${bits.join(' · ')}. ` : ''}اطلاعات ثبت‌شدهٔ مجموعه در کو کافه.`
   // توضیح کوتاه منبع به‌تنهایی snippet ضعیفی می‌سازد؛ واقعیت‌های صفحه آن را
   // کامل می‌کنند. متن بلند نیز برای جلوگیری از بریدگی بی‌هدف محدود می‌شود.
   const description = (about.length >= 80
@@ -307,7 +314,7 @@ export default async function CafePage({ params }: PageProps) {
           address: place.address,
           coords: place.coords,
           phone: place.phones[0]?.phone ?? null,
-          priceTier: place.priceTier,
+          priceTier: place.priceStatsItemCount > 0 ? place.priceTier : undefined,
           rating: place.rawRating ?? undefined,
           ratingCount: place.ratingCount,
           imageUrl: place.cover?.fullUrl ?? place.logo?.fullUrl ?? null,
