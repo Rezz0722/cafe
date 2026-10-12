@@ -1,6 +1,6 @@
 # KuCafe P1-01 — حفاظت دادهٔ ویرایش‌شده در پنل در برابر اسکرپر
 
-تاریخ: ۱۲ اکتبر ۲۰۲۶ · Branch: `feat/p1-01-owner-data-protection` · PR مستقل: پس از Push در انتهای مأموریت ثبت می‌شود. **بدون Merge، Migration یا Deploy روی Production.**
+تاریخ: ۱۲ اکتبر ۲۰۲۶ · Branch: `feat/p1-01-owner-data-protection` · PR مستقل: [#65](https://github.com/Rezz0722/cafe/pull/65). **بدون Merge، Migration یا Deploy روی Production.**
 
 ## شواهد و علت ریشه‌ای
 
