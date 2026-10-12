@@ -531,9 +531,14 @@ async function apply() {
   if (selectedReport.totalConflicts > 0) throw new Error(`${selectedReport.totalConflicts} تداخل شناسه در کافه‌های انتخاب‌شده وجود دارد؛ هیچ داده‌ای تغییر نکرد.`)
 
   const backup = join(process.env.TOPMENU_SYNC_BACKUP_DIR || 'backups', `kucafe-before-topmenu-${runId}.sql.gz`)
-  const backupChild = spawn(process.execPath, ['scripts/backup-db.mjs', backup], { cwd: process.cwd(), env: process.env, stdio: 'ignore' })
+  const backupLog = createWriteStream(join(runDir, 'backup.log'), { flags: 'a' })
+  const backupChild = spawn(process.execPath, ['scripts/backup-db.mjs', backup], { cwd: process.cwd(), env: process.env, stdio: ['ignore', 'pipe', 'pipe'] })
+  backupChild.stdout.pipe(backupLog, { end: false })
+  backupChild.stderr.pipe(backupLog, { end: false })
   const [backupCode] = await once(backupChild, 'close') as [number]
-  if (backupCode !== 0) throw new Error('بکاپ قبل از اعمال تغییرات ساخته نشد؛ هیچ داده‌ای تغییر نکرد.')
+  backupLog.end()
+  await once(backupLog, 'finish')
+  if (backupCode !== 0) throw new Error('بکاپ قبل از اعمال تغییرات ساخته نشد؛ هیچ داده‌ای تغییر نکرد. جزئیات در backup.log همین اجرا ثبت شد.')
 
   const db = getDb()
   const policy = await getDataPolicy()

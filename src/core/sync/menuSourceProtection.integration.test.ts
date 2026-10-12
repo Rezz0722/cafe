@@ -30,6 +30,9 @@ test('real disposable MariaDB: owner edits survive two TopMenu preview/apply cyc
     } catch (error) {
       let detail = 'No state error recorded'
       try { detail = JSON.parse(readFileSync(join(temp, 'state.json'), 'utf8')).error || detail } catch { /* original command error below */ }
+      if (mode === 'apply' && detail.includes('backup.log')) {
+        try { detail += ` / ${readFileSync(join(temp, 'runs', runId, 'backup.log'), 'utf8').slice(-1000)}` } catch { /* no backup log */ }
+      }
       throw new Error(`TopMenu ${mode} failed: ${detail}`, { cause: error })
     }
   }
