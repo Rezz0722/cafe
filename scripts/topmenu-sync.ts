@@ -6,6 +6,7 @@ import { once } from 'node:events'
 import { eq, inArray, isNotNull, sql } from 'drizzle-orm'
 import { closeDb, getDb } from '../src/db/connection.ts'
 import {
+  auditLog,
   dish as dishTable,
   media as mediaTable,
   menuItem as menuItemTable,
@@ -25,7 +26,7 @@ import {
   type TopMenuPriceChange,
   type TopMenuSyncReport,
 } from '../src/core/sync/topMenuSync.ts'
-import { refreshPlaceDerived, recordAudit } from '../src/core/places/manage.ts'
+import { refreshPlaceDerived } from '../src/core/places/manage.ts'
 import {
   cleanLine,
   classifyGeo,
@@ -810,6 +811,17 @@ async function apply() {
     if (expectedItems !== expectedTotalItems) {
       throw new Error('شمارش نهایی آیتم‌های snapshot ناسازگار است؛ عملیات rollback شد.')
     }
+    // The audit record must commit with the snapshot. Post-commit media or
+    // facet work can fail; that must not leave an applied sync without audit.
+    await tx.insert(auditLog).values({
+      actorUserId: current.actorUserId ?? null,
+      actorLabel: current.actorLabel ?? 'admin',
+      action: 'topmenu.full_sync',
+      entity: 'topmenu_sync',
+      entityId: runId,
+      before: { proposed: selectedReport.totalChanges, newCafes: selectedReport.totalNewCafes, newItems: selectedReport.totalNewItems, protectedPreview: selectedReport.protectedCount ?? 0, selection },
+      after: { ...stats, affectedCafes: affected.size, sourceIds: cafes.map(cafe => cafe['شناسه']), backup },
+    })
   })
 
   for (const placeId of affected) await refreshPlaceDerived(placeId)
@@ -818,12 +830,6 @@ async function apply() {
     await runNodeScript('scripts/media-download.ts', [], join(runDir, 'media-download.log'))
   }
 
-  await recordAudit(
-    { userId: current.actorUserId ?? '', label: current.actorLabel ?? 'admin' },
-    'topmenu.full_sync', 'topmenu_sync', runId,
-    { proposed: selectedReport.totalChanges, newCafes: selectedReport.totalNewCafes, newItems: selectedReport.totalNewItems, protectedPreview: selectedReport.protectedCount ?? 0, selection },
-    { ...stats, affectedCafes: affected.size, sourceIds: cafes.map(cafe => cafe['شناسه']), backup },
-  )
   await writeTopMenuSyncState({ ...current, status: 'completed', pid: undefined, appliedAt: new Date().toISOString(), applied: { ...stats, affectedCafes: affected.size, backup } })
 }
 

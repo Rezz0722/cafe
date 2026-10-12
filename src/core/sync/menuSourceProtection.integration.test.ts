@@ -81,6 +81,8 @@ test('real disposable MariaDB: owner edits survive two TopMenu preview/apply cyc
       const syncedPlace = (await db.select().from(place).where(eq(place.id, placeId)))[0]!
       assert.ok(syncedPlace.lastSourceSyncAt && syncedPlace.lastSourceSyncAt > legacySyncTime, 'source sync has its own timestamp')
       assert.equal(syncedPlace.lastVerifiedAt?.getTime(), legacySyncTime.getTime(), 'source sync never claims human verification')
+      const [syncAudit] = await db.select().from(auditLog).where(eq(auditLog.entityId, runId)).limit(1)
+      assert.equal(syncAudit?.action, 'topmenu.full_sync', 'each committed snapshot has a durable audit record')
       const item = await snapshot()
       assert.equal(item.name, 'لاته مالک')
       assert.equal(item.price, 135000)
