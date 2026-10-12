@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
 import { execFileSync } from 'node:child_process'
 import { mkdtemp, readFile, rm, writeFile, mkdir } from 'node:fs/promises'
+import { readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { eq, inArray } from 'drizzle-orm'
@@ -20,11 +21,17 @@ test('real disposable MariaDB: owner edits survive two TopMenu preview/apply cyc
   const actor = { userId: id, label: 'QA owner' }
   let placeId = 0, otherPlaceId = 0, liparPlaceId = 0, sectionId = 0, itemId = 0
   const run = (mode: 'scrape' | 'apply', runId: string, sourceFile: string) => {
-    execFileSync(process.execPath, ['--import', 'tsx', '--conditions=react-server', 'scripts/topmenu-sync.ts', mode, runId], {
-      cwd: process.cwd(), timeout: 90_000,
-      env: { ...process.env, TOPMENU_SYNC_ROOT: temp, TOPMENU_SYNC_SOURCE_FILE: sourceFile, TOPMENU_SYNC_BACKUP_DIR: join(temp, 'backups'), TOPMENU_SYNC_SMOKE_TEST: '1' },
-      stdio: 'pipe',
-    })
+    try {
+      execFileSync(process.execPath, ['--import', 'tsx', '--conditions=react-server', 'scripts/topmenu-sync.ts', mode, runId], {
+        cwd: process.cwd(), timeout: 90_000,
+        env: { ...process.env, TOPMENU_SYNC_ROOT: temp, TOPMENU_SYNC_SOURCE_FILE: sourceFile, TOPMENU_SYNC_BACKUP_DIR: join(temp, 'backups'), TOPMENU_SYNC_SMOKE_TEST: '1' },
+        stdio: 'pipe',
+      })
+    } catch (error) {
+      let detail = 'No state error recorded'
+      try { detail = JSON.parse(readFileSync(join(temp, 'state.json'), 'utf8')).error || detail } catch { /* original command error below */ }
+      throw new Error(`TopMenu ${mode} failed: ${detail}`, { cause: error })
+    }
   }
   const source = (description: string, price: number, category: string) => [{
     'شناسه': cafeSourceId, 'نام مجموعه': 'QA Cafe', 'یوزرنیم': `qa-${fixture}`,
