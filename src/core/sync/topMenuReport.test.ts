@@ -8,4 +8,10 @@ describe('Selected scrape reporting',()=>{
  it('uses cafe IDs rather than matching food IDs or ambiguous names',()=>{const result=selectTopMenuReport(report,targets,[10]);assert.equal(result.report.newItems.length,1);assert.equal(result.report.newItems[0].sourceCafeId,10);assert.equal(result.report.changes.length,1);assert.equal(result.summary.priceIncreases,5);assert.equal(result.summary.newItems,3);assert.equal(result.limitations.length,1)})
  it('includes the entire new cafe item count and rejects foreign selection',()=>{assert.equal(selectTopMenuReport(report,targets,[30]).summary.newItems,4);assert.throws(()=>selectTopMenuReport(report,targets,[99]))})
  it('declares legacy missing details rather than inventing complete reports',()=>assert.match(selectTopMenuReport({...report,reportVersion:undefined},targets,[10]).limitations[0],/قدیمی/))
+ it('keeps protected-conflict details inside the selected cafe only',()=>{
+  const withProtected={...report,protectedChanges:[{placeId:1,entity:'item' as const,entityId:100,field:'price',current:135000,source:110000},{placeId:2,entity:'item' as const,entityId:200,field:'price',current:90000,source:80000}]}
+  const selected=selectTopMenuReport(withProtected,targets,[10])
+  assert.equal(selected.summary.protectedCount,1)
+  assert.deepEqual(selected.report.protectedChanges.map(row=>row.entityId),[100])
+ })
 })

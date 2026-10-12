@@ -56,9 +56,17 @@ const REQUIRED = [
   'blogger_profile', 'club_membership', 'club_offer', 'club_code',
   'venue_lead', 'venue_lead_rate',
   'venue_qr_link',
+  'menu_item_field_override', 'menu_section_field_override',
 ]
 const missing = REQUIRED.filter((table) => !names.has(table))
 check(`${REQUIRED.length} جدول لازم موجود است`, missing.length === 0, missing.join(', '))
+
+const [sourceNameColumns] = await conn.query(`SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'menu_section' AND COLUMN_NAME = 'source_name'`)
+check('شناسهٔ آخرین نام دسته در منبع برای حفظ نام ویرایش‌شده موجود است', sourceNameColumns.length === 1)
+const [overrideFks] = await conn.query(`SELECT TABLE_NAME, REFERENCED_TABLE_NAME FROM information_schema.REFERENTIAL_CONSTRAINTS WHERE CONSTRAINT_SCHEMA = DATABASE() AND TABLE_NAME IN ('menu_item_field_override','menu_section_field_override')`)
+check('نشان‌های فیلدی با حذف آیتم/دستهٔ مربوط پاک می‌شوند', [
+  'menu_item_field_override:menu_item', 'menu_section_field_override:menu_section',
+].every(key => overrideFks.some(row => `${row.TABLE_NAME}:${row.REFERENCED_TABLE_NAME}` === key)))
 
 const [qrIndexes] = await conn.query(`SELECT INDEX_NAME, NON_UNIQUE FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'venue_qr_link'`)
 check('توکن و نام QR در شعبه unique هستند', ['venue_qr_token_uq', 'venue_qr_label_uq'].every(name => qrIndexes.some(row => row.INDEX_NAME === name && Number(row.NON_UNIQUE) === 0)))

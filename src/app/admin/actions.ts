@@ -47,6 +47,9 @@ import {
   bloggerProfile,
   district as districtTable,
   menuItem as menuItemTable,
+  menuItemFieldOverride,
+  menuSection as menuSectionTable,
+  menuSectionFieldOverride,
   place as placeTable,
   placeSubmission,
   review as reviewTable,
@@ -60,6 +63,7 @@ import { startTopMenuSync } from '@/core/sync/topMenuSync'
 import { parseTopMenuSelection } from '@/core/sync/topMenuSelection'
 import type { AdminActionState } from './state'
 import { runManagedWrite } from '@/core/places/managedWrite'
+import { ITEM_OVERRIDE_FIELDS, SECTION_OVERRIDE_FIELDS } from '@/core/sync/menuOverridePolicy'
 
 function str(form: FormData, key: string): string {
   const value = form.get(key)
@@ -563,6 +567,33 @@ export async function applyTopMenuPricesAction(
   if (!result.ok) return { ok: false, error: result.error }
   revalidatePath(paths.admin)
   return { ok: true, message: 'بکاپ و اعمال قیمت‌ها در پس‌زمینه شروع شد. صفحه را تازه کنید.' }
+}
+
+/** Admin-only, audited release of one human edit; the value changes only on a later reviewed sync. */
+export async function releaseTopMenuOverrideAction(_previous: AdminActionState, form: FormData): Promise<AdminActionState> {
+  return runManagedWrite(async () => {
+    const guard = await requireAdminActor()
+    if (!guard.ok) return { ok: false, error: guard.error }
+    const entity = str(form, 'entity'), id = num(form, 'entityId'), field = str(form, 'field'), reason = str(form, 'reason')
+    if (!id || !reason || reason.length < 10 || reason.length > 200 || str(form, 'confirm') !== 'بازگشت به منبع')
+      return { ok: false, error: 'شناسه، دلیل حداقل ۱۰ نویسه‌ای و تأیید صریح لازم است.' }
+    if (entity === 'item' && ITEM_OVERRIDE_FIELDS.includes(field as typeof ITEM_OVERRIDE_FIELDS[number])) {
+      const [row] = await getDb().select({ placeId: menuItemTable.placeId }).from(menuItemTable).where(eq(menuItemTable.id, id)).limit(1)
+      if (!row) return { ok: false, error: 'آیتم پیدا نشد.' }
+      const [override] = await getDb().select().from(menuItemFieldOverride).where(and(eq(menuItemFieldOverride.itemId, id), eq(menuItemFieldOverride.fieldName, field))).limit(1)
+      if (!override) return { ok: false, error: 'محافظت این فیلد فعال نیست؛ گزارش را تازه کنید.' }
+      await getDb().delete(menuItemFieldOverride).where(and(eq(menuItemFieldOverride.itemId, id), eq(menuItemFieldOverride.fieldName, field)))
+      await recordAudit(guard.actor, 'menu_source_override.release', 'menu_item', id, { field, actorUserId: override.actorUserId }, { field, reason, placeId: row.placeId })
+    } else if (entity === 'section' && SECTION_OVERRIDE_FIELDS.includes(field as typeof SECTION_OVERRIDE_FIELDS[number])) {
+      const [row] = await getDb().select({ placeId: menuSectionTable.placeId }).from(menuSectionTable).where(eq(menuSectionTable.id, id)).limit(1)
+      if (!row) return { ok: false, error: 'دسته پیدا نشد.' }
+      const [override] = await getDb().select().from(menuSectionFieldOverride).where(and(eq(menuSectionFieldOverride.sectionId, id), eq(menuSectionFieldOverride.fieldName, field))).limit(1)
+      if (!override) return { ok: false, error: 'محافظت این فیلد فعال نیست؛ گزارش را تازه کنید.' }
+      await getDb().delete(menuSectionFieldOverride).where(and(eq(menuSectionFieldOverride.sectionId, id), eq(menuSectionFieldOverride.fieldName, field)))
+      await recordAudit(guard.actor, 'menu_source_override.release', 'menu_section', id, { field, actorUserId: override.actorUserId }, { field, reason, placeId: row.placeId })
+    } else return { ok: false, error: 'فیلد یا نوع رکورد معتبر نیست.' }
+    return { ok: true, message: 'محافظت این فیلد با Audit برداشته شد. مقدار فعلی عوض نشد؛ پیش از Sync بعدی Preview تازه بگیرید.' }
+  })
 }
 
 // ═══════════════════════════════════════════════════════════════════════

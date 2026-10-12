@@ -35,10 +35,14 @@ export interface TopMenuPriceChange {
 }
 
 export interface TopMenuSyncReport {
+  /** Source proposals intentionally not applied because of a human edit or size pricing. */
+  protectedChanges?: { placeId: number; entity: 'item' | 'section'; entityId: number; field: string; current: unknown; source: unknown; releasable?: boolean }[]
+  protectedCount?: number
   totalChanges: number
   totalNewCafes: number
   totalNewItems: number
   totalNewSections: number
+  totalUpdatedSections?: number
   totalUpdatedItems: number
   totalMovedItems: number
   totalReactivatedItems: number
@@ -58,7 +62,7 @@ export interface TopMenuSyncReport {
   newItems: { sourceId: number; sourceCafeId?: number; placeName: string; sectionName: string; name: string; price: number | null }[]
   conflicts: { sourceId: number; sourceCafeId?: number; placeName: string; name: string; reason: string }[]
   changes: TopMenuPriceChange[]
-  cafes: { placeId: number; name: string; priceChanges: number; priceIncreases: number; priceDecreases: number; availabilityChanges: number; newItems: number; movedItems: number; archivedItems: number }[]
+  cafes: { placeId: number; name: string; priceChanges: number; priceIncreases: number; priceDecreases: number; availabilityChanges: number; newItems: number; movedItems: number; archivedItems: number; updatedSections?: number }[]
   reportVersion?: number
 }
 
@@ -91,6 +95,7 @@ export interface TopMenuSyncState {
     archivedItems: number
     mediaRegistered: number
     skipped: number
+    protectedFields?: number
     affectedCafes: number
     backup: string
   }
@@ -142,6 +147,7 @@ export async function readTopMenuSyncSummary(): Promise<TopMenuSyncState> {
       newCafes: state.report.newCafes.slice(0, 100),
       newItems: state.report.newItems.slice(0, 200),
       conflicts: (state.report.conflicts ?? []).slice(0, 200),
+      protectedChanges: (state.report.protectedChanges ?? []).slice(0, 200),
       cafes: state.report.cafes,
     },
   }

@@ -881,6 +881,10 @@ async function menuOperationActionImpl(
       const [before] = await getDb().select({ branchScope: menuSectionTable.branchScope }).from(menuSectionTable).where(and(eq(menuSectionTable.id, sectionId), eq(menuSectionTable.placeId, access.placeId))).limit(1)
       if (!before) return { ok: false, error: 'دسته به این شعبه تعلق ندارد.' }
       await getDb().update(menuSectionTable).set({ branchScope: scope as 'shared' | 'branch' | 'other_branch' | 'unverified' }).where(and(eq(menuSectionTable.id, sectionId), eq(menuSectionTable.placeId, access.placeId)))
+      if (before.branchScope !== scope) {
+        const { markSectionFields } = await import('@/core/places/menuSourceOverrides')
+        await markSectionFields(sectionId, ['branchScope'], access.actor.userId)
+      }
       await recordAudit(access.actor, 'menu_section.scope', 'place', access.placeId, { sectionId, ...before }, { sectionId, branchScope: scope })
       const { refreshPlaceDerived } = await import('@/core/places/manage')
       await refreshPlaceDerived(access.placeId)

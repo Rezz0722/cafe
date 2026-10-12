@@ -4,6 +4,7 @@ import { and, asc, eq, inArray, isNull, sql } from 'drizzle-orm'
 import { getDb,inDbTransaction,withDbTransaction } from '@/db/client'
 import { auditLog, menuItem, menuItemVariant, menuSection } from '@/db/schema'
 import { recordAudit, refreshPlaceDerived, type Actor } from './manage'
+import { markManyItemFields } from './menuSourceOverrides'
 
 export type PriceSelection = { scope: 'all' | 'section' | 'items'; sectionId?: number; itemIds?: number[] }
 export type PriceChange = { kind: 'item' | 'variant'; id: number; itemId: number; name: string; label: string | null; oldPrice: number; newPrice: number; oldUpdatedAt: string | null; oldItemUpdatedAt?: string | null }
@@ -76,6 +77,7 @@ export async function applyPricePlan(placeId: number, plan: PricePlan, fingerpri
     else await getDb().update(menuItemVariant).set({ price: change.newPrice, priceUpdatedAt: updatedAt }).where(and(eq(menuItemVariant.id, change.id), eq(menuItemVariant.itemId, change.itemId)))
   }
   await refreshVariantBases(placeId, [...new Set(plan.changes.filter(change => change.kind === 'variant').map(change => change.itemId))])
+  await markManyItemFields(plan.changes.map(change => change.itemId), ['price'], actor.userId, 'bulk_price')
   for (const id of new Set(plan.changes.filter(change => change.kind === 'variant').map(change => change.itemId))) await getDb().update(menuItem).set({ priceUpdatedAt: updatedAt }).where(and(eq(menuItem.id, id), eq(menuItem.placeId, placeId)))
   await recordAudit(actor, 'menu.bulk_price', 'place', placeId, { changes: plan.changes, percent: plan.percent }, { fingerprint, updatedAt: updatedAt.toISOString(), itemCount: plan.itemCount, variantCount: plan.variantCount })
   await refreshPlaceDerived(placeId)
@@ -102,6 +104,7 @@ export async function restorePriceChange(placeId: number, auditId: number, actor
     else await getDb().update(menuItemVariant).set({ price: change.oldPrice, priceUpdatedAt: stamp }).where(and(eq(menuItemVariant.id, change.id), eq(menuItemVariant.itemId, change.itemId)))
   }
   await refreshVariantBases(placeId, [...new Set(before.changes.filter(change => change.kind === 'variant').map(change => change.itemId))])
+  await markManyItemFields(before.changes.map(change => change.itemId), ['price'], actor.userId, 'bulk_price_restore')
   for (const id of new Set(before.changes.filter(change => change.kind === 'variant').map(change => change.itemId))) {
     const stamp = before.changes.find(change => change.itemId === id)?.oldItemUpdatedAt
     await getDb().update(menuItem).set({ priceUpdatedAt: stamp ? new Date(stamp) : null }).where(and(eq(menuItem.id, id), eq(menuItem.placeId, placeId)))

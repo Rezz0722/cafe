@@ -9,7 +9,10 @@ import {
   dish as dishTable,
   media as mediaTable,
   menuItem as menuItemTable,
+  menuItemFieldOverride as itemOverrideTable,
+  menuItemVariant as variantTable,
   menuSection as menuSectionTable,
+  menuSectionFieldOverride as sectionOverrideTable,
   place as placeTable,
   placeHours as placeHoursTable,
   placePhone as placePhoneTable,
@@ -59,6 +62,7 @@ import { parseTopMenuSelection, reconcileTopMenuScrape, selectTopMenuCafes, type
 import { assertTopMenuFailureManifest, failedTopMenuSourceIds, failedTopMenuSelectionIds } from '../src/core/sync/topMenuFailures.ts'
 import { readTopMenuRunSourcePresence } from '../src/core/sync/topMenuSourcePresence.ts'
 import { isTopMenuSourceExcluded, TOP_MENU_EXCLUDED_SOURCE_IDS } from '../src/core/sync/topMenuExclusions.ts'
+import { mergeItemSource, sourceFieldConflicts } from '../src/core/sync/menuOverridePolicy.ts'
 
 const mode = process.argv[2]
 const runId = process.argv[3]
@@ -98,6 +102,7 @@ interface ApplyStats {
   archivedItems: number
   mediaRegistered: number
   skipped: number
+  protectedFields: number
 }
 
 /**
@@ -127,6 +132,22 @@ function sourceSections(cafe: RawCafe): SourceSection[] {
     byName.set(key, row)
   }
   return result
+}
+
+/** A provider rename is inferable only when all already-known source items point to one old provider section. */
+function renamedSourceSection<T extends { id: number; placeId: number; sourceName: string | null }>(
+  sections: readonly T[],
+  sourceItems: readonly RawMenuItem[],
+  itemsBySource: Map<number, { placeId: number; sectionId: number }>,
+  placeId: number,
+  sourceNames: ReadonlySet<string>,
+  used: ReadonlySet<number>,
+): T | undefined {
+  const matched = sourceItems.map(item => itemsBySource.get(Number(item['شناسه']))).filter((item): item is { placeId: number; sectionId: number } => !!item && item.placeId === placeId)
+  const ids = new Set(matched.map(item => item.sectionId))
+  if (!matched.length || ids.size !== 1) return undefined
+  const candidate = sections.find(section => section.id === matched[0]!.sectionId)
+  return candidate?.sourceName && !sourceNames.has(normalizeFa(candidate.sourceName)) && !used.has(candidate.id) ? candidate : undefined
 }
 
 function validateSource(cafes: RawCafe[]): void {
@@ -183,9 +204,9 @@ async function fail(error: unknown) {
 
 async function buildReport(cafes: RawCafe[]): Promise<TopMenuSyncReport> {
   const db = getDb()
-  const [dbPlaces, dbSections, dbItems] = await Promise.all([
-    db.select({ id: placeTable.id, sourceId: placeTable.sourceId, name: placeTable.name, priceUnitFixed: placeTable.priceUnitFixed }).from(placeTable),
-    db.select({ id: menuSectionTable.id, placeId: menuSectionTable.placeId, name: menuSectionTable.name }).from(menuSectionTable),
+  const [dbPlaces, dbSections, dbItems, itemOverrides, sectionOverrides, variants, dbMedia] = await Promise.all([
+    db.select({ id: placeTable.id, sourceId: placeTable.sourceId, name: placeTable.name, branchName: placeTable.branchName, priceUnitFixed: placeTable.priceUnitFixed }).from(placeTable),
+    db.select({ id: menuSectionTable.id, placeId: menuSectionTable.placeId, name: menuSectionTable.name, sourceName: menuSectionTable.sourceName, description: menuSectionTable.description, facetId: menuSectionTable.facetId, mediaId: menuSectionTable.mediaId, branchScope: menuSectionTable.branchScope, branchLabel: menuSectionTable.branchLabel, sortOrder: menuSectionTable.sortOrder }).from(menuSectionTable),
     db.select({
       id: menuItemTable.id,
       sourceId: menuItemTable.sourceId,
@@ -198,9 +219,23 @@ async function buildReport(cafes: RawCafe[]): Promise<TopMenuSyncReport> {
       priceUnknown: menuItemTable.priceUnknown,
       available: menuItemTable.available,
       featured: menuItemTable.featured,
+      mediaId: menuItemTable.mediaId,
+      sortOrder: menuItemTable.sortOrder,
       archivedAt: menuItemTable.archivedAt,
     }).from(menuItemTable),
+    db.select({ itemId: itemOverrideTable.itemId, fieldName: itemOverrideTable.fieldName }).from(itemOverrideTable),
+    db.select({ sectionId: sectionOverrideTable.sectionId, fieldName: sectionOverrideTable.fieldName }).from(sectionOverrideTable),
+    db.select({ itemId: variantTable.itemId }).from(variantTable),
+    db.select({ id: mediaTable.id, urlHash: mediaTable.urlHash }).from(mediaTable),
   ])
+  const mediaHash = new Map(dbMedia.map(row => [row.id, row.urlHash]))
+  const itemFields = new Map<number, Set<string>>()
+  for (const row of itemOverrides) itemFields.set(row.itemId, (itemFields.get(row.itemId) ?? new Set()).add(row.fieldName))
+  const manuallyProtected = new Map([...itemFields].map(([id, fields]) => [id, new Set(fields)]))
+  const variantItemIds = new Set(variants.map(row => row.itemId))
+  for (const row of variants) { const fields = itemFields.get(row.itemId) ?? new Set<string>(); fields.add('price'); fields.add('available'); itemFields.set(row.itemId, fields) }
+  const sectionFields = new Map<number, Set<string>>()
+  for (const row of sectionOverrides) sectionFields.set(row.sectionId, (sectionFields.get(row.sectionId) ?? new Set()).add(row.fieldName))
   const placeBySource = new Map(dbPlaces.filter((row) => row.sourceId !== null).map((row) => [Number(row.sourceId), row]))
   const itemBySource = new Map(dbItems.filter((row) => row.sourceId !== null).map((row) => [Number(row.sourceId), row]))
   const sectionsByPlace = new Map<number, typeof dbSections>()
@@ -220,6 +255,7 @@ async function buildReport(cafes: RawCafe[]): Promise<TopMenuSyncReport> {
   const newCafes: TopMenuSyncReport['newCafes'] = []
   const newItems: TopMenuSyncReport['newItems'] = []
   const conflicts: TopMenuSyncReport['conflicts'] = []
+  const protectedChanges: NonNullable<TopMenuSyncReport['protectedChanges']> = []
   const cafeStats = new Map<number, TopMenuSyncReport['cafes'][number]>()
   const { thousandUnitThreshold } = await getDataPolicy()
   let matchedCafes = 0
@@ -227,6 +263,7 @@ async function buildReport(cafes: RawCafe[]): Promise<TopMenuSyncReport> {
   let unchangedItems = 0
   let totalNewItems = 0
   let totalNewSections = 0
+  let totalUpdatedSections = 0
   let totalUpdatedItems = 0
   let totalMovedItems = 0
   let totalReactivatedItems = 0
@@ -241,6 +278,7 @@ async function buildReport(cafes: RawCafe[]): Promise<TopMenuSyncReport> {
     const current = cafeStats.get(placeId) ?? {
       placeId, name, priceChanges: 0, priceIncreases: 0, priceDecreases: 0,
       availabilityChanges: 0, newItems: 0, movedItems: 0, archivedItems: 0,
+      updatedSections: 0,
     }
     cafeStats.set(placeId, current)
     return current
@@ -277,15 +315,35 @@ async function buildReport(cafes: RawCafe[]): Promise<TopMenuSyncReport> {
 
     matchedCafes++
     const existingSections = sectionsByPlace.get(matchedPlace.id) ?? []
-    const sectionByName = new Map(existingSections.map((section) => [normalizeFa(section.name), section]))
+    const importedSectionIds = new Set((itemsByPlace.get(matchedPlace.id) ?? []).filter(item => item.sourceId !== null).map(item => item.sectionId))
+    const sectionByName = new Map(existingSections.filter(section => section.sourceName !== null || importedSectionIds.has(section.id)).map((section) => [normalizeFa(section.sourceName ?? section.name), section]))
+    const sourceNames = new Set(sections.map(section => normalizeFa(section.name)))
+    const usedSections = new Set<number>()
     const sourceItemIds = new Set<number>()
     const context: PriceContext = { thousandUnit: matchedPlace.priceUnitFixed, threshold: thousandUnitThreshold }
     const stat = statFor(matchedPlace.id, matchedPlace.name)
 
     for (const section of sections) {
-      const targetSection = sectionByName.get(normalizeFa(section.name))
+      const targetSection = sectionByName.get(normalizeFa(section.name)) ?? renamedSourceSection(existingSections, section.items, itemBySource, matchedPlace.id, sourceNames, usedSections)
+      if (targetSection) usedSections.add(targetSection.id)
+      if (targetSection) {
+        const protectedFields = sectionFields.get(targetSection.id) ?? new Set<string>()
+        const scope = classifyMenuBranchScope(section.name, matchedPlace.branchName)
+        protectedChanges.push(...sourceFieldConflicts(targetSection, { name: section.name, sortOrder: section.sortOrder, branchScope: scope.branchScope }, protectedFields, 'section', targetSection.id).map(change => ({ ...change, placeId: matchedPlace.id })))
+        const imageHash = section.image ? hashUrl(section.image) : null
+        if (protectedFields.has('mediaId') && (mediaHash.get(targetSection.mediaId ?? -1) ?? null) !== imageHash)
+          protectedChanges.push({ placeId: matchedPlace.id, entity: 'section', entityId: targetSection.id, field: 'mediaId', current: targetSection.mediaId, source: section.image, releasable: true })
+        const effectiveName = protectedFields.has('name') ? targetSection.name : section.name
+        const effectiveScope = protectedFields.has('branchScope') ? targetSection.branchScope : scope.branchScope
+        const effectiveSortOrder = protectedFields.has('sortOrder') ? targetSection.sortOrder : section.sortOrder
+        if (targetSection.name !== effectiveName || targetSection.description !== section.description
+          || (!protectedFields.has('mediaId') && (mediaHash.get(targetSection.mediaId ?? -1) ?? null) !== imageHash)
+          || targetSection.facetId !== matchFacet(effectiveName) || targetSection.branchScope !== effectiveScope
+          || (!protectedFields.has('branchScope') && targetSection.branchLabel !== scope.branchLabel)
+          || targetSection.sortOrder !== effectiveSortOrder) { totalUpdatedSections++; stat.updatedSections = (stat.updatedSections ?? 0) + 1 }
+      }
       if (!targetSection) totalNewSections++
-      for (const item of section.items) {
+      for (const [itemIndex, item] of section.items.entries()) {
         const sourceItemId = Number(item['شناسه'])
         sourceItemIds.add(sourceItemId)
         const values = itemValues(item, context)
@@ -302,27 +360,37 @@ async function buildReport(cafes: RawCafe[]): Promise<TopMenuSyncReport> {
           continue
         }
         matchedItems++
-        const moved = !targetSection || existing.sectionId !== targetSection.id
-        const reactivated = existing.archivedAt !== null
-        const contentChanged = existing.name !== values.name
-          || existing.nameEn !== values.nameEn
-          || existing.description !== values.description
-          || existing.price !== values.price
-          || existing.priceUnknown !== values.priceUnknown
-          || existing.available !== values.available
-          || existing.featured !== values.featured
+        const proposed = { ...existing, ...values, sectionId: targetSection?.id ?? existing.sectionId, sortOrder: itemIndex, archivedAt: null }
+        const fields = itemFields.get(existing.id) ?? new Set<string>()
+        protectedChanges.push(...sourceFieldConflicts(existing, proposed, fields, 'item', existing.id).map(change => ({ ...change, placeId: matchedPlace.id, releasable: Boolean(manuallyProtected.get(existing.id)?.has(change.field)) && !(variantItemIds.has(existing.id) && (change.field === 'price' || change.field === 'available')) })))
+        if (!targetSection && fields.has('sectionId')) protectedChanges.push({ placeId: matchedPlace.id, entity: 'item', entityId: existing.id, field: 'sectionId', current: existing.sectionId, source: `دستهٔ تازه: ${section.name}`, releasable: true })
+        const imageHash = item['تصویر']?.trim() ? hashUrl(item['تصویر']!.trim()) : null
+        if (fields.has('mediaId') && (mediaHash.get(existing.mediaId ?? -1) ?? null) !== imageHash)
+          protectedChanges.push({ placeId: matchedPlace.id, entity: 'item', entityId: existing.id, field: 'mediaId', current: existing.mediaId, source: item['تصویر'] ?? null, releasable: manuallyProtected.get(existing.id)?.has('mediaId') ?? false })
+        const effective = mergeItemSource(existing, proposed, fields)
+        const moved = targetSection ? existing.sectionId !== effective.sectionId : !fields.has('sectionId')
+        const reactivated = existing.archivedAt !== null && effective.archivedAt === null
+        const contentChanged = existing.name !== effective.name
+          || existing.nameEn !== effective.nameEn
+          || existing.description !== effective.description
+          || existing.price !== effective.price
+          || existing.priceUnknown !== effective.priceUnknown
+          || existing.available !== effective.available
+          || existing.featured !== effective.featured
+          || existing.sortOrder !== effective.sortOrder
+          || (!fields.has('mediaId') && (mediaHash.get(existing.mediaId ?? -1) ?? null) !== imageHash)
         if (moved) { totalMovedItems++; stat.movedItems++ }
         if (reactivated) totalReactivatedItems++
         if (contentChanged || moved || reactivated) totalUpdatedItems++
         else unchangedItems++
 
-        if (existing.price !== values.price || existing.available !== values.available) {
-          if (existing.price !== values.price) {
+        if (existing.price !== effective.price || existing.available !== effective.available) {
+          if (existing.price !== effective.price) {
             priceChanges++; stat.priceChanges++
-            if (existing.price !== null && values.price !== null && values.price > existing.price) { priceIncreases++; stat.priceIncreases++ }
-            if (existing.price !== null && values.price !== null && values.price < existing.price) { priceDecreases++; stat.priceDecreases++ }
+            if (existing.price !== null && effective.price !== null && effective.price > existing.price) { priceIncreases++; stat.priceIncreases++ }
+            if (existing.price !== null && effective.price !== null && effective.price < existing.price) { priceDecreases++; stat.priceDecreases++ }
           }
-          if (existing.available !== values.available) { availabilityChanges++; stat.availabilityChanges++ }
+          if (existing.available !== effective.available) { availabilityChanges++; stat.availabilityChanges++ }
           changes.push({
             itemId: existing.id,
             sourceItemId,
@@ -330,9 +398,9 @@ async function buildReport(cafes: RawCafe[]): Promise<TopMenuSyncReport> {
             placeName: matchedPlace.name,
             itemName: existing.name,
             oldPrice: existing.price,
-            newPrice: values.price,
+            newPrice: effective.price,
             oldAvailable: existing.available,
-            newAvailable: values.available,
+            newAvailable: effective.available,
           })
         }
       }
@@ -340,7 +408,10 @@ async function buildReport(cafes: RawCafe[]): Promise<TopMenuSyncReport> {
 
     if (sourceItemIds.size > 0) {
       for (const existing of itemsByPlace.get(matchedPlace.id) ?? []) {
-        if (existing.sourceId !== null && !sourceItemIds.has(existing.sourceId) && existing.archivedAt === null) {
+        if (existing.sourceId !== null && !sourceItemIds.has(existing.sourceId) && existing.archivedAt === null && itemFields.get(existing.id)?.has('archivedAt')) {
+          protectedChanges.push({ placeId: matchedPlace.id, entity: 'item', entityId: existing.id, field: 'archivedAt', current: null, source: 'غایب از منبع؛ آرشیو پیشنهادی', releasable: true })
+        }
+        if (existing.sourceId !== null && !sourceItemIds.has(existing.sourceId) && existing.archivedAt === null && !itemFields.get(existing.id)?.has('archivedAt')) {
           totalArchivedItems++
           stat.archivedItems++
         }
@@ -350,11 +421,14 @@ async function buildReport(cafes: RawCafe[]): Promise<TopMenuSyncReport> {
 
   const failedCafes = (await failedTopMenuSourceIds(join(topMenuSyncRoot, 'runs', runId))).length
   return {
+    protectedChanges,
+    protectedCount: protectedChanges.length,
     reportVersion: 2,
-    totalChanges: totalUpdatedItems + totalNewItems + totalArchivedItems + newCafes.length,
+    totalChanges: totalUpdatedItems + totalUpdatedSections + totalNewSections + totalNewItems + totalArchivedItems + newCafes.length,
     totalNewCafes: newCafes.length,
     totalNewItems,
     totalNewSections,
+    totalUpdatedSections,
     totalUpdatedItems,
     totalMovedItems,
     totalReactivatedItems,
@@ -374,7 +448,7 @@ async function buildReport(cafes: RawCafe[]): Promise<TopMenuSyncReport> {
     conflicts,
     changes,
     cafes: [...cafeStats.values()]
-      .filter((stat) => stat.priceChanges || stat.availabilityChanges || stat.newItems || stat.movedItems || stat.archivedItems)
+      .filter((stat) => stat.priceChanges || stat.availabilityChanges || stat.newItems || stat.movedItems || stat.archivedItems || stat.updatedSections)
       .sort((a, b) => (b.priceChanges + b.newItems + b.movedItems + b.archivedItems) - (a.priceChanges + a.newItems + a.movedItems + a.archivedItems)),
   }
 }
@@ -466,11 +540,23 @@ async function apply() {
   const stats: ApplyStats = {
     createdCafes: 0, createdSections: 0, insertedItems: 0, updatedItems: 0,
     movedItems: 0, reactivatedItems: 0, archivedItems: 0, mediaRegistered: 0, skipped: 0,
+    protectedFields: 0,
   }
   const affected = new Set<number>()
   const verifiedAt = new Date()
+  const targetPlaceRows = await db.select({ id: placeTable.id }).from(placeTable)
+    .where(inArray(placeTable.sourceId, cafes.map(cafe => Number(cafe['شناسه']))))
+  const targetPlaceIds = targetPlaceRows.map(row => row.id)
 
   await db.transaction(async (tx) => {
+    // Lock only selected menu rows before the first consistent read. Section
+    // then item order follows venue writes, avoiding a place/item lock cycle.
+    // A concurrent edit either commits first and is observed, or waits until
+    // after sync and wins. No lock is taken on unrelated venues.
+    if (targetPlaceIds.length) {
+      await tx.select({ id: menuSectionTable.id }).from(menuSectionTable).where(inArray(menuSectionTable.placeId, targetPlaceIds)).for('update')
+      await tx.select({ id: menuItemTable.id }).from(menuItemTable).where(inArray(menuItemTable.placeId, targetPlaceIds)).for('update')
+    }
     const images = extractSourceImages(cafes)
     const existingMedia = await tx.select({ urlHash: mediaTable.urlHash }).from(mediaTable)
     const knownHashes = new Set(existingMedia.map((row) => row.urlHash))
@@ -483,10 +569,18 @@ async function apply() {
     const mediaByHash = new Map(allMedia.map((row) => [row.urlHash, row.id]))
     const mediaIdFor = (url: string | null | undefined) => url?.trim() ? mediaByHash.get(hashUrl(url.trim())) ?? null : null
 
-    const [places, sections, items, dishes] = await Promise.all([
+    const [places, sections, items, dishes, itemOverrides, sectionOverrides, variants] = await Promise.all([
       tx.select().from(placeTable), tx.select().from(menuSectionTable), tx.select().from(menuItemTable),
       tx.select({ id: dishTable.id, slug: dishTable.slug }).from(dishTable),
+      tx.select({ itemId: itemOverrideTable.itemId, fieldName: itemOverrideTable.fieldName }).from(itemOverrideTable),
+      tx.select({ sectionId: sectionOverrideTable.sectionId, fieldName: sectionOverrideTable.fieldName }).from(sectionOverrideTable),
+      tx.select({ itemId: variantTable.itemId }).from(variantTable),
     ])
+    const itemFields = new Map<number, Set<string>>()
+    for (const row of itemOverrides) itemFields.set(row.itemId, (itemFields.get(row.itemId) ?? new Set()).add(row.fieldName))
+    for (const row of variants) { const fields = itemFields.get(row.itemId) ?? new Set<string>(); fields.add('price'); fields.add('available'); itemFields.set(row.itemId, fields) }
+    const sectionFields = new Map<number, Set<string>>()
+    for (const row of sectionOverrides) sectionFields.set(row.sectionId, (sectionFields.get(row.sectionId) ?? new Set()).add(row.fieldName))
     const placeBySource = new Map(places.filter((row) => row.sourceId !== null).map((row) => [Number(row.sourceId), row]))
     const itemBySource = new Map(items.filter((row) => row.sourceId !== null).map((row) => [Number(row.sourceId), row]))
     const sectionsByPlace = new Map<number, typeof sections>()
@@ -570,27 +664,37 @@ async function apply() {
       const placeId = placeRow.id
       affected.add(placeId)
       const existingSections = sectionsByPlace.get(placeId) ?? []
-      const sectionByName = new Map(existingSections.map((section) => [normalizeFa(section.name), section]))
+      const importedSectionIds = new Set((itemsByPlace.get(placeId) ?? []).filter(item => item.sourceId !== null).map(item => item.sectionId))
+      const sectionByName = new Map(existingSections.filter(section => section.sourceName !== null || importedSectionIds.has(section.id)).map((section) => [normalizeFa(section.sourceName ?? section.name), section]))
+      const sourceNames = new Set(canonicalSections.map(section => normalizeFa(section.name)))
+      const usedSections = new Set<number>()
       const sourceItemIds = new Set<number>()
 
       for (const section of canonicalSections) {
         const sectionKey = normalizeFa(section.name)
-        let targetSection = sectionByName.get(sectionKey)
+        let targetSection = sectionByName.get(sectionKey) ?? renamedSourceSection(existingSections, section.items, itemBySource, placeId, sourceNames, usedSections)
+        if (targetSection) usedSections.add(targetSection.id)
         const facetId = matchFacet(section.name)
         const scope = classifyMenuBranchScope(section.name, placeRow.branchName)
         if (!targetSection) {
-          const [created] = await tx.insert(menuSectionTable).values({ placeId, name: section.name, description: section.description, mediaId: mediaIdFor(section.image), facetId, ...scope, sortOrder: section.sortOrder }).$returningId()
-          targetSection = { id: created!.id, placeId, name: section.name, nameEn: null, description: section.description, mediaId: mediaIdFor(section.image), facetId, ...scope, sortOrder: section.sortOrder }
+          const [created] = await tx.insert(menuSectionTable).values({ placeId, name: section.name, sourceName: section.name, description: section.description, mediaId: mediaIdFor(section.image), facetId, ...scope, sortOrder: section.sortOrder }).$returningId()
+          targetSection = { id: created!.id, placeId, name: section.name, sourceName: section.name, nameEn: null, description: section.description, mediaId: mediaIdFor(section.image), facetId, ...scope, sortOrder: section.sortOrder }
           sectionByName.set(sectionKey, targetSection)
           existingSections.push(targetSection)
           stats.createdSections++
         } else {
           const sectionMediaId = mediaIdFor(section.image)
-          if (targetSection.name !== section.name || targetSection.description !== section.description
-            || targetSection.mediaId !== sectionMediaId || targetSection.facetId !== facetId
-            || targetSection.branchScope !== scope.branchScope || targetSection.branchLabel !== scope.branchLabel
-            || targetSection.sortOrder !== section.sortOrder) {
-            await tx.update(menuSectionTable).set({ name: section.name, description: section.description, mediaId: sectionMediaId, facetId, ...scope, sortOrder: section.sortOrder }).where(eq(menuSectionTable.id, targetSection.id))
+          const protectedFields = sectionFields.get(targetSection.id) ?? new Set<string>()
+          stats.protectedFields += sourceFieldConflicts(targetSection, { name: section.name, mediaId: sectionMediaId, sortOrder: section.sortOrder, branchScope: scope.branchScope }, protectedFields, 'section', targetSection.id).length
+          const effectiveName = protectedFields.has('name') ? targetSection.name : section.name
+          const effectiveMediaId = protectedFields.has('mediaId') ? targetSection.mediaId : sectionMediaId
+          const effectiveScope = protectedFields.has('branchScope') ? { branchScope: targetSection.branchScope, branchLabel: targetSection.branchLabel } : scope
+          const effectiveSortOrder = protectedFields.has('sortOrder') ? targetSection.sortOrder : section.sortOrder
+          if (targetSection.sourceName !== section.name || targetSection.name !== effectiveName || targetSection.description !== section.description
+            || targetSection.mediaId !== effectiveMediaId || targetSection.facetId !== matchFacet(effectiveName)
+            || targetSection.branchScope !== effectiveScope.branchScope || targetSection.branchLabel !== effectiveScope.branchLabel
+            || targetSection.sortOrder !== effectiveSortOrder) {
+            await tx.update(menuSectionTable).set({ sourceName: section.name, name: effectiveName, description: section.description, mediaId: effectiveMediaId, facetId: matchFacet(effectiveName), ...effectiveScope, sortOrder: effectiveSortOrder }).where(eq(menuSectionTable.id, targetSection.id))
           }
         }
 
@@ -599,27 +703,31 @@ async function apply() {
           const sourceItemId = Number(sourceItem['شناسه'])
           sourceItemIds.add(sourceItemId)
           const values = itemValues(sourceItem, context)
-          const dishSlug = matchDish(values.name, facetId, {
-            price: values.price,
-            sectionName: section.name,
-          })
-          const dishId = dishSlug ? dishBySlug.get(dishSlug) ?? null : null
           const mediaId = mediaIdFor(sourceItem['تصویر'])
           const existing = itemBySource.get(sourceItemId)
           if (!existing) {
+            const dishSlug = matchDish(values.name, facetId, { price: values.price, sectionName: section.name })
+            const dishId = dishSlug ? dishBySlug.get(dishSlug) ?? null : null
             inserts.push({ publicId: importedItemPublicId(sourceItemId, cafeSourceId, section.sortOrder, itemIndex), placeId, sectionId: targetSection.id, sourceId: sourceItemId, ...values, mediaId, dishId, sortOrder: itemIndex, archivedAt: null, priceUpdatedAt: verifiedAt })
             continue
           }
           if (existing.placeId !== placeId) { stats.skipped++; continue }
-          const moved = existing.sectionId !== targetSection.id
-          const reactivated = existing.archivedAt !== null
-          const changed = moved || reactivated || existing.name !== values.name || existing.nameEn !== values.nameEn
-            || existing.description !== values.description || existing.price !== values.price
-            || existing.priceUnknown !== values.priceUnknown || existing.available !== values.available
-            || existing.featured !== values.featured || existing.mediaId !== mediaId
-            || existing.dishId !== dishId || existing.sortOrder !== itemIndex
+          const effective = mergeItemSource(existing, { ...existing, ...values, sectionId: targetSection.id, mediaId, sortOrder: itemIndex, archivedAt: null }, itemFields.get(existing.id) ?? new Set())
+          stats.protectedFields += sourceFieldConflicts(existing, { ...existing, ...values, sectionId: targetSection.id, mediaId, sortOrder: itemIndex, archivedAt: null }, itemFields.get(existing.id) ?? new Set(), 'item', existing.id).length
+          const effectiveSection = sections.find(row => row.id === effective.sectionId) ?? targetSection
+          const effectiveName = effectiveSection.id === targetSection.id ? (sectionFields.get(targetSection.id)?.has('name') ? targetSection.name : section.name) : effectiveSection.name
+          const effectiveFacet = matchFacet(effectiveName)
+          const dishSlug = matchDish(effective.name, effectiveFacet, { price: effective.price, sectionName: effectiveName })
+          const dishId = dishSlug ? dishBySlug.get(dishSlug) ?? null : null
+          const moved = existing.sectionId !== effective.sectionId
+          const reactivated = existing.archivedAt !== null && effective.archivedAt === null
+          const changed = moved || reactivated || existing.name !== effective.name || existing.nameEn !== effective.nameEn
+            || existing.description !== effective.description || existing.price !== effective.price
+            || existing.priceUnknown !== effective.priceUnknown || existing.available !== effective.available
+            || existing.featured !== effective.featured || existing.mediaId !== effective.mediaId
+            || existing.dishId !== dishId || existing.sortOrder !== effective.sortOrder
           if (!changed) continue
-          await tx.update(menuItemTable).set({ sectionId: targetSection.id, ...values, mediaId, dishId, sortOrder: itemIndex, archivedAt: null, priceUpdatedAt: existing.price !== values.price ? verifiedAt : existing.priceUpdatedAt }).where(eq(menuItemTable.id, existing.id))
+          await tx.update(menuItemTable).set({ sectionId: effective.sectionId, name: effective.name, nameEn: effective.nameEn, nameNormalized: normalizeFa(effective.name), description: effective.description, price: effective.price, priceUnknown: effective.priceUnknown, available: effective.available, featured: effective.featured, mediaId: effective.mediaId, dishId, sortOrder: effective.sortOrder, archivedAt: effective.archivedAt, priceUpdatedAt: existing.price !== effective.price ? verifiedAt : existing.priceUpdatedAt }).where(eq(menuItemTable.id, existing.id))
           stats.updatedItems++
           if (moved) stats.movedItems++
           if (reactivated) stats.reactivatedItems++
@@ -630,7 +738,8 @@ async function apply() {
 
       // source_id خالی یعنی آیتم دستی کافه‌دار و هرگز با sync آرشیو نمی‌شود.
       if (sourceItemIds.size > 0) {
-        const archiveIds = (itemsByPlace.get(placeId) ?? []).filter((item) => item.sourceId !== null && !sourceItemIds.has(item.sourceId) && item.archivedAt === null).map((item) => item.id)
+        const archiveIds = (itemsByPlace.get(placeId) ?? []).filter((item) => item.sourceId !== null && !sourceItemIds.has(item.sourceId) && item.archivedAt === null && !itemFields.get(item.id)?.has('archivedAt')).map((item) => item.id)
+        stats.protectedFields += (itemsByPlace.get(placeId) ?? []).filter((item) => item.sourceId !== null && !sourceItemIds.has(item.sourceId) && item.archivedAt === null && itemFields.get(item.id)?.has('archivedAt')).length
         for (let index = 0; index < archiveIds.length; index += CHUNK) {
           await tx.update(menuItemTable).set({ archivedAt: verifiedAt }).where(inArray(menuItemTable.id, archiveIds.slice(index, index + CHUNK)))
         }
@@ -642,7 +751,7 @@ async function apply() {
     // می‌خوانیم. هر مغایرت باعث throw و rollback کل عملیات می‌شود.
     const [verifiedPlaces, verifiedSections, verifiedItems] = await Promise.all([
       tx.select({ id: placeTable.id, sourceId: placeTable.sourceId, priceUnitFixed: placeTable.priceUnitFixed }).from(placeTable).where(isNotNull(placeTable.sourceId)),
-      tx.select({ id: menuSectionTable.id, placeId: menuSectionTable.placeId, name: menuSectionTable.name }).from(menuSectionTable),
+      tx.select({ id: menuSectionTable.id, placeId: menuSectionTable.placeId, name: menuSectionTable.name, sourceName: menuSectionTable.sourceName }).from(menuSectionTable),
       tx.select({
         sourceId: menuItemTable.sourceId,
         placeId: menuItemTable.placeId,
@@ -654,7 +763,7 @@ async function apply() {
       }).from(menuItemTable).where(isNotNull(menuItemTable.sourceId)),
     ])
     const verifiedPlaceBySource = new Map(verifiedPlaces.map((row) => [Number(row.sourceId), row]))
-    const verifiedSectionByPlaceAndName = new Map(verifiedSections.map((row) => [`${row.placeId}|${normalizeFa(row.name)}`, row]))
+    const verifiedSectionByPlaceAndName = new Map(verifiedSections.map((row) => [`${row.placeId}|${normalizeFa(row.sourceName ?? row.name)}`, row]))
     const verifiedItemBySource = new Map(verifiedItems.map((row) => [Number(row.sourceId), row]))
     const verificationErrors: string[] = []
     let expectedItems = 0
@@ -674,11 +783,15 @@ async function apply() {
           const sourceItemId = Number(sourceItem['شناسه'])
           const actual = verifiedItemBySource.get(sourceItemId)
           const expected = itemValues(sourceItem, verifyContext)
+          const previous = itemBySource.get(sourceItemId)
+          const effective = previous && verifiedSection
+            ? mergeItemSource(previous, { ...previous, ...expected, sectionId: verifiedSection.id, archivedAt: null }, itemFields.get(previous.id) ?? new Set())
+            : null
           if (!actual) verificationErrors.push(`آیتم ${sourceItemId} درج نشده`)
           else if (actual.placeId !== verifiedPlace.id) verificationErrors.push(`آیتم ${sourceItemId} به مجموعهٔ اشتباه متصل است`)
-          else if (actual.archivedAt !== null) verificationErrors.push(`آیتم ${sourceItemId} به‌اشتباه آرشیو است`)
-          else if (verifiedSection && actual.sectionId !== verifiedSection.id) verificationErrors.push(`دستهٔ آیتم ${sourceItemId} درست نیست`)
-          else if (actual.name !== expected.name || actual.price !== expected.price || actual.available !== expected.available) verificationErrors.push(`محتوای آیتم ${sourceItemId} با منبع یکی نیست`)
+          else if (actual.archivedAt !== null && !itemFields.get(previous?.id ?? -1)?.has('archivedAt')) verificationErrors.push(`آیتم ${sourceItemId} به‌اشتباه آرشیو است`)
+          else if (verifiedSection && actual.sectionId !== (effective?.sectionId ?? verifiedSection.id)) verificationErrors.push(`دستهٔ آیتم ${sourceItemId} درست نیست`)
+          else if (actual.name !== (effective ? effective.name : expected.name) || actual.price !== (effective ? effective.price : expected.price) || actual.available !== (effective ? effective.available : expected.available)) verificationErrors.push(`محتوای مؤثر آیتم ${sourceItemId} نادرست است`)
           if (verificationErrors.length >= 20) break
         }
         if (verificationErrors.length >= 20) break
@@ -703,7 +816,7 @@ async function apply() {
   await recordAudit(
     { userId: current.actorUserId ?? '', label: current.actorLabel ?? 'admin' },
     'topmenu.full_sync', 'topmenu_sync', runId,
-    { proposed: selectedReport.totalChanges, newCafes: selectedReport.totalNewCafes, newItems: selectedReport.totalNewItems, selection },
+    { proposed: selectedReport.totalChanges, newCafes: selectedReport.totalNewCafes, newItems: selectedReport.totalNewItems, protectedPreview: selectedReport.protectedCount ?? 0, selection },
     { ...stats, affectedCafes: affected.size, sourceIds: cafes.map(cafe => cafe['شناسه']), backup },
   )
   await writeTopMenuSyncState({ ...current, status: 'completed', pid: undefined, appliedAt: new Date().toISOString(), applied: { ...stats, affectedCafes: affected.size, backup } })

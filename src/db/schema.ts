@@ -530,6 +530,8 @@ export const menuSection = mysqlTable(
       .notNull()
       .references(() => place.id, { onDelete: 'cascade' }),
     name: varchar('name', { length: 200 }).notNull(),
+    /** Last matched provider category name; survives an owner's visible rename. */
+    sourceName: varchar('source_name', { length: 200 }),
     nameEn: varchar('name_en', { length: 200 }),
     description: text('description'),
     mediaId: int('media_id').references(() => media.id),
@@ -593,6 +595,31 @@ export const menuItem = mysqlTable(
     index('menu_item_dish_idx').on(t.dishId),
     index('menu_item_price_idx').on(t.price),
   ],
+)
+
+/** Explicit human edits only. Existing imported rows start without overrides. */
+export const menuItemFieldOverride = mysqlTable(
+  'menu_item_field_override',
+  {
+    itemId: int('item_id').notNull().references(() => menuItem.id, { onDelete: 'cascade' }),
+    fieldName: varchar('field_name', { length: 32 }).notNull(),
+    actorUserId: varchar('actor_user_id', { length: 36 }).notNull(),
+    reason: varchar('reason', { length: 200 }).notNull().default('venue_edit'),
+    updatedAt: timestamp('updated_at').notNull().defaultNow().onUpdateNow(),
+  },
+  (t) => [primaryKey({ columns: [t.itemId, t.fieldName] })],
+)
+
+export const menuSectionFieldOverride = mysqlTable(
+  'menu_section_field_override',
+  {
+    sectionId: int('section_id').notNull().references(() => menuSection.id, { onDelete: 'cascade' }),
+    fieldName: varchar('field_name', { length: 32 }).notNull(),
+    actorUserId: varchar('actor_user_id', { length: 36 }).notNull(),
+    reason: varchar('reason', { length: 200 }).notNull().default('venue_edit'),
+    updatedAt: timestamp('updated_at').notNull().defaultNow().onUpdateNow(),
+  },
+  (t) => [primaryKey({ columns: [t.sectionId, t.fieldName] })],
 )
 
 /**
