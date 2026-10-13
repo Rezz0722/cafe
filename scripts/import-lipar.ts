@@ -135,14 +135,14 @@ async function importBranch(branch: typeof BRANCHES[number], brandId: number, di
       const hasVariants = source.prices !== null
       const basePrice = hasVariants ? Math.min(...source.prices!.map(toman)) : toman(source.price!)
       const dishSlug = matchDish(source.name, facetId, { price: basePrice, sectionName: category.name })
-      const values = { sectionId: section.id, name: source.name, nameNormalized: normalizeFa(source.name), description: source.description, price: basePrice, priceUnknown: false, excludeFromPriceStats: category.id === 'add-ons', available: true, featured: false, dishId: dishSlug ? dishes.get(dishSlug) ?? null : null, sortOrder, archivedAt: null, priceUpdatedAt: new Date() }
+      const values = { sectionId: section.id, name: source.name, nameNormalized: normalizeFa(source.name), description: source.description, price: basePrice, priceUnknown: false, excludeFromPriceStats: category.id === 'add-ons', available: true, featured: false, dishId: dishSlug ? dishes.get(dishSlug) ?? null : null, sortOrder, archivedAt: null }
       let menuItem = itemsByName.get(values.nameNormalized)
       if (!menuItem) {
-        const [created] = await db.insert(menuItemTable).values({ publicId: publicId(branch.slug, source.id), placeId, ...values }).$returningId()
+        const [created] = await db.insert(menuItemTable).values({ publicId: publicId(branch.slug, source.id), placeId, ...values, priceUpdatedAt: new Date() }).$returningId()
         if (!created) throw new Error(`ساخت آیتم ${source.name} انجام نشد.`)
         menuItem = { id: created.id } as typeof existingItems[number]
       } else {
-        await db.update(menuItemTable).set(values).where(eq(menuItemTable.id, menuItem.id))
+        await db.update(menuItemTable).set({ ...values, ...(menuItem.price !== basePrice ? { priceUpdatedAt: new Date() } : {}) }).where(eq(menuItemTable.id, menuItem.id))
       }
       if (hasVariants) {
         const present = await db.select().from(menuItemVariantTable).where(eq(menuItemVariantTable.itemId, menuItem.id))
@@ -150,9 +150,10 @@ async function importBranch(branch: typeof BRANCHES[number], brandId: number, di
         for (const [variantIndex, price] of source.prices!.entries()) {
           const label = PRICE_LABELS[variantIndex]!
           const old = byLabel.get(label)
-          const variantValues = { price: toman(price), available: true, sortOrder: variantIndex, priceUpdatedAt: new Date() }
-          if (old) await db.update(menuItemVariantTable).set(variantValues).where(eq(menuItemVariantTable.id, old.id))
-          else await db.insert(menuItemVariantTable).values({ itemId: menuItem.id, label, ...variantValues })
+          const normalizedPrice = toman(price)
+          const variantValues = { price: normalizedPrice, available: true, sortOrder: variantIndex }
+          if (old) await db.update(menuItemVariantTable).set({ ...variantValues, ...(old.price !== normalizedPrice ? { priceUpdatedAt: new Date() } : {}) }).where(eq(menuItemVariantTable.id, old.id))
+          else await db.insert(menuItemVariantTable).values({ itemId: menuItem.id, label, ...variantValues, priceUpdatedAt: new Date() })
         }
       }
       itemCount++

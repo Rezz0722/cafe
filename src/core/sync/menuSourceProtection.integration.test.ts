@@ -8,8 +8,9 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { eq, inArray } from 'drizzle-orm'
 import { closeDb, getDb } from '@/db/client'
-import { appUser, auditLog, menuItem, menuItemFieldOverride, menuSection, menuSectionFieldOverride, place } from '@/db/schema'
-import { setMenuItemArchived, updateMenuItem, updateMenuSection } from '@/core/places/manage'
+import { appUser, auditLog, menuItem, menuItemFieldOverride, menuItemVariant, menuSection, menuSectionFieldOverride, place } from '@/db/schema'
+import { bulkAdjustPrices, createMenuItemVariant, setMenuItemArchived, updateMenuItem, updateMenuItemVariant, updateMenuSection } from '@/core/places/manage'
+import { applyPricePlan, makePricePlan } from '@/core/places/menuPrices'
 
 test('real disposable MariaDB: owner edits survive two TopMenu preview/apply cycles', { skip: process.env.KUCAFE_SOURCE_PROTECTION_DB_TEST !== '1' }, async () => {
   const url = new URL(process.env.DATABASE_URL || '')
@@ -38,7 +39,10 @@ test('real disposable MariaDB: owner edits survive two TopMenu preview/apply cyc
   }
   const source = (description: string, price: number, category: string) => [{
     'شناسه': cafeSourceId, 'نام مجموعه': 'QA Cafe', 'یوزرنیم': `qa-${fixture}`,
-    'منو': [{ 'دسته‌بندی': category, 'آیتم‌ها': [{ 'شناسه': itemSourceId, 'نام': 'QA لاته منبع', 'توضیحات': description, 'قیمت (تومان)': price, 'موجود است': true }] }],
+    'منو': [{ 'دسته‌بندی': category, 'آیتم‌ها': [
+      { 'شناسه': itemSourceId, 'نام': 'QA لاته منبع', 'توضیحات': description, 'قیمت (تومان)': price, 'موجود است': true },
+      { 'شناسه': itemSourceId + 1, 'نام': 'QA قیمت نامعلوم', 'توضیحات': 'قیمت روز', 'قیمت (تومان)': null, 'موجود است': true },
+    ] }],
   }]
   const snapshot = async () => (await db.select().from(menuItem).where(eq(menuItem.id, itemId)))[0]!
   try {
@@ -56,10 +60,27 @@ test('real disposable MariaDB: owner edits survive two TopMenu preview/apply cyc
     sectionId = s.insertId
     const [i] = await db.insert(menuItem).values({ placeId, sectionId, publicId: `qa_p1_${fixture}`, sourceId: itemSourceId, name: 'QA لاته منبع', nameNormalized: 'qa لاته منبع', price: 100000, available: true })
     itemId = i.insertId
-    await db.insert(menuItem).values({ placeId, sectionId, publicId: `qa_p1_manual_${fixture}`, name: 'آیتم دستی', nameNormalized: 'آیتم دستی', price: 70000 })
-    await db.insert(menuSection).values({ placeId: otherPlaceId, name: 'QA قهوه' })
+    const [manual] = await db.insert(menuItem).values({ placeId, sectionId, publicId: `qa_p1_manual_${fixture}`, name: 'آیتم دستی', nameNormalized: 'آیتم دستی', price: 70000 })
+    const manualId = manual.insertId
+    const [otherSection] = await db.insert(menuSection).values({ placeId: otherPlaceId, name: 'QA قهوه' })
     assert.equal((await updateMenuItem(itemId, { name: 'لاته مالک', price: 135000, available: false }, actor)).ok, true)
     const ownerPriceUpdatedAt = (await snapshot()).priceUpdatedAt
+    assert.equal((await updateMenuItem(itemId, { price: 135000 }, actor)).ok, true)
+    assert.equal((await snapshot()).priceUpdatedAt?.getTime(), ownerPriceUpdatedAt?.getTime(), 'saving an unchanged price cannot refresh its date')
+    assert.equal((await createMenuItemVariant(manualId, { label: 'کوچک', price: 1000 }, actor)).ok, true)
+    assert.equal((await createMenuItemVariant(manualId, { label: 'بزرگ', price: 80000 }, actor)).ok, true)
+    const baseBeforeVariantEdit = (await db.select().from(menuItem).where(eq(menuItem.id, manualId)))[0]!.priceUpdatedAt
+    const [largeVariant] = await db.select().from(menuItemVariant).where(eq(menuItemVariant.itemId, manualId))
+      .then(rows => rows.filter(row => row.label === 'بزرگ'))
+    assert.ok(largeVariant)
+    assert.equal((await updateMenuItemVariant(largeVariant.id, { label: 'بزرگ جدید', price: 80000, available: true }, actor)).ok, true)
+    const renamedVariant = (await db.select().from(menuItemVariant).where(eq(menuItemVariant.id, largeVariant.id)))[0]!
+    assert.equal(renamedVariant.priceUpdatedAt?.getTime(), largeVariant.priceUpdatedAt?.getTime(), 'label-only edit keeps variant price date')
+    assert.equal((await db.select().from(menuItem).where(eq(menuItem.id, manualId)))[0]!.priceUpdatedAt?.getTime(), baseBeforeVariantEdit?.getTime(), 'non-price variant edit keeps base price date')
+    const pricePlan = await makePricePlan(placeId, 1, { scope: 'items', itemIds: [manualId] })
+    assert.deepEqual(pricePlan.changes.map(change => change.id), [largeVariant.id], 'rounded minimum price is unchanged')
+    await applyPricePlan(placeId, pricePlan, pricePlan.fingerprint, actor)
+    assert.equal((await db.select().from(menuItem).where(eq(menuItem.id, manualId)))[0]!.priceUpdatedAt?.getTime(), baseBeforeVariantEdit?.getTime(), 'non-minimum bulk change keeps base price date')
     assert.equal((await updateMenuSection(placeId, sectionId, 'دسته مالک', actor)).ok, true)
     const overrides = await db.select().from(menuItemFieldOverride).where(eq(menuItemFieldOverride.itemId, itemId))
     assert.deepEqual(overrides.map(row => row.fieldName).sort(), ['available', 'name', 'price'])
@@ -90,12 +111,26 @@ test('real disposable MariaDB: owner edits survive two TopMenu preview/apply cyc
       assert.equal(item.available, false)
       assert.equal(item.description, description)
       assert.equal(item.sectionId, sectionId)
+      const [unknownPriceItem] = await db.select().from(menuItem).where(eq(menuItem.sourceId, itemSourceId + 1)).limit(1)
+      assert.equal(unknownPriceItem?.price, null)
+      assert.equal(unknownPriceItem?.priceUpdatedAt, null, 'an unknown source price must not acquire a misleading date')
       assert.equal((await db.select().from(menuSection).where(eq(menuSection.id, sectionId)))[0]!.name, 'دسته مالک')
       assert.equal((await db.select().from(menuSection).where(eq(menuSection.id, sectionId)))[0]!.sourceName, category)
       assert.equal((await db.select().from(menuSection).where(eq(menuSection.placeId, placeId))).length, 1)
-      assert.equal((await db.select().from(menuItem).where(eq(menuItem.placeId, placeId))).length, 2)
+      assert.equal((await db.select().from(menuItem).where(eq(menuItem.placeId, placeId))).length, 3)
       assert.equal((await db.select().from(menuItem).where(eq(menuItem.placeId, otherPlaceId))).length, 0)
     }
+    const oldBulkDate = new Date('2026-09-01T12:00:00Z')
+    const [bulkItem] = await db.insert(menuItem).values({ placeId: otherPlaceId, sectionId: otherSection.insertId, publicId: `qa_p1_bulk_${fixture}`, name: 'قیمت گروهی', nameNormalized: 'قیمت گروهی', price: 100000, priceUpdatedAt: oldBulkDate })
+    assert.deepEqual(await bulkAdjustPrices(otherPlaceId, 0.1, actor), { ok: true, changed: 0 })
+    assert.equal((await db.select().from(menuItem).where(eq(menuItem.id, bulkItem.insertId)))[0]!.priceUpdatedAt?.getTime(), oldBulkDate.getTime(), 'rounded no-op bulk edit preserves price date')
+    assert.equal((await db.select().from(menuItemFieldOverride).where(eq(menuItemFieldOverride.itemId, bulkItem.insertId))).length, 0, 'rounded no-op bulk edit does not claim an owner override')
+    const bulkResult = await bulkAdjustPrices(otherPlaceId, 10, actor)
+    assert.equal(bulkResult.ok, true)
+    assert.ok((bulkResult.changed ?? 0) > 0)
+    const [changedBulkItem] = await db.select().from(menuItem).where(eq(menuItem.id, bulkItem.insertId))
+    assert.equal(changedBulkItem?.price, 110000)
+    assert.ok(changedBulkItem?.priceUpdatedAt && changedBulkItem.priceUpdatedAt > oldBulkDate, 'a real bulk price change advances its date')
     assert.equal((await setMenuItemArchived(itemId, true, actor)).ok, true)
     const archiveRun = `qa_p1_${fixture}_archive`, archiveSource = join(temp, 'source-archive.json')
     await writeFile(archiveSource, JSON.stringify(source('منبع دو', 120, 'QA قهوه تازه')))

@@ -714,7 +714,7 @@ async function apply() {
           if (!existing) {
             const dishSlug = matchDish(values.name, facetId, { price: values.price, sectionName: section.name })
             const dishId = dishSlug ? dishBySlug.get(dishSlug) ?? null : null
-            inserts.push({ publicId: importedItemPublicId(sourceItemId, cafeSourceId, section.sortOrder, itemIndex), placeId, sectionId: targetSection.id, sourceId: sourceItemId, ...values, mediaId, dishId, sortOrder: itemIndex, archivedAt: null, priceUpdatedAt: appliedAt })
+            inserts.push({ publicId: importedItemPublicId(sourceItemId, cafeSourceId, section.sortOrder, itemIndex), placeId, sectionId: targetSection.id, sourceId: sourceItemId, ...values, mediaId, dishId, sortOrder: itemIndex, archivedAt: null, priceUpdatedAt: values.price === null ? null : appliedAt })
             continue
           }
           if (existing.placeId !== placeId) { stats.skipped++; continue }
@@ -733,7 +733,7 @@ async function apply() {
             || existing.featured !== effective.featured || existing.mediaId !== effective.mediaId
             || existing.dishId !== dishId || existing.sortOrder !== effective.sortOrder
           if (!changed) continue
-          await tx.update(menuItemTable).set({ sectionId: effective.sectionId, name: effective.name, nameEn: effective.nameEn, nameNormalized: normalizeFa(effective.name), description: effective.description, price: effective.price, priceUnknown: effective.priceUnknown, available: effective.available, featured: effective.featured, mediaId: effective.mediaId, dishId, sortOrder: effective.sortOrder, archivedAt: effective.archivedAt, priceUpdatedAt: existing.price !== effective.price ? appliedAt : existing.priceUpdatedAt }).where(eq(menuItemTable.id, existing.id))
+          await tx.update(menuItemTable).set({ sectionId: effective.sectionId, name: effective.name, nameEn: effective.nameEn, nameNormalized: normalizeFa(effective.name), description: effective.description, price: effective.price, priceUnknown: effective.priceUnknown, available: effective.available, featured: effective.featured, mediaId: effective.mediaId, dishId, sortOrder: effective.sortOrder, archivedAt: effective.archivedAt, priceUpdatedAt: existing.price !== effective.price ? (effective.price === null ? null : appliedAt) : existing.priceUpdatedAt }).where(eq(menuItemTable.id, existing.id))
           stats.updatedItems++
           if (moved) stats.movedItems++
           if (reactivated) stats.reactivatedItems++

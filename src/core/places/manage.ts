@@ -1039,6 +1039,7 @@ export async function createMenuItem(
 /** قیمت پایهٔ آیتم دارای سایز، کمترین قیمت سایز موجود است. */
 async function syncMenuItemVariantPrice(itemId: number): Promise<number | null> {
   const db = getDb()
+  const [previous] = await db.select({ price: menuItemTable.price }).from(menuItemTable).where(eq(menuItemTable.id, itemId)).limit(1)
   const [summary] = await db
     .select({
       total: sql<number>`COUNT(*)`,
@@ -1049,7 +1050,7 @@ async function syncMenuItemVariantPrice(itemId: number): Promise<number | null> 
     .where(eq(menuItemVariantTable.itemId, itemId))
   const total = Number(summary?.total ?? 0)
   if (total === 0) {
-    await db.update(menuItemTable).set({ price: null, priceUnknown: true, available: true, priceUpdatedAt: new Date() }).where(eq(menuItemTable.id, itemId))
+    await db.update(menuItemTable).set({ price: null, priceUnknown: true, available: true, priceUpdatedAt: null }).where(eq(menuItemTable.id, itemId))
     return null
   }
   const minimum = summary?.minimum === null || summary?.minimum === undefined ? null : Number(summary.minimum)
@@ -1057,7 +1058,7 @@ async function syncMenuItemVariantPrice(itemId: number): Promise<number | null> 
     price: minimum,
     priceUnknown: minimum === null,
     available: Number(summary?.availableCount ?? 0) > 0,
-    priceUpdatedAt: new Date(),
+    ...(minimum === null ? { priceUpdatedAt: null } : previous?.price !== minimum ? { priceUpdatedAt: new Date() } : {}),
   }).where(eq(menuItemTable.id, itemId))
   return minimum
 }
@@ -1108,13 +1109,14 @@ export async function updateMenuItemVariant(
     itemId: menuItemVariantTable.itemId,
     label: menuItemVariantTable.label,
     price: menuItemVariantTable.price,
+    priceUpdatedAt: menuItemVariantTable.priceUpdatedAt,
     available: menuItemVariantTable.available,
     placeId: menuItemTable.placeId,
   }).from(menuItemVariantTable).innerJoin(menuItemTable, eq(menuItemTable.id, menuItemVariantTable.itemId)).where(eq(menuItemVariantTable.id, variantId)).limit(1)
   if (!before) return { ok: false, error: 'این سایز پیدا نشد.' }
   const [duplicate] = await db.select({ id: menuItemVariantTable.id }).from(menuItemVariantTable).where(and(eq(menuItemVariantTable.itemId, before.itemId), eq(menuItemVariantTable.label, label), sql`${menuItemVariantTable.id} <> ${variantId}`)).limit(1)
   if (duplicate) return { ok: false, error: 'سایزی با این نام از قبل وجود دارد.' }
-  const after = { label, price: patch.price, available: patch.available, priceUpdatedAt: new Date() }
+  const after = { label, price: patch.price, available: patch.available, priceUpdatedAt: patch.price === null ? null : before.price === patch.price ? before.priceUpdatedAt : new Date() }
   await db.update(menuItemVariantTable).set(after).where(eq(menuItemVariantTable.id, variantId))
   await syncMenuItemVariantPrice(before.itemId)
   await markItemFields(before.itemId, ['price', 'available'], actor.userId, 'variant_edit')
@@ -1212,8 +1214,9 @@ export async function updateMenuItem(
     update.price = patch.price
     // قیمتِ خالی یعنی «قیمت روز»، نه صفر.
     update.priceUnknown = patch.price === null
-    // زمان تأیید قیمت ثبت می‌شود: با تورم ایران، قیمتِ بی‌تاریخ بی‌ارزش است.
-    update.priceUpdatedAt = new Date()
+    // این زمان فقط تغییر واقعی قیمت ثبت‌شده است، نه تأیید انسانی قیمت.
+    if (patch.price === null) update.priceUpdatedAt = null
+    else if (patch.price !== before.price) update.priceUpdatedAt = new Date()
   }
   if (patch.available !== undefined) update.available = patch.available
   if (patch.featured !== undefined) update.featured = patch.featured
@@ -1441,19 +1444,19 @@ export async function bulkAdjustPrices(
     return { ok: false, error: 'درصد تغییر باید بین ‎-۹۰ و ۲۰۰ باشد.' }
   }
 
-  const db = getDb()
   const factor = 1 + percent / 100
 
   // گرد کردن به هزار تومان: قیمتِ ۳۱۷٬۴۲۰ تومان در منو معنی ندارد.
   const now = new Date()
-  const changed = await db.transaction(async (tx) => {
+  const changed = await withDbTransaction(async () => {
+    const tx = getDb()
     // آیتم‌های ساده مستقیماً تغییر می‌کنند. آیتم دارای سایز از جدول سایزها
     // محاسبه می‌شود تا قیمت پایه و قیمت قابل سفارش از هم جدا نیفتند.
     const baseResult = await tx.execute(sql`
       UPDATE menu_item mi
       SET
-        mi.price = GREATEST(1000, ROUND(mi.price * ${factor} / 1000) * 1000),
-        mi.price_updated_at = ${now}
+        mi.price_updated_at = ${now},
+        mi.price = GREATEST(1000, ROUND(mi.price * ${factor} / 1000) * 1000)
       WHERE mi.place_id = ${placeId}
         AND mi.section_id IN (
           SELECT id FROM menu_section
@@ -1461,6 +1464,7 @@ export async function bulkAdjustPrices(
         )
         AND mi.archived_at IS NULL
         AND mi.price IS NOT NULL
+        AND mi.price <> GREATEST(1000, ROUND(mi.price * ${factor} / 1000) * 1000)
         AND NOT EXISTS (SELECT 1 FROM menu_item_variant v WHERE v.item_id = mi.id)
     `)
     const variantResult = await tx.execute(sql`
@@ -1468,31 +1472,41 @@ export async function bulkAdjustPrices(
       INNER JOIN menu_item mi ON mi.id = v.item_id
       INNER JOIN menu_section ms ON ms.id = mi.section_id
       SET
-        v.price = GREATEST(1000, ROUND(v.price * ${factor} / 1000) * 1000),
-        v.price_updated_at = ${now}
+        v.price_updated_at = ${now},
+        v.price = GREATEST(1000, ROUND(v.price * ${factor} / 1000) * 1000)
       WHERE mi.place_id = ${placeId}
         AND ms.branch_scope IN ('shared', 'branch')
         AND mi.archived_at IS NULL
         AND v.price IS NOT NULL
+        AND v.price <> GREATEST(1000, ROUND(v.price * ${factor} / 1000) * 1000)
     `)
     await tx.execute(sql`
       UPDATE menu_item mi
       SET
+        mi.price_updated_at = CASE
+          WHEN mi.price <=> (SELECT MIN(v.price) FROM menu_item_variant v WHERE v.item_id = mi.id AND v.available = TRUE) THEN mi.price_updated_at
+          WHEN (SELECT MIN(v.price) FROM menu_item_variant v WHERE v.item_id = mi.id AND v.available = TRUE) IS NULL THEN NULL
+          ELSE ${now}
+        END,
         mi.price = (SELECT MIN(v.price) FROM menu_item_variant v WHERE v.item_id = mi.id AND v.available = TRUE),
-        mi.price_unknown = NOT EXISTS (SELECT 1 FROM menu_item_variant v WHERE v.item_id = mi.id AND v.available = TRUE AND v.price IS NOT NULL),
-        mi.price_updated_at = ${now}
+        mi.price_unknown = NOT EXISTS (SELECT 1 FROM menu_item_variant v WHERE v.item_id = mi.id AND v.available = TRUE AND v.price IS NOT NULL)
       WHERE mi.place_id = ${placeId}
+        AND mi.section_id IN (SELECT id FROM menu_section WHERE place_id = ${placeId} AND branch_scope IN ('shared', 'branch'))
+        AND mi.archived_at IS NULL
         AND EXISTS (SELECT 1 FROM menu_item_variant v WHERE v.item_id = mi.id)
     `)
     const baseChanged = (baseResult[0] as unknown as { affectedRows?: number })?.affectedRows ?? 0
     const variantChanged = (variantResult[0] as unknown as { affectedRows?: number })?.affectedRows ?? 0
-    const touched = await tx.select({ id: menuItemTable.id }).from(menuItemTable)
-      .innerJoin(menuSectionTable, eq(menuSectionTable.id, menuItemTable.sectionId))
-      .where(and(eq(menuItemTable.placeId, placeId), inArray(menuSectionTable.branchScope, ['shared', 'branch']), isNull(menuItemTable.archivedAt), isNotNull(menuItemTable.price)))
-    await markManyItemFields(touched.map(row => row.id), ['price'], actor.userId, 'bulk_price')
-    return baseChanged + variantChanged
+    const changedCount = baseChanged + variantChanged
+    if (changedCount > 0) {
+      const touched = await tx.select({ id: menuItemTable.id }).from(menuItemTable)
+        .innerJoin(menuSectionTable, eq(menuSectionTable.id, menuItemTable.sectionId))
+        .where(and(eq(menuItemTable.placeId, placeId), inArray(menuSectionTable.branchScope, ['shared', 'branch']), isNull(menuItemTable.archivedAt), isNotNull(menuItemTable.price)))
+      await markManyItemFields(touched.map(row => row.id), ['price'], actor.userId, 'bulk_price')
+    }
+    await recordAudit(actor, 'menu.bulk_price', 'place', placeId, { percent }, { changed: changedCount })
+    return changedCount
   })
-  await recordAudit(actor, 'menu.bulk_price', 'place', placeId, { percent }, { changed })
   await refreshPlaceDerived(placeId)
   return { ok: true, changed }
 }
