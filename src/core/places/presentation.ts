@@ -50,3 +50,19 @@ export function ageInDays(date: Date | null, now = new Date()): number | null {
   if (!date || Number.isNaN(date.getTime())) return null
   return Math.max(0, Math.floor((now.getTime() - date.getTime()) / 86_400_000))
 }
+
+/** زمان Sync یا تأییدِ کل مکان جای زمان تغییر قیمتِ آیتم‌ها را نمی‌گیرد. */
+export function menuPriceTrust(input: {
+  priceLastUpdatedAt: Date | null
+  priceStatsItemCount: number
+  priceStaleItemCount: number
+  stalePriceDays: number
+}, now = new Date()): { latestRecordedChangeAt: Date | null; isStale: boolean } {
+  const age = ageInDays(input.priceLastUpdatedAt, now)
+  return {
+    latestRecordedChangeAt: input.priceLastUpdatedAt,
+    isStale: input.priceStatsItemCount > 0 && (
+      input.priceStaleItemCount > 0 || (age !== null && age > input.stalePriceDays)
+    ),
+  }
+}

@@ -319,6 +319,8 @@ export const place = mysqlTable(
 
     source: mysqlEnum('source', DATA_SOURCE).notNull().default('import'),
     lastVerifiedAt: timestamp('last_verified_at'),
+    /** Successful external snapshot Apply; not owner/editorial verification. */
+    lastSourceSyncAt: timestamp('last_source_sync_at'),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow().onUpdateNow(),
     /** نسخهٔ افزایشی فرم‌های مدیریت برای جلوگیری از overwrite هم‌زمان. */

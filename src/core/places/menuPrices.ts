@@ -76,9 +76,16 @@ export async function applyPricePlan(placeId: number, plan: PricePlan, fingerpri
     if (change.kind === 'item') await getDb().update(menuItem).set({ price: change.newPrice, priceUpdatedAt: updatedAt }).where(and(eq(menuItem.id, change.id), eq(menuItem.placeId, placeId)))
     else await getDb().update(menuItemVariant).set({ price: change.newPrice, priceUpdatedAt: updatedAt }).where(and(eq(menuItemVariant.id, change.id), eq(menuItemVariant.itemId, change.itemId)))
   }
-  await refreshVariantBases(placeId, [...new Set(plan.changes.filter(change => change.kind === 'variant').map(change => change.itemId))])
+  const variantItemIds = [...new Set(plan.changes.filter(change => change.kind === 'variant').map(change => change.itemId))]
+  const previousBases = variantItemIds.length
+    ? await getDb().select({ id: menuItem.id, price: menuItem.price }).from(menuItem).where(and(eq(menuItem.placeId, placeId), inArray(menuItem.id, variantItemIds)))
+    : []
+  await refreshVariantBases(placeId, variantItemIds)
   await markManyItemFields(plan.changes.map(change => change.itemId), ['price'], actor.userId, 'bulk_price')
-  for (const id of new Set(plan.changes.filter(change => change.kind === 'variant').map(change => change.itemId))) await getDb().update(menuItem).set({ priceUpdatedAt: updatedAt }).where(and(eq(menuItem.id, id), eq(menuItem.placeId, placeId)))
+  for (const previous of previousBases) {
+    const [current] = await getDb().select({ price: menuItem.price }).from(menuItem).where(and(eq(menuItem.id, previous.id), eq(menuItem.placeId, placeId))).limit(1)
+    if (current && current.price !== previous.price) await getDb().update(menuItem).set({ priceUpdatedAt: current.price === null ? null : updatedAt }).where(and(eq(menuItem.id, previous.id), eq(menuItem.placeId, placeId)))
+  }
   await recordAudit(actor, 'menu.bulk_price', 'place', placeId, { changes: plan.changes, percent: plan.percent }, { fingerprint, updatedAt: updatedAt.toISOString(), itemCount: plan.itemCount, variantCount: plan.variantCount })
   await refreshPlaceDerived(placeId)
 }

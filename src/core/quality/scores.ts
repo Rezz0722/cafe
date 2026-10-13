@@ -4,7 +4,7 @@
  * دو عدد جدا، عمداً — چون دو چیز متفاوت را می‌سنجند و درمان‌هایشان فرق دارد:
  *
  *   qualityScore   چقدر از پروفایل پر شده؟          → درمان: جمع‌آوری داده
- *   freshnessScore چقدر از آخرین تأیید گذشته؟       → درمان: بازدید دوباره
+ *   freshnessScore از آخرین مشاهدهٔ هر فیلد چقدر گذشته؟ → درمان: بازدید دوباره
  *
  * ادغام این دو در یک عدد، صف کار تیم داده را غیرقابل‌استفاده می‌کند: نمی‌شود
  * فهمید «کافه‌ی ناقص» یا «کافه‌ی بیات» جلوی روی توست.
@@ -152,14 +152,14 @@ function daysSince(iso: string | null, now: Date): number {
 
 /**
  * ۰..۱۰۰ — چقدر داده تازه است. افت نمایی بر اساس نیمه‌عمر هر فیلد.
- * فیلدی که هرگز تأیید نشده صفر می‌گیرد، نه اینکه نادیده گرفته شود.
+ * فیلدی که منشأ زمان‌دار ندارد صفر می‌گیرد؛ زمان کلی مکان جای مشاهدهٔ هر فیلد نیست.
  */
 export function computeFreshnessScore(place: Place, now: Date = new Date()): number {
   const fields = Object.keys(FIELD_HALF_LIFE_DAYS)
 
   const scores = fields.map((field) => {
     const record = place.provenance.find((p) => p.field === field)
-    const age = daysSince(record?.observedAt ?? place.lastVerifiedAt, now)
+    const age = daysSince(record?.observedAt ?? null, now)
     if (!Number.isFinite(age)) return 0
 
     const halfLife = FIELD_HALF_LIFE_DAYS[field] ?? DEFAULT_HALF_LIFE_DAYS
