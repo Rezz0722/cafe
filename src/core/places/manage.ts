@@ -46,6 +46,8 @@ import { cleanUserText, normalizeInstagram } from '@/core/security/input'
 import { mediaFullUrl, mediaPublicUrl } from '@/core/media/store'
 import {toEnDigits} from '@/lib/format'
 import {runManagedWrite} from './managedWrite'
+import { markItemFields, markManyItemFields, markSectionFields } from './menuSourceOverrides'
+import type { ItemOverrideField } from '@/core/sync/menuOverridePolicy'
 
 // ═══════════════════════════════════════════════════════════════════════
 // رد پا
@@ -849,7 +851,10 @@ export async function updateMenuSection(
   if (duplicate) return { ok: false, error: 'دسته‌ای با این نام از قبل وجود دارد.' }
 
   const facetId = matchFacet(name)
-  await db.update(menuSectionTable).set({ name, facetId }).where(eq(menuSectionTable.id, sectionId))
+  const [imported] = await db.select({ id: menuItemTable.id }).from(menuItemTable)
+    .where(and(eq(menuItemTable.sectionId, sectionId), isNotNull(menuItemTable.sourceId))).limit(1)
+  await db.update(menuSectionTable).set({ name, facetId, sourceName: before.sourceName ?? (imported ? before.name : null) }).where(eq(menuSectionTable.id, sectionId))
+  if (before.name !== name) await markSectionFields(sectionId, ['name'], actor.userId)
   // تغییر facet دسته، تطبیق محصول‌های آن را هم عوض می‌کند.
   const items = await db
     .select({ id: menuItemTable.id, name: menuItemTable.name, price: menuItemTable.price })
@@ -884,6 +889,7 @@ export async function setMenuSectionArtwork(
     return { ok: false, error: 'تصویر دسته آماده یا معتبر نیست.' }
   }
   await db.update(menuSectionTable).set({ mediaId }).where(eq(menuSectionTable.id, sectionId))
+  if (before.mediaId !== mediaId) await markSectionFields(sectionId, ['mediaId'], actor.userId)
   await recordAudit(actor, 'menu_section.artwork', 'menu_section', sectionId, before, { mediaId })
   return { ok: true }
 }
@@ -913,6 +919,8 @@ export async function moveMenuSection(
     await tx.update(menuSectionTable).set({ sortOrder: target.sortOrder }).where(eq(menuSectionTable.id, current.id))
     await tx.update(menuSectionTable).set({ sortOrder: current.sortOrder }).where(eq(menuSectionTable.id, target.id))
   })
+  await markSectionFields(current.id, ['sortOrder'], actor.userId)
+  await markSectionFields(target.id, ['sortOrder'], actor.userId)
   await recordAudit(actor, 'menu_section.reorder', 'menu_section', sectionId, { direction }, { moved: true })
   return { ok: true }
 }
@@ -1080,6 +1088,7 @@ export async function createMenuItemVariant(
   }).$returningId()
   if (!created) return { ok: false, error: 'ساخت سایز انجام نشد.' }
   await syncMenuItemVariantPrice(itemId)
+  await markItemFields(itemId, ['price', 'available'], actor.userId, 'variant_edit')
   await recordAudit(actor, 'menu_item_variant.create', 'menu_item_variant', created.id, null, { itemId, label, price: input.price, available: input.available ?? true })
   await refreshPlaceDerived(item.placeId)
   return { ok: true, placeId: item.placeId }
@@ -1108,6 +1117,7 @@ export async function updateMenuItemVariant(
   const after = { label, price: patch.price, available: patch.available, priceUpdatedAt: new Date() }
   await db.update(menuItemVariantTable).set(after).where(eq(menuItemVariantTable.id, variantId))
   await syncMenuItemVariantPrice(before.itemId)
+  await markItemFields(before.itemId, ['price', 'available'], actor.userId, 'variant_edit')
   await recordAudit(actor, 'menu_item_variant.update', 'menu_item_variant', variantId, before, after)
   await refreshPlaceDerived(before.placeId)
   return { ok: true, placeId: before.placeId }
@@ -1128,6 +1138,7 @@ export async function deleteMenuItemVariant(
   if (!before) return { ok: false, error: 'این سایز پیدا نشد.' }
   await db.delete(menuItemVariantTable).where(eq(menuItemVariantTable.id, variantId))
   await syncMenuItemVariantPrice(before.itemId)
+  await markItemFields(before.itemId, ['price', 'available'], actor.userId, 'variant_edit')
   await recordAudit(actor, 'menu_item_variant.delete', 'menu_item_variant', variantId, before, null)
   await refreshPlaceDerived(before.placeId)
   return { ok: true, placeId: before.placeId }
@@ -1248,6 +1259,11 @@ export async function updateMenuItem(
   if (Object.keys(update).length === 0) return { ok: true, placeId: before.placeId }
 
   await db.update(menuItemTable).set(update).where(eq(menuItemTable.id, itemId))
+  const fields: ItemOverrideField[] = []
+  for (const field of ['sectionId', 'name', 'description', 'price', 'available', 'featured', 'mediaId'] as const) {
+    if (field in update && update[field] !== before[field]) fields.push(field)
+  }
+  await markItemFields(itemId, fields, actor.userId)
   await recordAudit(actor, 'menu_item.update', 'menu_item', itemId, before, update)
   await refreshPlaceDerived(before.placeId)
   return { ok: true, placeId: before.placeId }
@@ -1262,6 +1278,7 @@ export async function setMenuItemArchived(
   const [before] = await db.select().from(menuItemTable).where(eq(menuItemTable.id, itemId)).limit(1)
   if (!before) return { ok: false, error: 'این آیتم پیدا نشد.' }
   await db.update(menuItemTable).set({ archivedAt: archived ? new Date() : null }).where(eq(menuItemTable.id, itemId))
+  if (Boolean(before.archivedAt) !== archived) await markItemFields(itemId, ['archivedAt'], actor.userId)
   await recordAudit(actor, archived ? 'menu_item.archive' : 'menu_item.restore', 'menu_item', itemId, before.archivedAt, archived)
   await refreshPlaceDerived(before.placeId)
   return { ok: true, placeId: before.placeId }
@@ -1350,6 +1367,8 @@ export async function moveMenuItem(
     await tx.update(menuItemTable).set({ sortOrder: target.sortOrder }).where(eq(menuItemTable.id, itemId))
     await tx.update(menuItemTable).set({ sortOrder: item.sortOrder }).where(eq(menuItemTable.id, target.id))
   })
+  await markItemFields(itemId, ['sortOrder'], actor.userId)
+  await markItemFields(target.id, ['sortOrder'], actor.userId)
   await recordAudit(actor, 'menu_item.reorder', 'menu_item', itemId, { direction }, { moved: true })
   return { ok: true, placeId: item.placeId }
 }
@@ -1372,6 +1391,12 @@ export async function bulkSetAvailability(
     return { ok: true, changed: 0 }
   }
   const changed = await db.transaction(async (tx) => {
+    const touched = await tx.select({ id: menuItemTable.id }).from(menuItemTable).where(and(
+      eq(menuItemTable.placeId, placeId),
+      inArray(menuItemTable.sectionId, publicSections.map(section => section.id)),
+      isNull(menuItemTable.archivedAt),
+      sql`${menuItemTable.available} <> ${available}`,
+    ))
     const result = await tx
       .update(menuItemTable)
       .set({ available })
@@ -1388,6 +1413,7 @@ export async function bulkSetAvailability(
         AND mi.section_id IN (${sql.join(publicSections.map((section) => sql`${section.id}`), sql`, `)})
         AND mi.archived_at IS NULL
     `)
+    await markManyItemFields(touched.map(row => row.id), ['available'], actor.userId, 'bulk_availability')
     return (result[0] as unknown as { affectedRows?: number })?.affectedRows ?? 0
   })
   await recordAudit(actor, 'menu.bulk_availability', 'place', placeId, null, { available, changed })
@@ -1460,6 +1486,10 @@ export async function bulkAdjustPrices(
     `)
     const baseChanged = (baseResult[0] as unknown as { affectedRows?: number })?.affectedRows ?? 0
     const variantChanged = (variantResult[0] as unknown as { affectedRows?: number })?.affectedRows ?? 0
+    const touched = await tx.select({ id: menuItemTable.id }).from(menuItemTable)
+      .innerJoin(menuSectionTable, eq(menuSectionTable.id, menuItemTable.sectionId))
+      .where(and(eq(menuItemTable.placeId, placeId), inArray(menuSectionTable.branchScope, ['shared', 'branch']), isNull(menuItemTable.archivedAt), isNotNull(menuItemTable.price)))
+    await markManyItemFields(touched.map(row => row.id), ['price'], actor.userId, 'bulk_price')
     return baseChanged + variantChanged
   })
   await recordAudit(actor, 'menu.bulk_price', 'place', placeId, { percent }, { changed })

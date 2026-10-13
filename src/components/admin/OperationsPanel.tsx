@@ -15,7 +15,7 @@
 
 import {useEffect,useState,useRef,useCallback} from 'react'
 import {ManagedForm,useManagedActionState,useManagedFormStatus} from './ManagedForm'
-import { runOperationAction } from '@/app/admin/actions'
+import { runOperationAction, releaseTopMenuOverrideAction } from '@/app/admin/actions'
 import { EMPTY_ADMIN_STATE } from '@/app/admin/state'
 import styles from './OperationsPanel.module.css'
 import type { TopMenuSyncState } from '@/core/sync/topMenuSync'
@@ -117,6 +117,7 @@ export function OperationsPanel({ topMenuSync: initialSync }: { topMenuSync: Top
   const [jobs,setJobs]=useState<{runId:string;status:string;changes:number|null;hasReport?:boolean}[]>([])
   useEffect(()=>{const controller=new AbortController();void fetch('/api/admin/topmenu-report',{signal:controller.signal,cache:'no-store'}).then(response=>response.ok?response.json():null).then(data=>{if(data)setJobs(data.jobs)}).catch(()=>{});return()=>controller.abort()},[topMenuSync.runId,topMenuSync.status])
   const [state, action] = useManagedActionState(runOperationAction, EMPTY_ADMIN_STATE)
+  const [releaseState, releaseAction] = useManagedActionState(releaseTopMenuOverrideAction, EMPTY_ADMIN_STATE)
   const [syncPending, setSyncPending] = useState(false)
   const refreshLock=useRef(false)
   const [refreshError,setRefreshError]=useState('')
@@ -189,6 +190,8 @@ export function OperationsPanel({ topMenuSync: initialSync }: { topMenuSync: Top
     <div className={styles.wrap}>
       {state.error && <p className={styles.error}>{state.error}</p>}
       {state.ok && state.message && <p className={styles.success}>{state.message}</p>}
+      {releaseState.error && <p className={styles.error}>{releaseState.error}</p>}
+      {releaseState.ok && releaseState.message && <p className={styles.success}>{releaseState.message}</p>}
 
       <section className={styles.syncCard}>
         <div className={styles.syncHead}>
@@ -239,10 +242,12 @@ export function OperationsPanel({ topMenuSync: initialSync }: { topMenuSync: Top
               <span><strong>{fa(report.availabilityChanges)}</strong> تغییر موجودی</span>
               <span><strong>{fa(report.totalNewItems)}</strong> آیتم جدید</span>
               <span><strong>{fa(report.totalNewSections ?? 0)}</strong> دستهٔ جدید</span>
+              <span><strong>{fa(report.totalUpdatedSections ?? 0)}</strong> دستهٔ به‌روزشونده</span>
               <span><strong>{fa(report.totalMovedItems ?? 0)}</strong> جابه‌جایی آیتم</span>
               <span><strong>{fa(report.totalArchivedItems ?? 0)}</strong> آیتم حذف‌شده از منبع</span>
               <span><strong>{fa(report.totalNewCafes)}</strong> کافه جدید</span>
               <span><strong>{fa(report.totalConflicts ?? 0)}</strong> تداخل شناسه</span>
+              <span><strong>{fa(report.protectedCount ?? 0)}</strong> تفاوت محافظت‌شدهٔ پنل</span>
               <span><strong>{fa(report.failedCafes)}</strong> خطای اسکرپ</span>
             </div>
             {skipped && skippedCount > 0 && <p role="status" className={styles.pickerStaleNote}>
@@ -268,6 +273,7 @@ export function OperationsPanel({ topMenuSync: initialSync }: { topMenuSync: Top
             {report.newCafes.length > 0 && <details className={styles.reportSection}><summary>کافه‌های جدید ({fa(report.totalNewCafes)})</summary><ul>{report.newCafes.map((cafe) => <li key={cafe.sourceId}><strong>{cafe.name}</strong> · {fa(cafe.sections ?? 0)} دسته · {fa(cafe.items ?? 0)} آیتم <span dir="ltr">{cafe.username}</span></li>)}</ul></details>}
             {report.newItems.length > 0 && <details className={styles.reportSection}><summary>آیتم‌های جدید ({fa(report.totalNewItems)})</summary><ul>{report.newItems.map((item) => <li key={`${item.sourceId}-${item.placeName}`}><strong>{item.name}</strong> · {item.placeName} / {item.sectionName || 'سایر'} · {item.price === null ? 'قیمت روز' : toman(item.price)}</li>)}</ul></details>}
             {(report.conflicts?.length ?? 0) > 0 && <details open className={styles.reportSection}><summary>تداخل‌های بازدارنده ({fa(report.totalConflicts)})</summary><ul>{report.conflicts.map((item) => <li key={`${item.sourceId}-${item.placeName}`}><strong>{item.name}</strong> · {item.placeName} — {item.reason}</li>)}</ul></details>}
+            {(report.protectedCount ?? 0) > 0 && <details className={styles.reportSection}><summary>تفاوت‌های محافظت‌شده ({fa(report.protectedCount ?? 0)})</summary><p>این فیلدها از منبع بازنویسی نمی‌شوند. بازگردانی فقط با دلیل و تأیید صریح، آن هم برای Sync بعدی، انجام می‌شود.</p><ul>{(report.protectedChanges ?? []).map((change, index) => <li key={`${change.entity}-${change.entityId}-${change.field}-${index}`}><span dir="ltr">{change.entity} #{change.entityId} · {change.field}</span> — پنل: {String(change.current ?? 'خالی')} / منبع: {String(change.source ?? 'خالی')}{change.releasable !== false && <ManagedForm action={releaseAction} className={styles.cardForm}><input type="hidden" name="entity" value={change.entity}/><input type="hidden" name="entityId" value={change.entityId}/><input type="hidden" name="field" value={change.field}/><label>دلیل بازگردانی<input name="reason" required minLength={10} maxLength={200}/></label><button type="submit" name="confirm" value="بازگشت به منبع">بازگشت این فیلد به منبع در Sync بعدی</button></ManagedForm>}</li>)}</ul></details>}
 
             {topMenuSync.status === 'ready' && (
               <>
@@ -275,7 +281,7 @@ export function OperationsPanel({ topMenuSync: initialSync }: { topMenuSync: Top
                 scope={applyScope} selected={applyIds} onScope={setApplyScope} onSelected={setApplyIds}
                 disabled={syncPending || busy} allLabel="همهٔ کافه‌های همین گزارش" blockedSourceIds={failedSourceIds} />
               {selectionError&&<p role="alert" className={styles.error}>{selectionError}</p>}
-              {selectionReport&&<section className={styles.reportSection}><h3>فقط کافه‌های تیک‌خورده</h3><p>{fa(selectionReport.summary.sourceCafes)} کافه · {fa(selectionReport.summary.priceIncreases)} افزایش قیمت · {fa(selectionReport.summary.priceDecreases)} کاهش قیمت · {fa(selectionReport.summary.newItems)} آیتم جدید · {fa(selectionReport.summary.archivedItems)} آیتم آرشیوی</p>{selectionReport.limitations.map(text=><p key={text}>{text}</p>)}<a href={`/api/admin/topmenu-report?runId=${encodeURIComponent(topMenuSync.runId!)}&sourceIds=${applyIds.join(',')}`} download>دانلود جزئیات همین انتخاب</a></section>}
+              {selectionReport&&<section className={styles.reportSection}><h3>فقط کافه‌های تیک‌خورده</h3><p>{fa(selectionReport.summary.sourceCafes)} کافه · {fa(selectionReport.summary.priceIncreases)} افزایش قیمت · {fa(selectionReport.summary.priceDecreases)} کاهش قیمت · {fa(selectionReport.summary.newItems)} آیتم جدید · {fa(selectionReport.summary.archivedItems)} آیتم آرشیوی · {fa(selectionReport.summary.updatedSections ?? 0)} دستهٔ به‌روزشونده · {fa(selectionReport.summary.protectedCount ?? 0)} تفاوت محافظت‌شده</p>{selectionReport.limitations.map(text=><p key={text}>{text}</p>)}<a href={`/api/admin/topmenu-report?runId=${encodeURIComponent(topMenuSync.runId!)}&sourceIds=${applyIds.join(',')}`} download>دانلود جزئیات همین انتخاب</a></section>}
               <form className={styles.applyBox} onSubmit={(event) => {
                 event.preventDefault()
                 const confirm = new FormData(event.currentTarget).get('confirm')

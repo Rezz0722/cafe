@@ -18,8 +18,10 @@ import {
   auditLog,
   dish as dishTable,
   menuItem as menuItemTable,
+  menuItemFieldOverride as itemOverrideTable,
   menuItemVariant as menuItemVariantTable,
   menuSection as menuSectionTable,
+  menuSectionFieldOverride as sectionOverrideTable,
   place as placeTable,
   placeBrand as placeBrandTable,
   placeHours as placeHoursTable,
@@ -94,6 +96,13 @@ async function importBranch(branch: typeof BRANCHES[number], brandId: number, di
   let placeId: number
   if (found) {
     placeId = found.id
+    const [protectedItem] = await db.select({ id: itemOverrideTable.itemId }).from(itemOverrideTable)
+      .innerJoin(menuItemTable, eq(menuItemTable.id, itemOverrideTable.itemId))
+      .where(eq(menuItemTable.placeId, placeId)).limit(1)
+    const [protectedSection] = await db.select({ id: sectionOverrideTable.sectionId }).from(sectionOverrideTable)
+      .innerJoin(menuSectionTable, eq(menuSectionTable.id, sectionOverrideTable.sectionId))
+      .where(eq(menuSectionTable.placeId, placeId)).limit(1)
+    if (protectedItem || protectedSection) throw new Error(`منوی ${branch.slug} ویرایش انسانی محافظت‌شده دارد؛ import دوباره بدون بررسی تعارض ممنوع است.`)
     await db.update(placeTable).set({ brandId, branchName: branch.branchName, isPrimaryBranch: branch.isPrimaryBranch, name: 'کافه لیپار', nameEn: 'Lipar Cafe', nameNormalized: normalizeFa('کافه لیپار'), kind: 'cafe', status: publish ? 'published' : found.status, lat: branch.lat.toFixed(7), lng: branch.lng.toFixed(7), geoStatus: classifyGeo(branch.lat, branch.lng), address: branch.address, districtId: null, priceUnitFixed: true, source: 'user', revision: found.revision + 1 }).where(eq(placeTable.id, placeId))
   } else {
     const [created] = await db.insert(placeTable).values({ slug: branch.slug, brandId, branchName: branch.branchName, isPrimaryBranch: branch.isPrimaryBranch, name: 'کافه لیپار', nameEn: 'Lipar Cafe', nameNormalized: normalizeFa('کافه لیپار'), kind: 'cafe', status: publish ? 'published' : 'draft', lat: branch.lat.toFixed(7), lng: branch.lng.toFixed(7), geoStatus: classifyGeo(branch.lat, branch.lng), address: branch.address, districtId: null, priceUnitFixed: true, source: 'user' }).$returningId()
