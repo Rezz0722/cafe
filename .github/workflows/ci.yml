@@ -51,6 +51,8 @@ jobs:
         run: bash scripts/check-no-secrets.sh
       - name: Initialize disposable CI database
         run: npm run db:migrate
+      - name: Legacy MariaDB timestamp integrity regression
+        run: KUCAFE_TIMESTAMP_DB_TEST=1 node scripts/place-timestamp-regression.mjs
       - run: npm run typecheck
       - run: npm test
       - name: TopMenuMarket scraper contract (mocked source, no live requests)

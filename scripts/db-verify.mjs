@@ -63,6 +63,30 @@ check(`${REQUIRED.length} جدول لازم موجود است`, missing.length =
 
 const [sourceNameColumns] = await conn.query(`SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'menu_section' AND COLUMN_NAME = 'source_name'`)
 check('شناسهٔ آخرین نام دسته در منبع برای حفظ نام ویرایش‌شده موجود است', sourceNameColumns.length === 1)
+const [placeTimestampColumns] = await conn.query(`SELECT COLUMN_NAME, IS_NULLABLE, COLUMN_DEFAULT, EXTRA
+  FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'place'
+    AND COLUMN_NAME IN ('last_verified_at', 'last_source_sync_at', 'updated_at')`)
+const placeTimestamp = new Map(placeTimestampColumns.map(row => [row.COLUMN_NAME, row]))
+const verified = placeTimestamp.get('last_verified_at')
+check('زمان تأیید فقط با ثبت صریح تغییر می‌کند',
+  verified?.IS_NULLABLE === 'YES' &&
+    (verified?.COLUMN_DEFAULT === null || String(verified?.COLUMN_DEFAULT).toUpperCase() === 'NULL') &&
+    !String(verified?.EXTRA ?? '').toLowerCase().includes('on update'))
+check('زمان همگام‌سازی منبع ستون مستقل و nullable دارد',
+  placeTimestamp.get('last_source_sync_at')?.IS_NULLABLE === 'YES')
+check('زمان ویرایش عمومی همچنان خودکار است',
+  String(placeTimestamp.get('updated_at')?.EXTRA ?? '').toLowerCase().includes('on update'))
+const [priceTimestampColumns] = await conn.query(`SELECT IS_NULLABLE, COLUMN_DEFAULT, EXTRA
+  FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE()
+    AND TABLE_NAME = 'menu_item' AND COLUMN_NAME = 'price_updated_at'`)
+const priceTimestamp = priceTimestampColumns[0]
+check('تاریخ قیمت فقط با تغییر صریح قیمت ثبت می‌شود',
+  priceTimestamp?.IS_NULLABLE === 'YES' &&
+    (priceTimestamp?.COLUMN_DEFAULT === null || String(priceTimestamp?.COLUMN_DEFAULT).toUpperCase() === 'NULL') &&
+    !String(priceTimestamp?.EXTRA ?? '').toLowerCase().includes('on update'))
+const [[unknownPriceDates]] = await conn.query(`SELECT COUNT(*) AS n FROM menu_item
+  WHERE price IS NULL AND price_updated_at IS NOT NULL`)
+check('آیتم بدون قیمت تاریخ تغییر قیمت ساختگی ندارد', Number(unknownPriceDates.n) === 0)
 const [overrideFks] = await conn.query(`SELECT TABLE_NAME, REFERENCED_TABLE_NAME FROM information_schema.REFERENTIAL_CONSTRAINTS WHERE CONSTRAINT_SCHEMA = DATABASE() AND TABLE_NAME IN ('menu_item_field_override','menu_section_field_override')`)
 check('نشان‌های فیلدی با حذف آیتم/دستهٔ مربوط پاک می‌شوند', [
   'menu_item_field_override:menu_item', 'menu_section_field_override:menu_section',

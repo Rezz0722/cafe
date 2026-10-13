@@ -3,7 +3,12 @@
 ALTER TABLE place ADD COLUMN IF NOT EXISTS last_source_sync_at TIMESTAMP NULL DEFAULT NULL AFTER last_verified_at;
 
 UPDATE place
-SET last_source_sync_at = last_verified_at
+-- MariaDB 10.6 created last_verified_at with an implicit ON UPDATE clause.
+-- Explicitly retaining BOTH existing timestamps prevents this backfill from
+-- advancing verification or the general edit time before 0017 repairs DDL.
+SET last_source_sync_at = last_verified_at,
+    last_verified_at = last_verified_at,
+    updated_at = updated_at
 WHERE source = 'import'
   AND source_id IS NOT NULL
   AND last_source_sync_at IS NULL

@@ -76,10 +76,22 @@ for expired in "${db_backups[@]:5}"; do
   [[ "$candidate" == "$backup_dir/db"/* && -f "$candidate" ]] && rm -f -- "$candidate"
 done
 
+# A green workflow must not silently turn migration work into a human
+# verification, a general edit or a price change. This read-only snapshot is
+# taken after the backup, immediately before migrations; concurrent edits fail
+# closed and require review rather than being mistaken for a safe migration.
+timestamp_before="$(KUCAFE_IMAGE_TAG="$tag" "${compose[@]}" --profile maintenance run --rm --no-deps \
+  maintenance node scripts/place-timestamp-fingerprint.mjs)"
 KUCAFE_IMAGE_TAG="$tag" "${compose[@]}" --profile maintenance run --rm --no-deps \
   maintenance npm run db:migrate
 KUCAFE_IMAGE_TAG="$tag" "${compose[@]}" --profile maintenance run --rm --no-deps \
   maintenance npm run db:verify
+timestamp_after="$(KUCAFE_IMAGE_TAG="$tag" "${compose[@]}" --profile maintenance run --rm --no-deps \
+  maintenance node scripts/place-timestamp-fingerprint.mjs)"
+[[ "$timestamp_before" == "$timestamp_after" ]] || {
+  echo 'Verification/edit/known-price timestamps changed during migration; refusing deployment.' >&2
+  false
+}
 # Compose deletes the old container and its Docker logs during replacement.
 # Keep bounded, root-private evidence before that irreversible diagnostic loss.
 old_app_id="$(KUCAFE_IMAGE_TAG="$tag" "${compose[@]}" ps -q app)"
