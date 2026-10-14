@@ -113,7 +113,9 @@ export async function trackPageView(
   if (placeId && device !== 'bot') {
     await db
       .update(placeTable)
-      .set({ viewCount: sql`${placeTable.viewCount} + 1` })
+      // A visit is not an editorial edit. MariaDB's ON UPDATE on updated_at
+      // would otherwise advance the place edit time on every page view.
+      .set({ viewCount: sql`${placeTable.viewCount} + 1`, updatedAt: sql`${placeTable.updatedAt}` })
       .where(eq(placeTable.id, placeId))
   }
 }

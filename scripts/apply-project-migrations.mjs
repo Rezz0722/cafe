@@ -18,6 +18,7 @@ const files = [
   'drizzle/0014_venue_qr_links.sql',
   'drizzle/0015_menu_source_overrides.sql',
   'drizzle/0016_menu_source_sync_time.sql',
+  'drizzle/0017_provenance_timestamp_integrity.sql',
 ]
 
 for (const file of files) {
