@@ -3,9 +3,10 @@ import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
 import { and, eq, inArray, like } from 'drizzle-orm'
 import { getDb, closeDb } from '@/db/client'
-import { appUser, dailyStat, menuItem, menuSection, place, setting, userPlaceRole } from '@/db/schema'
+import { appUser, dailyStat, menuItem, menuSection, pageView, place, setting, userPlaceRole } from '@/db/schema'
 import { invalidateSettings } from '@/core/settings/store'
 import { recordMenuView, getMenuStats } from './menuStats'
+import { trackPageView } from './track'
 import { POST } from '@/app/api/track/menu/route'
 
 test('disposable MariaDB menu aggregation, eligibility, privacy and owner scope', { skip: process.env.KUCAFE_MENU_STATS_DB_TEST !== '1' }, async t => {
@@ -23,6 +24,19 @@ test('disposable MariaDB menu aggregation, eligibility, privacy and owner scope'
     const [s] = await db.insert(menuSection).values({ placeId: ids[0]!, name: 'QA category' }); sectionId = s.insertId
     const [i] = await db.insert(menuItem).values({ placeId: ids[0]!, sectionId, publicId: `mi_${owner.replaceAll('-', '').slice(0, 24)}`, name: 'QA item', nameNormalized: 'qa' }); itemId = i.insertId
     await db.insert(setting).values({ key: 'trackPageViews', value: true }).onDuplicateKeyUpdate({ set: { value: true } }); invalidateSettings()
+    await t.test('page views increment the counter without changing place timestamps', async () => {
+      const verifiedAt = new Date('2026-01-02T03:04:05Z')
+      const updatedAt = new Date('2026-02-03T04:05:06Z')
+      await db.update(place).set({ lastVerifiedAt: verifiedAt, updatedAt }).where(eq(place.id, ids[0]!))
+      const before = (await db.select().from(place).where(eq(place.id, ids[0]!)))[0]!
+      for (let i = 0; i < 2; i++) {
+        await trackPageView({ path: `/cafe/${before.slug}`, placeSlug: before.slug, visitorId: randomUUID(), userAgent: 'Mozilla/5.0 Android' })
+      }
+      const after = (await db.select().from(place).where(eq(place.id, ids[0]!)))[0]!
+      assert.equal(after.viewCount, before.viewCount + 2)
+      assert.equal(after.lastVerifiedAt?.getTime(), verifiedAt.getTime())
+      assert.equal(after.updatedAt.getTime(), updatedAt.getTime())
+    })
     await t.test('atomic concurrent increments and distinct metrics', async () => {
       await Promise.all(Array.from({ length: 20 }, () => recordMenuView(view())))
       await recordMenuView(view('item'))
@@ -66,6 +80,7 @@ test('disposable MariaDB menu aggregation, eligibility, privacy and owner scope'
       assert.match(stats.items[0]!.name, /حذف‌شده/)
     })
   } finally {
+    if (ids.length) await db.delete(pageView).where(inArray(pageView.placeId, ids))
     for (const id of ids) await db.delete(dailyStat).where(and(like(dailyStat.refId, `${id}:%`), inArray(dailyStat.metric, ['menu_section_views', 'menu_item_views'])))
     if (ids.length) await db.delete(place).where(inArray(place.id, ids))
     await db.delete(appUser).where(inArray(appUser.id, [owner, other]))
