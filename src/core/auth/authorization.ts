@@ -4,11 +4,11 @@ export type PlaceRole = 'owner' | 'manager' | 'staff' | null
 
 /** Pure RBAC rules shared by server entry points and IDOR tests. */
 export function canWritePlace(globalRole: Role, placeRole: PlaceRole): boolean {
-  return globalRole === 'admin' || placeRole !== null
+  return globalRole === 'admin' || (globalRole === 'owner' && (placeRole === 'owner' || placeRole === 'manager'))
 }
 
 export function canManagePlaceUsers(globalRole: Role, placeRole: PlaceRole): boolean {
-  return globalRole === 'admin' || placeRole === 'owner'
+  return globalRole === 'admin' || (globalRole === 'owner' && placeRole === 'owner')
 }
 
 /** Owner-only reads (including archived menu exports) are not available to managers. */

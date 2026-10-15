@@ -3,6 +3,7 @@ import { randomBytes } from 'node:crypto'
 import { and, eq, gte, inArray, sql } from 'drizzle-orm'
 import { getDb, withDbTransaction } from '@/db/client'
 import { appUser, dailyStat, place, userPlaceRole, venueQrLink } from '@/db/schema'
+import { canWritePlace } from '@/core/auth/authorization'
 import { recordAudit, type Actor } from '@/core/places/manage'
 import { samePlaceRevision } from '@/core/places/revision'
 import { qrLabel, validQrToken } from './channelPolicy'
@@ -14,7 +15,7 @@ async function authorize(placeId: number, actor: Actor, locked = false) {
   const [account] = await (locked ? accountQuery.for('update') : accountQuery)
   const roleQuery = getDb().select().from(userPlaceRole).where(and(eq(userPlaceRole.userId, actor.userId), eq(userPlaceRole.placeId, placeId))).limit(1)
   const [role] = await (locked ? roleQuery.for('update') : roleQuery)
-  if (!account || account.status !== 'active' || account.mustChangePassword || (account.role !== 'admin' && role?.status !== 'active')) throw new Error('به این شعبه دسترسی فعال ندارید.')
+  if (!account || account.status !== 'active' || account.mustChangePassword || !canWritePlace(account.role, role?.status === 'active' ? role.role : null)) throw new Error('به این شعبه دسترسی فعال ندارید.')
 }
 export async function listQrChannels(placeId: number, actor: Actor): Promise<QrChannel[]> {
   // View-as cannot mutate; route intentionally does not expose these private metrics in that mode.

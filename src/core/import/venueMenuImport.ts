@@ -3,6 +3,7 @@ import { createHmac, timingSafeEqual } from 'node:crypto'
 import { and, eq, sql } from 'drizzle-orm'
 import { getDb, withDbTransaction } from '@/db/client'
 import { appUser, menuItem, menuSection, place, userPlaceRole } from '@/db/schema'
+import { canWritePlace } from '@/core/auth/authorization'
 import { createMenuItem, recordAudit, type Actor } from '@/core/places/manage'
 import { samePlaceRevision } from '@/core/places/revision'
 import { normalizeFa } from '@/core/text/normalize'
@@ -18,7 +19,7 @@ async function plan(input: Input, actor: Actor, locked = false): Promise<Omit<Me
   if (!account || account.status !== 'active' || account.mustChangePassword) throw new Error('حساب مجاز و فعال نیست.')
   const roleQuery = db.select().from(userPlaceRole).where(and(eq(userPlaceRole.userId, actor.userId), eq(userPlaceRole.placeId, input.placeId))).limit(1)
   const [role] = await (locked ? roleQuery.for('update') : roleQuery)
-  if (account.role !== 'admin' && role?.status !== 'active') throw new Error('به این شعبه دسترسی ندارید.')
+  if (!canWritePlace(account.role, role?.status === 'active' ? role.role : null)) throw new Error('به این شعبه دسترسی ندارید.')
   const [venue] = await db.select({ revision: place.revision }).from(place).where(eq(place.id, input.placeId)).limit(1)
   if (!venue || !samePlaceRevision(venue.revision, input.revision)) throw new Error('اطلاعات شعبه تغییر کرده؛ صفحه و پیش‌نمایش را تازه کنید.')
   const [section] = await db.select().from(menuSection).where(and(eq(menuSection.id, input.sectionId), eq(menuSection.placeId, input.placeId))).limit(1)

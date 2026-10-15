@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { eq, sql } from 'drizzle-orm'
-import { getSession } from '@/core/auth/currentUser'
+import { requireAdminRead } from '@/core/admin/access'
 import { invalidateReferenceCache } from '@/core/places/queries'
 import { patchPlaceAttributes, type AttributePatchInput } from '@/core/places/manage'
 import { samePlaceRevision } from '@/core/places/revision'
@@ -26,9 +26,9 @@ export async function saveExperienceCurationAction(
   _previous: ExperienceCurationState,
   form: FormData,
 ): Promise<ExperienceCurationState> {
-  const { user, actor } = await getSession()
-  if (!user) return { ok: false, error: 'ابتدا وارد شوید.' }
-  if (actor || user.role !== 'admin') return { ok: false, error: 'فقط مدیر سیستم به این صف دسترسی دارد.' }
+  const access = await requireAdminRead()
+  if (!access.ok) return { ok: false, error: access.error }
+  const { user } = access
 
   const placeId = Number(text(form, 'placeId'))
   if (!Number.isSafeInteger(placeId) || placeId <= 0) return { ok: false, error: 'کافه معتبر نیست.' }

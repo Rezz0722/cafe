@@ -12,6 +12,16 @@ test('cross-place access is denied when the place role is absent', () => {
   assert.equal(canWritePlace('customer', null), false)
 })
 
+test('staff and inconsistent customer assignments have no venue write or role-grant access', () => {
+  assert.equal(canWritePlace('owner', 'staff'), false)
+  assert.equal(canWritePlace('customer', 'staff'), false)
+  assert.equal(canWritePlace('customer', 'manager'), false)
+  assert.equal(canWritePlace('customer', 'owner'), false)
+  assert.equal(canManagePlaceUsers('owner', 'staff'), false)
+  assert.equal(canManagePlaceUsers('customer', 'owner'), false)
+  assert.equal(canGrantPlaceRole('owner', 'staff', 'manager'), false)
+})
+
 test('a manager can edit only an assigned place but cannot manage people', () => {
   assert.equal(canWritePlace('owner', 'manager'), true)
   assert.equal(canManagePlaceUsers('owner', 'manager'), false)
