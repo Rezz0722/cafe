@@ -346,6 +346,7 @@ interface Props {
   priceStatsExcludeServiceSections?: boolean
   managers: { userId: string; name: string; username: string | null; phone: string | null; role: string }[]
   canManageUsers: boolean
+  canExportMenu: boolean
   currentUserId: string
 }
 
@@ -360,6 +361,7 @@ export function VenuePanel({
   priceStatsExcludeServiceSections = false,
   managers,
   canManageUsers,
+  canExportMenu,
   currentUserId,
   ownerRepliesRequireApproval = false,
   clubPanel,
@@ -1013,6 +1015,20 @@ export function VenuePanel({
       {/* ── منو ──────────────────────────────────────────────────── */}
       {tab === 'menu' && (
         <section className={styles.section}>
+          {canExportMenu && <div className={styles.menuExport}>
+            <div>
+              <strong>یک نسخه از منوی شعبه‌تان نگه دارید</strong>
+              <p>فایل CSV برای مشاهده در Excel است؛ JSON جزئیات کامل‌تر، از جمله وضعیت دسته‌ها و زمان قیمت را نگه می‌دارد. تصویرها فقط به‌صورت لینک هستند.</p>
+            </div>
+            <div className={styles.menuExportActions}>
+              <a href={`/api/admin/venue/menu-export?placeId=${place.id}&format=csv`}>
+                <Download size={17} aria-hidden="true" /> دانلود منو (Excel / CSV)
+              </a>
+              <a href={`/api/admin/venue/menu-export?placeId=${place.id}`}>
+                <Download size={17} aria-hidden="true" /> دانلود اطلاعات کامل منو (JSON)
+              </a>
+            </div>
+          </div>}
           {!readOnly && menuScope === 'public' && <MenuImportPanel key={place.id} placeId={place.id} revision={revision} sections={publicSections.map(section => ({ id: section.id, name: section.name }))} action={venueMenuImportAction} />}
           {canManagePriceStats && quarantinedSections.length > 0 && <div className={styles.priceStatsNotice}>
             <strong>{menuScope === 'public' ? 'منوی فعال همین شعبه' : 'داده‌های قرنطینه‌شده؛ در منوی عمومی نمایش داده نمی‌شوند'}</strong>

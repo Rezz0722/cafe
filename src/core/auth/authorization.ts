@@ -11,6 +11,11 @@ export function canManagePlaceUsers(globalRole: Role, placeRole: PlaceRole): boo
   return globalRole === 'admin' || placeRole === 'owner'
 }
 
+/** Owner-only reads (including archived menu exports) are not available to managers. */
+export function canReadOwnerOnlyPlaceData(globalRole: Role, placeRole: PlaceRole): boolean {
+  return globalRole === 'admin' || (globalRole === 'owner' && placeRole === 'owner')
+}
+
 export function canGrantPlaceRole(
   globalRole: Role,
   actorPlaceRole: PlaceRole,
