@@ -2,6 +2,7 @@ import 'server-only'
 import { and, eq, gte, inArray, isNull, like, lte, sql } from 'drizzle-orm'
 import { getDb } from '@/db/client'
 import { appUser, dailyStat, menuItem, menuSection, userPlaceRole } from '@/db/schema'
+import { canWritePlace } from '@/core/auth/authorization'
 import type { Actor } from '@/core/places/manage'
 import type { MenuView } from './menuPolicy'
 export interface MenuStats {
@@ -27,7 +28,7 @@ export async function getMenuStats(placeId: number, actor: Actor, enabled: boole
   if (actor.onBehalfOf) throw new Error('آمار در حالت مشاهده به‌عنوان در دسترس نیست.')
   const [account] = await getDb().select().from(appUser).where(eq(appUser.id, actor.userId)).limit(1)
   const [role] = await getDb().select().from(userPlaceRole).where(and(eq(userPlaceRole.userId, actor.userId), eq(userPlaceRole.placeId, placeId))).limit(1)
-  if (!account || account.status !== 'active' || account.mustChangePassword || (account.role !== 'admin' && role?.status !== 'active')) throw new Error('دسترسی فعال به آمار این شعبه ندارید.')
+  if (!account || account.status !== 'active' || account.mustChangePassword || !canWritePlace(account.role, role?.status === 'active' ? role.role : null)) throw new Error('دسترسی فعال به آمار این شعبه ندارید.')
   const firstDay = new Date(new Date().toISOString().slice(0, 10)); firstDay.setUTCDate(firstDay.getUTCDate() - 29)
   const rows = await getDb().select({ metric: dailyStat.metric, refId: dailyStat.refId, views: sql<number>`SUM(${dailyStat.value})` }).from(dailyStat)
     .where(and(gte(dailyStat.day, firstDay), lte(dailyStat.day, new Date(new Date().toISOString().slice(0, 10))), inArray(dailyStat.metric, ['menu_section_views', 'menu_item_views']), like(dailyStat.refId, `${placeId}:%`))).groupBy(dailyStat.metric, dailyStat.refId)

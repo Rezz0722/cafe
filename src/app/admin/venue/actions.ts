@@ -15,10 +15,9 @@
 
 import { revalidatePath } from 'next/cache'
 import { getSession } from '@/core/auth/currentUser'
-import { VIEW_AS_READONLY } from '@/core/auth/impersonation'
+import { authorizeVenueSession, type VenueAccess } from '@/core/auth/venueAccess'
 import {
   createUser,
-  findUserById,
   findUserByPhone,
   findUserByUsername,
   getPlaceRole,
@@ -26,7 +25,7 @@ import {
   isUsernameTaken,
   revokePlaceRole,
 } from '@/core/auth/userRepo'
-import { canGrantPlaceRole, canManagePlaceUsers, canWritePlace } from '@/core/auth/authorization'
+import { canGrantPlaceRole, canManagePlaceUsers } from '@/core/auth/authorization'
 import { generatePassword, hashPassword } from '@/core/auth/password'
 import {publicActionError} from '@/core/security/actionError'
 import { cleanUserText } from '@/core/security/input'
@@ -58,7 +57,6 @@ import {
   deletePlacePhoto,
   deleteMenuItemVariant,
   updatePlaceInfo,
-  type Actor,
   type AttributeInput,
   type HourShiftInput,
 } from '@/core/places/manage'
@@ -188,39 +186,12 @@ async function venueDiscountActionImpl(_prev:VenueActionState,form:FormData):Pro
   catch(e){return{ok:false,error:publicActionError(e,'تخفیف ذخیره نشد.')}}
 }
 
-interface Access {
-  ok: true
-  placeId: number
-  actor: Actor
-  isAdmin: boolean
-  placeRole: 'owner' | 'manager' | 'staff' | null
-}
+type Access = VenueAccess
 
 async function requirePlaceAccess(
   placeId: number | null,
 ): Promise<Access | { ok: false; error: string }> {
-  const { user, actor } = await getSession()
-  if (!user) return { ok: false, error: 'ابتدا وارد شوید.' }
-  if (actor) return { ok: false, error: VIEW_AS_READONLY }
-  if (!placeId) return { ok: false, error: 'مجموعه مشخص نیست.' }
-
-  const account = await findUserById(user.id)
-  if (!account || account.blocked) return { ok: false, error: 'حساب فعال پیدا نشد.' }
-  if (account.mustChangePassword) {
-    return { ok: false, error: 'پیش از مدیریت کافه، رمز موقت را تغییر دهید.' }
-  }
-
-  const placeRole = user.role === 'admin' ? 'owner' : await getPlaceRole(user.id, placeId)
-  const allowed = canWritePlace(user.role, placeRole)
-  if (!allowed) return { ok: false, error: 'به این مجموعه دسترسی ندارید.' }
-
-  return {
-    ok: true,
-    placeId,
-    actor: { userId: user.id, label: user.name || user.phone || user.id },
-    isAdmin: user.role === 'admin',
-    placeRole,
-  }
+  return authorizeVenueSession(await getSession(), placeId)
 }
 
 function canManagePeople(access: Access): boolean {

@@ -22,7 +22,7 @@ import 'server-only'
  */
 
 import { randomUUID } from 'node:crypto'
-import { and, desc, eq, gt, isNotNull, isNull, lt, or, sql } from 'drizzle-orm'
+import { and, desc, eq, gt, inArray, isNotNull, isNull, lt, or, sql } from 'drizzle-orm'
 import { getDb } from '@/db/client'
 import {
   appUser,
@@ -121,7 +121,7 @@ async function loadOwnedPlaces(
     .select({ id: placeTable.id, slug: placeTable.slug, name: placeTable.name })
     .from(userPlaceRole)
     .innerJoin(placeTable, eq(placeTable.id, userPlaceRole.placeId))
-    .where(and(eq(userPlaceRole.userId, userId), eq(userPlaceRole.status, 'active')))
+    .where(and(eq(userPlaceRole.userId, userId), eq(userPlaceRole.status, 'active'), inArray(userPlaceRole.role, ['owner', 'manager'])))
     .orderBy(placeTable.name)
 }
 

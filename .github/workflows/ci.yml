@@ -66,6 +66,8 @@ jobs:
         run: KUCAFE_MENU_IMPORT_DB_TEST=1 node --import tsx --conditions=react-server --test src/core/import/venueMenuImport.integration.test.ts
       - name: Branch-scoped owner menu export integration
         run: KUCAFE_MENU_EXPORT_DB_TEST=1 node --import tsx --conditions=react-server --test src/core/places/menuExport.integration.test.ts
+      - name: Signed branch and role authorization integration
+        run: KUCAFE_AUTHZ_DB_TEST=1 node --import tsx --conditions=react-server --test src/core/auth/venueAuthorization.integration.test.ts
       - name: Owner menu protection and two real TopMenu sync cycles
         run: |
           if ! command -v mysqldump >/dev/null; then
@@ -81,3 +83,5 @@ jobs:
         run: KUCAFE_RESEARCH_DB_TEST=1 node --import tsx --conditions=react-server --test src/core/experience/researchBatch.integration.test.ts
       - name: Production build
         run: npm run build
+      - name: Real HTTP signed-session export authorization smoke
+        run: KUCAFE_AUTHZ_HTTP_TEST=1 node --import tsx --conditions=react-server --test src/core/auth/menuExportHttp.integration.test.ts
