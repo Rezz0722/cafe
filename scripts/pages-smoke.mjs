@@ -11,6 +11,7 @@
  */
 
 import { existsSync, readFileSync } from 'node:fs'
+import { extractStaticAssetUrls } from './pages-smoke-assets.mjs'
 
 const base = process.argv[2] ?? 'http://127.0.0.1:3001'
 const cookie = process.env.SESSION_COOKIE?.trim()
@@ -38,13 +39,13 @@ const CHECKS = [
   {
     path: '/',
     needs: [
-      'راهنمای انتخاب کافه و غذا در',
-      'کافه یا غذای مناسبِ',
-      'از چیزی که میل داری شروع کن',
-      'کافه‌ها را قبل از رفتن ببین',
-      'سه جواب روشن برای یک انتخاب بهتر',
+      'کافه‌ای پیدا کن که',
+      'به حالِ امروزت',
+      'برای چه لحظه‌ای کافه می‌خواهی؟',
+      'اول غذا را انتخاب کن، بعد کافه را',
+      'هر انتخاب، با اطلاعاتی که لازم داری',
       'محله‌به‌محله',
-      'برای کافه‌دارها',
+      'منوی دیجیتال، فقط یک QR نیست.',
       'پاسخ‌های کوتاه و روشن',
       'ورود | ثبت‌نام',
     ],
@@ -75,7 +76,7 @@ const CHECKS = [
   { path: '/mashhad/faramarz-abbasi', needs: ['فرامرز عباسی'] },
   {
     path: '/cafe/jan-majnoon-lounge',
-    needs: ['مجنون لانژ', 'ساعت کاری هفته', '/media/item/', 'nshn.ir/?lat='],
+    needs: ['مجنون لانژ', 'ساعت کاری این شعبه', '/media/item/', 'nshn.ir/?lat='],
     forbid: [
       // هیچ ارجاعی به CDN بیرونی نباید در HTML باشد.
       'cdn.topmenumarket.com',
@@ -190,9 +191,7 @@ for (const check of CHECKS) {
     // فقط ۲۰۰ بودن HTML کافی نیست. خرابی رایج هنگام deploy این است که HTML
     // سالم باشد ولی CSS/JS fingerprintشده پاک شده باشد؛ دقیقاً همان چیزی که
     // مرورگر به شکل صفحهٔ سفید و خطای `/_next/static/...` نشان می‌دهد.
-    for (const match of body.matchAll(/\/_next\/static\/[^"'\\\s<]+/g)) {
-      staticAssets.add(match[0].replaceAll('&amp;', '&'))
-    }
+    for (const asset of extractStaticAssetUrls(body)) staticAssets.add(asset)
     const missing = check.needs.filter((needle) => !body.includes(needle))
     const leaked = (check.forbid ?? []).filter((needle) => body.includes(needle))
 
