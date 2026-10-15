@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
   canGrantPlaceRole,
+  canReadOwnerOnlyPlaceData,
   canManagePlaceUsers,
   canWritePlace,
 } from './authorization'
@@ -26,4 +27,13 @@ test('system administrators retain explicit global access', () => {
   assert.equal(canWritePlace('admin', null), true)
   assert.equal(canManagePlaceUsers('admin', null), true)
   assert.equal(canGrantPlaceRole('admin', null, 'owner'), true)
+})
+
+test('menu export is restricted to the exact branch owner or system admin', () => {
+  assert.equal(canReadOwnerOnlyPlaceData('owner', 'owner'), true)
+  assert.equal(canReadOwnerOnlyPlaceData('owner', 'manager'), false)
+  assert.equal(canReadOwnerOnlyPlaceData('owner', 'staff'), false)
+  assert.equal(canReadOwnerOnlyPlaceData('owner', null), false)
+  assert.equal(canReadOwnerOnlyPlaceData('customer', 'owner'), false)
+  assert.equal(canReadOwnerOnlyPlaceData('admin', null), true)
 })

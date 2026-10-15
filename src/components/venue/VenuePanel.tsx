@@ -346,6 +346,7 @@ interface Props {
   priceStatsExcludeServiceSections?: boolean
   managers: { userId: string; name: string; username: string | null; phone: string | null; role: string }[]
   canManageUsers: boolean
+  canExportMenu: boolean
   currentUserId: string
 }
 
@@ -360,6 +361,7 @@ export function VenuePanel({
   priceStatsExcludeServiceSections = false,
   managers,
   canManageUsers,
+  canExportMenu,
   currentUserId,
   ownerRepliesRequireApproval = false,
   clubPanel,
@@ -1013,6 +1015,15 @@ export function VenuePanel({
       {/* ── منو ──────────────────────────────────────────────────── */}
       {tab === 'menu' && (
         <section className={styles.section}>
+          {canExportMenu && <div className={styles.menuExport}>
+            <div>
+              <strong>یک نسخه از منوی شعبه‌تان نگه دارید</strong>
+              <p>دسته‌ها، آیتم‌ها، تنوع‌ها و قیمت‌ها در فایل JSON ذخیره می‌شوند. تصویرها به‌صورت لینک هستند و فایل تصویر در خروجی نیست.</p>
+            </div>
+            <a href={`/api/admin/venue/menu-export?placeId=${place.id}`}>
+              <Download size={17} aria-hidden="true" /> دانلود خروجی منوی این شعبه
+            </a>
+          </div>}
           {!readOnly && menuScope === 'public' && <MenuImportPanel key={place.id} placeId={place.id} revision={revision} sections={publicSections.map(section => ({ id: section.id, name: section.name }))} action={venueMenuImportAction} />}
           {canManagePriceStats && quarantinedSections.length > 0 && <div className={styles.priceStatsNotice}>
             <strong>{menuScope === 'public' ? 'منوی فعال همین شعبه' : 'داده‌های قرنطینه‌شده؛ در منوی عمومی نمایش داده نمی‌شوند'}</strong>

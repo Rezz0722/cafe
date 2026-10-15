@@ -131,6 +131,7 @@ export default async function VenuePage({ searchParams }: PageProps) {
       priceStatsExcludeServiceSections={settings.priceStatsExcludeServiceSections}
       managers={managers}
       canManageUsers={!actor && (isAdmin || currentPlaceRole === 'owner')}
+      canExportMenu={!actor && (isAdmin || currentPlaceRole === 'owner')}
       currentUserId={user.id}
       clubPanel={canManageClub ? <CustomerClubPanel placeId={placeId} members={clubMembers} offers={clubOffers} currentDiscount={currentDiscount?{percent:currentDiscount.percent,expiresAt:currentDiscount.expiresAt.toISOString()}:null} /> : null}
     />
