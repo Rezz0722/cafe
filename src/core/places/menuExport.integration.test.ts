@@ -7,7 +7,7 @@ import { appUser, menuItem, menuItemVariant, menuSection, place, userPlaceRole }
 import { getPlaceRole } from '@/core/auth/userRepo'
 import { canReadOwnerOnlyPlaceData } from '@/core/auth/authorization'
 import { loadOwnerPlace } from './manage'
-import { buildMenuExport } from './menuExport'
+import { buildMenuCsv, buildMenuExport } from './menuExport'
 
 test('menu export reads only the authorized branch and never mutates its menu', {
   skip: process.env.KUCAFE_MENU_EXPORT_DB_TEST !== '1',
@@ -78,12 +78,18 @@ test('menu export reads only the authorized branch and never mutates its menu', 
     assert.ok(ownerPlace)
     const exportData = buildMenuExport(ownerPlace, priceDate)
     const serialized = JSON.stringify(exportData)
+    const csv = buildMenuCsv(exportData)
     assert.equal(exportData.sections.length, 2)
     assert.equal(exportData.sections[0]!.items[0]!.price, 120000)
     assert.equal(exportData.sections[0]!.items[0]!.variants[0]!.price, 150000)
     assert.equal(exportData.sections[1]!.items[0]!.archived, true)
     assert.equal(exportData.sections[0]!.items[0]!.priceUpdatedAt, priceDate.toISOString())
-    for (const secret of itemNames.slice(2)) assert.equal(serialized.includes(secret), false, secret)
+    for (const secret of itemNames.slice(2)) {
+      assert.equal(serialized.includes(secret), false, secret)
+      assert.equal(csv.includes(secret), false, secret)
+    }
+    assert.ok(csv.includes('"150000"'))
+    assert.ok(csv.includes('"نامعلوم"'))
     assert.deepEqual(await db.select().from(menuItem).where(eq(menuItem.placeId, ownPlaceId)), before)
   } finally {
     if (placeIds.length) {

@@ -1018,11 +1018,16 @@ export function VenuePanel({
           {canExportMenu && <div className={styles.menuExport}>
             <div>
               <strong>یک نسخه از منوی شعبه‌تان نگه دارید</strong>
-              <p>دسته‌ها، آیتم‌ها، تنوع‌ها و قیمت‌ها در فایل JSON ذخیره می‌شوند. تصویرها به‌صورت لینک هستند و فایل تصویر در خروجی نیست.</p>
+              <p>فایل CSV برای مشاهده در Excel است؛ JSON جزئیات کامل‌تر، از جمله وضعیت دسته‌ها و زمان قیمت را نگه می‌دارد. تصویرها فقط به‌صورت لینک هستند.</p>
             </div>
-            <a href={`/api/admin/venue/menu-export?placeId=${place.id}`}>
-              <Download size={17} aria-hidden="true" /> دانلود خروجی منوی این شعبه
-            </a>
+            <div className={styles.menuExportActions}>
+              <a href={`/api/admin/venue/menu-export?placeId=${place.id}&format=csv`}>
+                <Download size={17} aria-hidden="true" /> دانلود منو (Excel / CSV)
+              </a>
+              <a href={`/api/admin/venue/menu-export?placeId=${place.id}`}>
+                <Download size={17} aria-hidden="true" /> دانلود اطلاعات کامل منو (JSON)
+              </a>
+            </div>
           </div>}
           {!readOnly && menuScope === 'public' && <MenuImportPanel key={place.id} placeId={place.id} revision={revision} sections={publicSections.map(section => ({ id: section.id, name: section.name }))} action={venueMenuImportAction} />}
           {canManagePriceStats && quarantinedSections.length > 0 && <div className={styles.priceStatsNotice}>

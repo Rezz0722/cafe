@@ -995,6 +995,7 @@
 .menuExport { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 14px; border: 1px solid var(--c-primary-border); border-radius: 16px; background: var(--c-primary-soft); }
 .menuExport strong { color: var(--c-text); font-size: .85rem; }
 .menuExport p { margin: 4px 0 0; color: var(--c-muted); font-size: .72rem; line-height: 1.8; }
+.menuExportActions { display: flex; flex-wrap: wrap; gap: 8px; }
 .menuExport a { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 9px 14px; border: 1px solid var(--c-primary-border); border-radius: 11px; background: var(--c-surface); color: var(--c-primary-strong); font-size: .76rem; font-weight: 850; text-decoration: none; }
 .menuExport a:hover { border-color: var(--c-primary); background: var(--c-primary-soft); }
 .menuExport a:focus-visible { outline: 3px solid var(--c-primary); outline-offset: 3px; }
