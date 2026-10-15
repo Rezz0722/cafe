@@ -14,6 +14,8 @@ export interface VenueActionState {
   preview?: { fingerprint: string; itemCount: number; variantCount: number; percent: number; changes: { name: string; label: string | null; oldPrice: number; newPrice: number }[] }
   menuImportPreview?: import('@/core/import/menuCsv').MenuImportPreview
   menuImportAppliedRevision?: number
+  menuBatchPreview?: import('@/core/places/menuBatch').MenuBatchPreview
+  menuBatchAppliedRevision?: number
   qrAppliedRevision?: number
 }
 

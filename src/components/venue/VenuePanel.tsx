@@ -20,6 +20,8 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { usePanelTab } from '@/components/admin/usePanelTab'
 import { BulkPricePanel } from './BulkPricePanel'
+import { MenuBatchPanel } from './MenuBatchPanel'
+import { MAX_MENU_BATCH_ITEMS } from '@/core/places/menuBatchContract'
 import { MenuSetupChecklist } from './MenuSetupChecklist'
 import { MenuImportPanel } from './MenuImportPanel'
 import { QrChannelsPanel } from './QrChannelsPanel'
@@ -409,6 +411,7 @@ export function VenuePanel({
 
   const [menuQuery, setMenuQuery] = useState('')
   const [selectedIds, setSelectedIds] = useState<number[]>([])
+  useEffect(() => { setSelectedIds([]) }, [place.id])
   const [searchLimit, setSearchLimit] = useState(80)
   const [showArchived, setShowArchived] = useState(false)
   useEffect(() => { setSearchLimit(80) }, [menuQuery, menuScope, showArchived])
@@ -1089,7 +1092,8 @@ export function VenuePanel({
           )}
 
           {/* پرکاربردترین کارِ کافه‌دار، در دسترس‌ترین جا. */}
-          {menuScope === 'public' && <BulkPricePanel placeId={place.id} revision={revision} sections={publicSections} selectedIds={selectedIds} readOnly={readOnly} />}
+          {menuScope === 'public' && <BulkPricePanel placeId={place.id} revision={revision} sections={publicSections} selectedIds={selectedIds.filter(id => publicSections.some(section => section.items.some(item => item.id === id && !item.archivedAt)))} readOnly={readOnly} />}
+          {!readOnly && menuScope === 'public' && <MenuBatchPanel placeId={place.id} revision={revision} selectedIds={selectedIds} readOnly={readOnly} />}
 
           <Feedback state={itemState} />
           <Feedback state={menuOpState} />
@@ -1173,6 +1177,16 @@ export function VenuePanel({
                   </ManagedForm>
                 )}
 
+                {!readOnly && menuScope === 'public' && <div className={styles.menuBatchSelection}>
+                  <span>{fa(sourceSection.items.filter(item => selectedIds.includes(item.id)).length)} آیتم این دسته انتخاب شده</span>
+                  <button type="button" disabled={new Set([...selectedIds, ...visibleItems.map(item => item.id)]).size > MAX_MENU_BATCH_ITEMS}
+                    onClick={() => setSelectedIds(ids => [...new Set([...ids, ...visibleItems.map(item => item.id)])])}>
+                    انتخاب همهٔ آیتم‌های نمایش‌داده‌شده
+                  </button>
+                  <button type="button" disabled={!selectedIds.length} onClick={() => setSelectedIds([])}>لغو همهٔ انتخاب‌ها</button>
+                  {new Set([...selectedIds, ...visibleItems.map(item => item.id)]).size > MAX_MENU_BATCH_ITEMS && <small>برای این دسته، آیتم‌ها را در گروه‌های حداکثر {fa(MAX_MENU_BATCH_ITEMS)}تایی انتخاب کنید.</small>}
+                </div>}
+
                 {!readOnly && !normalizedMenuQuery && (
                   <div className={styles.categoryArtworkManager}>
                     <div className={styles.categoryArtworkCurrent}>
@@ -1196,7 +1210,7 @@ export function VenuePanel({
                     return (
                     <details key={item.id} className={`${styles.itemEditor} ${item.archivedAt ? styles.itemArchived : ''}`}>
                       <summary className={styles.itemSummary}>
-                        {!readOnly && menuScope === 'public' && !item.archivedAt && <label data-ignore-dirty="true" title="انتخاب برای تغییر گروهی قیمت" onClick={event=>event.stopPropagation()}><input type="checkbox" aria-label={`انتخاب ${item.name}`} checked={selectedIds.includes(item.id)} onChange={event=>setSelectedIds(ids=>event.target.checked?[...ids,item.id]:ids.filter(id=>id!==item.id))}/></label>}
+                        {!readOnly && menuScope === 'public' && <label data-ignore-dirty="true" title="انتخاب برای عملیات گروهی" onClick={event=>event.stopPropagation()}><input type="checkbox" aria-label={`انتخاب ${item.name} برای عملیات گروهی`} checked={selectedIds.includes(item.id)} disabled={!selectedIds.includes(item.id) && selectedIds.length >= MAX_MENU_BATCH_ITEMS} onChange={event=>setSelectedIds(ids=>event.target.checked?[...ids,item.id]:ids.filter(id=>id!==item.id))}/></label>}
                         {item.imageUrl ? <img src={item.imageUrl} alt="" width={48} height={48} loading="lazy" /> : <span className={styles.itemNoImage}><Coffee size={17} /></span>}
                         <span className={styles.itemSummaryMain}>
                           <strong>{item.name}</strong>
