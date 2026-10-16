@@ -45,10 +45,14 @@ import { paths } from '@/routes'
 import styles from './AdminDashboard.module.css'
 import { TriangleAlert, X } from 'lucide-react'
 import type { TopMenuSyncState } from '@/core/sync/topMenuSync'
+import type { CoordinationMetrics } from '@/core/booking/insights'
+import { BOOKING_KIND_LABEL } from '@/core/booking/presentation'
+import { EXPERIENCE_BY_SLUG, type ExperienceSlug } from '@/core/experience/registry'
 
 type Tab =
   | 'queue'
   | 'traffic'
+  | 'coordination'
   | 'places'
   | 'users'
   | 'credentials'
@@ -106,6 +110,7 @@ function Feedback({ state }: { state: AdminActionState }) {
 // ═══════════════════════════════════════════════════════════════════════
 
 export interface AdminData {
+  coordination: CoordinationMetrics
   traffic: {
     viewsToday: number
     viewsWeek: number
@@ -192,7 +197,7 @@ const ROLE_LABELS: Record<string, string> = {
 
 export function AdminDashboard({ data }: { data: AdminData }) {
   const draft = useUnsavedForms()
-  const [tab, setTab] = usePanelTab<Tab>(['queue', 'traffic', 'places', 'users', 'credentials', 'health', 'settings', 'operations', 'history'], 'queue', draft.confirmDiscard)
+  const [tab, setTab] = usePanelTab<Tab>(['queue', 'traffic', 'coordination', 'places', 'users', 'credentials', 'health', 'settings', 'operations', 'history'], 'queue', draft.confirmDiscard)
   const usersCatalog = useAdminCatalog('users', data.users, data.userSummary.total, (tab === 'users' || tab === 'credentials'))
   const placesCatalog = useAdminCatalog('places', data.places, data.placesTotal, tab === 'places')
   const { query: userQuery, setQuery: setUserQuery } = usersCatalog
@@ -224,6 +229,7 @@ export function AdminDashboard({ data }: { data: AdminData }) {
   const tabs: { id: Tab; label: string; badge?: number }[] = [
     { id: 'queue', label: 'صف کار', badge: queueCount },
     { id: 'traffic', label: 'بازدید' },
+    { id: 'coordination', label: 'رزرو و رویداد' },
     { id: 'places', label: 'مجموعه‌ها' },
     { id: 'users', label: 'کاربران' },
     { id: 'credentials', label: 'اعتبارنامه' },
@@ -959,6 +965,37 @@ export function AdminDashboard({ data }: { data: AdminData }) {
               </ul>
             </>
           )}
+        </section>
+      )}
+
+      {/* ── درخواست‌ها و رویدادها ─────────────────────────────────── */}
+      {tab === 'coordination' && (
+        <section className={styles.section}>
+          <h2>هماهنگی با کافه‌ها</h2>
+          <p>این اعداد از درخواست‌ها و رویدادهای واقعی ثبت‌شده محاسبه می‌شوند؛ هنوز ثبت درخواست به معنی رزرو یا حضور قطعی نیست.</p>
+          <div className={styles.statGrid}>
+            {([
+              ['کل درخواست‌های میز و مناسبت', data.coordination.booking.total],
+              ['در انتظار پاسخ', data.coordination.booking.pending],
+              ['تأییدشده توسط کافه', data.coordination.booking.confirmed],
+              ['ردشده', data.coordination.booking.rejected],
+              ['لغوشده', data.coordination.booking.cancelled],
+              ['منقضی‌شده', data.coordination.booking.expired],
+              ['انجام‌شده', data.coordination.booking.completed],
+              ['رویداد منتشرشده', data.coordination.events.published],
+              ['درخواست/علاقه‌مندی رویداد', data.coordination.events.participationRequests],
+              ['علاقه‌مندی رویداد', data.coordination.events.interested],
+              ['در انتظار پاسخ رویداد', data.coordination.events.pending],
+              ['مشارکت تأییدشدهٔ رویداد', data.coordination.events.confirmed],
+            ] as const).map(([label, value]) => <div className={styles.stat} key={label}><span className={styles.statValue}>{faCount(value)}</span><span className={styles.statLabel}>{label}</span></div>)}
+          </div>
+          <p>میانگین پاسخ کافه: {data.coordination.booking.averageResponseMinutes === null ? 'هنوز دادهٔ پاسخ کافی نیست' : `${faCount(data.coordination.booking.averageResponseMinutes)} دقیقه`}</p>
+          <h3>نوع درخواست</h3>
+          {data.coordination.byKind.length === 0 ? <p>هنوز درخواستی ثبت نشده است.</p> :
+            <div className={styles.statGrid}>{data.coordination.byKind.map(row => <div className={styles.stat} key={row.kind}><span className={styles.statValue}>{faCount(row.total)}</span><span className={styles.statLabel}>{BOOKING_KIND_LABEL[row.kind as keyof typeof BOOKING_KIND_LABEL] ?? row.kind}</span></div>)}</div>}
+          <h3>ورود از صفحهٔ تجربه</h3>
+          {data.coordination.byExperience.length === 0 ? <p>هنوز درخواستی با منشأ تجربه ثبت نشده است.</p> :
+            <div className={styles.statGrid}>{data.coordination.byExperience.map(row => <div className={styles.stat} key={row.slug}><span className={styles.statValue}>{faCount(row.total)}</span><span className={styles.statLabel}>{EXPERIENCE_BY_SLUG.get(row.slug as ExperienceSlug)?.shortTitle ?? row.slug}</span></div>)}</div>}
         </section>
       )}
 

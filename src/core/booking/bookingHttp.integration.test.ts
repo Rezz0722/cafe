@@ -127,6 +127,8 @@ test('isolated signed HTTP booking pages and optional browser journey', {
       await ownerPage.getByText('وضعیت درخواست ثبت شد.').waitFor()
       await customerPage.reload()
       await customerPage.getByText('تأییدشده توسط کافه').first().waitFor()
+      await customerPage.goto('/profile/updates')
+      await customerPage.getByText('کافه درخواست را تأیید کرد.').waitFor()
       await ownerContext.close()
       await customerContext.close()
     }
