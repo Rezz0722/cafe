@@ -101,6 +101,8 @@ test('isolated signed HTTP booking pages and optional browser journey', {
         await customerPage.setViewportSize({ width, height: 844 })
         await customerPage.goto(`/cafe/${slug}/request`)
         assert.equal(await customerPage.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, `horizontal overflow at ${width}px`)
+        assert.equal(await customerPage.locator('nav[aria-label="دسترسی سریع موبایل"]').getByText('مقایسه').count(), 0,
+          'request page must not inherit cafe-detail bottom actions')
       }
       const nextDay = new Date(`${tehranCivilNow().date}T00:00:00Z`)
       nextDay.setUTCDate(nextDay.getUTCDate() + 1)
