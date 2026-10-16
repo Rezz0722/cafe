@@ -80,6 +80,7 @@ import { changeClubOffer } from '@/core/club/manage'
 import {toEnDigits} from '@/lib/format'
 import { applyVenueMenuImport, previewVenueMenuImport } from '@/core/import/venueMenuImport'
 import { manageQrChannel } from '@/core/qr/channels'
+import { applyMenuBatch, previewMenuBatch, type MenuBatchOperation } from '@/core/places/menuBatch'
 
 export async function venueQrAction(_previous: VenueActionState, form: FormData): Promise<VenueActionState> {
   return runManagedWrite(async () => {
@@ -1090,6 +1091,32 @@ export async function venueMenuImportAction(_previous: VenueActionState, form: F
       })
       return { ok: true, menuImportAppliedRevision: Number(input.revision) + 1, message: `${result.count.toLocaleString('fa-IR')} آیتم جدید ثبت شد؛ آیتم‌ها و قیمت‌های قبلی تغییر نکردند.` }
     } catch (error) { return { ok: false, error: publicActionError(error, 'ورود منو انجام نشد؛ پیش‌نمایش را بررسی کنید.') } }
+  })
+}
+
+export async function venueMenuBatchAction(_previous: VenueActionState, form: FormData): Promise<VenueActionState> {
+  return runManagedWrite(async () => {
+    const access = await requirePlaceAccess(num(form, 'placeId'))
+    if (!access.ok) return { ok: false, error: access.error }
+    let itemIds: unknown
+    try { itemIds = JSON.parse(str(form, 'itemIds')) } catch { return { ok: false, error: 'انتخاب آیتم‌ها معتبر نیست.' } }
+    const input = { placeId: access.placeId, revision: str(form, 'revision'), itemIds: itemIds as number[], operation: str(form, 'batchOperation') as MenuBatchOperation }
+    const secret = process.env.SESSION_SECRET ?? ''
+    try {
+      if (str(form, 'operation') === 'preview') {
+        const menuBatchPreview = await previewMenuBatch(input, access.actor, secret)
+        return { ok: true, preserveDraft: true, message: 'پیش‌نمایش آماده است؛ هنوز تغییری ثبت نشده.', menuBatchPreview }
+      }
+      if (str(form, 'operation') !== 'apply' || form.get('confirmed') !== 'yes') return { ok: false, error: 'اعمال تغییرات را تأیید کنید.' }
+      const result = await applyMenuBatch(input, access.actor, str(form, 'token'), secret)
+      const slug = await slugOf(access.placeId)
+      afterDbCommit(() => {
+        invalidateReferenceCache()
+        if (slug) revalidatePath(paths.cafe(slug))
+        for (const path of [paths.ownerPanel, paths.search, paths.home]) revalidatePath(path)
+      })
+      return { ok: true, menuBatchAppliedRevision: result.revision, message: `${result.changedCount.toLocaleString('fa-IR')} آیتم تغییر کرد؛ تاریخچه ثبت شد.` }
+    } catch (error) { return { ok: false, error: publicActionError(error, 'عملیات گروهی انجام نشد؛ پیش‌نمایش را تازه کنید.') } }
   })
 }
 

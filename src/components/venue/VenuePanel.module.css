@@ -515,6 +515,22 @@
 .archiveToggle input { width: 18px; height: 18px; accent-color: var(--c-primary); }
 
 .bulkAvailability { display: inline-flex; gap: 6px; }
+.menuBatchPanel { margin-block: 16px; padding: 16px; border: 1px solid var(--c-border-3); border-radius: 14px; background: var(--c-surface); }
+.menuBatchPanel h3 { margin: 0 0 6px; color: var(--c-ink); font-size: 1rem; }
+.menuBatchPanel p { margin: 6px 0 12px; color: var(--c-muted); }
+.menuBatchPanel form { display: grid; gap: 10px; }
+.menuBatchPanel select { width: 100%; max-width: 420px; }
+.menuBatchActions, .menuBatchSelection { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.menuBatchActions button { min-height: 44px; }
+.menuBatchPreview { padding: 12px; border: 1px solid var(--c-border-3); border-radius: 10px; overflow-wrap: anywhere; }
+.menuBatchPreview ul { margin: 8px 0; padding-inline-start: 22px; }
+.menuBatchConfirm { display: flex; align-items: flex-start; gap: 8px; line-height: 1.7; }
+.menuBatchConfirm input { flex: 0 0 auto; margin-top: 5px; }
+.menuBatchSelection { margin-block: 10px; }
+.menuBatchSelection button { min-height: 40px; padding: 7px 12px; border: 1px solid var(--c-border-3); border-radius: 9px; background: var(--c-surface); color: var(--c-ink); cursor: pointer; }
+.menuBatchSelection button:hover:not(:disabled), .menuBatchSelection button:focus-visible { border-color: var(--c-primary-strong); outline: 2px solid var(--c-primary-soft); }
+.menuBatchSelection button:disabled { opacity: .5; cursor: not-allowed; }
+.menuBatchSelection small { width: 100%; color: var(--c-muted); }
 .bulkAvailability button,
 .sectionTools button,
 .itemActions button {
