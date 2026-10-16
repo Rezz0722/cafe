@@ -24,6 +24,7 @@ import { MenuBatchPanel } from './MenuBatchPanel'
 import { MAX_MENU_BATCH_ITEMS } from '@/core/places/menuBatchContract'
 import { MenuSetupChecklist } from './MenuSetupChecklist'
 import { MenuImportPanel } from './MenuImportPanel'
+import { PortableMenuImportPanel } from './PortableMenuImportPanel'
 import { QrChannelsPanel } from './QrChannelsPanel'
 import { MenuStatsPanel } from './MenuStatsPanel'
 import type { MenuStats } from '@/core/analytics/menuStats'
@@ -1033,6 +1034,7 @@ export function VenuePanel({
             </div>
           </div>}
           {!readOnly && menuScope === 'public' && <MenuImportPanel key={place.id} placeId={place.id} revision={revision} sections={publicSections.map(section => ({ id: section.id, name: section.name }))} action={venueMenuImportAction} />}
+          {!readOnly && menuScope === 'public' && <PortableMenuImportPanel key={`portable-${place.id}`} placeId={place.id} revision={revision} />}
           {canManagePriceStats && quarantinedSections.length > 0 && <div className={styles.priceStatsNotice}>
             <strong>{menuScope === 'public' ? 'منوی فعال همین شعبه' : 'داده‌های قرنطینه‌شده؛ در منوی عمومی نمایش داده نمی‌شوند'}</strong>
             <span>{fa(quarantinedSections.length)} دسته با مالکیت شعبه دیگر یا نامشخص جدا نگه داشته شده است؛ این داده‌ها حذف نشده‌اند.</span>
