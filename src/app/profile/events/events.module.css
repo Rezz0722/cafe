@@ -1,0 +1,13 @@
+.page{width:min(900px,100%);margin-inline:auto;padding:20px var(--page-pad) 88px;color:var(--c-ink)}
+.page nav{display:flex;gap:8px;align-items:center;min-height:44px;font-size:.84rem;color:var(--c-muted)}
+.page a{color:var(--c-primary-strong);font-weight:800;text-decoration:none}
+.page header{padding:18px 0 24px;border-bottom:1px solid var(--c-border)}
+.page h1{margin:5px 0;font-size:clamp(1.5rem,4vw,2rem)}.page p{line-height:1.75;color:var(--c-muted)}
+.kicker{color:var(--c-primary-strong);font-size:.82rem;font-weight:850}
+.empty,.card{padding:20px;margin-top:18px;border:1px solid var(--c-border);border-radius:18px;background:var(--c-surface)}
+.list{list-style:none;display:grid;gap:12px;padding:0;margin:20px 0}
+.card{margin:0}.head{display:flex;justify-content:space-between;align-items:flex-start;gap:15px;flex-wrap:wrap}.head p{margin:5px 0}
+.head strong{padding:7px 11px;border-radius:999px;background:var(--c-accent-soft);color:var(--c-accent-text-strong);font-size:.82rem}
+.warning{color:#a33b31!important}.cancelForm{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.cancelForm button{min-height:44px;padding:8px 14px;border:1px solid var(--c-border);border-radius:10px;background:var(--c-surface-2);color:var(--c-ink);font:inherit;font-weight:800;cursor:pointer}.cancelForm button:disabled{opacity:.55}.cancelForm span[role=alert]{color:#9b2430}
+.page :is(a,button):focus-visible{outline:3px solid var(--c-primary-strong);outline-offset:2px}
+@media(max-width:430px){.card{padding:15px}.cancelForm button{width:100%}}

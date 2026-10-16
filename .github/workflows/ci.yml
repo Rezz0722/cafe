@@ -70,6 +70,8 @@ jobs:
         run: KUCAFE_PORTABLE_IMPORT_DB_TEST=1 node --import tsx --conditions=react-server --test src/core/import/portableMenuImport.integration.test.ts
       - name: Booking opt-in, authorization and transactional state integration
         run: KUCAFE_BOOKING_DB_TEST=1 node --import tsx --conditions=react-server --test src/core/booking/service.integration.test.ts
+      - name: Event publishing, participation and authorization integration
+        run: KUCAFE_EVENT_DB_TEST=1 node --import tsx --conditions=react-server --test src/core/events/service.integration.test.ts
       - name: Branch-scoped owner menu export integration
         run: KUCAFE_MENU_EXPORT_DB_TEST=1 node --import tsx --conditions=react-server --test src/core/places/menuExport.integration.test.ts
       - name: Signed branch and role authorization integration
@@ -91,5 +93,7 @@ jobs:
         run: npm run build
       - name: Signed HTTP booking route and privacy smoke
         run: KUCAFE_BOOKING_HTTP_TEST=1 node --import tsx --conditions=react-server --test src/core/booking/bookingHttp.integration.test.ts
+      - name: Signed HTTP event discovery and branch privacy smoke
+        run: KUCAFE_EVENT_HTTP_TEST=1 node --import tsx --conditions=react-server --test src/core/events/eventHttp.integration.test.ts
       - name: Real HTTP signed-session export authorization smoke
         run: KUCAFE_AUTHZ_HTTP_TEST=1 node --import tsx --conditions=react-server --test src/core/auth/menuExportHttp.integration.test.ts

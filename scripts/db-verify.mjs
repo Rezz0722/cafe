@@ -58,6 +58,7 @@ const REQUIRED = [
   'venue_qr_link',
   'menu_item_field_override', 'menu_section_field_override',
   'venue_booking_settings', 'booking_request', 'booking_status_history', 'booking_item_intent',
+  'venue_event', 'event_participation', 'event_participation_history',
 ]
 const missing = REQUIRED.filter((table) => !names.has(table))
 check(`${REQUIRED.length} جدول لازم موجود است`, missing.length === 0, missing.join(', '))
@@ -77,6 +78,19 @@ const [bookingIndexes] = await conn.query(`SELECT TABLE_NAME, INDEX_NAME, NON_UN
     AND TABLE_NAME IN ('booking_request', 'booking_status_history', 'booking_item_intent')`)
 check('شناسهٔ تکرار درخواست در هر حساب یکتا است', bookingIndexes.some(row =>
   row.TABLE_NAME === 'booking_request' && row.INDEX_NAME === 'booking_request_user_idempotency_uq' && Number(row.NON_UNIQUE) === 0))
+
+const [eventColumns] = await conn.query(`SELECT TABLE_NAME, COLUMN_NAME, COLUMN_DEFAULT, EXTRA
+  FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE()
+    AND ((TABLE_NAME = 'venue_event' AND COLUMN_NAME = 'status')
+      OR (TABLE_NAME = 'event_participation' AND COLUMN_NAME = 'responded_at'))`)
+check('رویدادهای تازه پیش‌فرض پیش‌نویس هستند', eventColumns.some(row =>
+  row.TABLE_NAME === 'venue_event' && row.COLUMN_NAME === 'status' && String(row.COLUMN_DEFAULT).replaceAll("'", '') === 'draft'))
+check('زمان پاسخ رویداد به‌صورت خودکار تغییر نمی‌کند', eventColumns.some(row =>
+  row.TABLE_NAME === 'event_participation' && row.COLUMN_NAME === 'responded_at' && !String(row.EXTRA ?? '').toLowerCase().includes('on update')))
+const [eventIndexes] = await conn.query(`SELECT TABLE_NAME, INDEX_NAME, NON_UNIQUE
+  FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME IN ('venue_event', 'event_participation')`)
+check('هر کاربر فقط یک درخواست در هر رویداد دارد', eventIndexes.some(row =>
+  row.TABLE_NAME === 'event_participation' && row.INDEX_NAME === 'event_participation_user_uq' && Number(row.NON_UNIQUE) === 0))
 
 const [sourceNameColumns] = await conn.query(`SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'menu_section' AND COLUMN_NAME = 'source_name'`)
 check('شناسهٔ آخرین نام دسته در منبع برای حفظ نام ویرایش‌شده موجود است', sourceNameColumns.length === 1)

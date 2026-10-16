@@ -12,6 +12,7 @@ const NAV_LINKS = [
   { label: 'کشف کافه', href: paths.search },
   { label: 'منو و قیمت', href: paths.menuHub },
   { label: 'محله‌ها', href: paths.districtHub },
+  { label: 'رویدادها', href: paths.events },
   { label: 'برای کافه‌ها', href: '/#for-venues' },
 ]
 

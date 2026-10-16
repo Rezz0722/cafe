@@ -15,6 +15,7 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
       { label: 'نزدیک من', href: searchPath({ nearMe: true, sort: 'distance' }) },
       { label: 'روی نقشه', href: searchPath({ view: 'map' }) },
       { label: 'کافه‌های بررسی‌شده', href: paths.reviewedCafes },
+      { label: 'رویدادهای کافه‌ها', href: paths.events },
       { label: 'قهوه دمی', href: paths.menuCategory('brewed_coffee') },
       { label: 'صبحانه', href: paths.menuCategory('breakfast') },
     ],

@@ -16,6 +16,8 @@ export const paths = {
   search: '/search',
   cafe: (slug: string) => `/cafe/${slug}`,
   cafeRequest: (slug: string) => `/cafe/${slug}/request`,
+  events: '/events',
+  event: (id: string) => `/events/${encodeURIComponent(id)}`,
   /** صفحهٔ مستقل محصول واقعی یک منو؛ sourceId فعلی هویت پایدار import است. */
   item: (publicId: string | number, slug: string) =>
     `/item/${encodeURIComponent(String(publicId))}/${encodeURIComponent(slug)}`,
@@ -51,6 +53,7 @@ export const paths = {
   contribute: '/contribute',
   profile: '/profile',
   myBookings: '/profile/requests',
+  myEvents: '/profile/events',
   /** تغییر رمز — مقصد اجباریِ کسی که رمز موقت گرفته. */
   changePassword: '/profile/password',
   accountSecurity: '/profile/security',
@@ -66,6 +69,7 @@ export const paths = {
   /** پنل مالک کافه — جدا از پنل مدیر. */
   ownerPanel: '/admin/venue',
   venueBookings: (placeId: number) => `/admin/venue/bookings?place=${placeId}`,
+  venueEvents: (placeId: number) => `/admin/venue/events?place=${placeId}`,
   experienceHub: '/mashhad/experience',
   experience: (slug: string) => `/mashhad/experience/${encodeURIComponent(slug)}`,
 } as const

@@ -8,10 +8,12 @@ import {
 } from '@/core/places/queries'
 import { isIndexable } from '@/core/seo/indexability'
 import { listExperienceSummaries } from '@/core/experience/queries'
+import { listUpcomingPublicEvents } from '@/core/events/service'
 import { absoluteUrl, paths } from '@/routes'
 
-// Sitemap باید رشد و ویرایش داده را ببیند، نه فقط snapshot زمان build را.
-export const revalidate = 3600
+// جدول‌های افزایشی رویداد ممکن است هنگام Docker build هنوز migrate نشده باشند.
+// Sitemap باید در زمان درخواست و پس از Migration ساخته شود، نه در Build.
+export const dynamic = 'force-dynamic'
 
 /**
  * sitemap تولیدشده از دیتابیس.
@@ -26,13 +28,14 @@ export const revalidate = 3600
  * صفحات کانونی: خانه، محله، کافه و Dishهای محبوب با دادهٔ مقایسه‌ای کافی.
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [slugs, districts, dishes, facets, reviewedCards, experiences] = await Promise.all([
+  const [slugs, districts, dishes, facets, reviewedCards, experiences, events] = await Promise.all([
     listPublishedSlugs(),
     listDistricts(),
     listSeoDishes(),
     listFilterFacets(),
     listPlaceCards({ bloggerReviewedOnly: true, limit: 1 }),
     listExperienceSummaries(),
+    listUpcomingPublicEvents({ limit: 100 }),
   ])
 
   const entries: MetadataRoute.Sitemap = [
@@ -48,6 +51,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   if (reviewedCards.length > 0) {
     entries.push({ url: absoluteUrl(paths.reviewedCafes), changeFrequency: 'daily', priority: 0.75 })
+  }
+  if (events.length > 0) {
+    entries.push({ url: absoluteUrl(paths.events), changeFrequency: 'daily', priority: 0.72 })
+    for (const { event } of events) entries.push({ url: absoluteUrl(paths.event(event.id)), changeFrequency: 'daily', priority: 0.65 })
   }
 
   for (const item of experiences) {
