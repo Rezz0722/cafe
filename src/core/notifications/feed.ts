@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { and, desc, eq, inArray, ne } from 'drizzle-orm'
+import { and, desc, eq, inArray } from 'drizzle-orm'
 import type { Session } from '@/core/auth/currentUser'
 import { getDb } from '@/db/client'
 import { bookingRequest, bookingStatusHistory, eventParticipation, eventParticipationHistory,
@@ -46,7 +46,7 @@ export async function listMyAccountUpdates(session: Session, limit = 60): Promis
     db.select({ id: venueEvent.id, title: venueEvent.title, status: venueEvent.status, updatedAt: venueEvent.updatedAt })
       .from(eventParticipation).innerJoin(venueEvent, eq(venueEvent.id, eventParticipation.eventId))
       .where(and(eq(eventParticipation.userId, userId), inArray(venueEvent.status, ['cancelled', 'ended']),
-        ne(eventParticipation.status, 'cancelled'))).orderBy(desc(venueEvent.updatedAt)).limit(limit),
+        inArray(eventParticipation.status, ['interested', 'pending', 'confirmed']))).orderBy(desc(venueEvent.updatedAt)).limit(limit),
   ])
   const updates: AccountUpdate[] = [
     ...bookings.map(row => ({ id: `booking-${row.id}`, kind: 'booking' as const,
