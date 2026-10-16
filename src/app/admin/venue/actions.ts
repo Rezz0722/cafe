@@ -79,6 +79,7 @@ import { saveVenueDiscount, cancelVenueDiscount } from '@/core/club/venueDiscoun
 import { changeClubOffer } from '@/core/club/manage'
 import {toEnDigits} from '@/lib/format'
 import { applyVenueMenuImport, previewVenueMenuImport } from '@/core/import/venueMenuImport'
+import { applyPortableImport, previewPortableImport } from '@/core/import/portableMenuImport'
 import { manageQrChannel } from '@/core/qr/channels'
 import { applyMenuBatch, previewMenuBatch, type MenuBatchOperation } from '@/core/places/menuBatch'
 
@@ -1091,6 +1092,30 @@ export async function venueMenuImportAction(_previous: VenueActionState, form: F
       })
       return { ok: true, menuImportAppliedRevision: Number(input.revision) + 1, message: `${result.count.toLocaleString('fa-IR')} آیتم جدید ثبت شد؛ آیتم‌ها و قیمت‌های قبلی تغییر نکردند.` }
     } catch (error) { return { ok: false, error: publicActionError(error, 'ورود منو انجام نشد؛ پیش‌نمایش را بررسی کنید.') } }
+  })
+}
+
+export async function venuePortableImportAction(_previous: VenueActionState, form: FormData): Promise<VenueActionState> {
+  return runManagedWrite(async () => {
+    const access = await requirePlaceAccess(num(form, 'placeId'))
+    if (!access.ok) return { ok: false, error: access.error }
+    const input = { placeId: access.placeId, revision: str(form, 'revision'), text: String(form.get('text') ?? '') }
+    const secret = process.env.SESSION_SECRET ?? ''
+    try {
+      if (str(form, 'operation') === 'preview') {
+        const portableImportPreview = await previewPortableImport(input, access.actor, secret)
+        return { ok: true, preserveDraft: true, message: 'فایل بررسی شد؛ هیچ تغییری ثبت نشده است.', portableImportPreview }
+      }
+      if (str(form, 'operation') !== 'apply' || form.get('confirmed') !== 'yes') return { ok: false, error: 'ثبت آیتم‌های جدید را تأیید کنید.' }
+      const result = await applyPortableImport(input, access.actor, str(form, 'token'), str(form, 'selected'), secret)
+      const slug = await slugOf(access.placeId)
+      afterDbCommit(() => {
+        invalidateReferenceCache()
+        if (slug) revalidatePath(paths.cafe(slug))
+        for (const path of [paths.ownerPanel, paths.search, paths.home]) revalidatePath(path)
+      })
+      return { ok: true, portableImportAppliedRevision: result.revision, message: `${result.count.toLocaleString('fa-IR')} آیتم جدید ثبت شد؛ اطلاعات موجود تغییر نکرد.` }
+    } catch (error) { return { ok: false, error: publicActionError(error, 'ورود فایل منو انجام نشد؛ پیش‌نمایش را بررسی کنید.') } }
   })
 }
 
