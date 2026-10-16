@@ -41,7 +41,7 @@
 | Unit پیش‌فرض | ۴۶۴ Pass، ۱۱ Skip وابسته به محیط، ۰ Fail |
 | MariaDB ایزوله | ۱۱ Pass، ۰ Fail برای P2-01 و P2-02؛ سناریوهای نقش، شعبه، Replay، Revision، Rollback، قیمت و آرشیو |
 | Build ایزوله Next.js | Pass با `NEXT_DIST_DIR=.next-p2`؛ خروجی Production تغییر نکرد |
-| مرورگر احرازشدهٔ QA | Pass در ۳۲۰/۳۶۰/۴۳۰/۱۴۴۰ px؛ RTL، Preview هر دو پنل، بدون Overflow/خطای JS/Write در Preview |
+| مرورگر احرازشدهٔ QA | Pass در ۳۲۰/۳۶۰/۴۳۰/۱۴۴۰ px؛ RTL، Preview هر دو پنل، فوکوس و انتخاب با صفحه‌کلید، پیام خطای فایل خراب، بدون Overflow/خطای JS/Write در Preview |
 | Security و diff | `npm run secrets:check` و `git diff --check`: Pass؛ Dependency یا Schema تازه اضافه نشده |
 | Excel دسکتاپ / QR چاپی / دو کافه | NOT TESTED؛ معیار پایلوت، نه نتیجهٔ ساختگی |
 
@@ -54,7 +54,7 @@
 - [PR #73](https://github.com/Rezz0722/cafe/pull/73) — [CI](https://github.com/Rezz0722/cafe/actions/runs/38873743750)؛ نتیجهٔ نهایی پیش از بررسی Merge مجدداً خوانده شود.
 - #73 باید پس از #71 بازپایه/به `production` تغییر Base داده شود و Diff/CI مستقل دوباره کنترل شود. #72 از این دو مستقل است. هر سه PR باز و Merge نشده‌اند.
 
-Production در آغاز و پایان روی SHA `4fed25fe3e578c4480fff4b192dbaf2a62e6b3bf` در GitHub و Imageهای App/Worker با Tag `sha-4fed25fe3e57`، هر دو Healthy بود. `MERGE: NOT EXECUTED`؛ `DEPLOY: NOT EXECUTED`؛ `MIGRATION: NOT EXECUTED`؛ `TOPMENU APPLY: NOT EXECUTED`. تغییر Schema پیشنهاد نشده است. فضای آزاد پایان بررسی حدود ۵٫۷ GiB و Inode آزاد کافی بود؛ Build ایزوله پس از QA پاک‌سازی می‌شود.
+Production در آغاز و پایان روی SHA `4fed25fe3e578c4480fff4b192dbaf2a62e6b3bf` در GitHub و Imageهای App/Worker با Tag `sha-4fed25fe3e57`، هر دو Healthy بود. `MERGE: NOT EXECUTED`؛ `DEPLOY: NOT EXECUTED`؛ `MIGRATION: NOT EXECUTED`؛ `TOPMENU APPLY: NOT EXECUTED`. تغییر Schema پیشنهاد نشده است. پس از توقف دیتابیس QA و پاک‌سازی Build ایزوله، فضای آزاد حدود ۶٫۳ GiB و Inode آزاد کافی بود.
 
 ## ریسک‌ها و تصمیم Reviewer
 
