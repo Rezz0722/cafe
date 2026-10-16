@@ -15,10 +15,11 @@ const ITEMS = [
 
 export function MobileBottomNav() {
   const pathname = usePathname() ?? paths.home
+  const isCafeDetail = /^\/cafe\/[^/]+\/?$/.test(pathname)
 
   if (pathname.startsWith(paths.admin) || pathname.startsWith(paths.auth)) return null
 
-  const items = pathname.startsWith('/cafe/')
+  const items = isCafeDetail
     ? [
         { label: 'مقایسه', href: `${pathname}#price-compare`, icon: Scale },
         { label: 'منو', href: `${pathname}#menu`, icon: UtensilsCrossed },
@@ -31,8 +32,8 @@ export function MobileBottomNav() {
     <nav className={styles.nav} aria-label="دسترسی سریع موبایل">
       {items.map((item) => {
         const Icon = item.icon
-        const opensCafeMenu = pathname.startsWith('/cafe/') && item.label === 'منو'
-        if(pathname.startsWith('/cafe/') && item.label==='مقایسه') return <button key={item.label} type="button" className={styles.item} onClick={()=>document.querySelector<HTMLButtonElement>('#price-compare button')?.click()}><Icon size={20} aria-hidden="true"/><span>{item.label}</span></button>
+        const opensCafeMenu = isCafeDetail && item.label === 'منو'
+        if(isCafeDetail && item.label==='مقایسه') return <button key={item.label} type="button" className={styles.item} onClick={()=>document.querySelector<HTMLButtonElement>('#price-compare button')?.click()}><Icon size={20} aria-hidden="true"/><span>{item.label}</span></button>
         const current = item.href.includes('#')
           ? false
           : item.href === paths.home

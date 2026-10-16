@@ -11,7 +11,7 @@ import type { Session } from '@/core/auth/currentUser'
 import { tehranCivilNow } from './policy'
 import {
   cancelMyBookingRequest, completeVenueBookingRequest, createBookingRequest, expireOverdueBookingRequests,
-  getMyBookingRequest, getPublicBookingConfiguration,
+  getMyBookingRequest, getPublicBookingConfiguration, getVenueBookingRequest, listPublicBookablePlaceIds,
   getVenueBookingConfiguration, listMyBookingRequests, listVenueBookingRequests,
   respondToBookingRequest, saveVenueBookingConfiguration,
 } from './service'
@@ -89,6 +89,7 @@ test('P2-05 booking core is opt-in, branch-scoped, idempotent and transactional'
       assert.equal(saved.revision, 1)
       assert.ok(await getPublicBookingConfiguration(placeIds[0]!))
       assert.equal(await getPublicBookingConfiguration(placeIds[1]!), null)
+      assert.deepEqual([...await listPublicBookablePlaceIds(placeIds)], [placeIds[0]])
       assert.equal((await getVenueBookingConfiguration(manager, placeIds[0]!))?.enabled, true)
       await assert.rejects(saveVenueBookingConfiguration(owner, placeIds[0]!, 0, { ...saved, enabled: false }, invalidateCafePage))
     })
@@ -122,6 +123,11 @@ test('P2-05 booking core is opt-in, branch-scoped, idempotent and transactional'
       await assert.rejects(listVenueBookingRequests(owner, placeIds[1]!))
       assert.equal((await listVenueBookingRequests(manager, placeIds[0]!)).length, 1)
       assert.equal((await listVenueBookingRequests(admin, placeIds[0]!)).length, 1)
+      assert.equal((await listVenueBookingRequests(session('owner', 'owner', true), placeIds[0]!)).length, 1)
+      await assert.rejects(listVenueBookingRequests(session('staff', 'owner', true), placeIds[0]!))
+      assert.equal((await getVenueBookingRequest(manager, placeIds[0]!, created.id))?.items.length, 2)
+      await assert.rejects(getVenueBookingRequest(owner, placeIds[1]!, created.id))
+      await assert.rejects(getVenueBookingRequest(staff, placeIds[0]!, created.id))
       const menuAfter = await db.select({ id: menuItem.id, price: menuItem.price, priceUpdatedAt: menuItem.priceUpdatedAt })
         .from(menuItem).where(inArray(menuItem.id, itemIds))
       const placeAfter = await db.select({ id: place.id, verified: place.lastVerifiedAt }).from(place).where(inArray(place.id, placeIds))
@@ -182,6 +188,7 @@ test('P2-05 booking core is opt-in, branch-scoped, idempotent and transactional'
     if (placeIds.length) {
       const requests = await db.select({ id: bookingRequest.id }).from(bookingRequest).where(inArray(bookingRequest.placeId, placeIds))
       if (requests.length) {
+        await db.delete(auditLog).where(and(eq(auditLog.entity, 'booking_request'), inArray(auditLog.entityId, requests.map(row => row.id))))
         await db.delete(bookingItemIntent).where(inArray(bookingItemIntent.bookingId, requests.map(row => row.id)))
         await db.delete(bookingStatusHistory).where(inArray(bookingStatusHistory.bookingId, requests.map(row => row.id)))
         await db.delete(bookingRequest).where(inArray(bookingRequest.id, requests.map(row => row.id)))

@@ -89,5 +89,7 @@ jobs:
         run: KUCAFE_RESEARCH_DB_TEST=1 node --import tsx --conditions=react-server --test src/core/experience/researchBatch.integration.test.ts
       - name: Production build
         run: npm run build
+      - name: Signed HTTP booking route and privacy smoke
+        run: KUCAFE_BOOKING_HTTP_TEST=1 node --import tsx --conditions=react-server --test src/core/booking/bookingHttp.integration.test.ts
       - name: Real HTTP signed-session export authorization smoke
         run: KUCAFE_AUTHZ_HTTP_TEST=1 node --import tsx --conditions=react-server --test src/core/auth/menuExportHttp.integration.test.ts

@@ -6,6 +6,11 @@
   padding: 18px 16px 56px;
 }
 
+.bookingShortcut{max-width:960px;margin:18px auto 0;padding-inline:16px}
+.bookingShortcut a{display:inline-flex;align-items:center;min-height:46px;padding:9px 15px;border:1px solid var(--c-border);border-radius:12px;color:var(--c-primary-strong);background:var(--c-surface);font-weight:850;text-decoration:none}
+.bookingShortcut a:hover{border-color:var(--c-primary-strong);box-shadow:0 5px 16px rgb(8 103 232 / 10%)}
+.bookingShortcut a:focus-visible{outline:3px solid var(--c-primary-strong);outline-offset:2px}
+
 .head {
   display: flex;
   flex-wrap: wrap;

@@ -71,3 +71,6 @@
   .resultsHead { display: block; }
   .candidateGrid { grid-template-columns: 1fr; }
 }
+.bookingLink{display:inline-flex;align-items:center;justify-content:center;min-height:44px;margin:10px 0 0;padding:8px 14px;border:1px solid var(--c-primary-strong);border-radius:11px;color:var(--c-primary-strong);background:var(--c-surface);font-size:.82rem;font-weight:850;text-decoration:none}
+.bookingLink:hover{background:var(--c-surface-2)}
+.bookingLink:focus-visible{outline:3px solid var(--c-primary-strong);outline-offset:2px}

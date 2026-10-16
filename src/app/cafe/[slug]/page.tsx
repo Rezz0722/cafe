@@ -17,6 +17,10 @@ import { Armchair, BadgeCheck, BadgePercent, CameraOff, ChevronDown, Coffee, Cro
 import { BreadcrumbJsonLd, PlaceJsonLd } from '@/components/seo/PlaceJsonLd'
 import { getSession } from '@/core/auth/currentUser'
 import { getVenueDiscount } from '@/core/club/venueDiscounts'
+import { getPublicBookingConfiguration } from '@/core/booking/service'
+import { getDb } from '@/db/client'
+import { placeAttribute } from '@/db/schema'
+import { and, eq, inArray, gte } from 'drizzle-orm'
 import { discountedPrice } from '@/core/club/discount'
 import { findUserById } from '@/core/auth/userRepo'
 import { computeOpenState, groupedWeekSchedule, weekSchedule } from '@/core/hours/openNow'
@@ -211,6 +215,11 @@ export default async function CafePage({ params }: PageProps) {
   const place = await getPlaceDetail(slug)
   if (!place) notFound()
   const venueDiscount = await getVenueDiscount(place.id)
+  const bookingSettings = await getPublicBookingConfiguration(place.id)
+  const occasionSignals = bookingSettings ? await getDb().select({ attributeId: placeAttribute.attributeId }).from(placeAttribute)
+    .where(and(eq(placeAttribute.placeId, place.id), inArray(placeAttribute.attributeId, ['birthday_friendly', 'good_for_gathering']), gte(placeAttribute.value, 1))) : []
+  const canRequestBirthday = occasionSignals.some(signal => signal.attributeId === 'birthday_friendly')
+  const canRequestGathering = occasionSignals.some(signal => signal.attributeId === 'good_for_gathering')
 
   const { user } = await getSession()
   const account = user ? await findUserById(user.id) : null
@@ -429,6 +438,9 @@ export default async function CafePage({ params }: PageProps) {
 
             <div className={styles.actionRow} id="directions">
               <MenuOpenButton />
+              {bookingSettings && <Link href={paths.cafeRequest(place.slug)} className={styles.bookingAction}>درخواست رزرو میز</Link>}
+              {bookingSettings && (canRequestBirthday || canRequestGathering) &&
+                <Link href={`${paths.cafeRequest(place.slug)}?kind=${canRequestBirthday ? 'birthday' : 'gathering'}&experience=${canRequestBirthday ? 'birthday' : 'gathering'}`} className={styles.bookingActionAlt}>هماهنگی {canRequestBirthday ? 'تولد' : 'دورهمی'}</Link>}
               <DirectionsBar
                 lat={place.coords?.lat ?? null}
                 lng={place.coords?.lng ?? null}
