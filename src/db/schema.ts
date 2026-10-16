@@ -721,6 +721,78 @@ export const userPlaceRole = mysqlTable(
   ],
 )
 
+// درخواست هماهنگی با کافه؛ هیچ شعبه‌ای با ایجاد این جدول‌ها خودکار فعال نمی‌شود.
+export const BOOKING_KIND = ['table', 'birthday', 'gathering', 'special_occasion'] as const
+export const BOOKING_STATUS = ['pending', 'confirmed', 'rejected', 'cancelled', 'expired', 'completed'] as const
+
+export const venueBookingSettings = mysqlTable('venue_booking_settings', {
+  placeId: int('place_id').primaryKey().references(() => place.id, { onDelete: 'cascade' }),
+  enabled: boolean('enabled').notNull().default(false),
+  requestFrom: time('request_from'),
+  requestUntil: time('request_until'),
+  maxPartySize: int('max_party_size'),
+  minNoticeMinutes: int('min_notice_minutes').notNull().default(60),
+  maxAdvanceDays: int('max_advance_days').notNull().default(30),
+  instructions: varchar('instructions', { length: 500 }),
+  revision: int('revision').notNull().default(0),
+  updatedAt: timestamp('updated_at').notNull().defaultNow().onUpdateNow(),
+})
+
+export const bookingRequest = mysqlTable('booking_request', {
+  id: char('id', { length: 36 }).primaryKey(),
+  placeId: int('place_id').notNull().references(() => place.id),
+  requesterUserId: char('requester_user_id', { length: 36 }).notNull().references(() => appUser.id),
+  kind: mysqlEnum('kind', BOOKING_KIND).notNull(),
+  experienceSlug: varchar('experience_slug', { length: 48 }),
+  requestedDate: date('requested_date', { mode: 'string' }).notNull(),
+  requestedLocalTime: time('requested_local_time').notNull(),
+  partySize: int('party_size').notNull(),
+  durationMinutes: int('duration_minutes'),
+  needsCake: boolean('needs_cake').notNull().default(false),
+  needsDecoration: boolean('needs_decoration').notNull().default(false),
+  needsPrivateSpace: boolean('needs_private_space').notNull().default(false),
+  customerNote: varchar('customer_note', { length: 1000 }),
+  contactPhone: varchar('contact_phone', { length: 16 }).notNull(),
+  consentAt: timestamp('consent_at').notNull(),
+  status: mysqlEnum('status', BOOKING_STATUS).notNull().default('pending'),
+  venueResponse: varchar('venue_response', { length: 1000 }),
+  respondedAt: timestamp('responded_at'),
+  respondedByUserId: char('responded_by_user_id', { length: 36 }).references(() => appUser.id),
+  cancellationReason: varchar('cancellation_reason', { length: 300 }),
+  idempotencyKey: char('idempotency_key', { length: 36 }).notNull(),
+  requestHash: char('request_hash', { length: 64 }).notNull(),
+  revision: int('revision').notNull().default(0),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow().onUpdateNow(),
+}, t => [
+  uniqueIndex('booking_request_user_idempotency_uq').on(t.requesterUserId, t.idempotencyKey),
+  index('booking_request_user_created_idx').on(t.requesterUserId, t.createdAt),
+  index('booking_request_place_status_date_idx').on(t.placeId, t.status, t.requestedDate),
+])
+
+export const bookingStatusHistory = mysqlTable('booking_status_history', {
+  id: bigint('id', { mode: 'number' }).autoincrement().primaryKey(),
+  bookingId: char('booking_id', { length: 36 }).notNull().references(() => bookingRequest.id, { onDelete: 'cascade' }),
+  fromStatus: mysqlEnum('from_status', BOOKING_STATUS),
+  toStatus: mysqlEnum('to_status', BOOKING_STATUS).notNull(),
+  actorUserId: char('actor_user_id', { length: 36 }).references(() => appUser.id),
+  note: varchar('note', { length: 300 }),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+}, t => [index('booking_history_request_created_idx').on(t.bookingId, t.createdAt)])
+
+export const bookingItemIntent = mysqlTable('booking_item_intent', {
+  id: bigint('id', { mode: 'number' }).autoincrement().primaryKey(),
+  bookingId: char('booking_id', { length: 36 }).notNull().references(() => bookingRequest.id, { onDelete: 'cascade' }),
+  menuItemId: int('menu_item_id').references(() => menuItem.id, { onDelete: 'set null' }),
+  menuItemVariantId: int('menu_item_variant_id').references(() => menuItemVariant.id, { onDelete: 'set null' }),
+  itemName: varchar('item_name', { length: 250 }).notNull(),
+  variantName: varchar('variant_name', { length: 120 }),
+  quantity: int('quantity').notNull(),
+  unitPriceToman: int('unit_price_toman'),
+  priceUnknown: boolean('price_unknown').notNull().default(false),
+  availableAtRequest: boolean('available_at_request').notNull(),
+}, t => [index('booking_item_intent_request_idx').on(t.bookingId)])
+
 /** دسترسی تحریریه مستقل از نقش مدیریتی؛ یک مالک نیز می‌تواند بلاگر باشد. */
 export const bloggerProfile = mysqlTable('blogger_profile', {
   userId: char('user_id', { length: 36 }).primaryKey().references(() => appUser.id, { onDelete: 'cascade' }),

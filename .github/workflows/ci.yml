@@ -68,6 +68,8 @@ jobs:
         run: KUCAFE_MENU_BATCH_DB_TEST=1 node --import tsx --conditions=react-server --test src/core/places/menuBatch.integration.test.ts
       - name: Portable menu round-trip and atomic rollback integration
         run: KUCAFE_PORTABLE_IMPORT_DB_TEST=1 node --import tsx --conditions=react-server --test src/core/import/portableMenuImport.integration.test.ts
+      - name: Booking opt-in, authorization and transactional state integration
+        run: KUCAFE_BOOKING_DB_TEST=1 node --import tsx --conditions=react-server --test src/core/booking/service.integration.test.ts
       - name: Branch-scoped owner menu export integration
         run: KUCAFE_MENU_EXPORT_DB_TEST=1 node --import tsx --conditions=react-server --test src/core/places/menuExport.integration.test.ts
       - name: Signed branch and role authorization integration

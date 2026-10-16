@@ -57,9 +57,26 @@ const REQUIRED = [
   'venue_lead', 'venue_lead_rate',
   'venue_qr_link',
   'menu_item_field_override', 'menu_section_field_override',
+  'venue_booking_settings', 'booking_request', 'booking_status_history', 'booking_item_intent',
 ]
 const missing = REQUIRED.filter((table) => !names.has(table))
 check(`${REQUIRED.length} جدول لازم موجود است`, missing.length === 0, missing.join(', '))
+
+const [bookingColumns] = await conn.query(`SELECT TABLE_NAME, COLUMN_NAME, COLUMN_DEFAULT, EXTRA
+  FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE()
+    AND ((TABLE_NAME = 'venue_booking_settings' AND COLUMN_NAME = 'enabled')
+      OR (TABLE_NAME = 'booking_request' AND COLUMN_NAME = 'responded_at'))`)
+const bookingEnabled = bookingColumns.find(row => row.TABLE_NAME === 'venue_booking_settings')
+const bookingResponded = bookingColumns.find(row => row.TABLE_NAME === 'booking_request')
+check('درخواست رزرو برای همهٔ شعبه‌ها پیش‌فرض غیرفعال است',
+  Boolean(bookingEnabled) && ['0', 'false'].includes(String(bookingEnabled.COLUMN_DEFAULT).toLowerCase()))
+check('زمان پاسخ کافه فقط صریح ثبت می‌شود',
+  Boolean(bookingResponded) && !String(bookingResponded.EXTRA ?? '').toLowerCase().includes('on update'))
+const [bookingIndexes] = await conn.query(`SELECT TABLE_NAME, INDEX_NAME, NON_UNIQUE
+  FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE()
+    AND TABLE_NAME IN ('booking_request', 'booking_status_history', 'booking_item_intent')`)
+check('شناسهٔ تکرار درخواست در هر حساب یکتا است', bookingIndexes.some(row =>
+  row.TABLE_NAME === 'booking_request' && row.INDEX_NAME === 'booking_request_user_idempotency_uq' && Number(row.NON_UNIQUE) === 0))
 
 const [sourceNameColumns] = await conn.query(`SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'menu_section' AND COLUMN_NAME = 'source_name'`)
 check('شناسهٔ آخرین نام دسته در منبع برای حفظ نام ویرایش‌شده موجود است', sourceNameColumns.length === 1)

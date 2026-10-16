@@ -19,6 +19,7 @@ const files = [
   'drizzle/0015_menu_source_overrides.sql',
   'drizzle/0016_menu_source_sync_time.sql',
   'drizzle/0017_provenance_timestamp_integrity.sql',
+  'drizzle/0018_booking_core.sql',
 ]
 
 for (const file of files) {
