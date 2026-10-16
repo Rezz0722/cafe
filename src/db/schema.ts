@@ -793,6 +793,58 @@ export const bookingItemIntent = mysqlTable('booking_item_intent', {
   availableAtRequest: boolean('available_at_request').notNull(),
 }, t => [index('booking_item_intent_request_idx').on(t.bookingId)])
 
+export const VENUE_EVENT_STATUS = ['draft', 'published', 'cancelled', 'ended'] as const
+export const VENUE_EVENT_CATEGORY = ['music', 'workshop', 'tasting', 'community', 'other'] as const
+export const EVENT_PARTICIPATION_MODE = ['interest', 'request'] as const
+export const EVENT_PARTICIPATION_STATUS = ['interested', 'pending', 'confirmed', 'rejected', 'cancelled'] as const
+
+export const venueEvent = mysqlTable('venue_event', {
+  id: char('id', { length: 36 }).primaryKey(),
+  placeId: int('place_id').notNull().references(() => place.id),
+  title: varchar('title', { length: 160 }).notNull(),
+  description: text('description').notNull(),
+  startDate: date('start_date', { mode: 'string' }).notNull(),
+  startLocalTime: time('start_local_time').notNull(),
+  endDate: date('end_date', { mode: 'string' }).notNull(),
+  endLocalTime: time('end_local_time').notNull(),
+  category: mysqlEnum('category', VENUE_EVENT_CATEGORY).notNull(),
+  capacity: int('capacity'),
+  terms: text('terms'),
+  participationMode: mysqlEnum('participation_mode', EVENT_PARTICIPATION_MODE).notNull(),
+  coverMediaId: int('cover_media_id').references(() => media.id, { onDelete: 'set null' }),
+  status: mysqlEnum('status', VENUE_EVENT_STATUS).notNull().default('draft'),
+  revision: int('revision').notNull().default(0),
+  publishedAt: timestamp('published_at'),
+  createdByUserId: char('created_by_user_id', { length: 36 }).notNull().references(() => appUser.id),
+  updatedByUserId: char('updated_by_user_id', { length: 36 }).notNull().references(() => appUser.id),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow().onUpdateNow(),
+}, t => [index('venue_event_public_idx').on(t.status, t.startDate, t.startLocalTime), index('venue_event_place_idx').on(t.placeId, t.startDate)])
+
+export const eventParticipation = mysqlTable('event_participation', {
+  id: char('id', { length: 36 }).primaryKey(),
+  eventId: char('event_id', { length: 36 }).notNull().references(() => venueEvent.id),
+  userId: char('user_id', { length: 36 }).notNull().references(() => appUser.id),
+  status: mysqlEnum('status', EVENT_PARTICIPATION_STATUS).notNull(),
+  contactPhone: varchar('contact_phone', { length: 16 }),
+  customerNote: varchar('customer_note', { length: 500 }),
+  venueResponse: varchar('venue_response', { length: 500 }),
+  respondedByUserId: char('responded_by_user_id', { length: 36 }).references(() => appUser.id),
+  respondedAt: timestamp('responded_at'),
+  revision: int('revision').notNull().default(0),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow().onUpdateNow(),
+}, t => [uniqueIndex('event_participation_user_uq').on(t.eventId, t.userId), index('event_participation_user_idx').on(t.userId, t.createdAt)])
+
+export const eventParticipationHistory = mysqlTable('event_participation_history', {
+  id: bigint('id', { mode: 'number' }).autoincrement().primaryKey(),
+  participationId: char('participation_id', { length: 36 }).notNull().references(() => eventParticipation.id, { onDelete: 'cascade' }),
+  fromStatus: mysqlEnum('from_status', EVENT_PARTICIPATION_STATUS),
+  toStatus: mysqlEnum('to_status', EVENT_PARTICIPATION_STATUS).notNull(),
+  actorUserId: char('actor_user_id', { length: 36 }).references(() => appUser.id),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+}, t => [index('event_participation_history_idx').on(t.participationId, t.createdAt)])
+
 /** دسترسی تحریریه مستقل از نقش مدیریتی؛ یک مالک نیز می‌تواند بلاگر باشد. */
 export const bloggerProfile = mysqlTable('blogger_profile', {
   userId: char('user_id', { length: 36 }).primaryKey().references(() => appUser.id, { onDelete: 'cascade' }),

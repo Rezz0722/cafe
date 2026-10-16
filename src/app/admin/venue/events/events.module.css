@@ -1,0 +1,24 @@
+.page{width:min(980px,100%);margin-inline:auto;padding:20px var(--page-pad) 88px;color:var(--c-ink)}
+.nav{display:flex;align-items:center;gap:8px;min-height:44px;font-size:.84rem;color:var(--c-muted)}
+.nav a,.header a,.list a{color:var(--c-primary-strong);font-weight:800;text-decoration:none}
+.header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:22px 0;border-bottom:1px solid var(--c-border)}
+.header h1{margin:5px 0;font-size:clamp(1.5rem,4vw,2rem)}.header p{margin:0;color:var(--c-muted);line-height:1.7}
+.kicker{font-size:.82rem;font-weight:850;color:var(--c-primary-strong)}
+.primaryLink,.editor button,.actionForm button{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:9px 18px;border:0;border-radius:11px;background:var(--c-primary-strong);color:#fff!important;font:inherit;font-weight:850;text-decoration:none;cursor:pointer}
+.card,.editor{display:grid;gap:16px;padding:22px;margin-top:20px;border:1px solid var(--c-border);border-radius:20px;background:var(--c-surface)}
+.card h2,.editor h2{margin:0;font-size:1.13rem}.card p,.editor p{margin:0;line-height:1.75;color:var(--c-muted)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.editor label,.actionForm label{display:grid;gap:7px;font-size:.87rem;font-weight:750}
+.editor :is(input,select,textarea),.actionForm :is(select,textarea){width:100%;min-width:0;min-height:44px;padding:9px 12px;border:1px solid var(--c-border);border-radius:11px;background:var(--c-surface);color:var(--c-ink);font:inherit;font-size:1rem}
+.editor textarea,.actionForm textarea{resize:vertical}.editor button,.actionForm button{justify-self:start}
+.editor button:disabled,.actionForm button:disabled{opacity:.55;cursor:wait}
+.notice{padding:12px;border-radius:11px;background:var(--c-surface-2);font-size:.83rem}
+.error{color:#9b2430!important}.success{color:#116b45!important}
+.list,.participants{list-style:none;display:grid;gap:10px;padding:0;margin:0}
+.list li,.participants li{display:flex;align-items:flex-start;justify-content:space-between;gap:15px;flex-wrap:wrap;padding:14px;border:1px solid var(--c-border);border-radius:12px}
+.list li>div,.participants li>div{display:grid;gap:6px}.list span,.participants span{color:var(--c-muted);font-size:.82rem}
+.actionForm{display:grid;gap:12px;padding-top:12px;border-top:1px solid var(--c-border)}
+.actionForm fieldset{display:flex;gap:12px;flex-wrap:wrap;border:1px solid var(--c-border);border-radius:10px;padding:12px}
+.actionForm fieldset label{display:flex;align-items:center;gap:6px}.actionForm fieldset input{width:18px;height:18px;accent-color:var(--c-primary-strong)}
+.page :is(a,button,input,select,textarea):focus-visible{outline:3px solid var(--c-primary-strong);outline-offset:2px}
+@media(max-width:600px){.grid{grid-template-columns:1fr}.card,.editor{padding:16px}.editor button,.actionForm button,.primaryLink{width:100%}}

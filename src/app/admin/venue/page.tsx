@@ -115,6 +115,7 @@ export default async function VenuePage({ searchParams }: PageProps) {
   return (
     <>
     <div className={styles.bookingShortcut}><Link href={paths.venueBookings(placeId)}>درخواست‌های رزرو و تنظیمات دریافت درخواست</Link></div>
+    <div className={styles.bookingShortcut}><Link href={paths.venueEvents(placeId)}>رویدادهای شعبه و درخواست‌های شرکت</Link></div>
     <VenuePanel
       place={place}
       qrChannels={qrChannels}
