@@ -9,7 +9,7 @@ import {
   menuItem, menuItemVariant, menuSection, place, userPlaceRole, venueBookingSettings,
 } from '@/db/schema'
 import type { Session } from '@/core/auth/currentUser'
-import { authorizeVenueSession, type VenueAccess } from '@/core/auth/venueAccess'
+import { authorizeVenueReadSession, authorizeVenueSession, type VenueAccess } from '@/core/auth/venueAccess'
 import { recordAudit } from '@/core/places/manage'
 import { cleanUserText } from '@/core/security/input'
 import { canonicalBookingDraft, hashBookingDraft, normalizeBookingDraft, tehranCivilNow, validateBookingWindow,
@@ -91,12 +91,33 @@ export async function getPublicBookingConfiguration(placeId: number): Promise<Ve
   return asConfiguration(row.settings)
 }
 
+/** One query for experience cards; disabled/unhandled venues never receive a request CTA. */
+export async function listPublicBookablePlaceIds(placeIds: number[]): Promise<Set<number>> {
+  const ids = [...new Set(placeIds.filter(id => Number.isSafeInteger(id) && id > 0))].slice(0, 100)
+  if (!ids.length) return new Set()
+  const rows = await getDb().select({ settings: venueBookingSettings, placeId: place.id }).from(venueBookingSettings)
+    .innerJoin(place, eq(place.id, venueBookingSettings.placeId))
+    .innerJoin(userPlaceRole, eq(userPlaceRole.placeId, place.id))
+    .innerJoin(appUser, eq(appUser.id, userPlaceRole.userId))
+    .where(and(inArray(place.id, ids), eq(venueBookingSettings.enabled, true), eq(place.status, 'published'),
+      inArray(userPlaceRole.role, ['owner', 'manager']), eq(userPlaceRole.status, 'active'),
+      eq(appUser.status, 'active'), eq(appUser.mustChangePassword, false), sql`${place.kind} <> 'shop'`))
+  const result = new Set<number>()
+  for (const row of rows) {
+    try { validateBookingWindow(row.settings); result.add(row.placeId) } catch { /* malformed settings stay disabled publicly */ }
+  }
+  return result
+}
+
 export async function saveVenueBookingConfiguration(
   session: Session,
   placeId: number,
   expectedRevision: number,
   next: Omit<VenueBookingConfiguration, 'revision'>,
-  invalidateCafePage: (slug: string) => void = slug => revalidatePath(`/cafe/${slug}`),
+  invalidateCafePage: (slug: string) => void = slug => {
+    revalidatePath(`/cafe/${slug}`)
+    for (const experience of ['birthday', 'gathering', 'date']) revalidatePath(`/mashhad/experience/${experience}`)
+  },
 ): Promise<VenueBookingConfiguration> {
   if (!Number.isSafeInteger(expectedRevision) || expectedRevision < 0) throw new Error('نسخهٔ تنظیمات نامعتبر است.')
   if (next.enabled) validateBookingWindow(next)
@@ -276,11 +297,21 @@ export async function cancelMyBookingRequest(session: Session, bookingId: string
 }
 
 export async function listVenueBookingRequests(session: Session, placeId: number, status?: typeof bookingRequest.$inferSelect.status) {
-  const access = await authorizeVenueSession(session, placeId)
+  const access = await authorizeVenueReadSession(session, placeId)
   if (!access.ok) throw new Error(access.error)
   const predicate = status ? and(eq(bookingRequest.placeId, placeId), eq(bookingRequest.status, status)) : eq(bookingRequest.placeId, placeId)
   return getDb().select().from(bookingRequest).where(predicate)
     .orderBy(desc(bookingRequest.createdAt)).limit(MAX_VENUE_LIST)
+}
+
+export async function getVenueBookingRequest(session: Session, placeId: number, bookingId: string) {
+  const access = await authorizeVenueReadSession(session, placeId)
+  if (!access.ok) throw new Error(access.error)
+  const [request] = await getDb().select().from(bookingRequest)
+    .where(and(eq(bookingRequest.id, bookingId), eq(bookingRequest.placeId, placeId))).limit(1)
+  if (!request) return null
+  const items = await getDb().select().from(bookingItemIntent).where(eq(bookingItemIntent.bookingId, bookingId))
+  return { request, items }
 }
 
 export async function respondToBookingRequest(
@@ -352,7 +383,7 @@ export async function expireOverdueBookingRequests(now = new Date(), limit = 100
 }
 
 export async function getVenueBookingConfiguration(session: Session, placeId: number): Promise<VenueBookingConfiguration | null> {
-  const access = await authorizeVenueSession(session, placeId)
+  const access = await authorizeVenueReadSession(session, placeId)
   if (!access.ok) throw new Error(access.error)
   const [row] = await getDb().select().from(venueBookingSettings)
     .where(eq(venueBookingSettings.placeId, placeId)).limit(1)

@@ -9,6 +9,7 @@ import { MaintenanceScreen } from '@/components/site/MaintenanceScreen'
 import { ATTRIBUTE_BY_ID } from '@/core/taxonomy/attributes'
 import { listFilterFacets } from '@/core/places/queries'
 import { listExperienceCandidates } from '@/core/experience/queries'
+import { listPublicBookablePlaceIds } from '@/core/booking/service'
 import { EXPERIENCE_BY_SLUG, isExperienceSlug } from '@/core/experience/registry'
 import { maintenanceState } from '@/core/settings/maintenance'
 import { getLocalePolicy, getSiteName } from '@/core/settings/policies'
@@ -63,6 +64,8 @@ export default async function ExperiencePage({ params }: PageProps) {
     getLocalePolicy(),
     getSiteName(),
   ])
+  const bookableIds = ['birthday', 'gathering', 'date'].includes(slug)
+    ? await listPublicBookablePlaceIds(candidates.map(candidate => candidate.card.id)) : new Set<number>()
   const facetLabels = Object.fromEntries(facets.map((facet) => [facet.id, facet.labelFa]))
   const criteria = [experience.primaryAttributeId, ...experience.supportingAttributeIds]
     .map((id) => ATTRIBUTE_BY_ID.get(id)?.labelFa)
@@ -139,6 +142,10 @@ export default async function ExperiencePage({ params }: PageProps) {
                     <strong>چرا پیشنهاد شده؟</strong>
                     {candidate.reasons.map((reason) => <span key={reason}>{reason}</span>)}
                   </div>
+                  {bookableIds.has(candidate.card.id) && <Link className={styles.bookingLink}
+                    href={`${paths.cafeRequest(candidate.card.slug)}?kind=${slug === 'birthday' ? 'birthday' : slug === 'gathering' ? 'gathering' : 'table'}&experience=${slug}`}>
+                    {slug === 'birthday' ? 'درخواست هماهنگی تولد' : slug === 'gathering' ? 'درخواست هماهنگی دورهمی' : 'درخواست میز برای قرار'}
+                  </Link>}
                 </article>
               ))}
             </div>

@@ -113,6 +113,8 @@ export default async function VenuePage({ searchParams }: PageProps) {
     : [[], []]
 
   return (
+    <>
+    <div className={styles.bookingShortcut}><Link href={paths.venueBookings(placeId)}>درخواست‌های رزرو و تنظیمات دریافت درخواست</Link></div>
     <VenuePanel
       place={place}
       qrChannels={qrChannels}
@@ -135,5 +137,6 @@ export default async function VenuePage({ searchParams }: PageProps) {
       currentUserId={user.id}
       clubPanel={canManageClub ? <CustomerClubPanel placeId={placeId} members={clubMembers} offers={clubOffers} currentDiscount={currentDiscount?{percent:currentDiscount.percent,expiresAt:currentDiscount.expiresAt.toISOString()}:null} /> : null}
     />
+    </>
   )
 }

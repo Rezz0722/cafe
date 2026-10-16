@@ -193,6 +193,12 @@
   scroll-margin-top: calc(var(--header-h) + var(--view-as-h, 0px) + 12px);
 }
 
+.bookingAction,.bookingActionAlt{display:inline-flex;align-items:center;justify-content:center;min-height:45px;padding:8px 15px;border-radius:12px;text-decoration:none;font-size:.82rem;font-weight:850;transition:transform .16s ease,box-shadow .16s ease}
+.bookingAction{color:#0b2238;background:#e7b24a;box-shadow:0 7px 20px rgb(231 178 74 / 18%)}
+.bookingActionAlt{color:#fff;border:1px solid rgb(255 255 255 / 46%);background:rgb(255 255 255 / 9%)}
+.bookingAction:hover,.bookingActionAlt:hover{transform:translateY(-2px)}
+.bookingAction:focus-visible,.bookingActionAlt:focus-visible{outline:3px solid #fff;outline-offset:2px}
+
 .clubOffers { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; padding: 11px 12px; border: 1px solid rgb(231 178 74 / 28%); border-radius: 14px; color: #ffe1a3; background: rgb(231 178 74 / 9%); font-size: .72rem; }
 .clubOffers strong { display: inline-flex; align-items: center; gap: 5px; }
 .clubOffers span { padding: 4px 8px; border-radius: 999px; color: #fff; background: rgb(255 255 255 / 9%); }
@@ -394,6 +400,7 @@
   .actionRow { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   .actionRow > button:first-child,
   .actionRow > div { grid-column: 1 / -1; }
+  .actionRow > .bookingAction,.actionRow > .bookingActionAlt{grid-column:1 / -1}
   .heroVisual,
   .heroFallback { min-height: 245px; }
   .heroFallback { padding: 20px 18px; }

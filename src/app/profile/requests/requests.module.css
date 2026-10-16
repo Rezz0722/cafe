@@ -1,0 +1,31 @@
+.page{width:min(860px,100%);margin-inline:auto;padding:24px var(--page-pad) 88px;color:var(--c-ink)}
+.nav{min-height:44px;display:flex;gap:8px;align-items:center;color:var(--c-muted);font-size:.84rem}
+.nav a,.cardHead a,.cardActions a,.empty a{color:var(--c-primary-strong);font-weight:800;text-decoration:none}
+.page header{padding:20px 0 24px;border-bottom:1px solid var(--c-border)}
+.kicker{color:var(--c-primary-strong);font-size:.82rem;font-weight:850}
+.page h1{margin:7px 0;font-size:clamp(1.5rem,4vw,2rem)}
+.page header p,.empty p{margin:0;color:var(--c-muted);line-height:1.8}
+.list{list-style:none;padding:0;display:grid;gap:14px;margin:24px 0}
+.card,.detail,.empty{padding:20px;border:1px solid var(--c-border);border-radius:18px;background:var(--c-surface);box-shadow:0 8px 26px rgb(13 35 58 / 4%)}
+.cardHead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.cardHead div{display:grid;gap:3px}
+.cardHead span{color:var(--c-muted);font-size:.83rem}
+.cardHead strong{padding:6px 10px;border-radius:999px;background:var(--c-surface-2);font-size:.76rem}
+.cardHead strong[data-status=confirmed]{color:#116b45;background:#e6f7eb}
+.cardHead strong[data-status=rejected],.cardHead strong[data-status=expired]{color:#9b2430;background:#fff0f1}
+.card p,.detail p{line-height:1.8}
+.response{padding:12px;border-inline-start:3px solid var(--c-primary-strong);background:var(--c-surface-2);border-radius:8px}
+.cardActions{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-top:14px}
+.cardActions a,.cancelForm button,.empty a{min-height:44px;display:inline-flex;align-items:center;padding:8px 13px;border:1px solid var(--c-border);border-radius:10px;background:var(--c-surface);font:inherit;font-size:.83rem}
+.cancelForm{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.cancelForm button{color:#9b2430;font-weight:800;cursor:pointer}
+.cancelForm button:disabled{opacity:.55;cursor:wait}
+.error{color:#9b2430;font-size:.82rem}
+.detail{margin-top:24px}
+.detail dl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.detail dt{color:var(--c-muted);font-size:.8rem}.detail dd{margin:4px 0 0;font-weight:800}
+.detail h2{font-size:1.05rem}
+.detail li{margin-block:7px}
+.empty{margin-top:24px}.empty h2{margin-top:0;font-size:1.15rem}.empty a{margin-top:16px}
+.page :is(a,button):focus-visible{outline:3px solid var(--c-primary-strong);outline-offset:3px}
+@media(max-width:600px){.detail dl{grid-template-columns:1fr}.card,.detail,.empty{padding:16px}}

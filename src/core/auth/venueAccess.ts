@@ -44,3 +44,28 @@ export async function authorizeVenueSession(
     placeRole,
   }
 }
+
+/** View-as may inspect a target owner's own branch, but can never authorize a write. */
+export async function authorizeVenueReadSession(
+  session: Session,
+  placeId: number | null,
+): Promise<VenueAccess | { ok: false; error: string }> {
+  if (!session.actor) return authorizeVenueSession(session, placeId)
+  if (!session.user || !Number.isSafeInteger(placeId) || (placeId ?? 0) <= 0) {
+    return { ok: false, error: 'مجموعه مشخص نیست.' }
+  }
+  const [admin, target] = await Promise.all([
+    findUserById(session.actor.id),
+    findUserById(session.user.id),
+  ])
+  if (!admin || admin.blocked || admin.mustChangePassword || admin.role !== 'admin' ||
+    !target || target.blocked || target.mustChangePassword || target.role !== 'owner') {
+    return { ok: false, error: 'دسترسی معتبر نیست.' }
+  }
+  const placeRole = await getPlaceRole(target.id, placeId!)
+  if (!canWritePlace(target.role, placeRole)) return { ok: false, error: 'به این مجموعه دسترسی ندارید.' }
+  return {
+    ok: true, placeId: placeId!, actor: { userId: admin.id, label: admin.name || admin.id },
+    isAdmin: false, placeRole,
+  }
+}
