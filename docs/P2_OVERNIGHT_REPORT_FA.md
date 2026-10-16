@@ -7,7 +7,7 @@
 | مسیر | پیاده‌سازی | آزمون | PR | وضعیت |
 | --- | --- | --- | --- | --- |
 | P2-01 | انتخاب گروهی، موجودی، ویژه، آرشیو/بازگردانی، Preview و Apply اتمیک | Unit/Integration، Build و مرورگر ایزوله پاس | [#71](https://github.com/Rezz0722/cafe/pull/71) | آمادهٔ بازبینی؛ CI سبز |
-| P2-02 | Import JSON v1/CSV خروجی فعلی با سیاست create-only، تعارض و Revision | Unit/Integration، Build و مرورگر ایزوله پاس | [#73](https://github.com/Rezz0722/cafe/pull/73) | Stacked بر #71؛ نتیجهٔ CI باید پیش از Merge کنترل شود |
+| P2-02 | Import JSON v1/CSV خروجی فعلی با سیاست create-only، تعارض و Revision | Unit/Integration، Build، مرورگر ایزوله و CI پاس | [#73](https://github.com/Rezz0722/cafe/pull/73) | Stacked بر #71؛ پس از تغییر Base، CI باید دوباره کنترل شود |
 | P2-03 | راهنمای مالک، Playbook، Scorecard، بستهٔ Excel/QR/قیمت/ثبت باگ | نمونهٔ CSV بازتولیدپذیر و CI پاس | [#72](https://github.com/Rezz0722/cafe/pull/72) | آمادهٔ استفادهٔ آزمایشی؛ آزمون‌های میدانی باز |
 
 ## تغییرات و تصمیم‌های معماری
@@ -51,7 +51,7 @@
 
 - [PR #71](https://github.com/Rezz0722/cafe/pull/71) — CI [موفق](https://github.com/Rezz0722/cafe/actions/runs/38825288992).
 - [PR #72](https://github.com/Rezz0722/cafe/pull/72) — CI [موفق](https://github.com/Rezz0722/cafe/actions/runs/38825552139).
-- [PR #73](https://github.com/Rezz0722/cafe/pull/73) — [CI](https://github.com/Rezz0722/cafe/actions/runs/38873743750)؛ نتیجهٔ نهایی پیش از بررسی Merge مجدداً خوانده شود.
+- [PR #73](https://github.com/Rezz0722/cafe/pull/73) — [CI موفق کد و تست‌ها](https://github.com/Rezz0722/cafe/actions/runs/38874311427)؛ نتیجهٔ آخرین Head و CI پس از تغییر Base پیش از Merge مجدداً خوانده شود.
 - #73 باید پس از #71 بازپایه/به `production` تغییر Base داده شود و Diff/CI مستقل دوباره کنترل شود. #72 از این دو مستقل است. هر سه PR باز و Merge نشده‌اند.
 
 Production در آغاز و پایان روی SHA `4fed25fe3e578c4480fff4b192dbaf2a62e6b3bf` در GitHub و Imageهای App/Worker با Tag `sha-4fed25fe3e57`، هر دو Healthy بود. `MERGE: NOT EXECUTED`؛ `DEPLOY: NOT EXECUTED`؛ `MIGRATION: NOT EXECUTED`؛ `TOPMENU APPLY: NOT EXECUTED`. تغییر Schema پیشنهاد نشده است. پس از توقف دیتابیس QA و پاک‌سازی Build ایزوله، فضای آزاد حدود ۶٫۳ GiB و Inode آزاد کافی بود.
@@ -65,4 +65,4 @@ Production در آغاز و پایان روی SHA `4fed25fe3e578c4480fff4b192dba
 
 ## اقدام صبح
 
-CI نهایی #73 را تأیید کنید، سپس PRها را به ترتیب وابستگی بازبینی کنید؛ دربارهٔ Merge/Deploy تصمیم جداگانه بگیرید. برای پایلوت، دو کافه و مسئول منو را تعیین و چک‌لیست Excel، QR و سنجش ۳۰روزه را اجرا کنید. هیچ اقدام Production در این اسپرینت انجام نشده است.
+PRها را به ترتیب وابستگی بازبینی کنید؛ دربارهٔ Merge/Deploy تصمیم جداگانه بگیرید و پس از تغییر Base #73، CI همان Head را دوباره کنترل کنید. برای پایلوت، دو کافه و مسئول منو را تعیین و چک‌لیست Excel، QR و سنجش ۳۰روزه را اجرا کنید. هیچ اقدام Production در این اسپرینت انجام نشده است.
