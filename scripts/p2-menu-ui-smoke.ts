@@ -66,15 +66,26 @@ try {
         await page.getByRole('button', { name: 'بررسی و پیش‌نمایش؛ بدون ثبت' }).click()
         await page.getByRole('heading', { name: 'پیش‌نمایش JSON' }).waitFor()
         assert.ok(await page.getByText('موکا تازه').count())
+        await page.getByRole('textbox', { name: 'متن فایل برای بررسی' }).press('Tab')
+        const previewButton = page.getByRole('button', { name: 'بررسی و پیش‌نمایش؛ بدون ثبت' })
+        assert.ok(await previewButton.evaluate(button => button === document.activeElement && button.matches(':focus-visible')), 'keyboard focus must be visible')
+        await previewButton.press('Tab')
+        const newItemCheckbox = page.getByRole('checkbox', { name: /دسته تازه.*موکا تازه/ })
+        assert.ok(await newItemCheckbox.evaluate(input => input === document.activeElement), 'preview selection must be keyboard reachable')
+        await newItemCheckbox.press('Space')
+        assert.ok(await newItemCheckbox.isChecked(), 'Space must select the preview row')
         const after = await page.evaluate(() => ({ scroll: document.documentElement.scrollWidth, client: document.documentElement.clientWidth }))
         assert.ok(after.scroll <= after.client + 1)
         assert.deepEqual(errors, [])
         await page.screenshot({ path: 'var/qa/p2-menu-ui/portable-preview-360.png' })
+        await page.getByRole('textbox', { name: 'متن فایل برای بررسی' }).fill('{bad')
+        await previewButton.click()
+        await page.getByRole('alert').filter({ hasText: /خراب/ }).first().waitFor()
       }
     } finally { await context.close() }
   }
   assert.equal((await db.select().from(menuItem).where(eq(menuItem.placeId, placeId))).length, 3, 'preview must not write')
-  console.log('P2 menu UI smoke passed: 320/360/430/1440, RTL owner session, previews, no overflow or writes')
+  console.log('P2 menu UI smoke passed: 320/360/430/1440, RTL owner session, previews, keyboard focus, error state, no overflow or writes')
 } finally {
   if (browser) await browser.close()
   if (sessionId) await revokeSession(sessionId)
