@@ -1,0 +1,464 @@
+[
+  {
+    "source": "local",
+    "theme": "light",
+    "viewport": [
+      320,
+      568
+    ],
+    "pageHeight": 4818,
+    "overflow": false,
+    "sections": 8,
+    "title": {
+      "top": 119,
+      "bottom": 156,
+      "height": 37
+    },
+    "search": {
+      "top": 242,
+      "bottom": 290,
+      "height": 48
+    },
+    "firstCategory": {
+      "top": 487,
+      "bottom": 514,
+      "height": 27
+    },
+    "reviews": null,
+    "food": {
+      "top": 1439,
+      "bottom": 1470,
+      "height": 31
+    },
+    "brokenVisibleImages": 0
+  },
+  {
+    "source": "local",
+    "theme": "dark",
+    "viewport": [
+      320,
+      568
+    ],
+    "pageHeight": 4818,
+    "overflow": false,
+    "sections": 8,
+    "title": {
+      "top": 119,
+      "bottom": 156,
+      "height": 37
+    },
+    "search": {
+      "top": 242,
+      "bottom": 290,
+      "height": 48
+    },
+    "firstCategory": {
+      "top": 487,
+      "bottom": 514,
+      "height": 27
+    },
+    "reviews": null,
+    "food": {
+      "top": 1439,
+      "bottom": 1470,
+      "height": 31
+    },
+    "brokenVisibleImages": 0
+  },
+  {
+    "source": "local",
+    "theme": "light",
+    "viewport": [
+      360,
+      800
+    ],
+    "pageHeight": 4370,
+    "overflow": false,
+    "sections": 8,
+    "title": {
+      "top": 119,
+      "bottom": 156,
+      "height": 37
+    },
+    "search": {
+      "top": 242,
+      "bottom": 290,
+      "height": 48
+    },
+    "firstCategory": {
+      "top": 435,
+      "bottom": 462,
+      "height": 27
+    },
+    "reviews": null,
+    "food": {
+      "top": 1357,
+      "bottom": 1387,
+      "height": 31
+    },
+    "brokenVisibleImages": 0
+  },
+  {
+    "source": "local",
+    "theme": "dark",
+    "viewport": [
+      360,
+      800
+    ],
+    "pageHeight": 4370,
+    "overflow": false,
+    "sections": 8,
+    "title": {
+      "top": 119,
+      "bottom": 156,
+      "height": 37
+    },
+    "search": {
+      "top": 242,
+      "bottom": 290,
+      "height": 48
+    },
+    "firstCategory": {
+      "top": 435,
+      "bottom": 462,
+      "height": 27
+    },
+    "reviews": null,
+    "food": {
+      "top": 1357,
+      "bottom": 1387,
+      "height": 31
+    },
+    "brokenVisibleImages": 0
+  },
+  {
+    "source": "local",
+    "theme": "light",
+    "viewport": [
+      390,
+      844
+    ],
+    "pageHeight": 4354,
+    "overflow": false,
+    "sections": 8,
+    "title": {
+      "top": 119,
+      "bottom": 156,
+      "height": 37
+    },
+    "search": {
+      "top": 242,
+      "bottom": 290,
+      "height": 48
+    },
+    "firstCategory": {
+      "top": 435,
+      "bottom": 463,
+      "height": 28
+    },
+    "reviews": null,
+    "food": {
+      "top": 1358,
+      "bottom": 1388,
+      "height": 31
+    },
+    "brokenVisibleImages": 0
+  },
+  {
+    "source": "local",
+    "theme": "dark",
+    "viewport": [
+      390,
+      844
+    ],
+    "pageHeight": 4354,
+    "overflow": false,
+    "sections": 8,
+    "title": {
+      "top": 119,
+      "bottom": 156,
+      "height": 37
+    },
+    "search": {
+      "top": 242,
+      "bottom": 290,
+      "height": 48
+    },
+    "firstCategory": {
+      "top": 435,
+      "bottom": 463,
+      "height": 28
+    },
+    "reviews": null,
+    "food": {
+      "top": 1358,
+      "bottom": 1388,
+      "height": 31
+    },
+    "brokenVisibleImages": 0
+  },
+  {
+    "source": "local",
+    "theme": "light",
+    "viewport": [
+      430,
+      932
+    ],
+    "pageHeight": 4318,
+    "overflow": false,
+    "sections": 8,
+    "title": {
+      "top": 119,
+      "bottom": 157,
+      "height": 39
+    },
+    "search": {
+      "top": 243,
+      "bottom": 291,
+      "height": 48
+    },
+    "firstCategory": {
+      "top": 437,
+      "bottom": 468,
+      "height": 31
+    },
+    "reviews": null,
+    "food": {
+      "top": 1365,
+      "bottom": 1398,
+      "height": 33
+    },
+    "brokenVisibleImages": 0
+  },
+  {
+    "source": "local",
+    "theme": "dark",
+    "viewport": [
+      430,
+      932
+    ],
+    "pageHeight": 4318,
+    "overflow": false,
+    "sections": 8,
+    "title": {
+      "top": 119,
+      "bottom": 157,
+      "height": 39
+    },
+    "search": {
+      "top": 243,
+      "bottom": 291,
+      "height": 48
+    },
+    "firstCategory": {
+      "top": 437,
+      "bottom": 468,
+      "height": 31
+    },
+    "reviews": null,
+    "food": {
+      "top": 1365,
+      "bottom": 1398,
+      "height": 33
+    },
+    "brokenVisibleImages": 0
+  },
+  {
+    "source": "local",
+    "theme": "light",
+    "viewport": [
+      768,
+      1024
+    ],
+    "pageHeight": 5815,
+    "overflow": false,
+    "sections": 8,
+    "title": {
+      "top": 167,
+      "bottom": 236,
+      "height": 69
+    },
+    "search": {
+      "top": 327,
+      "bottom": 375,
+      "height": 48
+    },
+    "firstCategory": {
+      "top": 540,
+      "bottom": 577,
+      "height": 38
+    },
+    "reviews": null,
+    "food": {
+      "top": 2492,
+      "bottom": 2538,
+      "height": 46
+    },
+    "brokenVisibleImages": 0
+  },
+  {
+    "source": "local",
+    "theme": "dark",
+    "viewport": [
+      768,
+      1024
+    ],
+    "pageHeight": 5815,
+    "overflow": false,
+    "sections": 8,
+    "title": {
+      "top": 167,
+      "bottom": 236,
+      "height": 69
+    },
+    "search": {
+      "top": 327,
+      "bottom": 375,
+      "height": 48
+    },
+    "firstCategory": {
+      "top": 540,
+      "bottom": 577,
+      "height": 38
+    },
+    "reviews": null,
+    "food": {
+      "top": 2492,
+      "bottom": 2538,
+      "height": 46
+    },
+    "brokenVisibleImages": 0
+  },
+  {
+    "source": "local",
+    "theme": "light",
+    "viewport": [
+      1440,
+      900
+    ],
+    "pageHeight": 5030,
+    "overflow": false,
+    "sections": 8,
+    "title": {
+      "top": 167,
+      "bottom": 238,
+      "height": 72
+    },
+    "search": {
+      "top": 330,
+      "bottom": 378,
+      "height": 48
+    },
+    "firstCategory": {
+      "top": 543,
+      "bottom": 580,
+      "height": 38
+    },
+    "reviews": null,
+    "food": {
+      "top": 1841,
+      "bottom": 1886,
+      "height": 46
+    },
+    "brokenVisibleImages": 0
+  },
+  {
+    "source": "local",
+    "theme": "dark",
+    "viewport": [
+      1440,
+      900
+    ],
+    "pageHeight": 5030,
+    "overflow": false,
+    "sections": 8,
+    "title": {
+      "top": 167,
+      "bottom": 238,
+      "height": 72
+    },
+    "search": {
+      "top": 330,
+      "bottom": 378,
+      "height": 48
+    },
+    "firstCategory": {
+      "top": 543,
+      "bottom": 580,
+      "height": 38
+    },
+    "reviews": null,
+    "food": {
+      "top": 1841,
+      "bottom": 1886,
+      "height": 46
+    },
+    "brokenVisibleImages": 0
+  },
+  {
+    "source": "production-read-only",
+    "theme": "light",
+    "viewport": [
+      390,
+      844
+    ],
+    "pageHeight": 6598,
+    "overflow": false,
+    "sections": 8,
+    "title": {
+      "top": 115,
+      "bottom": 231,
+      "height": 116
+    },
+    "search": {
+      "top": 379,
+      "bottom": 427,
+      "height": 48
+    },
+    "firstCategory": {
+      "top": 1282,
+      "bottom": 1358,
+      "height": 75
+    },
+    "reviews": null,
+    "food": {
+      "top": 1878,
+      "bottom": 1953,
+      "height": 75
+    },
+    "brokenVisibleImages": 0
+  },
+  {
+    "source": "production-read-only",
+    "theme": "dark",
+    "viewport": [
+      390,
+      844
+    ],
+    "pageHeight": 6598,
+    "overflow": false,
+    "sections": 8,
+    "title": {
+      "top": 115,
+      "bottom": 231,
+      "height": 116
+    },
+    "search": {
+      "top": 379,
+      "bottom": 427,
+      "height": 48
+    },
+    "firstCategory": {
+      "top": 1282,
+      "bottom": 1358,
+      "height": 75
+    },
+    "reviews": null,
+    "food": {
+      "top": 1878,
+      "bottom": 1953,
+      "height": 75
+    },
+    "brokenVisibleImages": 0
+  }
+]

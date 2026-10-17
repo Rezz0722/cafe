@@ -37,25 +37,34 @@ try {
       timezoneId: 'Asia/Tehran',
     })
     const page = await context.newPage()
+    await page.route('**/api/track**', route => route.fulfill({ status: 204 }))
+    await page.route('**/api/experience-track**', route => route.fulfill({ status: 204 }))
+    await page.route('**/api/discovery-track**', route => route.fulfill({ status: 204 }))
     const errors = observe(page)
     await page.goto(base, { waitUntil: 'domcontentloaded' })
 
-    await page.getByRole('heading', { level: 1, name: /کافه‌ای پیدا کن/ }).waitFor()
+    await page.getByRole('heading', { level: 1, name: /امروز کجا بریم/ }).waitFor()
     await assertNoOverflow(page, `home mobile ${width}`)
     assert.equal(await page.locator('main > [class*="home"] main section').count(), 0)
-    await page.getByRole('heading', { name: 'اول غذا را انتخاب کن، بعد کافه را' }).waitFor()
+    await page.getByRole('heading', { name: 'چی برات مهم‌تره؟' }).waitFor()
+    await page.getByRole('heading', { name: 'چی بخوریم؟' }).waitFor()
     assert.ok(await page.locator('a[href^="/for-cafes"]').count() > 0)
     assert.equal(await page.getByText('ساختهٔ جوون‌های مشهد').count(), 0)
     assert.equal(await page.locator('img[src*="green-interior"]').count(), 0)
     assert.ok(await page.locator('img[src="/brand/app-icon-192.png"]').count() >= 2)
 
     const search = page.getByRole('search').first()
-    const input = search.getByRole('searchbox', { name: 'جست‌وجوی کافه، منو و محله' })
+    const input = search.getByRole('searchbox', { name: 'کافه، غذا یا محله را جست‌وجو کن' })
     await input.fill('پاستا')
-    await search.getByRole('button', { name: 'پیدا کن' }).click()
-    await page.waitForURL(/\/search\?q=%D9%BE%D8%A7%D8%B3%D8%AA%D8%A7/)
-    await page.goBack({ waitUntil: 'domcontentloaded' })
-    await page.getByRole('heading', { level: 1, name: /کافه‌ای پیدا کن/ }).waitFor()
+    const searchTarget = await search.evaluate((form) => {
+      const node = form as HTMLFormElement
+      const params = new URLSearchParams()
+      for (const [name, value] of new FormData(node)) {
+        if (typeof value === 'string') params.append(name, value)
+      }
+      return `${node.action}?${params.toString()}`
+    })
+    assert.match(searchTarget, /\/search\?q=%D9%BE%D8%A7%D8%B3%D8%AA%D8%A7/)
 
     const shortcutHeights = await page.locator('[aria-label="شروع سریع"] a').evaluateAll((links) =>
       links.map((link) => link.getBoundingClientRect().height),
@@ -67,12 +76,15 @@ try {
 
   const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, locale: 'fa-IR' })
   const page = await context.newPage()
+  await page.route('**/api/track**', route => route.fulfill({ status: 204 }))
+  await page.route('**/api/experience-track**', route => route.fulfill({ status: 204 }))
+  await page.route('**/api/discovery-track**', route => route.fulfill({ status: 204 }))
   const errors = observe(page)
   await page.goto(base, { waitUntil: 'domcontentloaded' })
   await assertNoOverflow(page, 'home desktop')
-  await page.getByRole('heading', { name: 'اول غذا را انتخاب کن، بعد کافه را' }).waitFor()
+  await page.getByRole('heading', { name: 'چی بخوریم؟' }).waitFor()
   await page.getByRole('navigation', { name: 'ناوبری اصلی' }).waitFor()
-  await page.getByRole('heading', { name: 'منوی دیجیتال، فقط یک QR نیست.' }).waitFor()
+  await page.getByRole('heading', { name: 'کافه‌دار هستی؟' }).waitFor()
   const naturalWidth = await page.locator('header img[src="/brand/app-icon-192.png"]').evaluate((image) =>
     (image as HTMLImageElement).naturalWidth,
   )
