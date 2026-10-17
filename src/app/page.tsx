@@ -321,8 +321,8 @@ export default async function HomePage() {
                 <h2 id="experience-title">برای چه لحظه‌ای کافه می‌خواهی؟</h2>
                 <p>گزینه‌هایی بر اساس امکانات و اطلاعات ثبت‌شده؛ شفاف و بدون ادعای «بهترین» بودن.</p>
               </div>
-              <Link href={paths.experienceHub} className={styles.textLink}>
-                همهٔ تجربه‌ها <ArrowLeft size={16} />
+              <Link href={paths.experienceHub} className={`${styles.textLink} ${styles.experienceHeaderLink}`}>
+                همهٔ تجربه‌ها <ArrowLeft size={16} aria-hidden="true" />
               </Link>
             </div>
             <div className={styles.experienceRail}>
@@ -348,6 +348,9 @@ export default async function HomePage() {
                 )
               })}
             </div>
+            <Link href={paths.experienceHub} className={styles.experienceAllLink}>
+              مشاهده همه تجربه‌ها <ArrowLeft size={18} aria-hidden="true" />
+            </Link>
           </section>
         )}
         <section className={`container ${styles.section} ${styles.discoverySection}`} aria-labelledby="discovery-title">
