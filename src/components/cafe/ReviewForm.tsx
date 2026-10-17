@@ -29,6 +29,7 @@ async function saveReview(previous: ActionState, data: FormData): Promise<Action
 
 interface Props {
   placeId: number; slug: string; placeName: string; signedIn: boolean; authHref: string
+  compact?: boolean
   existing: { id?: number; stars: number; text: string | null; status: string; visitDate: Date | null; itemIds?: number[]; videoUrl?: string | null; ratingCoffee?: number | null; ratingFood?: number | null; ratingVibe?: number | null; ratingService?: number | null; ratingValue?: number | null } | null
   menuItems?: { id: number; name: string; nameEn: string | null; sectionId: number; sectionName: string; dishName: string | null; available: boolean }[]
   minTextLength?: number; maxTextLength?: number; isBlogger?: boolean
@@ -199,7 +200,9 @@ export function ReviewForm(props: Props) {
       block: 'start', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
     })
   }
-  if (!props.signedIn) return <div className={styles.signInPrompt}><div><strong>تو تجربه کردی؛ بقیه بهتر انتخاب می‌کنند</strong><p>برای ثبت تجربه و سفارش‌ها وارد حساب شو.</p></div><a href={props.authHref} className={styles.signInLink}>ورود و ثبت تجربه</a></div>
+  if (!props.signedIn) return props.compact
+    ? <a href={props.authHref} className={styles.signInLink}>ورود و ثبت اولین تجربه</a>
+    : <div className={styles.signInPrompt}><div><strong>تو تجربه کردی؛ بقیه بهتر انتخاب می‌کنند</strong><p>برای ثبت تجربه و سفارش‌ها وارد حساب شو.</p></div><a href={props.authHref} className={styles.signInLink}>ورود و ثبت تجربه</a></div>
   return <div className={styles.launcher}><p>در سه قدم کوتاه؛ امتیاز، سفارش و تاریخ.</p>
     <CafePopover label={props.existing ? 'ویرایش تجربه' : 'ثبت تجربهٔ من'} title={props.existing ? 'ویرایش تجربهٔ شما' : 'تجربه‌ات را با دیگران شریک شو'} onClose={onClose}>
       {({ close }) => <ReviewWizard key={`${props.existing?.id ?? 'new'}-${version}`} props={props} onSuccess={onSuccess} onConfirm={close} />}

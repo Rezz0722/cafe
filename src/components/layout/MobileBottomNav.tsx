@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Scale, House, MapPinned, MessageSquareText, Navigation, Search, UtensilsCrossed, UserRound } from 'lucide-react'
+import { House, MapPinned, Search, UserRound } from 'lucide-react'
 import { paths } from '@/routes'
 import styles from './MobileBottomNav.module.css'
 
@@ -17,48 +17,17 @@ export function MobileBottomNav() {
   const pathname = usePathname() ?? paths.home
   const isCafeDetail = /^\/cafe\/[^/]+\/?$/.test(pathname)
 
-  if (pathname.startsWith(paths.admin) || pathname.startsWith(paths.auth)) return null
-
-  const items = isCafeDetail
-    ? [
-        { label: 'مقایسه', href: `${pathname}#price-compare`, icon: Scale },
-        { label: 'منو', href: `${pathname}#menu`, icon: UtensilsCrossed },
-        { label: 'مسیریابی', href: `${pathname}#directions`, icon: Navigation },
-        { label: 'نظرها', href: `${pathname}#reviews`, icon: MessageSquareText },
-      ]
-    : ITEMS
+  if (pathname.startsWith(paths.admin) || pathname.startsWith(paths.auth) || isCafeDetail) return null
 
   return (
     <nav className={styles.nav} aria-label="دسترسی سریع موبایل">
-      {items.map((item) => {
+      {ITEMS.map((item) => {
         const Icon = item.icon
-        const opensCafeMenu = isCafeDetail && item.label === 'منو'
-        if(isCafeDetail && item.label==='مقایسه') return <button key={item.label} type="button" className={styles.item} onClick={()=>document.querySelector<HTMLButtonElement>('#price-compare button')?.click()}><Icon size={20} aria-hidden="true"/><span>{item.label}</span></button>
         const current = item.href.includes('#')
           ? false
           : item.href === paths.home
           ? pathname === paths.home
           : !item.href.includes('?') && pathname.startsWith(item.href)
-
-        if (opensCafeMenu) {
-          return (
-            <a
-              key={item.label}
-              href={`${pathname}?menu=1#menu`}
-              className={styles.item}
-              onClick={(event) => {
-                const launcher = document.querySelector<HTMLAnchorElement>('[data-menu-launcher]')
-                if (launcher) {
-                  event.preventDefault()
-                  launcher.click()
-                }
-              }}
-            >
-              <Icon size={20} strokeWidth={1.9} aria-hidden="true" />
-              <span>{item.label}</span>
-            </a>
-          )
-        }
 
         return (
           <Link

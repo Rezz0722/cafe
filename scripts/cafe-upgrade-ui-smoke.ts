@@ -31,19 +31,20 @@ try{
   assert.equal((await page.goto(`${base}/cafe/ramouz-cafe`,{waitUntil:'domcontentloaded'}))?.status(),200);await check('cafe');console.log(`QA ${width}: cafe loaded`)
   await page.screenshot({path:`var/qa/cafe-upgrade/cafe-${width}.png`})
   const centered=async(dialog:ReturnType<typeof page.getByRole>)=>{await page.waitForTimeout(300);const box=await dialog.boundingBox();assert.ok(box);assert.ok(Math.abs(box.x+box.width/2-width/2)<2,'dialog horizontal center');assert.ok(Math.abs(box.y+box.height/2-450)<3,'dialog vertical center')}
-  await page.getByRole('button',{name:'مقایسهٔ قیمت',exact:true}).click();const comparison=page.getByRole('dialog',{name:'قیمت اینجا در مقایسه با شهر'});await comparison.waitFor();await comparison.getByRole('status').waitFor();await centered(comparison);await page.screenshot({path:`var/qa/cafe-upgrade/compare-loading-${width}.png`});await comparison.getByText('با دید باز انتخاب کن',{exact:true}).waitFor();await centered(comparison);await page.screenshot({path:`var/qa/cafe-upgrade/compare-result-${width}.png`});await page.goBack();await comparison.waitFor({state:'hidden'});await page.waitForFunction(()=>document.body.style.overflow==='',{},{timeout:1500})
-  await page.getByRole('button',{name:'مقایسهٔ قیمت',exact:true}).click();await comparison.waitFor();await page.goBack();await comparison.waitFor({state:'hidden'});await page.waitForTimeout(2500);assert.equal(await comparison.isVisible(),false);await page.waitForFunction(()=>document.body.style.overflow==='')
+  await page.getByRole('button',{name:'مقایسه با قیمت شهر',exact:true}).click();const comparison=page.getByRole('dialog',{name:'قیمت اینجا در مقایسه با شهر'});await comparison.waitFor();await comparison.getByText('با دید باز انتخاب کن',{exact:true}).waitFor();await page.screenshot({path:`var/qa/cafe-upgrade/compare-result-${width}.png`});await page.goBack();await comparison.waitFor({state:'hidden'});await page.waitForFunction(()=>document.body.style.overflow==='',{},{timeout:1500})
+  await page.getByRole('button',{name:'مقایسه با قیمت شهر',exact:true}).click();await comparison.waitFor();await page.goBack();await comparison.waitFor({state:'hidden'});assert.equal(await comparison.isVisible(),false);await page.waitForFunction(()=>document.body.style.overflow==='')
   await page.getByRole('button',{name:/ساعت هفته/}).click();await page.getByRole('dialog',{name:/ساعت/}).waitFor();await centered(page.getByRole('dialog',{name:/ساعت/}));await page.keyboard.press('Escape');await page.getByRole('dialog',{name:/ساعت/}).waitFor({state:'hidden'})
   await page.getByRole('button',{name:'مسیریابی',exact:true}).click();const directions=page.getByRole('dialog',{name:'با کدام نقشه برویم؟'});await directions.waitFor();await centered(directions);assert.equal(await directions.getByText('دقیق‌تر در ایران').count(),0);await page.keyboard.press('Escape');await directions.waitFor({state:'hidden'})
   await page.getByRole('button',{name:'دیدن منو',exact:true}).click()
   const menu=width<700?page.getByRole('dialog',{name:/منوی کافه راموز/}):page.locator('#menu')
   const categories=menu.getByRole('navigation',{name:'دسته‌های منو'});await categories.waitFor()
   if(width>=700)await menu.evaluate(element=>element.scrollIntoView({behavior:'instant',block:'start'}))
-  assert.equal(await menu.getByText('دستهٔ انتخاب‌شده',{exact:true}).count(),0)
+  assert.ok(await menu.getByText('دستهٔ انتخاب‌شده',{exact:true}).count()>0)
   assert.ok(await categories.locator('img').count()>0)
   if(width>=700){const boxes=await categories.getByRole('button').evaluateAll(nodes=>nodes.map(n=>{const b=n.getBoundingClientRect();return{top:b.top,bottom:b.bottom}}));for(let n=1;n<boxes.length;n++)assert.ok(boxes[n].top>=boxes[n-1].bottom-1,'category overlap')}
   await check('menu');await page.screenshot({path:`var/qa/cafe-upgrade/menu-${width}.png`})
   if(width<700){await page.keyboard.press('Escape');await menu.waitFor({state:'hidden'})}
+  if(width<700)await page.getByRole('navigation',{name:'بخش‌های کافه'}).getByRole('link',{name:'تجربه‌ها'}).click()
   await page.getByRole('button',{name:'ثبت تجربهٔ من',exact:true}).click();const reviewDialog=page.getByRole('dialog',{name:'تجربه‌ات را با دیگران شریک شو'});await centered(reviewDialog)
   const form=reviewDialog.locator('form').filter({has:page.locator('input[name="stars"]')}).first()
   assert.ok(await form.getByRole('button',{name:'انتخاب سفارش‌ها',exact:true}).isDisabled());await form.locator('label').filter({has:page.locator('input[name="stars"][value="5"]')}).click();await form.getByRole('button',{name:'انتخاب سفارش‌ها',exact:true}).click()

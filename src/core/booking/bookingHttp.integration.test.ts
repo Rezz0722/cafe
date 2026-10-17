@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto'
 import { spawn } from 'node:child_process'
 import { once } from 'node:events'
 import { createServer } from 'node:net'
+import { mkdir } from 'node:fs/promises'
 import { and, eq, inArray } from 'drizzle-orm'
 import { closeDb, getDb } from '@/db/client'
 import { appUser, auditLog, authSession, bookingItemIntent, bookingRequest, bookingStatusHistory,
@@ -97,6 +98,23 @@ test('isolated signed HTTP booking pages and optional browser journey', {
       const customerContext = await browser.newContext({ baseURL: origin, viewport: { width: 390, height: 844 } })
       await customerContext.addCookies([{ name: SESSION_COOKIE, value: cookies.customer!.split('=')[1]!, url: origin, httpOnly: true, sameSite: 'Lax' }])
       const customerPage = await customerContext.newPage()
+      await customerPage.goto(`/cafe/${slug}`)
+      await customerPage.locator('#page-top[data-cafe-ready="true"]').waitFor()
+      assert.equal(await customerPage.getByRole('navigation', { name: 'بخش‌های کافه' }).getByRole('link').count(), 4)
+      await mkdir('var/qa/mobile-miniapp', { recursive: true })
+      await customerPage.screenshot({ path: 'var/qa/mobile-miniapp/booking-opt-in-overview-390.png' })
+      await customerPage.getByRole('link', { name: 'درخواست رزرو میز' }).click()
+      await customerPage.getByText('ثبت درخواست به معنی رزرو قطعی میز نیست').waitFor()
+      await customerPage.goBack()
+      await customerPage.locator('#page-top[data-cafe-screen="overview"]').waitFor()
+      await customerPage.getByRole('navigation', { name: 'بخش‌های کافه' }).getByRole('link', { name: 'تجربه‌ها' }).click()
+      await customerPage.getByRole('button', { name: 'ثبت تجربهٔ من' }).click()
+      const reviewComposer = customerPage.getByRole('dialog', { name: 'تجربه‌ات را با دیگران شریک شو' })
+      await reviewComposer.waitFor()
+      await customerPage.waitForTimeout(250)
+      await customerPage.screenshot({ path: 'var/qa/mobile-miniapp/review-composer-390.png' })
+      await customerPage.keyboard.press('Escape')
+      await reviewComposer.waitFor({ state: 'hidden' })
       for (const width of [320, 360, 390, 430, 768, 1440]) {
         await customerPage.setViewportSize({ width, height: 844 })
         await customerPage.goto(`/cafe/${slug}/request`)

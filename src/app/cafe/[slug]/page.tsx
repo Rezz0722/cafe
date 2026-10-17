@@ -6,6 +6,7 @@ import { DirectionsBar } from '@/components/cafe/DirectionsBar'
 import { HoursCard } from '@/components/cafe/HoursCard'
 import { CafePopover, MenuOpenButton } from '@/components/cafe/CafePopover'
 import { MenuBrowser } from '@/components/cafe/MenuBrowser'
+import { CafeMiniAppNav } from '@/components/cafe/CafeMiniAppNav'
 import { PlaceGallery, type GalleryImage } from '@/components/cafe/PlaceGallery'
 import { ReviewForm } from '@/components/cafe/ReviewForm'
 import { SavePlaceButton } from '@/components/cafe/SavePlaceButton'
@@ -13,7 +14,7 @@ import { SharePlaceButton } from '@/components/cafe/SharePlaceButton'
 import { ClubJoinButton } from '@/components/cafe/ClubJoinButton'
 import { SuggestEdit } from '@/components/cafe/SuggestEdit'
 import { Stars } from '@/components/ui/Stars'
-import { Armchair, BadgeCheck, BadgePercent, CameraOff, ChevronDown, Coffee, Croissant, Database, ExternalLink, MapPin, MessageSquareText, ShoppingBag, UtensilsCrossed, WalletCards } from 'lucide-react'
+import { Armchair, BadgeCheck, BadgePercent, CameraOff, ChevronDown, Coffee, Croissant, Database, ExternalLink, MapPin, MessageSquareText, Phone, ShoppingBag, UtensilsCrossed, WalletCards } from 'lucide-react'
 import { BreadcrumbJsonLd, PlaceJsonLd } from '@/components/seo/PlaceJsonLd'
 import { getSession } from '@/core/auth/currentUser'
 import { getVenueDiscount } from '@/core/club/venueDiscounts'
@@ -312,6 +313,16 @@ export default async function CafePage({ params }: PageProps) {
     )
     .slice(0, 6)
 
+  const reviewFormProps = {
+    placeId: place.id, slug: place.slug, placeName: place.name, signedIn: !!user,
+    existing: null, menuItems: reviewableMenuItems,
+    authHref: authUrl(`${paths.cafe(place.slug)}#reviews`),
+    minTextLength: moderation.reviewMinTextLength,
+    maxTextLength: moderation.reviewMaxTextLength,
+    isBlogger: account?.isBlogger === true,
+  }
+  const newReviewForm = moderation.reviewsEnabled ? <ReviewForm {...reviewFormProps} /> : null
+
   return (
     <>
       <PlaceJsonLd
@@ -355,7 +366,7 @@ export default async function CafePage({ params }: PageProps) {
       />
 
       <main id="page-top" className={styles.page}>
-        <nav className={styles.breadcrumbs} aria-label="مسیر صفحه">
+        <nav className={styles.breadcrumbs} aria-label="مسیر صفحه" data-cafe-screen="overview">
           <Link href={paths.home}>خانه</Link>
           <span aria-hidden="true">/</span>
           {place.districtName && place.districtId ? (
@@ -368,8 +379,9 @@ export default async function CafePage({ params }: PageProps) {
           <span aria-hidden="true">/</span>
           <span aria-current="page">{place.name}</span>
         </nav>
+        <CafeMiniAppNav placeName={place.name} />
 
-        <section className={styles.introGrid} data-has-media={galleryImages.length > 0} aria-labelledby="place-title">
+        <section className={styles.introGrid} data-has-media={galleryImages.length > 0} data-cafe-screen="overview" aria-labelledby="place-title">
           <div className={styles.heroVisual}>
             {galleryImages.length > 0 ? (
               <PlaceGallery images={galleryImages} placeName={place.name} />
@@ -412,7 +424,7 @@ export default async function CafePage({ params }: PageProps) {
                   {place.ribbon && <span className={styles.ribbon}>{place.ribbon}</span>}
                 </div>
 
-                <h1 id="place-title" className={styles.name}>{identity.title}</h1>
+                <h1 id="place-title" className={styles.name} tabIndex={-1}>{identity.title}</h1>
                 {(place.brandNameEn ?? place.nameEn) && <p className={styles.nameEn}>{place.brandNameEn ?? place.nameEn}</p>}
               </div>
             </div>
@@ -437,35 +449,41 @@ export default async function CafePage({ params }: PageProps) {
             </div>
 
             <div className={styles.actionRow} id="directions">
-              <MenuOpenButton />
+              <div className={styles.primaryActions}>
+                <MenuOpenButton />
+                {place.coords && place.geoStatus !== 'missing' && <DirectionsBar
+                  lat={place.coords?.lat ?? null}
+                  lng={place.coords?.lng ?? null}
+                  name={place.name}
+                  address={place.address}
+                  phones={place.phones}
+                  instagram={place.instagram}
+                  geoStatus={place.geoStatus}
+                  services={map.routingServices}
+                  showContactActions={false}
+                />}
+              </div>
               {bookingSettings && <Link href={paths.cafeRequest(place.slug)} className={styles.bookingAction}>درخواست رزرو میز</Link>}
               {bookingSettings && (canRequestBirthday || canRequestGathering) &&
                 <Link href={`${paths.cafeRequest(place.slug)}?kind=${canRequestBirthday ? 'birthday' : 'gathering'}&experience=${canRequestBirthday ? 'birthday' : 'gathering'}`} className={styles.bookingActionAlt}>هماهنگی {canRequestBirthday ? 'تولد' : 'دورهمی'}</Link>}
-              <DirectionsBar
-                lat={place.coords?.lat ?? null}
-                lng={place.coords?.lng ?? null}
-                name={place.name}
-                address={place.address}
-                phones={place.phones}
-                instagram={place.instagram}
-                geoStatus={place.geoStatus}
-                services={map.routingServices}
-              />
-              <SavePlaceButton
-                placeId={place.id}
-                slug={place.slug}
-                initialSaved={isSaved}
-                signedIn={!!user}
-                authHref={authUrl(paths.cafe(place.slug))}
-              />
-              <SharePlaceButton name={place.name} />
-              <ClubJoinButton placeId={place.id} slug={place.slug} joined={clubMembership?.status === 'active'} signedIn={!!user} authHref={authUrl(paths.cafe(place.slug))} />
+              <div className={styles.secondaryActions}>
+                {place.phones[0] && <a className={styles.callAction} href={`tel:${place.phones[0].phone}`}><Phone size={16} aria-hidden="true" /> تماس</a>}
+                <SavePlaceButton
+                  placeId={place.id}
+                  slug={place.slug}
+                  initialSaved={isSaved}
+                  signedIn={!!user}
+                  authHref={authUrl(paths.cafe(place.slug))}
+                />
+                <SharePlaceButton name={place.name} />
+                <ClubJoinButton placeId={place.id} slug={place.slug} joined={clubMembership?.status === 'active'} signedIn={!!user} authHref={authUrl(paths.cafe(place.slug))} />
+              </div>
             </div>
             {clubOffers.length > 0 && <div className={styles.clubOffers}><strong><BadgePercent size={16}/> پیشنهاد اعضای باشگاه</strong>{clubOffers.map(offer=><span key={offer.id}>{offer.title} · {offer.discountLabel}</span>)}</div>}
           </header>
         </section>
 
-        <section className={styles.compactFacts} aria-label="خلاصهٔ تصمیم‌گیری">
+        <section className={styles.compactFacts} data-cafe-screen="overview" aria-label="خلاصهٔ تصمیم‌گیری">
           {place.priceMedian !== null && (
             <div className={styles.factItem}>
               <WalletCards size={21} aria-hidden="true" />
@@ -477,7 +495,7 @@ export default async function CafePage({ params }: PageProps) {
           {place.ratingCount > 0 && (
             <Link className={styles.ratingFact} href="#reviews"><MessageSquareText size={21} aria-hidden="true" /><span><small>تجربهٔ ثبت‌شده</small><strong>★ {fa((place.rawRating ?? place.rating).toFixed(1))} از ۵</strong></span><em>{faCount(place.ratingCount)} نظر{place.ratingCount<5?' · اولیه':''}</em></Link>
           )}
-          <div className={styles.compareFact} id="price-compare"><CafePopover label="مقایسه با قیمت شهر" title="قیمت اینجا در مقایسه با شهر" scan>
+          <div className={styles.compareFact} id="price-compare"><CafePopover label="مقایسه با قیمت شهر" title="قیمت اینجا در مقایسه با شهر" comparison>
             <div className={styles.compareIntro}><span>از منوهای واقعی مشهد</span><h3>با دید باز انتخاب کن</h3><p>قیمت شروع هر خوراکی در این کافه، کنار میانهٔ قیمت ثبت‌شدهٔ همان خوراکی در شهر.</p></div>
             {comparableDishes.length===0?<div className={styles.compareEmpty}><strong>برای یک مقایسهٔ مطمئن، هنوز داده کافی نیست</strong><p>وقتی تعداد منوهای قابل مقایسه بیشتر شود، نتیجه اینجا نمایش داده می‌شود.</p></div>:<ul className={styles.compareList}>{comparableDishes.map(dish=><li key={dish.dishId}><div className={styles.compareHeading}><Link href={paths.dish(dish.slug)}>{dish.nameFa}</Link><small>{faCount(dish.cityPlaceCount)} مجموعه در نمونهٔ شهر</small></div><div className={styles.compareNumbers}><div><span>شروع قیمت اینجا</span><strong>{toman(dish.minPrice!)}</strong></div><div><span>میانهٔ شهر</span><strong>{toman(dish.cityMedian!)}</strong></div></div><Link className={styles.compareExplore} href={paths.dish(dish.slug)}>دیدن قیمت‌ها و گزینه‌های دیگر</Link></li>)}</ul>}
             <p className={styles.compareCaveat}>مقایسهٔ قیمت پایه است، نه قیمت با تخفیف. اندازه، مواد و افزودنی‌ها ممکن است متفاوت باشند؛ ارزان‌تر بودن به‌تنهایی نشانهٔ انتخاب بهتر نیست.</p>
@@ -495,7 +513,7 @@ export default async function CafePage({ params }: PageProps) {
           /* شفافیت درباره‌ی دست‌کاری داده: قیمت‌های این مجموعه در منبع به
              «هزار تومان» بود و اصلاح شد. پنهان‌کردنش یعنی اگر اشتباه کرده
              باشیم، کاربر هیچ راهی برای فهمیدنش ندارد. */
-          <p className={styles.dataNote}>
+          <p className={styles.dataNote} data-cafe-screen="info">
             قیمت‌های منوی این مجموعه در منبع به «هزار تومان» ثبت شده بود و برای نمایش به
             تومان تبدیل شده است.
           </p>
@@ -506,7 +524,8 @@ export default async function CafePage({ params }: PageProps) {
             {/* منو هدف اصلی بیشتر بازدیدهاست؛ مخصوصاً روی موبایل نباید بعد از
                 متن معرفی و پیشنهادهای قیمتی دفن شود. خود مرورگر منو در موبایل
                 یک CTA جمع‌وجور است و با یک لمس تمام‌صفحه باز می‌شود. */}
-            <MenuBrowser
+            <div className={styles.menuScreen} data-cafe-screen="menu">
+              <MenuBrowser
               placeId={place.id}
               discountPercent={venueDiscount?.percent??0}
               discountExpiresAt={venueDiscount?.expiresAt.toISOString()??null}
@@ -518,10 +537,11 @@ export default async function CafePage({ params }: PageProps) {
               priceUpdatedLabel={formattedPriceDate}
               priceIsStale={priceIsStale}
               sourceLabel={sourceLabel}
-            />
+              />
+            </div>
 
             {place.about && (
-              <section className={styles.about} id="about">
+              <section className={styles.about} id="about" data-cafe-screen="info">
                 <span className={styles.sectionKicker}>داستان این مکان</span>
                 <h2 className={styles.sectionHeading}>دربارهٔ {place.name}</h2>
                 {place.about
@@ -533,15 +553,19 @@ export default async function CafePage({ params }: PageProps) {
               </section>
             )}
 
-            <section className={styles.reviews} id="reviews">
+            <section className={styles.reviews} id="reviews" data-cafe-screen="reviews">
               <span className={styles.sectionKicker}>تجربهٔ آدم‌ها</span>
-              <h2 className={styles.sectionHeading}>نظرها دربارهٔ {place.name}</h2>
+              <h2 className={styles.sectionHeading} tabIndex={-1}>تجربه‌ها در {place.name}</h2>
+              <p className={styles.reviewsSummary}>{place.ratingCount > 0 ? `★ ${fa((place.rawRating ?? place.rating).toFixed(1))} از ۵ · ${faCount(place.ratingCount)} نظر تأییدشده` : 'هنوز امتیاز تأییدشده‌ای ثبت نشده است.'}</p>
               {visibleReviews.length === 0 ? (
-                <p className={styles.noReviews}>
-                  هنوز نظری ثبت نشده. اگر اینجا رفته‌اید، اولین نفر باشید.
-                </p>
+                <div className={styles.noReviews}>
+                  <p>هنوز تجربه‌ای ثبت نشده.</p>
+                  {moderation.reviewsEnabled && <ReviewForm {...reviewFormProps} compact />}
+                </div>
               ) : (
-                <ul className={styles.reviewList}>
+                <>
+                  <div className={styles.reviewsAction}>{newReviewForm}</div>
+                  <ul className={styles.reviewList}>
                   {visibleReviews.map((review) => (
                     <li key={review.id} data-own-review={review.userId === user?.id || undefined} data-review-status={review.status} className={`${styles.review} ${review.isBloggerReview ? styles.bloggerReview : ''} ${review.userId === user?.id ? styles.ownReview : ''}`}>
                       {review.userId === user?.id && <p className={styles.ownReviewStatus}>نظر شما · {review.status === 'approved' ? 'منتشر شده' : review.status === 'rejected' ? 'تأیید نشده؛ فقط برای شما قابل مشاهده است' : 'در انتظار بررسی؛ فقط برای شما قابل مشاهده است'}</p>}
@@ -566,7 +590,8 @@ export default async function CafePage({ params }: PageProps) {
                       ))}
                     </li>
                   ))}
-                </ul>
+                  </ul>
+                </>
               )}
               {ownReviews.length > 0 && <Link className={styles.myReviewsLink} href={paths.myReviews}>همهٔ تجربه‌های من و وضعیت انتشارشان</Link>}
 
@@ -584,16 +609,17 @@ export default async function CafePage({ params }: PageProps) {
                       </div>
                     </details>
                   )}
-                  <div className={styles.reviewFormWrap}>
-                    <h3 className={styles.reviewFormTitle}>{myReview ? 'مراجعهٔ جدیدت را ثبت کن' : 'نظرت را بنویس'}</h3>
-                    <ReviewForm placeId={place.id} slug={place.slug} placeName={place.name} signedIn={!!user} existing={null} menuItems={reviewableMenuItems} authHref={authUrl(`${paths.cafe(place.slug)}#reviews`)} minTextLength={moderation.reviewMinTextLength} maxTextLength={moderation.reviewMaxTextLength} isBlogger={account?.isBlogger === true} />
-                  </div>
                 </>
               )}
             </section>
           </div>
 
-          <aside className={styles.side}>
+          <aside className={styles.side} data-cafe-screen="info">
+            <h2 className={styles.mobileScreenHeading} tabIndex={-1}>اطلاعات {place.name}</h2>
+            {hourGroups.length > 0 && <section className={styles.card} aria-label="ساعت کاری کامل">
+              <h3 className={styles.sideHeading}>ساعت کاری</h3>
+              <ul className={styles.hoursList}>{hourGroups.map(group => <li key={group.dows.join('-')}><span>{group.label}</span><strong>{group.unknown ? 'نامشخص' : group.closed ? 'تعطیل' : fa(group.ranges.join('، '))}</strong></li>)}</ul>
+            </section>}
             <section className={`${styles.card} ${styles.mapCard}`} id="map">
               <h2 className={styles.sideHeading}>پیداکردن اینجا</h2>
               {place.coords && place.geoStatus === 'ok' ? (
@@ -704,7 +730,7 @@ export default async function CafePage({ params }: PageProps) {
             />
           </aside>
         </div>
-        <section className={`${styles.dataTrust} ${priceIsStale ? styles.dataTrustStale : ''}`} aria-label="منبع و تازگی اطلاعات">
+        <section className={`${styles.dataTrust} ${priceIsStale ? styles.dataTrustStale : ''}`} data-cafe-screen="info" aria-label="منبع و تازگی اطلاعات">
           <div className={styles.trustLead}><span className={styles.trustIcon} aria-hidden="true"><Database size={20}/></span><div><strong>منشأ اولیهٔ اطلاعات: {sourceLabel}</strong><span>{formattedPriceDate?`جدیدترین تغییر ثبت‌شدهٔ قیمت: ${formattedPriceDate}`:'زمان تغییر قیمت ثبت نشده است'}</span>{formattedSourceSyncDate&&<span>آخرین همگام‌سازی منبع: {formattedSourceSyncDate}</span>}{priceIsStale&&<span>برخی قیمت‌ها نیاز به بازبینی دارند.</span>}</div></div>
           {place.priceStatsItemCount>0 && <details><summary>مبنای آمار قیمت</summary><p>بر پایهٔ {faCount(place.priceStatsItemCount)} آیتم مشمول؛ خدمات و قیمت‌های خارج از قواعد محاسبه کنار گذاشته می‌شوند. بازهٔ قیمت از میانه و ردهٔ قیمت جداست.{place.priceMinItemName&&place.priceMaxItemName?` کمینه: ${place.priceMinItemName}؛ بیشینه: ${place.priceMaxItemName}.`:''}</p></details>}
         </section>

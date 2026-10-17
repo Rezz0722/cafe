@@ -57,6 +57,7 @@ interface Props {
   geoStatus?: string
   /** سرویس‌های مسیریابی و ترتیبشان — از تنظیمات پنل ادمین. */
   services?: string[]
+  showContactActions?: boolean
 }
 
 const DEFAULT_SERVICES = ['neshan', 'balad', 'google', 'waze', 'osm']
@@ -70,6 +71,7 @@ export function DirectionsBar({
   instagram,
   geoStatus,
   services = DEFAULT_SERVICES,
+  showContactActions = true,
 }: Props) {
   /** «کپی شد» — بازخورد لازم است، وگرنه کاربر نمی‌داند کلیک کارگر شد یا نه. */
   const [copied, setCopied] = useState<string | null>(null)
@@ -237,14 +239,14 @@ export function DirectionsBar({
         </p>
       )}
 
-      {callable && (
+      {showContactActions && callable && (
         <a href={`tel:${callable.phone}`} className={styles.action}>
           <Phone size={16} aria-hidden="true" />
           تماس
         </a>
       )}
 
-      {instagram && (
+      {showContactActions && instagram && (
         <a
           href={`https://instagram.com/${instagram}`}
           target="_blank"
