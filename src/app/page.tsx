@@ -3,13 +3,10 @@ import type { CSSProperties } from 'react'
 import Link from 'next/link'
 import {
   ArrowLeft,
-  BadgeCheck,
   Book,
-  BookOpenText,
   CakeSlice,
   Building2,
   Camera,
-  Check,
   ChevronLeft,
   Clock3,
   Coffee,
@@ -19,13 +16,10 @@ import {
   LocateFixed,
   MapPinned,
   Moon,
-  Navigation,
   Salad,
-  ShieldCheck,
   Store,
   Sunrise,
   Trees,
-  Tags,
   UtensilsCrossed,
   Users,
   WalletCards,
@@ -46,6 +40,8 @@ import {
 } from '@/core/places/queries'
 import { searchPath } from '@/core/search/filters'
 import { listExperienceSummaries } from '@/core/experience/queries'
+import { listUpcomingPublicEvents } from '@/core/events/service'
+import { pickHomeRecommendations } from '@/core/discovery/homeRecommendations'
 import { maintenanceState } from '@/core/settings/maintenance'
 import { getDiscoveryPolicy, getLocalePolicy } from '@/core/settings/policies'
 import { getSettings } from '@/core/settings/store'
@@ -194,22 +190,25 @@ export default async function HomePage() {
     getLocalePolicy(),
     getSettings(),
   ])
-  const [stats, featured, facets, districts, popularDishes] = await Promise.all([
+  const [stats, rankedPlaces, facets, districts, popularDishes, events] = await Promise.all([
     getSiteStats(),
-    listPlaceCards({ limit: discovery.homeCardCount, sort: 'rating' }),
+    listPlaceCards({ limit: Math.max(24, discovery.homeCardCount * 5), sort: 'quality' }),
     listFilterFacets(),
     listDistricts(),
     listPopularDishes(8),
+    listUpcomingPublicEvents({ limit: 2 }),
   ])
   const experienceSummaries = await listExperienceSummaries()
 
   const facetLabels = Object.fromEntries(facets.map((facet) => [facet.id, facet.labelFa]))
-  const popularFacets = facets.filter((facet) => facet.kind !== 'service').slice(0, 8)
+  const popularFacets = facets.filter((facet) => facet.kind !== 'service' && facet.placeCount > 0).slice(0, 6)
   const activeDistricts = districts.filter((district) => district.placeCount > 0).slice(0, 10)
   const siteDescription = `راهنمای منو، قیمت و انتخاب کافه‌ها و رستوران‌های ${locale.cityName}`
   const availableExperiences = experienceSummaries.filter((item) => item.candidateCount > 0)
   const experienceIcons = { work: Laptop, date: Heart, gathering: Users, birthday: CakeSlice, desserts: CakeSlice, healthy: Salad, breakfast: Sunrise, study: Book, outdoor: Trees, 'late-night': Moon, photogenic: Camera, calm: Leaf, 'specialty-coffee': Coffee }
-  const heroExperiences = availableExperiences.slice(0, 3)
+  const featured = pickHomeRecommendations(rankedPlaces, Math.min(4, discovery.homeCardCount))
+  const firstExperience = availableExperiences[0]
+  const firstFood = popularFacets[0]
 
   return (
     <div className={styles.home}>
@@ -218,7 +217,7 @@ export default async function HomePage() {
         siteName={settings.siteName}
         description={siteDescription}
         cityName={locale.cityName}
-        featured={featured}
+        featured={featured.map(({ card }) => card)}
       />
 
       <main>
@@ -230,64 +229,53 @@ export default async function HomePage() {
                 راهنمای انتخاب کافه در {locale.cityName}
               </div>
               <h1 id="home-title" className={styles.title}>
-                کافه‌ای پیدا کن که
-                <span> به حالِ امروزت</span> بخورد.
+                امروز <span>کجا بریم؟</span>
               </h1>
               <p className={styles.lede}>
-                کافه، غذا یا محله‌ات رو پیدا کن؛ منو، قیمت و مسیر رو قبل از رفتن ببین.
+                کافه‌های {locale.cityName}، منو، قیمت و تجربهٔ آدم‌ها.
               </p>
 
               <HeroSearch />
 
               <div className={styles.heroShortcuts} aria-label="شروع سریع">
-                <Link href={searchPath({ nearMe: true, sort: 'distance' })}>
+                <Link href={searchPath({ nearMe: true, sort: 'distance' })} data-discovery-event="nearby_search_started" data-discovery-context="near_me" data-discovery-source="hero">
                   <LocateFixed size={18} aria-hidden="true" /> نزدیک من
                 </Link>
                 <Link href={searchPath({ openNow: true })}>
                   <Clock3 size={18} aria-hidden="true" /> الان باز است
                 </Link>
-                <Link href={paths.districtHub}>
+                <Link href={paths.districtHub} data-discovery-event="discovery_category_clicked" data-discovery-context="district" data-discovery-source="hero">
                   <Building2 size={18} aria-hidden="true" /> انتخاب محله
                 </Link>
               </div>
-              <InstallLink />
             </div>
-
-            {heroExperiences.length > 0 && (
-              <div className={styles.heroVisual} aria-label="راه‌های انتخاب کافه بر اساس نیاز">
-                {heroExperiences.map(({ experience, candidateCount }, index) => {
-                  const Icon = experienceIcons[experience.slug]
-                  return (
-                    <Link
-                      href={paths.experience(experience.slug)}
-                      className={styles.heroMomentCard}
-                      data-featured={index === 0 ? 'true' : undefined}
-                      data-experience-track="card_click"
-                      data-experience-slug={experience.slug}
-                      data-experience-count={candidateCount}
-                      key={experience.slug}
-                    >
-                      <img src={experience.image} alt={experience.imageAlt} width={1536} height={1024} />
-                      <span className={styles.heroMomentBody}>
-                        <i style={{ color: experience.accent } as CSSProperties}><Icon size={18} /></i>
-                        <span><b>{experience.shortTitle}</b><small>{faCount(candidateCount)}</small></span>
-                        <ChevronLeft size={17} aria-hidden="true" />
-                      </span>
-                    </Link>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-
-          <div className={`container ${styles.proofBar}`} aria-label="پوشش واقعی اطلاعات کو کافه">
-            <div><strong>{faCount(stats.publishedPlaces)}</strong><span>کافه و رستوران</span></div>
-            <div><strong>{faCount(stats.menuItems)}</strong><span>آیتم منوی قابل جست‌وجو</span></div>
-            <div><strong>{faCount(stats.districts)}</strong><span>محلهٔ {locale.cityName}</span></div>
           </div>
         </section>
 
-        <DiscountDiscovery />
+        <section id="how-it-works" className={`container ${styles.quickDiscovery}`} aria-labelledby="quick-discovery-title">
+          <div className={styles.sectionHeading}>
+            <div><span className={styles.sectionKicker}>از نیازت شروع کن</span><h2 id="quick-discovery-title">چی برات مهم‌تره؟</h2></div>
+          </div>
+          <div className={styles.quickDiscoveryGrid}>
+            {firstExperience && <Link href={paths.experience(firstExperience.experience.slug)} className={styles.quickDiscoveryCard} data-experience-track="card_click" data-experience-slug={firstExperience.experience.slug} data-experience-count={firstExperience.candidateCount}>
+              <span className={styles.quickDiscoveryIcon}><Heart size={21} aria-hidden="true" /></span>
+              <span><strong>حال‌وهوا و مناسبت</strong><small>{firstExperience.experience.shortTitle}، کار، قرار و بیشتر</small></span><ArrowLeft size={17} aria-hidden="true" />
+            </Link>}
+            {firstFood && <Link href={paths.menuCategory(firstFood.id)} className={styles.quickDiscoveryCard} data-discovery-event="food_category_selected" data-discovery-context={firstFood.id} data-discovery-source="quick_discovery">
+              <span className={styles.quickDiscoveryIcon}><UtensilsCrossed size={21} aria-hidden="true" /></span>
+              <span><strong>غذا و نوشیدنی</strong><small>{firstFood.labelFa} و منوهای واقعی</small></span><ArrowLeft size={17} aria-hidden="true" />
+            </Link>}
+            <Link href={paths.districtHub} className={styles.quickDiscoveryCard} data-discovery-event="discovery_category_clicked" data-discovery-context="district" data-discovery-source="quick_discovery">
+              <span className={styles.quickDiscoveryIcon}><MapPinned size={21} aria-hidden="true" /></span>
+              <span><strong>محله و موقعیت</strong><small>نزدیک من، الان باز و نقشه</small></span><ArrowLeft size={17} aria-hidden="true" />
+            </Link>
+          </div>
+          <nav className={styles.quickHubLinks} aria-label="همهٔ مسیرهای کشف">
+            <Link href={paths.experienceHub}>همهٔ تجربه‌ها</Link>
+            <Link href={paths.menuHub}>همهٔ دسته‌های منو</Link>
+            <Link href={paths.districtHub}>همهٔ محله‌ها</Link>
+          </nav>
+        </section>
         {availableExperiences.length > 0 && (
           <section className={`container ${styles.section} ${styles.experienceSection}`} aria-labelledby="experience-title">
             <div className={styles.sectionHeading}>
@@ -328,19 +316,19 @@ export default async function HomePage() {
         <section className={`container ${styles.section} ${styles.discoverySection}`} aria-labelledby="discovery-title">
           <div className={styles.sectionHeading}>
             <div>
-              <span className={styles.sectionKicker}>بدون دانستن اسم کافه</span>
-              <h2 id="discovery-title">اول غذا را انتخاب کن، بعد کافه را</h2>
-              <p>دستهٔ دلخواهت را باز کن یا قیمت یک انتخاب محبوب را بین چند منو مقایسه کن.</p>
+              <span className={styles.sectionKicker}>منوی واقعی مجموعه‌ها</span>
+              <h2 id="discovery-title">چی بخوریم؟</h2>
+              <p>از خوراکی دلخواهت به کافه‌هایی برس که آن را در منوی ثبت‌شده دارند.</p>
             </div>
-            <Link href={searchPath({ scope: 'items' })} className={styles.textLink}>
-              همهٔ منوها <ArrowLeft size={16} />
+            <Link href={paths.menuHub} className={styles.textLink}>
+              همهٔ دسته‌ها <ArrowLeft size={16} />
             </Link>
           </div>
 
           <div className={styles.discoveryGrid}>
             <div className={styles.categoryGrid} aria-label="دسته‌های محبوب منو">
               {popularFacets.map((facet) => (
-                <Link href={paths.menuCategory(facet.id)} className={styles.categoryCard} key={facet.id}>
+                <Link href={paths.menuCategory(facet.id)} className={styles.categoryCard} key={facet.id} data-discovery-event="food_category_selected" data-discovery-context={facet.id} data-discovery-source="food_discovery">
                   <span className={styles.categoryIcon}><FacetIcon id={facet.id} size={22} /></span>
                   <span><b>{facet.labelFa}</b><small>{faCount(facet.placeCount)} مجموعه</small></span>
                   <ChevronLeft size={17} aria-hidden="true" />
@@ -352,10 +340,10 @@ export default async function HomePage() {
               <aside className={styles.comparePanel} aria-label="مقایسهٔ قیمت‌های محبوب">
                 <div className={styles.compareHeading}>
                   <WalletCards size={21} aria-hidden="true" />
-                  <span><b>قبل از سفارش مقایسه کن</b><small>کمترین قیمت ثبت‌شده در منوها</small></span>
+                  <span><b>قیمت‌های ثبت‌شده را ببین</b><small>قیمت امروزِ کافه تضمین نمی‌شود</small></span>
                 </div>
                 <div className={styles.dishList}>
-                  {popularDishes.slice(0, 5).map((dish) => (
+                  {popularDishes.slice(0, 2).map((dish) => (
                     <Link href={paths.dish(dish.slug)} key={dish.id}>
                       <span><b>{dish.nameFa}</b><small>{faCount(dish.placeCount)} منو</small></span>
                       <em>{dish.minPrice !== null ? `از ${toman(dish.minPrice)}` : 'مشاهده'}</em>
@@ -365,42 +353,6 @@ export default async function HomePage() {
                 </div>
               </aside>
             )}
-          </div>
-        </section>
-
-        {featured.length > 0 && (
-          <section className={styles.featuredBand} aria-labelledby="featured-title">
-            <div className={`container ${styles.section}`}>
-              <div className={styles.sectionHeading}>
-                <div>
-                  <span className={styles.sectionKicker}>اطلاعات کامل‌تر برای تصمیم مطمئن‌تر</span>
-                  <h2 id="featured-title">پیشنهادهایی برای شروع</h2>
-                  <p>منو، ساعت، محله و اطلاعات ثبت‌شدهٔ هر شعبه را یک‌جا بررسی کن.</p>
-                </div>
-                <Link href={searchPath({ sort: 'quality' })} className={styles.textLink}>
-                  همهٔ کافه‌ها <ArrowLeft size={16} />
-                </Link>
-              </div>
-              <div className={styles.featuredGrid}>
-                {featured.map((card) => <CafeCard key={card.id} card={card} facetLabels={facetLabels} />)}
-              </div>
-            </div>
-          </section>
-        )}
-
-        <section id="how-it-works" className={styles.decisionBand} aria-labelledby="decision-title">
-          <div className={`container ${styles.decisionGrid}`}>
-            <div className={styles.decisionCopy}>
-              <span>پیشنهاد قابل توضیح</span>
-              <h2 id="decision-title">هر انتخاب، با اطلاعاتی که لازم داری</h2>
-              <p>کو کافه فقط یک فهرست اسم نیست؛ قبل از انتخاب، سه سؤال اصلی را روشن می‌کند.</p>
-              <Link href={paths.methodology}>روش جمع‌آوری و اعتبار داده‌ها <ArrowLeft size={16} /></Link>
-            </div>
-            <div className={styles.decisionSteps}>
-              <div><BookOpenText size={23} /><span><b>چی دارد؟</b><small>منوی دسته‌بندی‌شده و قابل جست‌وجوی همان شعبه</small></span></div>
-              <div><Clock3 size={23} /><span><b>الان می‌شود رفت؟</b><small>ساعت کاری، وضعیت بازبودن و آخرین به‌روزرسانی</small></span></div>
-              <div><Navigation size={23} /><span><b>کجاست؟</b><small>آدرس، فاصله و مسیریابی مستقیم روی موبایل</small></span></div>
-            </div>
           </div>
         </section>
 
@@ -415,7 +367,7 @@ export default async function HomePage() {
             </div>
             <div className={styles.districtRail}>
               {activeDistricts.map((district) => (
-                <Link href={paths.district(district.slug)} key={district.id}>
+                <Link href={paths.district(district.slug)} key={district.id} data-discovery-event="discovery_category_clicked" data-discovery-context={district.slug} data-discovery-source="district">
                   <MapPinned size={19} aria-hidden="true" />
                   <span><b>{district.name}</b><small>{faCount(district.placeCount)} مجموعه</small></span>
                   <ChevronLeft size={16} aria-hidden="true" />
@@ -425,37 +377,58 @@ export default async function HomePage() {
           </section>
         )}
 
+        {featured.length > 0 && (
+          <section className={styles.featuredBand} aria-labelledby="featured-title">
+            <div className={`container ${styles.section}`}>
+              <div className={styles.sectionHeading}>
+                <div>
+                  <span className={styles.sectionKicker}>دلیل روشن برای شروع</span>
+                  <h2 id="featured-title">کافه‌های قابل بررسی</h2>
+                  <p>هر پیشنهاد بر پایهٔ دادهٔ ثبت‌شده است؛ نه عنوان «بهترین» یا بازدید بالا.</p>
+                </div>
+                <Link href={searchPath({ sort: 'quality' })} className={styles.textLink}>
+                  همهٔ کافه‌ها <ArrowLeft size={16} />
+                </Link>
+              </div>
+              <div className={styles.featuredGrid}>
+                {featured.map(({ card, reason }) => (
+                  <div className={styles.featuredEntry} key={card.id} data-discovery-event="cafe_detail_opened" data-discovery-context={String(card.id)} data-discovery-source="featured">
+                    <span className={styles.featuredReason}>{reason}</span>
+                    <CafeCard card={card} facetLabels={facetLabels} />
+                    <Link className={styles.featuredMenuLink} href={`${paths.cafe(card.slug)}?menu=1#menu`} data-discovery-event="menu_opened_from_discovery" data-discovery-context={String(card.id)} data-discovery-source="featured">دیدن منو <ArrowLeft size={15} aria-hidden="true" /></Link>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {events.length > 0 && <section className={`container ${styles.section} ${styles.eventSection}`} aria-labelledby="home-events-title">
+          <div className={styles.sectionHeading}><div><span className={styles.sectionKicker}>برنامه‌های واقعی کافه‌ها</span><h2 id="home-events-title">رویدادهای پیشِ رو</h2></div><Link href={paths.events} className={styles.textLink}>همهٔ رویدادها <ArrowLeft size={16} /></Link></div>
+          <div className={styles.eventGrid}>{events.map(({ event, placeName }) => <Link href={paths.event(event.id)} key={event.id} className={styles.eventCard}><strong>{event.title}</strong><span>{placeName} · {new Date(`${event.startDate}T12:00:00Z`).toLocaleDateString('fa-IR', { timeZone: 'Asia/Tehran' })}</span><ArrowLeft size={17} aria-hidden="true" /></Link>)}</div>
+        </section>}
+
+        <DiscountDiscovery />
+
         <section id="for-venues" className={styles.ownerSection} aria-labelledby="owner-title">
-          <div className={`container ${styles.ownerGrid}`}>
+          <div className={`container ${styles.ownerGrid} ${styles.ownerGridCompact}`}>
             <div className={styles.ownerCopy}>
               <span className={styles.ownerBadge}><Store size={16} /> برای کافه‌دارها</span>
-              <h2 id="owner-title">منوی دیجیتال، فقط یک QR نیست.</h2>
-              <p>صفحهٔ اختصاصی هر شعبه، منوی قابل جست‌وجو، قیمت، ساعت، تصویر و QR؛ همه در یک پنل ساده و مناسب موبایل.</p>
-              <div className={styles.ownerChecks}>
-                <span><Check size={17} /> مدیریت منو و موجودی</span>
-                <span><Check size={17} /> صفحه و QR اختصاصی شعبه</span>
-                <span><Check size={17} /> حضور در جست‌وجوی خوراکی و محله</span>
-              </div>
+              <h2 id="owner-title">کافه‌دار هستی؟</h2>
+              <p>اطلاعات و منوی شعبه‌ات را در پنل KuCafe مدیریت کن.</p>
               <div className={styles.ownerActions}>
                 <Link href={`${paths.ownerLanding}?from=home`} className={styles.ownerPrimary}>دریافت پنل کافه <ArrowLeft size={16} /></Link>
                 <Link href={authUrl(paths.ownerPanel)} className={styles.ownerSecondary}>ورود اعضا</Link>
               </div>
             </div>
-
-            <div className={styles.ownerPreview} aria-label="امکانات پنل کافه">
-              <div className={styles.previewHead}>
-                <span><img src="/brand/app-icon-192.png" alt="" width={192} height={192} /></span>
-                <div><small>صفحهٔ اختصاصی شعبه</small><b>منوی مرتب، همیشه در دسترس</b></div>
-                <BadgeCheck size={22} aria-label="قابل تأیید" />
-              </div>
-              <div className={styles.previewRows}>
-                <div><Tags size={20} /><span><b>دسته‌بندی و آیتم</b><small>ویرایش سریع قیمت و موجودی</small></span><strong>مدیریت</strong></div>
-                <div><UtensilsCrossed size={20} /><span><b>منوی قابل جست‌وجو</b><small>برای مشتری و موتور جست‌وجو</small></span><strong>منتشر</strong></div>
-                <div><ShieldCheck size={20} /><span><b>دسترسی امن شعبه</b><small>فقط برای مدیران مجاز</small></span><strong>فعال</strong></div>
-              </div>
-            </div>
           </div>
         </section>
+
+        <div className={`container ${styles.homeAfterword}`}>
+          <span>{faCount(stats.publishedPlaces)} مجموعه · {faCount(stats.menuItems)} آیتم منوی قابل جست‌وجو</span>
+          <Link href={paths.methodology}>روش جمع‌آوری اطلاعات</Link>
+          <InstallLink />
+        </div>
 
         <section id="faq" className={`container ${styles.faqSection}`} aria-labelledby="faq-title">
           <div className={styles.faqIntro}>
