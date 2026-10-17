@@ -25,6 +25,7 @@ import { pingDb } from '@/db/client'
 import { readTopMenuSyncSummary } from '@/core/sync/topMenuSync'
 import { authUrl, paths } from '@/routes'
 import { getAdminPlaces, getAdminPlaceChoices } from '@/core/admin/catalog'
+import { getCoordinationMetrics } from '@/core/booking/insights'
 
 /**
  * پنل مدیریت.
@@ -45,7 +46,8 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic'
 
 export default async function AdminPage() {
-  const { user, actor } = await getSession()
+  const session = await getSession()
+  const { user, actor } = session
   if (!user) redirect(authUrl(paths.admin))
   /*
     در حالت «مشاهده به‌عنوان»، `user` همان کاربرِ هدف است نه ادمین — پس این
@@ -80,6 +82,7 @@ export default async function AdminPage() {
     settingsUpdatedAt,
     districts,
     topMenuSync,
+    coordination,
   ] = await Promise.all([
     getTrafficSummary(),
     getDailyViews(30),
@@ -102,9 +105,11 @@ export default async function AdminPage() {
     getSettingsUpdatedAt(),
     listDistricts(),
     readTopMenuSyncSummary(),
+    getCoordinationMetrics(session),
   ])
 
   const data: AdminData = {
+    coordination,
     traffic,
     daily,
     topPlaces: topPlaces.map((place) => ({

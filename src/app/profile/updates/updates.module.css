@@ -1,0 +1,9 @@
+.page{width:min(900px,100%);margin-inline:auto;padding:20px var(--page-pad) 88px;color:var(--c-ink)}
+.page nav{display:flex;gap:8px;align-items:center;min-height:44px;color:var(--c-muted);font-size:.84rem}
+.page a{color:var(--c-primary-strong);font-weight:800;text-decoration:none}
+.page header{padding:18px 0 24px;border-bottom:1px solid var(--c-border)}
+.page header span{font-size:.82rem;color:var(--c-primary-strong);font-weight:850}.page h1{margin:5px 0;font-size:clamp(1.5rem,4vw,2rem)}.page p{line-height:1.75;color:var(--c-muted)}
+.empty,.list li{padding:18px;margin-top:16px;border:1px solid var(--c-border);border-radius:16px;background:var(--c-surface)}
+.list{list-style:none;display:grid;gap:10px;padding:0;margin:20px 0}.list li{display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap;margin:0}.list p{margin:5px 0}.list time{font-size:.8rem;color:var(--c-muted)}
+.page :is(a,button):focus-visible{outline:3px solid var(--c-primary-strong);outline-offset:2px}
+.retry{min-height:44px;padding:10px 18px;margin-top:18px;border:1px solid var(--c-primary-strong);border-radius:12px;background:var(--c-primary-strong);color:var(--c-surface);font:inherit;font-weight:800;cursor:pointer}

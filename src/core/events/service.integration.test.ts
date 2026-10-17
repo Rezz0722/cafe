@@ -6,6 +6,8 @@ import { closeDb, getDb } from '@/db/client'
 import { appUser, auditLog, eventParticipation, eventParticipationHistory, place, userPlaceRole, venueEvent } from '@/db/schema'
 import type { Session } from '@/core/auth/currentUser'
 import { tehranCivilNow } from '@/core/booking/policy'
+import { getCoordinationMetrics } from '@/core/booking/insights'
+import { listMyAccountUpdates } from '@/core/notifications/feed'
 import type { EventDraft } from './policy'
 import { cancelMyEventParticipation, createVenueEvent, getPublicEvent, getVenueEvent,
   listMyEventParticipations, listUpcomingPublicEvents, listVenueEventParticipations, listVenueEvents,
@@ -106,7 +108,12 @@ test('P2-05 event publishing and participation are branch-scoped and explicit', 
       assert.equal(results.filter(result => result.status === 'rejected').length, 1)
       const [saved] = await db.select().from(eventParticipation).where(eq(eventParticipation.id, pending.id))
       assert.equal(saved?.revision, 1)
-      assert.equal((await cancelMyEventParticipation(customer, pending.id, 1)).status, 'cancelled')
+      if (saved?.status === 'confirmed') {
+        assert.equal((await cancelMyEventParticipation(customer, pending.id, 1)).status, 'cancelled')
+      } else {
+        assert.equal(saved?.status, 'rejected')
+        await assert.rejects(cancelMyEventParticipation(customer, pending.id, 1))
+      }
       await assert.rejects(cancelMyEventParticipation(second, pending.id, 2))
       const interestEvent = await createVenueEvent(admin, draft(placeIds[0]!, 'interest'))
       eventIds.push(interestEvent.id)
@@ -115,6 +122,26 @@ test('P2-05 event publishing and participation are branch-scoped and explicit', 
       await transitionVenueEvent(owner, placeIds[0]!, interestEvent.id, 1, 'cancelled', new Date(), noInvalidate)
       assert.equal((await getPublicEvent(interestEvent.id))?.event.status, 'cancelled')
       assert.ok(!(await listUpcomingPublicEvents()).some(row => row.event.id === interestEvent.id))
+    })
+    await t.test('private updates and aggregate-only admin metrics', async () => {
+      const customerUpdates = await listMyAccountUpdates(customer)
+      assert.ok(customerUpdates.some(update => update.detail === 'درخواست شرکت لغو شد.' || update.detail === 'کافه درخواست شرکت را رد کرد.'))
+      assert.ok(customerUpdates.every(update => !JSON.stringify(update).includes('09120000004')))
+      const secondUpdates = await listMyAccountUpdates(second)
+      assert.ok(secondUpdates.some(update => update.detail === 'کافه این رویداد را لغو کرده است.'))
+      assert.ok(secondUpdates.every(update => !update.href.includes(eventIds[0]!)))
+      await assert.rejects(listMyAccountUpdates(session('customer', 'customer', true)))
+      await assert.rejects(listMyAccountUpdates(customer, 101))
+
+      const metrics = await getCoordinationMetrics(admin)
+      assert.ok(metrics.events.published >= 1)
+      assert.ok(metrics.events.participationRequests >= 2)
+      assert.ok(!JSON.stringify(metrics).includes('09120000004'))
+      await assert.rejects(getCoordinationMetrics(staff))
+      await assert.rejects(getCoordinationMetrics(session('admin', 'admin', true)))
+      await db.update(appUser).set({ status: 'blocked' }).where(eq(appUser.id, ids.admin))
+      await assert.rejects(getCoordinationMetrics(admin))
+      await db.update(appUser).set({ status: 'active' }).where(eq(appUser.id, ids.admin))
     })
     await t.test('audit failure rolls back draft and historical verification remains unchanged', async () => {
       const before = (await db.select({ total: sql<number>`COUNT(*)` }).from(venueEvent))[0]!.total

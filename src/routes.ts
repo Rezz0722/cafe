@@ -54,6 +54,7 @@ export const paths = {
   profile: '/profile',
   myBookings: '/profile/requests',
   myEvents: '/profile/events',
+  accountUpdates: '/profile/updates',
   /** تغییر رمز — مقصد اجباریِ کسی که رمز موقت گرفته. */
   changePassword: '/profile/password',
   accountSecurity: '/profile/security',

@@ -9,6 +9,8 @@ import {
 } from '@/db/schema'
 import type { Session } from '@/core/auth/currentUser'
 import { tehranCivilNow } from './policy'
+import { getCoordinationMetrics } from './insights'
+import { listMyAccountUpdates } from '@/core/notifications/feed'
 import {
   cancelMyBookingRequest, completeVenueBookingRequest, createBookingRequest, expireOverdueBookingRequests,
   getMyBookingRequest, getPublicBookingConfiguration, getVenueBookingRequest, listPublicBookablePlaceIds,
@@ -182,6 +184,18 @@ test('P2-05 booking core is opt-in, branch-scoped, idempotent and transactional'
       const [expired] = await db.select().from(bookingRequest).where(eq(bookingRequest.id, pending.id))
       assert.equal(expired?.status, 'expired')
       assert.equal((await expireOverdueBookingRequests(later)), 0)
+    })
+    await t.test('real booking counts and private status feed do not leak contact data', async () => {
+      const metrics = await getCoordinationMetrics(admin)
+      assert.ok(metrics.booking.total >= 4)
+      assert.ok(metrics.byKind.some(row => row.kind === 'birthday' && row.total >= 4))
+      assert.ok(metrics.byExperience.some(row => row.slug === 'birthday' && row.total >= 4))
+      assert.ok(metrics.booking.averageResponseMinutes !== null)
+      assert.ok(!JSON.stringify(metrics).includes('09120000001'))
+      const updates = await listMyAccountUpdates(customer)
+      assert.ok(updates.some(row => row.detail === 'کافه درخواست را تأیید کرد.'))
+      assert.ok(updates.every(row => !JSON.stringify(row).includes('09120000001')))
+      assert.equal((await listMyAccountUpdates(foreignCustomer)).length, 0)
     })
   } finally {
     await db.execute(sql.raw(`DROP TRIGGER IF EXISTS ${triggerName}`))

@@ -32,7 +32,7 @@ test('signed HTTP event discover, participate, venue response and mobile layout'
     (url.pathname === '/kucafe_booking_test' || (process.env.GITHUB_ACTIONS === 'true' && url.pathname === '/kucafe')),
   'Disposable database required; production forbidden')
   const db = getDb(), suffix = randomUUID().replaceAll('-', '').slice(0, 12)
-  const ids = { customer: randomUUID(), owner: randomUUID(), staff: randomUUID() }
+  const ids = { customer: randomUUID(), owner: randomUUID(), staff: randomUUID(), admin: randomUUID() }
   const slug = `qa-event-http-${suffix}`
   let placeId: number | null = null, eventId: string | null = null
   let child: ReturnType<typeof spawn> | null = null
@@ -42,6 +42,7 @@ test('signed HTTP event discover, participate, venue response and mobile layout'
       { id: ids.customer, role: 'customer', name: 'QA customer', phone: '09120000007', phoneVerifiedAt: new Date() },
       { id: ids.owner, role: 'owner', name: 'QA owner' },
       { id: ids.staff, role: 'owner', name: 'QA staff' },
+      { id: ids.admin, role: 'admin', name: 'QA admin' },
     ])
     const [venue] = await db.insert(place).values({ slug, name: 'کافهٔ آزمایشی رویداد', nameNormalized: 'کافه آزمایشی رویداد', status: 'published', kind: 'cafe' })
     placeId = venue.insertId
@@ -59,7 +60,7 @@ test('signed HTTP event discover, participate, venue response and mobile layout'
     const cookies: Record<string, string> = {}
     for (const [role, userId] of Object.entries(ids)) {
       const sessionId = await createAuthSession({ userId, method: 'password', expiresAt: new Date(Date.now() + 300_000) })
-      cookies[role] = `${SESSION_COOKIE}=${createSessionToken({ sessionId, userId, phone: '', role: role === 'customer' ? 'customer' : 'owner' })}`
+      cookies[role] = `${SESSION_COOKIE}=${createSessionToken({ sessionId, userId, phone: '', role: role === 'customer' ? 'customer' : role === 'admin' ? 'admin' : 'owner' })}`
     }
     const port = await freePort(), origin = `http://127.0.0.1:${port}`
     let output = ''
@@ -85,9 +86,14 @@ test('signed HTTP event discover, participate, venue response and mobile layout'
     assert.equal(detail.status, 200)
     assert.match(await detail.text(), /درخواست شرکت/)
     assert.equal((await get('/profile/events')).status, 307)
+    assert.equal((await get('/profile/updates')).status, 307)
     const my = await get('/profile/events', 'customer')
     assert.equal(my.status, 200)
     assert.match(my.headers.get('cache-control') || '', /no-store/)
+    const updates = await get('/profile/updates', 'customer')
+    assert.equal(updates.status, 200)
+    assert.match(updates.headers.get('cache-control') || '', /no-store/)
+    assert.match(await updates.text(), /noindex/)
     assert.equal((await get(`/admin/venue/events?place=${placeId}`, 'owner')).status, 200)
     assert.equal((await get(`/admin/venue/events?place=${placeId}`, 'staff')).status, 404)
     if (process.env.KUCAFE_EVENT_BROWSER_TEST === '1') {
@@ -112,6 +118,19 @@ test('signed HTTP event discover, participate, venue response and mobile layout'
       await ownerPage.getByText('تأییدشده توسط کافه').waitFor({ timeout: 15_000 })
       await customerPage.goto('/profile/events')
       await customerPage.getByText('تأییدشده توسط کافه').waitFor()
+      await customerPage.goto('/profile/updates')
+      await customerPage.getByText('کافه شرکت شما را تأیید کرد.').waitFor()
+      for (const width of [320, 360, 390, 430, 768, 1440]) {
+        await customerPage.setViewportSize({ width, height: 844 })
+        assert.equal(await customerPage.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, `updates overflow at ${width}px`)
+      }
+      const adminContext = await browser.newContext({ baseURL: origin })
+      await adminContext.addCookies([{ name: SESSION_COOKIE, value: cookies.admin!.split('=')[1]!, url: origin, httpOnly: true, sameSite: 'Lax' }])
+      const adminPage = await adminContext.newPage()
+      await adminPage.goto('/admin?tab=coordination')
+      await adminPage.getByText('درخواست/علاقه‌مندی رویداد').waitFor({ timeout: 15_000 })
+      assert.equal(await adminPage.getByText('درخواست/علاقه‌مندی رویداد').count(), 1)
+      await adminContext.close()
       await ownerContext.close(); await customerContext.close()
     }
   } finally {
