@@ -136,11 +136,11 @@ export function MenuBrowser({
   const [visibleLimit, setVisibleLimit] = useState(PAGE_SIZE)
   const [menuOpen, setMenuOpen] = useState(false)
   const [categoryPickerOpen, setCategoryPickerOpen] = useState(false)
-  const [categoryPickerIsEntry, setCategoryPickerIsEntry] = useState(false)
-  const [viewMode, setViewMode] = useState<'simple' | 'visual'>('simple')
+  const [viewMode, setViewMode] = useState<'simple' | 'visual'>('visual')
   const [lightbox, setLightbox] = useState<MenuItemProps | null>(null)
   const deferredQuery = useDeferredValue(query)
   const closeMenuRef=useRef<()=>void>(()=>{})
+  const showCategoriesRef=useRef<()=>void>(()=>{})
   const closeRef = useRef<HTMLButtonElement>(null)
   const launcherRef = useRef<HTMLAnchorElement>(null)
   const resultsRef = useRef<HTMLDivElement>(null)
@@ -148,9 +148,7 @@ export function MenuBrowser({
   const panelBodyRef = useRef<HTMLDivElement>(null)
   const sectionNavRef = useRef<HTMLElement>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
-  const categoryReturnFocusRef = useRef<HTMLButtonElement | null>(null)
   const railGesture = useRef({ pointerId: -1, x: 0, y: 0, moved: false })
-  const categoryPickerRef = useRef<HTMLDivElement>(null)
   const categoryPickerCloseRef = useRef<HTMLButtonElement>(null)
   const lightboxRef = useRef<HTMLDivElement>(null)
   const lightboxCloseRef = useRef<HTMLButtonElement>(null)
@@ -189,10 +187,9 @@ export function MenuBrowser({
     [matchingSections, visibleLimit],
   )
   const selectedSection = displaySections.find((section) => section.id === activeSection) ?? displaySections[0]
-  const overlayOpen = menuOpen || Boolean(lightbox) || categoryPickerOpen
+  const overlayOpen = menuOpen || Boolean(lightbox)
 
-  // Keep the document locked while moving between the stacked menu dialogs.
-  // Releasing/reapplying the lock on every category choice can move the page.
+  // Keep the document locked while navigating the single mobile menu dialog.
   useEffect(() => {
     if (!overlayOpen) return
     const previousOverflow = document.body.style.overflow
@@ -213,23 +210,22 @@ export function MenuBrowser({
     const returnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null
     const initialFocus = categoryPickerOpen ? categoryPickerCloseRef.current
       : lightbox ? lightboxCloseRef.current : closeRef.current
-    const activeDialog = categoryPickerRef.current ?? lightboxRef.current ?? panelRef.current
+    const activeDialog = lightboxRef.current ?? panelRef.current
     // When an inner dialog closes, keep the focus restored to its trigger.
     if (!activeDialog?.contains(document.activeElement)) initialFocus?.focus({ preventScroll: true })
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.preventDefault()
-        if (categoryPickerOpen && categoryPickerIsEntry) closeMenuRef.current()
-        else if (categoryPickerOpen) setCategoryPickerOpen(false)
+        if (categoryPickerOpen) closeMenuRef.current()
         else if (lightbox) setLightbox(null)
-        else closeMenuRef.current()
+        else showCategoriesRef.current()
         return
       }
 
       // فوکوس نباید از پنجرهٔ تمام‌صفحه یا لایت‌باکس به محتوای پشت آن فرار کند.
       if (event.key !== 'Tab') return
-      const scope = categoryPickerRef.current ?? lightboxRef.current ?? panelRef.current
+      const scope = lightboxRef.current ?? panelRef.current
       const focusable = Array.from(
         scope?.querySelectorAll<HTMLElement>(
           'a[href], button:not([disabled]), input:not([disabled])',
@@ -252,24 +248,22 @@ export function MenuBrowser({
       window.removeEventListener('keydown', onKeyDown)
       if (returnFocus?.isConnected) returnFocus.focus({ preventScroll: true })
     }
-  }, [categoryPickerIsEntry, categoryPickerOpen, lightbox, overlayOpen])
+  }, [categoryPickerOpen, lightbox, overlayOpen])
 
   useEffect(() => {
     const mobileViewport = window.matchMedia('(max-width: 760px)')
     const syncFromUrl = () => {
       const url = new URL(window.location.href)
       const requestedSection = Number(url.searchParams.get(MENU_SECTION_KEY))
-      if (displaySections.some((section) => section.id === requestedSection)) {
+      const validSection = displaySections.some((section) => section.id === requestedSection)
+      if (validSection) {
         setActiveSection(requestedSection)
-        setViewMode('visual')
       }
-      setQuery(url.searchParams.get(MENU_QUERY_KEY) ?? '')
+      const menuQuery = url.searchParams.get(MENU_QUERY_KEY) ?? ''
+      setQuery(menuQuery)
       const nextMenuOpen = url.searchParams.get('menu') === '1' || url.hash === '#menu'
       setMenuOpen(nextMenuOpen && mobileViewport.matches)
-      // Opening the menu is one tap. Category selection remains available
-      // from the menu header, rather than blocking the first item view.
-      setCategoryPickerOpen(false)
-      setCategoryPickerIsEntry(false)
+      setCategoryPickerOpen(nextMenuOpen && mobileViewport.matches && !validSection && !menuQuery.trim())
     }
     const syncViewport = () => {
       const url = new URL(window.location.href)
@@ -330,9 +324,15 @@ export function MenuBrowser({
     if (!open && url.hash === '#menu') {
       url.hash = window.history.state?.kucafeMenuReturnHash || '#overview'
     }
+    const previousDepth = Number(window.history.state?.kucafeMenuDepth) || 0
+    const openedFromCafe = wasOpen
+      ? window.history.state?.kucafeMenuOpenedFromCafe === true
+      : open && mode === 'push'
     const state = {
       ...(window.history.state ?? {}),
       kucafeMenu: open,
+      kucafeMenuDepth: open ? (mode === 'push' ? previousDepth + 1 : previousDepth) : 0,
+      kucafeMenuOpenedFromCafe: open && openedFromCafe,
       ...(open && mode === 'push' ? { kucafeMenuReturnHash: previousHash } : {}),
     }
     window.history[mode === 'push' ? 'pushState' : 'replaceState'](state, '', url)
@@ -352,34 +352,49 @@ export function MenuBrowser({
     }
     setQuery('')
     setVisibleLimit(PAGE_SIZE)
-    setViewMode(categoryWasChosen ? 'visual' : 'simple')
+    setViewMode('visual')
     setMenuOpen(true)
-    setCategoryPickerOpen(false)
-    setCategoryPickerIsEntry(false)
+    setCategoryPickerOpen(!categoryWasChosen)
     writeMenuUrl(true, categoryWasChosen ? nextSection : null, '', 'push')
   }
 
   const closeMenu = () => {
+    const menuDepth = Number(window.history.state?.kucafeMenuDepth) || 0
+    const openedFromCafe = window.history.state?.kucafeMenuOpenedFromCafe === true
     setLightbox(null)
     setCategoryPickerOpen(false)
-    setCategoryPickerIsEntry(false)
     setMenuOpen(false)
     // بستنِ صریح باید همان لحظه URL را هم پاک کند. Back سخت‌افزاری مسیر
     // `popstate` را دارد؛ تکیه‌کردن این دکمه به history.back بعد از رفت‌وبرگشت
     // صفحهٔ آیتم در بعضی مرورگرها کاربر را روی `menu=1` نگه می‌داشت.
-    writeMenuUrl(false, null, '')
+    if (menuDepth > 0 && openedFromCafe) window.history.go(-menuDepth)
+    else if (menuDepth > 0) {
+      window.addEventListener('popstate', () => {
+        writeMenuUrl(false, null, '')
+        setMenuOpen(false)
+        setCategoryPickerOpen(false)
+      }, { once: true })
+      window.history.go(-menuDepth)
+    }
+    else writeMenuUrl(false, null, '')
     requestAnimationFrame(() => launcherRef.current?.focus({ preventScroll: true }))
   }
 
   closeMenuRef.current=closeMenu
+  const showCategories = () => {
+    setLightbox(null)
+    setCategoryPickerOpen(true)
+    setQuery('')
+    writeMenuUrl(true, null, '')
+    requestAnimationFrame(() => categoryPickerCloseRef.current?.focus({ preventScroll: true }))
+  }
+  showCategoriesRef.current = showCategories
   const chooseSection = (sectionId: number) => {
     setActiveSection(sectionId)
     setCategoryPickerOpen(false)
-    setCategoryPickerIsEntry(false)
-    setViewMode('visual')
     setQuery('')
     setVisibleLimit(PAGE_SIZE)
-    writeMenuUrl(menuOpen, sectionId, '')
+    writeMenuUrl(menuOpen, sectionId, '', categoryPickerOpen ? 'push' : 'replace')
     requestAnimationFrame(() => {
       if (window.matchMedia('(max-width: 760px)').matches) {
         panelBodyRef.current?.scrollTo({ top: 0, behavior: 'instant' })
@@ -394,20 +409,6 @@ export function MenuBrowser({
           ?.focus({ preventScroll: true })
       }
     })
-  }
-
-  const closeCategoryPicker = () => {
-    if (categoryPickerIsEntry) closeMenu()
-    else {
-      setCategoryPickerOpen(false)
-      requestAnimationFrame(() => categoryReturnFocusRef.current?.focus({ preventScroll: true }))
-    }
-  }
-
-  const openCategoryPicker = (trigger: HTMLButtonElement) => {
-    categoryReturnFocusRef.current = trigger
-    setCategoryPickerIsEntry(false)
-    setCategoryPickerOpen(true)
   }
 
   const focusSearch = () => {
@@ -468,7 +469,8 @@ export function MenuBrowser({
       <div
         ref={panelRef}
         data-menu-content
-        inert={categoryPickerOpen || Boolean(lightbox)}
+        data-picker-open={categoryPickerOpen}
+        inert={Boolean(lightbox)}
         className={`${styles.panel} ${menuOpen ? styles.panelOpen : ''}`}
         role={menuOpen ? 'dialog' : undefined}
         aria-modal={menuOpen ? 'true' : undefined}
@@ -476,7 +478,7 @@ export function MenuBrowser({
       >
         <header className={styles.mobilePanelHead} data-menu-mobile-head>
           <div className={styles.mobilePanelBack}>
-            <button ref={closeRef} type="button" onClick={closeMenu} aria-label="بستن منو">
+            <button ref={closeRef} type="button" onClick={showCategories} aria-label="بازگشت به دسته‌بندی‌ها">
               <ArrowLeft size={20} aria-hidden="true" />
             </button>
           </div>
@@ -489,13 +491,39 @@ export function MenuBrowser({
             <button type="button" onClick={focusSearch} aria-label="جست‌وجو در منو">
               <Search size={19} aria-hidden="true" />
             </button>
-            <button type="button" onClick={(event) => openCategoryPicker(event.currentTarget)} aria-label="نمایش همهٔ دسته‌بندی‌ها">
+            <button type="button" onClick={showCategories} aria-label="نمایش همهٔ دسته‌بندی‌ها">
               <Grid2X2 size={19} aria-hidden="true" />
             </button>
           </div>
         </header>
 
-        <div ref={panelBodyRef} className={styles.panelBody} data-menu-body>
+        {categoryPickerOpen && (
+          <div className={styles.categoryPicker} data-menu-picker aria-labelledby="category-picker-title">
+            <header className={styles.categoryPickerHead}>
+              <div><strong id="category-picker-title">دسته‌بندی‌های منو</strong><span>{placeName} · {faCount(displaySections.length)} دسته</span></div>
+              <button ref={categoryPickerCloseRef} type="button" onClick={closeMenu} aria-label="بستن منو"><X size={20} aria-hidden="true" /></button>
+            </header>
+            <div className={styles.categoryGrid}>
+              {displaySections.map((section, index) => (
+                <button key={section.id} type="button" aria-label={`${section.name}، ${faCount(section.items.length)} آیتم`} title={section.name} onClick={() => chooseSection(section.id)}>
+                  <span className={styles.categoryCover}>
+                    <img src={categoryArtwork(section.name, section.facetId, section.image?.url)} alt="" width={720} height={540} loading={index < 6 ? 'eager' : 'lazy'} decoding="async" draggable={false} onError={(event) => {
+                      if (!event.currentTarget.src.endsWith('/menu-categories/other.webp')) event.currentTarget.src = '/menu-categories/other.webp'
+                    }} />
+                  </span>
+                  <span className={styles.categoryScrim} aria-hidden="true" />
+                  <span className={styles.categoryCardCopy}>
+                    <CategoryCardName name={section.name} />
+                    <small>{faCount(section.items.length)} آیتم</small>
+                  </span>
+                  <span className={styles.categoryCardCta} aria-hidden="true">دیدن آیتم‌ها <ArrowLeft size={18} /></span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div ref={panelBodyRef} className={styles.panelBody} data-menu-body hidden={categoryPickerOpen}>
           <header className={styles.desktopHead}>
             <div className={styles.desktopTitleRow}>
               <span className={styles.titleIcon} aria-hidden="true">
@@ -581,7 +609,7 @@ export function MenuBrowser({
             </aside>
 
             <div className={styles.menuViewBar} aria-label="تنظیمات نمایش منو">
-              <button type="button" className={styles.allCategoriesButton} onClick={(event) => openCategoryPicker(event.currentTarget)}>
+              <button type="button" className={styles.allCategoriesButton} onClick={showCategories}>
                 <Grid2X2 size={18} aria-hidden="true" />
                 <span><strong>همهٔ دسته‌بندی‌ها</strong><small>{faCount(displaySections.length)} دسته در یک نگاه</small></span>
               </button>
@@ -729,36 +757,6 @@ export function MenuBrowser({
           </div>
         </div>
       </div>
-
-      {categoryPickerOpen && (
-        <div className={styles.categoryPickerBackdrop} onClick={closeCategoryPicker}>
-          <div ref={categoryPickerRef} className={styles.categoryPicker} role="dialog" aria-modal="true" aria-labelledby="category-picker-title" onClick={(event) => event.stopPropagation()}>
-            <header className={styles.categoryPickerHead}>
-              <div><strong id="category-picker-title">دسته‌بندی‌های منو</strong><span>{placeName} · {faCount(displaySections.length)} دسته</span></div>
-              <button ref={categoryPickerCloseRef} type="button" onClick={closeCategoryPicker} aria-label="بستن دسته‌بندی‌ها"><X size={20} /></button>
-            </header>
-            <div className={styles.categoryGrid}>
-              {displaySections.map((section) => (
-                <button key={section.id} type="button" aria-label={`${section.name}، ${faCount(section.items.length)} آیتم`} title={section.name} data-active={!categoryPickerIsEntry && !normalizedQuery && activeSection === section.id} onClick={() => chooseSection(section.id)}>
-                  <picture className={styles.categoryCover}>
-                    {section.image && !section.image.url.startsWith('/menu-categories/') && (
-                      <source media="(max-width: 760px) and (min-resolution: 2dppx)" srcSet={section.image.fullUrl} />
-                    )}
-                    <source media="(min-width: 900px)" srcSet={categoryArtworkFull(section.name, section.facetId, section.image?.fullUrl)} />
-                    <img src={categoryArtwork(section.name, section.facetId, section.image?.url)} alt="" width={720} height={540} loading="lazy" decoding="async" draggable={false} />
-                  </picture>
-                  <span className={styles.categoryScrim} aria-hidden="true" />
-                  <span className={styles.categoryCardCopy}>
-                    <CategoryCardName name={section.name} />
-                    <small>{faCount(section.items.length)} آیتم</small>
-                  </span>
-                  <span className={styles.categoryCardCta} aria-hidden="true">دیدن آیتم‌ها <ArrowLeft size={18} /></span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
 
       {lightbox && (
         <div ref={lightboxRef} className={styles.lightbox} role="dialog" aria-modal="true" aria-label={lightbox.name} onClick={() => setLightbox(null)}>
