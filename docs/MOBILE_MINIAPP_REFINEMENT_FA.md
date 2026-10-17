@@ -20,4 +20,6 @@
 
 تست مرورگری `scripts/mobile-miniapp-ui-smoke.ts` عرض‌های ۳۲۰، ۳۶۰، ۳۹۰، ۴۳۰، ۷۶۸ و ۱۴۴۰، هر دو تم، URL/History، تک‌پنجره‌بودن منو، نمای تصویری، Deep Link، صفحهٔ اطلاعات، عدم CTA رزرو غیرواقعی و حالت بدون JavaScript را بررسی می‌کند. نتایج و تصاویر در `var/qa/mobile-miniapp/` هستند. تست QR قدیمی نیز با ساختار تک‌پنجره‌ای به‌روز شد. اسکن QR چاپی و حساب احرازشدهٔ Production در این تغییر انجام نشده‌اند.
 
+شواهد بصری منتخب برای بازبین: [Overview قبل](qa/mobile-miniapp/overview-before-390-dark.png)، [Overview بعد](qa/mobile-miniapp/overview-after-390-dark.png)، [دسته‌ها قبل](qa/mobile-miniapp/category-before-390-dark.png)، [دسته‌ها بعد](qa/mobile-miniapp/category-after-390-dark.png)، [اطلاعات بعد](qa/mobile-miniapp/information-after-390-dark.png). این‌ها Screenshot واقعی مرورگرند؛ مجموعهٔ کامل ۶ عرض × دو تم در بستهٔ QA محلی نگهداری می‌شود.
+
 هیچ Migration، تغییر دادهٔ Production، TopMenu Apply یا انتشار در این PR مجاز نیست.
