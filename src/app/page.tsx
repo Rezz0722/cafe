@@ -16,7 +16,9 @@ import {
   LocateFixed,
   MapPinned,
   Moon,
+  MessageCircle,
   Salad,
+  Star,
   Store,
   Sunrise,
   Trees,
@@ -27,6 +29,7 @@ import {
 import { CafeCard } from '@/components/cafe/CafeCard'
 import { DiscountDiscovery } from '@/components/cafe/DiscountDiscovery'
 import { ExperienceClickTracker } from '@/components/experience/ExperienceClickTracker'
+import { DiscoveryClickTracker } from '@/components/home/DiscoveryClickTracker'
 import { HeroSearch } from '@/components/home/HeroSearch'
 import { InstallLink } from '@/components/pwa/InstallApp'
 import { MaintenanceScreen } from '@/components/site/MaintenanceScreen'
@@ -42,6 +45,7 @@ import { searchPath } from '@/core/search/filters'
 import { listExperienceSummaries } from '@/core/experience/queries'
 import { listUpcomingPublicEvents } from '@/core/events/service'
 import { pickHomeRecommendations } from '@/core/discovery/homeRecommendations'
+import { listTrustedReviewCards } from '@/core/discovery/trustedReviews'
 import { maintenanceState } from '@/core/settings/maintenance'
 import { getDiscoveryPolicy, getLocalePolicy } from '@/core/settings/policies'
 import { getSettings } from '@/core/settings/store'
@@ -190,13 +194,14 @@ export default async function HomePage() {
     getLocalePolicy(),
     getSettings(),
   ])
-  const [stats, rankedPlaces, facets, districts, popularDishes, events] = await Promise.all([
+  const [stats, rankedPlaces, facets, districts, popularDishes, events, trustedReviews] = await Promise.all([
     getSiteStats(),
     listPlaceCards({ limit: Math.max(24, discovery.homeCardCount * 5), sort: 'quality' }),
     listFilterFacets(),
     listDistricts(),
     listPopularDishes(8),
     listUpcomingPublicEvents({ limit: 2 }),
+    listTrustedReviewCards(3),
   ])
   const experienceSummaries = await listExperienceSummaries()
 
@@ -213,6 +218,7 @@ export default async function HomePage() {
   return (
     <div className={styles.home}>
       <ExperienceClickTracker />
+      <DiscoveryClickTracker />
       <HomeJsonLd
         siteName={settings.siteName}
         description={siteDescription}
@@ -276,6 +282,36 @@ export default async function HomePage() {
             <Link href={paths.districtHub}>همهٔ محله‌ها</Link>
           </nav>
         </section>
+        {trustedReviews.length >= 3 && (
+          <section className={`container ${styles.section} ${styles.trustedReviewSection}`} aria-labelledby="home-reviews-title">
+            <div className={styles.sectionHeading}>
+              <div>
+                <span className={styles.sectionKicker}>تجربهٔ واقعی، نه تبلیغ</span>
+                <h2 id="home-reviews-title">کافه‌هایی که مردم درباره‌شون نوشتن</h2>
+                <p>گزیده‌ای از نظرهای تأییدشده؛ برای تصمیم خودت متن کامل را در صفحهٔ کافه ببین.</p>
+              </div>
+              <Link href={paths.reviewedCafes} className={styles.textLink}>همهٔ تجربه‌ها <ArrowLeft size={16} aria-hidden="true" /></Link>
+            </div>
+            <div className={styles.trustedReviewGrid}>
+              {trustedReviews.map(card => (
+                <Link key={card.reviewId} href={`${paths.cafe(card.placeSlug)}#reviews`} className={styles.trustedReviewCard}
+                  data-discovery-event="review_card_opened" data-discovery-context={String(card.placeId)} data-discovery-source="trusted_reviews">
+                  <span className={styles.trustedReviewVenue}>
+                    {card.placeImage ? <img src={card.placeImage} alt="" width={64} height={64} loading="lazy" /> : <span className={styles.trustedReviewFallback}><Coffee size={22} aria-hidden="true" /></span>}
+                    <span><strong>{card.placeName}</strong><small>{card.districtName ?? 'مشهد'} · {faCount(card.approvedReviewCount)} تجربهٔ تأییدشده</small></span>
+                  </span>
+                  <span className={styles.trustedReviewMeta}>
+                    {card.rating !== null && <span><Star size={14} fill="currentColor" aria-hidden="true" /> {card.rating.toLocaleString('fa-IR', { maximumFractionDigits: 1 })}</span>}
+                    {card.isBloggerReview && <span>تجربهٔ بلاگر</span>}
+                    <span>{card.reviewedAt.toLocaleDateString('fa-IR', { timeZone: 'Asia/Tehran' })}</span>
+                  </span>
+                  <span className={styles.trustedReviewQuote}>«{card.excerpt}»</span>
+                  <span className={styles.trustedReviewFoot}><span><MessageCircle size={15} aria-hidden="true" /> خواندن تجربه</span><ArrowLeft size={16} aria-hidden="true" /></span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
         {availableExperiences.length > 0 && (
           <section className={`container ${styles.section} ${styles.experienceSection}`} aria-labelledby="experience-title">
             <div className={styles.sectionHeading}>
