@@ -532,6 +532,34 @@
   padding-block-end: 34px;
 }
 
+.experienceHeaderLink {
+  display: none;
+}
+
+.experienceAllLink {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  margin-block-start: 12px;
+  padding: 10px 16px;
+  border: 1px solid #7eafff;
+  border-radius: 14px;
+  color: #b6d4ff;
+  background: var(--c-inverse-surface);
+  font-size: 14px;
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.experienceAllLink:focus-visible {
+  outline: 3px solid var(--c-primary);
+  outline-offset: 3px;
+}
+
 .experienceRail {
   display: flex;
   gap: 12px;
@@ -1334,6 +1362,14 @@
     padding-block-end: 44px;
   }
 
+  .experienceHeaderLink {
+    display: inline-flex;
+  }
+
+  .experienceAllLink {
+    display: none;
+  }
+
   .experienceRail {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1553,6 +1589,15 @@
 }
 
 @media (max-width: 759px) {
+  .home .experienceSection .sectionHeading {
+    margin-block-end: 13px;
+  }
+
+  .home .experienceSection .sectionHeading p {
+    margin-block-start: 5px;
+    line-height: 1.7;
+  }
+
   .hero {
     padding-block-start: 20px;
   }
