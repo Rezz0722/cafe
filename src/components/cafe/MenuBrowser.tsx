@@ -264,14 +264,16 @@ export function MenuBrowser({
         setViewMode('visual')
       }
       setQuery(url.searchParams.get(MENU_QUERY_KEY) ?? '')
-      const nextMenuOpen = url.searchParams.get('menu') === '1'
-      const needsCategoryChoice = nextMenuOpen && !displaySections.some((section) => section.id === requestedSection)
+      const nextMenuOpen = url.searchParams.get('menu') === '1' || url.hash === '#menu'
       setMenuOpen(nextMenuOpen && mobileViewport.matches)
-      setCategoryPickerOpen(needsCategoryChoice)
-      setCategoryPickerIsEntry(needsCategoryChoice)
+      // Opening the menu is one tap. Category selection remains available
+      // from the menu header, rather than blocking the first item view.
+      setCategoryPickerOpen(false)
+      setCategoryPickerIsEntry(false)
     }
     const syncViewport = () => {
-      setMenuOpen(new URL(window.location.href).searchParams.get('menu') === '1' && mobileViewport.matches)
+      const url = new URL(window.location.href)
+      setMenuOpen((url.searchParams.get('menu') === '1' || url.hash === '#menu') && mobileViewport.matches)
     }
 
     syncFromUrl()
@@ -317,14 +319,26 @@ export function MenuBrowser({
     mode: 'push' | 'replace' = 'replace',
   ) => {
     const url = new URL(window.location.href)
+    const wasOpen = url.searchParams.get('menu') === '1' || url.hash === '#menu'
+    const previousHash = url.hash
     if (open) url.searchParams.set('menu', '1')
     else url.searchParams.delete('menu')
     if (sectionId !== null) url.searchParams.set(MENU_SECTION_KEY, String(sectionId))
     else url.searchParams.delete(MENU_SECTION_KEY)
     if (menuQuery.trim()) url.searchParams.set(MENU_QUERY_KEY, menuQuery.trim())
     else url.searchParams.delete(MENU_QUERY_KEY)
-    const state = { ...(window.history.state ?? {}), kucafeMenu: open }
+    if (!open && url.hash === '#menu') {
+      url.hash = window.history.state?.kucafeMenuReturnHash || '#overview'
+    }
+    const state = {
+      ...(window.history.state ?? {}),
+      kucafeMenu: open,
+      ...(open && mode === 'push' ? { kucafeMenuReturnHash: previousHash } : {}),
+    }
     window.history[mode === 'push' ? 'pushState' : 'replaceState'](state, '', url)
+    if (wasOpen !== open || previousHash !== url.hash) {
+      window.dispatchEvent(new Event('kucafe:cafe-location'))
+    }
   }
 
   const openMenu = (sectionId?: number) => {
@@ -340,8 +354,8 @@ export function MenuBrowser({
     setVisibleLimit(PAGE_SIZE)
     setViewMode(categoryWasChosen ? 'visual' : 'simple')
     setMenuOpen(true)
-    setCategoryPickerOpen(!categoryWasChosen)
-    setCategoryPickerIsEntry(!categoryWasChosen)
+    setCategoryPickerOpen(false)
+    setCategoryPickerIsEntry(false)
     writeMenuUrl(true, categoryWasChosen ? nextSection : null, '', 'push')
   }
 
@@ -417,9 +431,15 @@ export function MenuBrowser({
   }
 
   return (
-    <section id="menu" className={styles.wrap} aria-label={`منوی ${placeName}`}>
+    <section id="menu" className={styles.wrap} aria-label={`منوی ${placeName}`} data-menu-public>
+      <noscript><style>{`@media (max-width: 760px) {
+        [data-menu-public] [data-menu-mobile-launcher],
+        [data-menu-public] [data-menu-mobile-head] { display: none !important; }
+        [data-menu-public] [data-menu-content] { display: block !important; position: static !important; height: auto !important; overflow: visible !important; }
+        [data-menu-public] [data-menu-body] { height: auto !important; overflow: visible !important; }
+      }`}</style></noscript>
       {activePercent>0&&<p className={styles.discountBanner}><strong>{fa(activePercent)}٪ تخفیف روی کل منو</strong><span>تا {new Date(discountExpiresAt!).toLocaleDateString('fa-IR',{timeZone:'Asia/Tehran',month:'long',day:'numeric'})} · قیمت پایه خط‌خورده است؛ با کد باشگاه جمع نمی‌شود.</span></p>}
-      <div className={styles.mobileLauncher}>
+      <div className={styles.mobileLauncher} data-menu-mobile-launcher>
         <div className={styles.launcherTop}>
           <span className={styles.launcherIcon} aria-hidden="true">
             <UtensilsCrossed size={23} />
@@ -447,13 +467,14 @@ export function MenuBrowser({
 
       <div
         ref={panelRef}
+        data-menu-content
         inert={categoryPickerOpen || Boolean(lightbox)}
         className={`${styles.panel} ${menuOpen ? styles.panelOpen : ''}`}
         role={menuOpen ? 'dialog' : undefined}
         aria-modal={menuOpen ? 'true' : undefined}
         aria-label={menuOpen ? `منوی ${placeName}` : undefined}
       >
-        <header className={styles.mobilePanelHead}>
+        <header className={styles.mobilePanelHead} data-menu-mobile-head>
           <div className={styles.mobilePanelBack}>
             <button ref={closeRef} type="button" onClick={closeMenu} aria-label="بستن منو">
               <ArrowLeft size={20} aria-hidden="true" />
@@ -474,7 +495,7 @@ export function MenuBrowser({
           </div>
         </header>
 
-        <div ref={panelBodyRef} className={styles.panelBody}>
+        <div ref={panelBodyRef} className={styles.panelBody} data-menu-body>
           <header className={styles.desktopHead}>
             <div className={styles.desktopTitleRow}>
               <span className={styles.titleIcon} aria-hidden="true">

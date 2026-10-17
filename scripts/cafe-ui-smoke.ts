@@ -62,13 +62,13 @@ try {
       await page.getByRole('heading', { level: 1, name: 'کافه راموز' }).waitFor()
       await page.getByText('شعبهٔ قاضی طباطبایی', { exact: true }).waitFor()
       assert.equal(await page.getByRole('region', { name: /تصاویر محیط/ }).count(), 0, 'لوگو نباید گالری محیط جا زده شود')
-      assert.ok(await page.getByRole('button',{name:'مقایسهٔ قیمت',exact:true}).count() > 0)
+      assert.ok(await page.getByRole('button',{name:'مقایسه با قیمت شهر',exact:true}).count() > 0)
       // تعداد نظر زنده است و با ثبت نظر واقعی تغییر می‌کند؛ smoke باید منطق
       // «نمونهٔ کم‌تعداد» را بسنجد، نه عدد تاریخی یک رکورد را.
-      assert.ok(await page.getByText(/امتیاز اولیه/).count() > 0)
+      assert.ok(await page.getByRole('link',{name:/تجربهٔ ثبت‌شده/}).count() > 0)
 
       if (width === 390) {
-        await page.getByRole('navigation', { name: 'دسترسی سریع موبایل' }).getByRole('link', { name: 'منو' }).click()
+        await page.getByRole('navigation', { name: 'بخش‌های کافه' }).getByRole('link', { name: 'منو' }).click()
         const dialog = page.getByRole('dialog', { name: /منوی کافه راموز/ })
         await dialog.waitFor()
         assert.match(page.url(), /menu=1/)
