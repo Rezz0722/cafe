@@ -1,0 +1,180 @@
+{
+  "schemaVersion": 1,
+  "batchId": "experience-01-20261007-review4",
+  "parentBatchId": "experience-01-20261007",
+  "observedDate": "2026-10-07",
+  "productionRevision": "53fd31865936a27ab0b030e095089322919d7312",
+  "purpose": "Evidence-only review of seven remaining dossiers; not a production import",
+  "productionWrites": 0,
+  "newTaxonomyEntries": 0,
+  "readyCandidates": 0,
+  "heldDossiers": 7,
+  "actualDatedNeshanPagesRead": 8,
+  "countingPolicy": "Eight pages are not eight cafes: two Bvlgari pages, two 5am pages, one Vegas, one nonmatching Jana, one Mahoor VIP and one tentative Mahoor. Nonmatching/ambiguous pages are not counted as confirmed target-cafe reviews.",
+  "sourcePolicy": {
+    "unknownIsFalse": false,
+    "menuProvesSubjectiveExperience": false,
+    "pageUpdateIsFacilityConfirmation": false,
+    "samePhoneAloneProvesBrandContinuity": false,
+    "genericDirectorySpecialtyLabelIsSufficient": false,
+    "negativeBirthdayReviewIsPositiveRecommendation": false,
+    "unavailableSearchProvesClosure": false
+  },
+  "records": [
+    {
+      "placeId": 158,
+      "slug": "newvegas-cafe",
+      "name": "نیو وگاس کافه غذا",
+      "baseline": { "address": "جنب کوثر شمالی 28", "instagram": "newvegas.cafe", "revision": 0, "lat": "36.3124927", "lng": "59.5146883", "existingAttributes": ["desserts=1/editorial/75"] },
+      "decision": "hold-brand-continuity",
+      "sourceUrls": [
+        "https://neshan.org/maps/places/34f24053c0e22c4223e42e5507784320",
+        "https://www.instagram.com/newvegas.cafe/",
+        "https://app.topmenumarket.com/menu/vegas.food"
+      ],
+      "observedAt": "2026-10-07T14:13:50.328Z",
+      "identityEvidence": { "businessPhoneMatches": true, "geoDistanceMeters": 11, "neshanName": "فست فود وگاس", "neshanInstagram": "vegas.foodstore", "officialInstagramFetch": "browser connection timeout" },
+      "datedEvidence": [
+        { "dateFa": "1405/06/30", "paraphrase": "نظر مثبت درباره مزه، نه تجربه کار/ساعات/فضای باز." },
+        { "dateFa": "1405/06/25", "paraphrase": "نظر مثبت درباره مواد اولیه و طبخ، نه سیاست ماندن یا ساعات دیرهنگام." }
+      ],
+      "finding": "شماره یکسان و موقعیت نزدیک، فرض رد کامل نتیجه قبلی را اصلاح می‌کند؛ تفاوت نام/handle/مسیر منو هنوز تغییر برند یا ادامه همان سرویس را اثبات نمی‌کند. جدول 12–01 تاریخ تأیید ندارد و ساعات امروزِ صفحه روز هفته ناسازگار است.",
+      "proposals": [],
+      "nextEvidenceNeeded": "شاهد عمومی تاریخ‌دار از newvegas.cafe که رابطه با vegas.foodstore و ساعت/امکانات شعبه کوثر شمالی 28 را صریحاً مشخص کند.",
+      "productionApplied": false
+    },
+    {
+      "placeId": 212,
+      "slug": "mahor-cafe-restaurant",
+      "name": "کافه رستوران ماهور",
+      "baseline": { "address": "", "instagram": "mahoorrestaurant_", "revision": 0, "lat": null, "lng": null, "existingAttributes": ["desserts=1/editorial/75"] },
+      "decision": "hold-identity",
+      "sourceUrls": [
+        "https://neshan.org/maps/places/1e5599ef7572b8c1933595b60ec64705",
+        "https://www.waze.com/live-map/directions/ir/razavi-khorasan-province/nowchah/kafh-mahwr-trqbh?to=place.ChIJZeY3fGXzbD8R2U8tHEz-Gzk",
+        "https://yandex.com/maps/org/73434201085/"
+      ],
+      "observedAt": "2026-10-07T14:15:31.426Z",
+      "identityEvidence": { "neshanAddress": "طرقبه، امام رضا 17", "dbAddressMissing": true, "dbGeoMissing": true, "businessPhoneMissingInDb": true, "instagramMatchNotEstablished": true },
+      "datedEvidence": [ { "dateFa": "1405/06/06", "paraphrase": "گلایه از خدمت و غذا؛ انتساب این رستوران به رکورد سایت هنوز احراز نشده." } ],
+      "finding": "نتیجه رستوران ماهور امام رضا 17 خوانده شد، اما اسم مشترک به تنهایی کافی نیست؛ سایر ماهورهای معلم، امامت، شهرک لشکر، گلبرگ و تهران کنار گذاشته شدند. جدول 11–02 به رکورد بی‌نشانی سایت منتقل نمی‌شود.",
+      "proposals": [],
+      "nextEvidenceNeeded": "آدرس یا شماره/مختصات عمومی متصل به handle mahoorrestaurant_؛ تفکیک شعبه از ماهور VIP/پلاس.",
+      "productionApplied": false
+    },
+    {
+      "placeId": 233,
+      "slug": "mahor-vip",
+      "name": "کافه رستوران ماهور پلاس",
+      "baseline": { "address": "مشهد،طرقبه،امام رضا ۱۷", "instagram": "Mahoorrestaurant_plus", "revision": 0, "lat": "36.3391867", "lng": "59.4268046", "existingAttributes": ["breakfast=1/editorial/75"] },
+      "decision": "hold-conflicting-experience",
+      "sourceUrls": [
+        "https://neshan.org/maps/places/c6219d39ae068d20f30f8cb3dd7ae252",
+        "https://es.restaurantguru.com/rstwran-mahwr-%D9%BElas-Vila-Shahr"
+      ],
+      "observedAt": "2026-10-07T14:15:24.682Z",
+      "identityEvidence": { "neshanName": "کافه ماهور vip", "geoDistanceMeters": 8, "streetMatches": true, "handleNotListedOnNeshan": true },
+      "datedEvidence": [
+        { "dateFa": "1405/07/09", "paraphrase": "گزارش صدای زیاد موسیقی/نور نمایشگر و مشکل رسیدگی؛ شاهد مثبت آرامش/کار نیست." },
+        { "dateFa": "1405/03/25", "paraphrase": "تولد برگزار شده ولی مشتری تجربه پراسترس و ناموفق را گزارش می‌کند؛ وقوع تولد معادل مناسب بودن برای تولد نیست." },
+        { "dateFa": "1405/02/03", "paraphrase": "DJ مورد پسند همراه با گلایه صدای موسیقی؛ کیفیت دورهمی یا آرامش برای همه اثبات نشده." }
+      ],
+      "finding": "موقعیت و خیابان با شعبه پلاس همخوان‌اند. RestaurantGuru جدول 08–13 و نظرهای یک/دو ساله دارد؛ updated=2026-07-26 تاریخ تأیید خدمت نیست. شاهد تازه مثبت برای birthday/outdoor/quiet وجود ندارد.",
+      "proposals": [],
+      "nextEvidenceNeeded": "سیاست فعلی رزرو تولد/پذیرایی و شاهد مستقل تازه مثبت؛ تأیید هویت handle و ساعات از منبع کسب‌وکار.",
+      "productionApplied": false
+    },
+    {
+      "placeId": 242,
+      "slug": "bvlgari-lounge",
+      "name": "بولگاری لانژ",
+      "baseline": { "address": "", "instagram": null, "revision": 0, "lat": null, "lng": null, "existingAttributes": ["desserts=1/editorial/75"] },
+      "decision": "hold-identity-and-hours",
+      "sourceUrls": [
+        "https://neshan.org/maps/places/c2c411dac192f46be7ef78f2103e5def",
+        "https://neshan.org/maps/places/67731104cb7d32c5edae647961e27b9a",
+        "https://pictame.com/en/discover/hashtag/%DA%A9%D8%A7%D9%81%D9%87-%D8%A8%D9%84%D9%88%D8%A8%D8%B1%DB%8C-%D9%85%D8%B4%D9%87%D8%AF-%D8%B7%D8%B1%D9%82%D8%A8%D9%87"
+      ],
+      "observedAt": "2026-10-07T14:13:25.202Z",
+      "identityEvidence": { "neshanPages": 2, "bothStreet": "امام رضا 17", "dbAddressPhoneGeoHandleMissing": true, "mirrorRenameLead": "بلوبری، بولگاری سابق؛ تاریخ انتشار احراز نشده" },
+      "datedEvidence": [
+        { "dateFa": "1405/03/19", "paraphrase": "رضایت از DJ و پذیرایی در یکی از ورودی‌ها، نه تأیید ساعت یا ظرفیت دورهمی." },
+        { "dateFa": "1405/02/29", "paraphrase": "گزارش تغییر مالکیت/منو در ورودی دیگر؛ دلیل احتیاط در پیوستگی هویت." },
+        { "dateFa": "1405/06/28", "paraphrase": "گلایه از کیفیت/قیمت؛ تازگی نظر، تأیید 24ساعته بودن نیست." }
+      ],
+      "finding": "دو ورودی هم‌خیابان با جدول 24/7 در یکی و 08:30–03/08–04 در دیگری؛ یک ناشرند نه دو شاهد مستقل. از ادعای 24ساعته یا انتقال نظر به رکورد بدون هویت خودداری شد.",
+      "proposals": [],
+      "nextEvidenceNeeded": "پیوند رکورد سایت به شعبه/نام فعلی و برنامه ساعت فعلی، با منبع اولیه تاریخ‌دار.",
+      "productionApplied": false
+    },
+    {
+      "placeId": 288,
+      "slug": "jana-lounge",
+      "name": "کافه رستوران جانا",
+      "baseline": { "address": "مشهد ، ابتدای جاده شاندیز مقابل دوربرگردان اول", "instagram": "Jana_lounge", "revision": 0, "lat": "36.3579825", "lng": "59.4295901", "existingAttributes": [] },
+      "decision": "hold-nonmatching-results",
+      "sourceUrls": [
+        "https://neshan.org/maps/places/e0b0c2117ec64da8d1ee0458ec740492",
+        "https://www.instagram.com/jana_lounge/"
+      ],
+      "observedAt": "2026-10-07T14:14:00.413Z",
+      "identityEvidence": { "candidateStreet": "وکیل آباد، صیاد شیرازی", "businessPhoneDoesNotMatch": true, "candidateGeo": { "lat": 36.332189, "lng": 59.4845654 }, "officialInstagramFetch": "browser connection timeout" },
+      "datedEvidence": [ { "dateFa": "1400/01/28", "paraphrase": "ادعای آرامش مربوط به کافه هم‌نام وکیل‌آباد و بیش از پنج سال قبل است؛ برای شعبه شاندیز رد شد." } ],
+      "finding": "نه نظر قدیمی کافه وکیل‌آباد، نه جانای شریعتی، نه باغ جانا در زشک شاهد شعبه ابتدای شاندیز نیستند. outdoor دوباره بدون شاهد افزوده نمی‌شود.",
+      "proposals": [],
+      "nextEvidenceNeeded": "صفحه عمومی متصل به Jana_lounge و نشانی/مختصات ابتدای شاندیز؛ سپس شاهد مستقیم تجربه.",
+      "productionApplied": false
+    },
+    {
+      "placeId": 324,
+      "slug": "5amcafe",
+      "name": "کافه 5 صبحی ها",
+      "baseline": { "address": "بلوار شهید دستغیب- حدفاصل دستغیب 33 و 35 ، پلاک 453.", "instagram": "the5amcafe", "revision": 0, "lat": "36.3128126", "lng": "59.5634240", "existingAttributes": ["desserts=1/editorial/75"] },
+      "decision": "hold-no-new-supported-attribute",
+      "sourceUrls": [
+        "https://neshan.org/maps/places/29412b85e4259f24b9a7929149a387d7",
+        "https://neshan.org/maps/places/da5be804eb1ffefdc2600f2fb59c9ef8",
+        "https://www.instagram.com/the5amcafe/"
+      ],
+      "observedAt": "2026-10-07T14:13:41.368Z",
+      "identityEvidence": { "businessPhoneMatchesOnBothPages": true, "handleMatchesFirstPage": true, "geoDistanceMetersFirstPage": 13, "secondPagePlaque": "8", "dbPlaque": "453", "samePublisherNotIndependentSources": true },
+      "datedEvidence": [
+        { "dateFa": "1405/06/15", "paraphrase": "رضایت از کیک شکلاتی و شیک انبه و باریستا؛ از desserts موجود پشتیبانی می‌کند، نه قهوه تخصصی یا آرامش." },
+        { "dateFa": "1405/02/31", "paraphrase": "نظر کلی کیفیت/طعم؛ فاقد شاهد تجربه جدید." },
+        { "dateFa": "1401/09/15", "paraphrase": "توصیف دنجی قدیمی، برای ثبت quiet امروز کافی نیست." },
+        { "dateFa": "1404/09/03", "paraphrase": "توصیف دنجی در ورودی دوم، بیش از 180 روز قبل؛ شاهد تازه نیست." }
+      ],
+      "finding": "هویت شعبه به‌خوبی تطبیق دارد، اما بازشدن صبح زود اثبات سرو صبحانه نیست؛ نام رستری/فروش قهوه و تعریف از باریستا اثبات تخصص با روش/دانه مشخص نیست. ویژگی قدیمی و verifiedAt آن بدون نوشتن حفظ شدند.",
+      "proposals": [],
+      "nextEvidenceNeeded": "سیاست فعلی کار/مطالعه یا شاهد تازه سکوت در ساعت مشخص؛ برای تخصص قهوه روش/دانه و منبع اولیه مشخص.",
+      "productionApplied": false
+    },
+    {
+      "placeId": 379,
+      "slug": "mir-coffee",
+      "name": "قهوه میر",
+      "baseline": { "address": "میدان بهارستان، بهارستان ۱۰/۱، رستری میر", "instagram": "mir_coffee_roasters", "revision": 0, "lat": "36.3914403", "lng": "59.6406555", "existingAttributes": [] },
+      "decision": "hold-nonmatching-directory",
+      "sourceUrls": [
+        "https://www.pulled.coffee/shop/mir-coffee-mashhad",
+        "https://www.instagram.com/mir_coffee_roasters/"
+      ],
+      "observedDate": "2026-10-07",
+      "identityEvidence": { "pulledMapsLinkGeo": { "lat": 36.3112581, "lng": 59.5547903 }, "distanceFromDbMeters": 11774, "unclaimed": true, "checkIns": 0, "phoneHandleMatchNotEstablished": true },
+      "datedEvidence": [],
+      "finding": "برچسب Specialty در دایرکتوری غیرclaim شده و بدون check-in، با موقعیت حدود 11.8 کیلومتر دورتر، به رستری بهارستان منتقل نشد. متن عمومی دایرکتوری شاهد مشاهده روش دم‌آوری این شعبه نیست؛ Google Maps مستقیم به consent هدایت شد و قابل بررسی نبود.",
+      "proposals": [],
+      "nextEvidenceNeeded": "منبع اولیه متصل به mir_coffee_roasters و بهارستان 10/1، همراه با شاهد واقعی سرو قهوه تخصصی برای مشتری، نه صرف عنوان رستری.",
+      "productionApplied": false
+    }
+  ],
+  "accessLimitations": [
+    "Direct Instagram pages for newvegas.cafe, the5amcafe and jana_lounge timed out in isolated browser; mir_coffee_roasters was unavailable through web open.",
+    "Google Maps destination from Pulled redirected to consent and was not inspected directly.",
+    "Targeted Snappfood and Balad web searches returned no attributable result; no claim that these businesses are absent or closed.",
+    "RestaurantGuru Mahoor Plus is a secondary Google-attributed source; July 26 page update is not business verification.",
+    "Neshan weekday labels varied from the actual observation weekday; dated reviews, not the Today label, were used.",
+    "An additional attempt to resolve Social cafe Telegram evidence date failed through public web and server connection; no date was inferred and no Social attribute was added."
+  ],
+  "overallBatchProgress": { "dossiers": 20, "previouslyAppliedCandidates": 3, "newlyAppliedThisReview": 0, "unresolved": 17, "allDossiersHaveResearchTriage": true, "allDossiersHaveVerifiedIndependentEvidence": false }
+}
