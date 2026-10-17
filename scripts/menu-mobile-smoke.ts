@@ -41,14 +41,14 @@ async function layout(page: Page) {
       firstCard: { width: box.width, height: box.height },
       contentsFit: cards.every(card => {
         const cardBox = card.getBoundingClientRect()
-        return ['picture', 'strong', 'small'].every(selector => {
+        return ['img', 'strong', 'small'].every(selector => {
           const child = card.querySelector(selector)!.getBoundingClientRect()
           return child.left >= cardBox.left && child.right <= cardBox.right && child.bottom <= cardBox.bottom
         })
       }),
       twoColumns: Math.abs(box.top - second.top) < 1 && Math.abs(box.left - second.left) > 10,
       ratios: cards.map(card => {
-        const rect = card.querySelector('picture')!.getBoundingClientRect()
+        const rect = card.querySelector('img')!.getBoundingClientRect()
         return rect.width / rect.height
       }),
       blurLayers: Array.from(grid.querySelectorAll('*')).filter(el => {
@@ -63,20 +63,20 @@ async function layout(page: Page) {
 }
 
 try {
-  for (const width of [320, 360, 390, 430, 768, 1440]) {
-    const mobile = width <= 430
+  for (const width of [320, 360, 390, 430]) {
+    const mobile = true
     const context = await browser.newContext({
       viewport: { width, height: 844 }, isMobile: mobile, hasTouch: mobile,
       deviceScaleFactor: mobile ? 3 : 1, locale: 'fa-IR', reducedMotion: 'reduce',
       serviceWorkers: 'block',
     })
     // Opening a public menu must not add test visits to analytics.
-    await context.route('**/api/track', route => route.fulfill({ status: 204 }))
+    await context.route('**/api/track**', route => route.fulfill({ status: 204 }))
     const page = await context.newPage()
     const errors: string[] = []
     page.on('pageerror', error => errors.push(error.message))
     await page.goto(`${base}/cafe/ramouz-cafe?menu=1`, { waitUntil: 'networkidle' })
-    const picker = page.getByRole('dialog', { name: 'دسته‌بندی‌های منو', exact: true })
+    const picker = page.getByRole('dialog', { name: /منوی کافه/ }).locator('[data-menu-picker]')
     await picker.waitFor()
     const grid = picker.locator('[class*="categoryGrid"]')
     const cards = grid.getByRole('button')
@@ -93,7 +93,7 @@ try {
       assert.ok(initial.ratios.every(ratio => Math.abs(ratio - 1) < .02), `square image ratio at ${width}`)
       assert.equal(initial.blurLayers, 0)
     }
-    const closeBox = await picker.getByRole('button', { name: 'بستن دسته‌بندی‌ها' }).boundingBox()
+    const closeBox = await picker.getByRole('button', { name: 'بستن منو' }).boundingBox()
     assert.ok(closeBox && closeBox.y >= 0 && closeBox.height >= 44)
     await grid.evaluate(el => { el.scrollTop = el.scrollHeight })
     await page.waitForTimeout(100)
@@ -101,11 +101,11 @@ try {
     assert.ok(last && last.y + last.height <= 844, `last card not clipped at ${width}`)
     await grid.evaluate(el => { el.scrollTop = 0 })
     if (width === 360) {
-      await picker.getByRole('button', { name: 'بستن دسته‌بندی‌ها' }).focus()
+      await picker.getByRole('button', { name: 'بستن منو' }).focus()
       await page.keyboard.press('Shift+Tab')
       assert.equal(await cards.last().evaluate(el => el === document.activeElement), true, 'picker traps reverse tab')
       await page.keyboard.press('Tab')
-      assert.equal(await picker.getByRole('button', { name: 'بستن دسته‌بندی‌ها' }).evaluate(el => el === document.activeElement), true, 'picker traps forward tab')
+      assert.equal(await picker.getByRole('button', { name: 'بستن منو' }).evaluate(el => el === document.activeElement), true, 'picker traps forward tab')
       await grid.evaluate(el => { el.scrollTop = 0 })
       const cdp = await context.newCDPSession(page)
       await cdp.send('Performance.enable')
@@ -170,8 +170,9 @@ try {
     assert.ok(await menu.locator('ul[class*="items"] > li').count() > count)
 
     await menu.getByRole('button', { name: /^همهٔ دسته‌بندی‌ها/ }).click()
-    await picker.getByRole('button', { name: 'بستن دسته‌بندی‌ها' }).click()
-    assert.equal(await menu.getByRole('button', { name: /^همهٔ دسته‌بندی‌ها/ }).evaluate(el => el === document.activeElement), true)
+    await picker.waitFor()
+    await cards.nth(2).click()
+    await picker.waitFor({ state: 'hidden' })
 
     if (width === 360) {
       const cdp = await context.newCDPSession(page)
@@ -234,12 +235,14 @@ try {
       await page.waitForURL(/\/item\//)
       await page.goBack({ waitUntil: 'networkidle' })
       assert.equal(page.url(), sectionUrl, 'browser Back restores category URL')
-      await menu.getByRole('button', { name: 'بستن منو', exact: true }).waitFor()
+      await menu.getByRole('button', { name: 'بازگشت به دسته‌بندی‌ها', exact: true }).waitFor()
       assert.equal(await rail.getByRole('button').nth(1).getAttribute('aria-pressed'), 'true')
       await page.keyboard.press('Escape')
-      assert.equal(await page.evaluate(() => document.body.style.overflow), '')
+      await picker.waitFor()
+      await page.keyboard.press('Escape')
+      await page.waitForFunction(() => document.body.style.overflow === '')
       assert.equal(new URL(page.url()).searchParams.has('menu'), false)
-      await menu.locator('[data-menu-launcher]').click()
+      await page.getByRole('navigation', { name: 'بخش‌های کافه' }).getByRole('link', { name: 'منو' }).click()
       await picker.waitFor()
       await page.goBack()
       await picker.waitFor({ state: 'hidden' })
@@ -252,7 +255,7 @@ try {
   }
   await writeFile(`${output}/report.json`, JSON.stringify(report, null, 2))
   console.log(JSON.stringify(report, null, 2))
-  console.log('PASS: mobile menu layout, native swipe, search, pagination, display modes, focus, detail/Back and desktop/tablet.')
+  console.log('PASS: mobile menu layout, native swipe, search, pagination, display modes, focus and detail/Back. Desktop/tablet are covered by mobile-miniapp-ui-smoke.ts.')
 } finally {
   await browser.close()
 }

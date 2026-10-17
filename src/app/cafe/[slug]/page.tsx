@@ -7,6 +7,7 @@ import { HoursCard } from '@/components/cafe/HoursCard'
 import { CafePopover, MenuOpenButton } from '@/components/cafe/CafePopover'
 import { MenuBrowser } from '@/components/cafe/MenuBrowser'
 import { CafeMiniAppNav } from '@/components/cafe/CafeMiniAppNav'
+import { MobileInfoDetails } from '@/components/cafe/MobileInfoDetails'
 import { PlaceGallery, type GalleryImage } from '@/components/cafe/PlaceGallery'
 import { ReviewForm } from '@/components/cafe/ReviewForm'
 import { SavePlaceButton } from '@/components/cafe/SavePlaceButton'
@@ -541,7 +542,7 @@ export default async function CafePage({ params }: PageProps) {
             </div>
 
             {place.about && (
-              <section className={styles.about} id="about" data-cafe-screen="info">
+              <MobileInfoDetails className={styles.about} id="about" title={`دربارهٔ ${place.name}`}>
                 <span className={styles.sectionKicker}>داستان این مکان</span>
                 <h2 className={styles.sectionHeading}>دربارهٔ {place.name}</h2>
                 {place.about
@@ -550,7 +551,7 @@ export default async function CafePage({ params }: PageProps) {
                   .map((paragraph, index) => (
                     <p key={index}>{paragraph}</p>
                   ))}
-              </section>
+              </MobileInfoDetails>
             )}
 
             <section className={styles.reviews} id="reviews" data-cafe-screen="reviews">
@@ -616,10 +617,10 @@ export default async function CafePage({ params }: PageProps) {
 
           <aside className={styles.side} data-cafe-screen="info">
             <h2 className={styles.mobileScreenHeading} tabIndex={-1}>اطلاعات {place.name}</h2>
-            {hourGroups.length > 0 && <section className={styles.card} aria-label="ساعت کاری کامل">
+            {hourGroups.length > 0 && <MobileInfoDetails className={`${styles.card} ${styles.infoDisclosure}`} title="ساعت کاری کامل">
               <h3 className={styles.sideHeading}>ساعت کاری</h3>
               <ul className={styles.hoursList}>{hourGroups.map(group => <li key={group.dows.join('-')}><span>{group.label}</span><strong>{group.unknown ? 'نامشخص' : group.closed ? 'تعطیل' : fa(group.ranges.join('، '))}</strong></li>)}</ul>
-            </section>}
+            </MobileInfoDetails>}
             <section className={`${styles.card} ${styles.mapCard}`} id="map">
               <h2 className={styles.sideHeading}>پیداکردن اینجا</h2>
               {place.coords && place.geoStatus === 'ok' ? (
@@ -638,7 +639,7 @@ export default async function CafePage({ params }: PageProps) {
                   focusSlug={place.slug}
                   center={place.coords}
                   zoom={Math.min(16, map.maxZoom)}
-                  height="300px"
+                  height="clamp(220px, 31dvh, 300px)"
                   showLocate={false}
                 />
               ) : (
@@ -730,10 +731,16 @@ export default async function CafePage({ params }: PageProps) {
             />
           </aside>
         </div>
-        <section className={`${styles.dataTrust} ${priceIsStale ? styles.dataTrustStale : ''}`} data-cafe-screen="info" aria-label="منبع و تازگی اطلاعات">
+        <MobileInfoDetails className={`${styles.dataTrust} ${styles.infoDisclosure} ${priceIsStale ? styles.dataTrustStale : ''}`} title="منشأ و تازگی اطلاعات">
           <div className={styles.trustLead}><span className={styles.trustIcon} aria-hidden="true"><Database size={20}/></span><div><strong>منشأ اولیهٔ اطلاعات: {sourceLabel}</strong><span>{formattedPriceDate?`جدیدترین تغییر ثبت‌شدهٔ قیمت: ${formattedPriceDate}`:'زمان تغییر قیمت ثبت نشده است'}</span>{formattedSourceSyncDate&&<span>آخرین همگام‌سازی منبع: {formattedSourceSyncDate}</span>}{priceIsStale&&<span>برخی قیمت‌ها نیاز به بازبینی دارند.</span>}</div></div>
           {place.priceStatsItemCount>0 && <details><summary>مبنای آمار قیمت</summary><p>بر پایهٔ {faCount(place.priceStatsItemCount)} آیتم مشمول؛ خدمات و قیمت‌های خارج از قواعد محاسبه کنار گذاشته می‌شوند. بازهٔ قیمت از میانه و ردهٔ قیمت جداست.{place.priceMinItemName&&place.priceMaxItemName?` کمینه: ${place.priceMinItemName}؛ بیشینه: ${place.priceMaxItemName}.`:''}</p></details>}
-        </section>
+        </MobileInfoDetails>
+        <nav className={styles.miniFooter} data-cafe-screen="info" aria-label="راهنما و سیاست‌های کو کافه">
+          <Link href={paths.privacy}>حریم خصوصی</Link>
+          <Link href={paths.editorialPolicy}>سیاست محتوا و نظرها</Link>
+          <Link href="/#faq">راهنما</Link>
+          <Link href={paths.contribute}>اصلاح اطلاعات</Link>
+        </nav>
       </main>
     </>
   )
