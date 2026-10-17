@@ -303,6 +303,7 @@ export default async function HomePage() {
                   <span className={styles.trustedReviewMeta}>
                     {card.rating !== null && <span><Star size={14} fill="currentColor" aria-hidden="true" /> {card.rating.toLocaleString('fa-IR', { maximumFractionDigits: 1 })}</span>}
                     {card.isBloggerReview && <span>تجربهٔ بلاگر</span>}
+                    {card.placeStatus === 'temporarily_closed' && <span>موقتاً بسته</span>}
                     <span>{card.reviewedAt.toLocaleDateString('fa-IR', { timeZone: 'Asia/Tehran' })}</span>
                   </span>
                   <span className={styles.trustedReviewQuote}>«{card.excerpt}»</span>

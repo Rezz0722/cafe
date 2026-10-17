@@ -9,6 +9,7 @@ function card(id: number, patch: Record<string, unknown> = {}) {
     placeId: id,
     placeName: `کافه ${id}`,
     placeSlug: `cafe-${id}`,
+    placeStatus: 'published' as const,
     placeImage: null,
     districtName: `محله ${id}`,
     rating: 5,
@@ -49,4 +50,14 @@ test('Bayesian ranking and district diversity do not label a single five-star re
   assert.equal(result[0]?.placeId, 2)
   assert.equal(new Set(result.map(item => item.districtName)).size, 3)
   assert.equal(result.some(item => item.placeId === 1), false)
+})
+
+test('temporarily closed public venues remain labeled and rank below equivalent open venues', () => {
+  const result = rankTrustedReviews([
+    card(1, { placeStatus: 'temporarily_closed', districtName: 'الف' }),
+    card(2, { districtName: 'ب' }),
+    card(3, { districtName: 'ج' }),
+  ], 3, now)
+  assert.equal(result[0]?.placeStatus, 'published')
+  assert.equal(result.at(-1)?.placeStatus, 'temporarily_closed')
 })

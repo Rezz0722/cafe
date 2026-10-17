@@ -14,6 +14,7 @@ export interface TrustedReviewCard {
   placeId: number
   placeName: string
   placeSlug: string
+  placeStatus: 'published' | 'temporarily_closed'
   placeImage: string | null
   districtName: string | null
   rating: number | null
@@ -56,7 +57,8 @@ export function rankTrustedReviews(candidates: Candidate[], limit = 3, now = new
       score: bayesianAverage(card.ratingSum, count) * 8
         + Math.log1p(count) * 2
         + Math.max(0, 2 - ageDays / 90)
-        + Math.min(100, Math.max(0, card.qualityScore)) / 50,
+        + Math.min(100, Math.max(0, card.qualityScore)) / 50
+        - (card.placeStatus === 'temporarily_closed' ? 3 : 0),
     }
   }).sort((a, b) => b.score - a.score || b.card.reviewId - a.card.reviewId)
   const chosen: TrustedReviewCard[] = []
@@ -86,6 +88,7 @@ export async function listTrustedReviewCards(limit = 3): Promise<TrustedReviewCa
     placeId: place.id,
     placeName: place.name,
     placeSlug: place.slug,
+    placeStatus: place.status,
     districtName: district.name,
     coverPath: cover.localPath,
     logoPath: logo.localPath,
@@ -122,6 +125,7 @@ export async function listTrustedReviewCards(limit = 3): Promise<TrustedReviewCa
       placeId: row.placeId,
       placeName: row.placeName,
       placeSlug: row.placeSlug,
+      placeStatus: row.placeStatus as 'published' | 'temporarily_closed',
       placeImage: mediaPublicUrl(row.coverPath ?? row.logoPath),
       districtName: row.districtName,
       rating: rating !== null && rating >= 1 && rating <= 5 ? rating : null,

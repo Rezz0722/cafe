@@ -43,6 +43,7 @@ test('approved public reviews only; moderation removes them without leaking cont
     const own = initial.filter(item => placeIds.includes(item.placeId))
     assert.equal(own.length, 3)
     assert.equal(own.some(item => item.placeId === placeIds[3]), false)
+    assert.equal(own.find(item => item.placeId === placeIds[2])?.placeStatus, 'temporarily_closed')
     assert.equal(own.some(item => item.excerpt.includes('09123456789')), false)
     assert.equal(own.some(item => item.excerpt.includes('این نظر نباید')), false)
     assert.equal(own.find(item => item.placeId === placeIds[1])?.isBloggerReview, true)
