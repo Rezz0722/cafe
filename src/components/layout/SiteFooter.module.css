@@ -86,6 +86,7 @@
 }
 
 @media (max-width: 760px) {
+  :global(body:has(#page-top[data-cafe-ready='true'])) .footer { display: none; }
   .inner { padding-top: 38px; }
 
   .grid {
