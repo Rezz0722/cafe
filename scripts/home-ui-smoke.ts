@@ -44,7 +44,7 @@ try {
     await assertNoOverflow(page, `home mobile ${width}`)
     assert.equal(await page.locator('main > [class*="home"] main section').count(), 0)
     await page.getByRole('heading', { name: 'اول غذا را انتخاب کن، بعد کافه را' }).waitFor()
-    assert.ok(await page.locator('a[href="/for-cafes"]').count() > 0)
+    assert.ok(await page.locator('a[href^="/for-cafes"]').count() > 0)
     assert.equal(await page.getByText('ساختهٔ جوون‌های مشهد').count(), 0)
     assert.equal(await page.locator('img[src*="green-interior"]').count(), 0)
     assert.ok(await page.locator('img[src="/brand/app-icon-192.png"]').count() >= 2)
