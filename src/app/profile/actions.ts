@@ -188,6 +188,7 @@ export async function submitReviewAction(
   if (slug) revalidatePath(paths.cafe(slug))
   revalidatePath(paths.myReviews)
   revalidatePath(paths.reviewedCafes)
+  revalidatePath(paths.home)
   revalidatePath('/sitemap.xml')
 
   // پیام باید با واقعیت بخواند: اگر تأیید خودکار روشن است، «بعد از بررسی»

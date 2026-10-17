@@ -192,6 +192,7 @@ async function moderateReviewActionImpl(
   if (place) revalidatePath(paths.cafe(place.slug))
   revalidatePath(paths.admin)
   revalidatePath(paths.reviewedCafes)
+  revalidatePath(paths.home)
   revalidatePath('/sitemap.xml')
   revalidatePath(paths.search)
 

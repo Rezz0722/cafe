@@ -1650,6 +1650,25 @@
 .quickHubLinks { display: flex; flex-wrap: wrap; gap: 5px 14px; margin-top: 11px; }
 .quickHubLinks a { min-height: 36px; display: inline-flex; align-items: center; color: var(--c-primary-strong); font-size: .72rem; font-weight: 800; text-decoration: underline; text-underline-offset: 3px; }
 
+.home .trustedReviewSection { padding-block: 31px; }
+.trustedReviewGrid { display: grid; gap: 10px; }
+.trustedReviewCard { min-width: 0; display: flex; flex-direction: column; gap: 11px; padding: 14px; border: 1px solid var(--c-border); border-radius: 18px; color: var(--c-ink); background: var(--c-surface-tint); text-decoration: none; transition: border-color .18s ease, transform .18s ease; }
+.trustedReviewCard:hover { border-color: var(--c-primary-border); transform: translateY(-2px); }
+.trustedReviewCard:focus-visible { outline: 3px solid var(--c-primary); outline-offset: 3px; }
+.trustedReviewVenue { min-width: 0; display: flex; align-items: center; gap: 10px; }
+.trustedReviewVenue img, .trustedReviewFallback { width: 48px; height: 48px; flex: none; border-radius: 13px; object-fit: cover; }
+.trustedReviewFallback { display: grid; place-items: center; color: var(--c-primary-strong); background: var(--c-primary-soft); }
+.trustedReviewVenue > span:last-child { min-width: 0; display: grid; gap: 3px; }
+.trustedReviewVenue strong { overflow: hidden; font-size: .86rem; font-weight: 900; text-overflow: ellipsis; white-space: nowrap; }
+.trustedReviewVenue small { overflow: hidden; color: var(--c-muted); font-size: .68rem; text-overflow: ellipsis; white-space: nowrap; }
+.trustedReviewMeta { display: flex; flex-wrap: wrap; gap: 6px; }
+.trustedReviewMeta > span { min-height: 25px; display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 999px; color: var(--c-primary-strong); background: var(--c-primary-soft); font-size: .67rem; font-weight: 800; }
+.trustedReviewQuote { display: -webkit-box; overflow: hidden; color: var(--c-ink-2); font-size: .78rem; line-height: 1.8; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
+.trustedReviewFoot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; color: var(--c-primary-strong); font-size: .72rem; font-weight: 850; }
+.trustedReviewFoot > span { display: inline-flex; align-items: center; gap: 5px; }
+@media (min-width: 760px) { .trustedReviewGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (prefers-reduced-motion: reduce) { .trustedReviewCard { transition: none; } }
+
 .home .experienceSection,
 .home .discoverySection,
 .home .districtSection { padding-block: 31px; }
