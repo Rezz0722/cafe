@@ -1,9 +1,8 @@
 import { cookies } from 'next/headers'
 import { detectDevice, VISITOR_COOKIE } from '@/core/analytics/track'
 import { parseHomeDiscoveryEvent } from '@/core/discovery/tracking'
+import { recordHomeDiscoveryEvent } from '@/core/discovery/recordTracking'
 import { getSettings } from '@/core/settings/store'
-import { getDb } from '@/db/client'
-import { searchLog } from '@/db/schema'
 
 export async function POST(request: Request): Promise<Response> {
   if (request.headers.get('sec-fetch-site') && request.headers.get('sec-fetch-site') !== 'same-origin') return new Response(null, { status: 204 })
@@ -23,16 +22,7 @@ export async function POST(request: Request): Promise<Response> {
   const store = await cookies()
   const visitor = store.get(VISITOR_COOKIE)?.value
   try {
-    await getDb().insert(searchLog).values({
-      query: '',
-      requestedScope: 'places',
-      resolvedEntity: 'places',
-      resolvedIntent: `home:${event.event}:${event.source}:${event.placeId ? '' : event.context}`.slice(0, 80),
-      facetIds: '',
-      resultCount: 0,
-      clickedPlaceId: event.placeId,
-      sessionId: visitor && /^[a-f0-9-]{36}$/i.test(visitor) ? visitor : null,
-    })
+    await recordHomeDiscoveryEvent(event, visitor && /^[a-f0-9-]{36}$/i.test(visitor) ? visitor : null)
   } catch (error) {
     console.warn('[discovery-track] failed', error)
   }

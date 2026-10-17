@@ -1,0 +1,134 @@
+[
+  {
+    "viewport": {
+      "width": 320,
+      "height": 568
+    },
+    "theme": "light",
+    "sectionTop": 821,
+    "pageHeight": 5734,
+    "cards": 3,
+    "browserErrors": 0
+  },
+  {
+    "viewport": {
+      "width": 320,
+      "height": 568
+    },
+    "theme": "dark",
+    "sectionTop": 821,
+    "pageHeight": 5734,
+    "cards": 3,
+    "browserErrors": 0
+  },
+  {
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "theme": "light",
+    "sectionTop": 769,
+    "pageHeight": 5286,
+    "cards": 3,
+    "browserErrors": 0
+  },
+  {
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "theme": "dark",
+    "sectionTop": 769,
+    "pageHeight": 5286,
+    "cards": 3,
+    "browserErrors": 0
+  },
+  {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "theme": "light",
+    "sectionTop": 770,
+    "pageHeight": 5239,
+    "cards": 3,
+    "browserErrors": 0
+  },
+  {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "theme": "dark",
+    "sectionTop": 770,
+    "pageHeight": 5239,
+    "cards": 3,
+    "browserErrors": 0
+  },
+  {
+    "viewport": {
+      "width": 430,
+      "height": 932
+    },
+    "theme": "light",
+    "sectionTop": 775,
+    "pageHeight": 5205,
+    "cards": 3,
+    "browserErrors": 0
+  },
+  {
+    "viewport": {
+      "width": 430,
+      "height": 932
+    },
+    "theme": "dark",
+    "sectionTop": 775,
+    "pageHeight": 5205,
+    "cards": 3,
+    "browserErrors": 0
+  },
+  {
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "theme": "light",
+    "sectionTop": 720,
+    "pageHeight": 6274,
+    "cards": 3,
+    "browserErrors": 0
+  },
+  {
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "theme": "dark",
+    "sectionTop": 720,
+    "pageHeight": 6274,
+    "cards": 3,
+    "browserErrors": 0
+  },
+  {
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "theme": "light",
+    "sectionTop": 723,
+    "pageHeight": 5488,
+    "cards": 3,
+    "browserErrors": 0
+  },
+  {
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "theme": "dark",
+    "sectionTop": 723,
+    "pageHeight": 5488,
+    "cards": 3,
+    "browserErrors": 0
+  }
+]

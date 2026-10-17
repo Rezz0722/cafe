@@ -3,8 +3,10 @@ import test from 'node:test'
 import { randomUUID } from 'node:crypto'
 import { eq, inArray } from 'drizzle-orm'
 import { closeDb, getDb } from '@/db/client'
-import { place, review } from '@/db/schema'
+import { place, review, searchLog } from '@/db/schema'
 import { listTrustedReviewCards } from './trustedReviews'
+import { recordHomeDiscoveryEvent } from './recordTracking'
+import { parseHomeDiscoveryEvent } from './tracking'
 
 test('approved public reviews only; moderation removes them without leaking contacts', {
   skip: process.env.KUCAFE_TRUSTED_REVIEWS_DB_TEST !== '1',
@@ -16,6 +18,7 @@ test('approved public reviews only; moderation removes them without leaking cont
   const db = getDb()
   const suffix = randomUUID().replaceAll('-', '').slice(0, 12)
   const placeIds: number[] = []
+  let logId: number | null = null
   try {
     const statuses = ['published', 'published', 'temporarily_closed', 'draft'] as const
     for (const [index, status] of statuses.entries()) {
@@ -47,7 +50,18 @@ test('approved public reviews only; moderation removes them without leaking cont
     await db.update(review).set({ status: 'rejected' }).where(eq(review.placeId, placeIds[1]!))
     const afterModeration = await listTrustedReviewCards(6)
     assert.equal(afterModeration.some(item => item.placeId === placeIds[1]), false)
+
+    const event = parseHomeDiscoveryEvent({ event: 'review_card_opened', source: 'trusted_reviews', context: String(placeIds[0]) })
+    assert.ok(event)
+    logId = await recordHomeDiscoveryEvent(event, null)
+    const [logged] = await db.select().from(searchLog).where(eq(searchLog.id, logId)).limit(1)
+    assert.equal(logged?.query, '')
+    assert.equal(logged?.clickedPlaceId, placeIds[0])
+    assert.equal(logged?.userId, null)
+    assert.equal(logged?.sessionId, null)
+    assert.equal(logged?.resolvedIntent?.startsWith('home:review_card_opened:trusted_reviews'), true)
   } finally {
+    if (logId !== null) await db.delete(searchLog).where(eq(searchLog.id, logId))
     if (placeIds.length) await db.delete(place).where(inArray(place.id, placeIds))
     await closeDb()
   }

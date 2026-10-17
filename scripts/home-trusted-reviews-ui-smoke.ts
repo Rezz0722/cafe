@@ -53,8 +53,12 @@ try {
       assert.ok(details.links.every(link => link?.endsWith('#reviews')))
       assert.deepEqual(errors, [])
       if (viewport.width === 390 || viewport.width === 1440) {
-        await section.screenshot({ path: `${output}/reviews-${viewport.width}-${theme}.png` })
-        if (viewport.width === 390) await page.screenshot({ path: `${output}/home-full-${viewport.width}-${theme}.png`, fullPage: true })
+        await page.evaluate(() => {
+          const target = document.querySelector('section[aria-labelledby="home-reviews-title"]')!
+          window.scrollTo(0, target.getBoundingClientRect().top + scrollY - 72)
+        })
+        await page.waitForTimeout(100)
+        await page.screenshot({ path: `${output}/reviews-${viewport.width}-${theme}.png` })
       }
       await cards.first().click()
       await page.waitForFunction(() => /\/cafe\/[^/]+#reviews$/.test(location.href), undefined, { timeout: 60_000 })
