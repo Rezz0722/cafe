@@ -1,0 +1,1430 @@
+[
+  {
+    "route": "home",
+    "path": "/",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/",
+    "width": 360,
+    "scrollWidth": 360,
+    "bodyHeight": 5278,
+    "title": "کو کافه | منو، قیمت و کافه‌های مشهد",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "home",
+    "path": "/",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/",
+    "width": 360,
+    "scrollWidth": 360,
+    "bodyHeight": 5278,
+    "title": "کو کافه | منو، قیمت و کافه‌های مشهد",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "home",
+    "path": "/",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/",
+    "width": 390,
+    "scrollWidth": 390,
+    "bodyHeight": 5232,
+    "title": "کو کافه | منو، قیمت و کافه‌های مشهد",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "home",
+    "path": "/",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/",
+    "width": 390,
+    "scrollWidth": 390,
+    "bodyHeight": 5232,
+    "title": "کو کافه | منو، قیمت و کافه‌های مشهد",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "home",
+    "path": "/",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "bodyHeight": 5488,
+    "title": "کو کافه | منو، قیمت و کافه‌های مشهد",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "home",
+    "path": "/",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "bodyHeight": 5488,
+    "title": "کو کافه | منو، قیمت و کافه‌های مشهد",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "search",
+    "path": "/search",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/search",
+    "width": 360,
+    "scrollWidth": 360,
+    "bodyHeight": 5983,
+    "title": "کافه‌های مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "search",
+    "path": "/search",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/search",
+    "width": 360,
+    "scrollWidth": 360,
+    "bodyHeight": 5983,
+    "title": "کافه‌های مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "search",
+    "path": "/search",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/search",
+    "width": 390,
+    "scrollWidth": 390,
+    "bodyHeight": 5969,
+    "title": "کافه‌های مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "search",
+    "path": "/search",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/search",
+    "width": 390,
+    "scrollWidth": 390,
+    "bodyHeight": 5969,
+    "title": "کافه‌های مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "search",
+    "path": "/search",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/search",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "bodyHeight": 4695,
+    "title": "کافه‌های مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "search",
+    "path": "/search",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/search",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "bodyHeight": 4695,
+    "title": "کافه‌های مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "search-items",
+    "path": "/search?scope=items&q=%D9%82%D9%87%D9%88%D9%87",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/search",
+    "width": 360,
+    "scrollWidth": 360,
+    "bodyHeight": 6023,
+    "title": "آیتم‌های منو برای «قهوه» | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "search-items",
+    "path": "/search?scope=items&q=%D9%82%D9%87%D9%88%D9%87",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/search",
+    "width": 360,
+    "scrollWidth": 360,
+    "bodyHeight": 6023,
+    "title": "آیتم‌های منو برای «قهوه» | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "search-items",
+    "path": "/search?scope=items&q=%D9%82%D9%87%D9%88%D9%87",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/search",
+    "width": 390,
+    "scrollWidth": 390,
+    "bodyHeight": 6003,
+    "title": "آیتم‌های منو برای «قهوه» | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "search-items",
+    "path": "/search?scope=items&q=%D9%82%D9%87%D9%88%D9%87",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/search",
+    "width": 390,
+    "scrollWidth": 390,
+    "bodyHeight": 6003,
+    "title": "آیتم‌های منو برای «قهوه» | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "search-items",
+    "path": "/search?scope=items&q=%D9%82%D9%87%D9%88%D9%87",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/search",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "bodyHeight": 3768,
+    "title": "آیتم‌های منو برای «قهوه» | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "search-items",
+    "path": "/search?scope=items&q=%D9%82%D9%87%D9%88%D9%87",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/search",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "bodyHeight": 3768,
+    "title": "آیتم‌های منو برای «قهوه» | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "map",
+    "path": "/search?view=map",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/search",
+    "width": 360,
+    "scrollWidth": 360,
+    "bodyHeight": 1248,
+    "title": "کافه‌های مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "map",
+    "path": "/search?view=map",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/search",
+    "width": 360,
+    "scrollWidth": 360,
+    "bodyHeight": 1248,
+    "title": "کافه‌های مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "map",
+    "path": "/search?view=map",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/search",
+    "width": 390,
+    "scrollWidth": 390,
+    "bodyHeight": 1248,
+    "title": "کافه‌های مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "map",
+    "path": "/search?view=map",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/search",
+    "width": 390,
+    "scrollWidth": 390,
+    "bodyHeight": 1248,
+    "title": "کافه‌های مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "map",
+    "path": "/search?view=map",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/search",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "bodyHeight": 1747,
+    "title": "کافه‌های مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "map",
+    "path": "/search?view=map",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/search",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "bodyHeight": 1747,
+    "title": "کافه‌های مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "cafe",
+    "path": "/cafe/raam-cafe",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/cafe/raam-cafe",
+    "width": 360,
+    "scrollWidth": 360,
+    "bodyHeight": 4376,
+    "title": "کافه رام — کافه در احمدآباد، مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "cafe",
+    "path": "/cafe/raam-cafe",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/cafe/raam-cafe",
+    "width": 360,
+    "scrollWidth": 360,
+    "bodyHeight": 4376,
+    "title": "کافه رام — کافه در احمدآباد، مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "cafe",
+    "path": "/cafe/raam-cafe",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/cafe/raam-cafe",
+    "width": 390,
+    "scrollWidth": 390,
+    "bodyHeight": 4299,
+    "title": "کافه رام — کافه در احمدآباد، مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "cafe",
+    "path": "/cafe/raam-cafe",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/cafe/raam-cafe",
+    "width": 390,
+    "scrollWidth": 390,
+    "bodyHeight": 4299,
+    "title": "کافه رام — کافه در احمدآباد، مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "cafe",
+    "path": "/cafe/raam-cafe",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/cafe/raam-cafe",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "bodyHeight": 3545,
+    "title": "کافه رام — کافه در احمدآباد، مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "cafe",
+    "path": "/cafe/raam-cafe",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/cafe/raam-cafe",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "bodyHeight": 3545,
+    "title": "کافه رام — کافه در احمدآباد، مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "menu",
+    "path": "/cafe/raam-cafe?menu=1",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/cafe/raam-cafe",
+    "width": 360,
+    "scrollWidth": 360,
+    "bodyHeight": 4376,
+    "title": "کافه رام — کافه در احمدآباد، مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "menu",
+    "path": "/cafe/raam-cafe?menu=1",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/cafe/raam-cafe",
+    "width": 360,
+    "scrollWidth": 360,
+    "bodyHeight": 4376,
+    "title": "کافه رام — کافه در احمدآباد، مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "menu",
+    "path": "/cafe/raam-cafe?menu=1",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/cafe/raam-cafe",
+    "width": 390,
+    "scrollWidth": 390,
+    "bodyHeight": 4299,
+    "title": "کافه رام — کافه در احمدآباد، مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "menu",
+    "path": "/cafe/raam-cafe?menu=1",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/cafe/raam-cafe",
+    "width": 390,
+    "scrollWidth": 390,
+    "bodyHeight": 4299,
+    "title": "کافه رام — کافه در احمدآباد، مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "menu",
+    "path": "/cafe/raam-cafe?menu=1",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/cafe/raam-cafe",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "bodyHeight": 3545,
+    "title": "کافه رام — کافه در احمدآباد، مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "menu",
+    "path": "/cafe/raam-cafe?menu=1",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/cafe/raam-cafe",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "bodyHeight": 3545,
+    "title": "کافه رام — کافه در احمدآباد، مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "reviews",
+    "path": "/cafe/raam-cafe#reviews",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/cafe/raam-cafe",
+    "width": 360,
+    "scrollWidth": 360,
+    "bodyHeight": 4376,
+    "title": "کافه رام — کافه در احمدآباد، مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "reviews",
+    "path": "/cafe/raam-cafe#reviews",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/cafe/raam-cafe",
+    "width": 360,
+    "scrollWidth": 360,
+    "bodyHeight": 4376,
+    "title": "کافه رام — کافه در احمدآباد، مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "reviews",
+    "path": "/cafe/raam-cafe#reviews",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/cafe/raam-cafe",
+    "width": 390,
+    "scrollWidth": 390,
+    "bodyHeight": 4299,
+    "title": "کافه رام — کافه در احمدآباد، مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "reviews",
+    "path": "/cafe/raam-cafe#reviews",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/cafe/raam-cafe",
+    "width": 390,
+    "scrollWidth": 390,
+    "bodyHeight": 4299,
+    "title": "کافه رام — کافه در احمدآباد، مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "reviews",
+    "path": "/cafe/raam-cafe#reviews",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/cafe/raam-cafe",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "bodyHeight": 3545,
+    "title": "کافه رام — کافه در احمدآباد، مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "reviews",
+    "path": "/cafe/raam-cafe#reviews",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/cafe/raam-cafe",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "bodyHeight": 3545,
+    "title": "کافه رام — کافه در احمدآباد، مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "experiences",
+    "path": "/mashhad/experience",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/mashhad/experience",
+    "width": 360,
+    "scrollWidth": 360,
+    "bodyHeight": 4981,
+    "title": "انتخاب کافه بر اساس تجربه در مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "experiences",
+    "path": "/mashhad/experience",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/mashhad/experience",
+    "width": 360,
+    "scrollWidth": 360,
+    "bodyHeight": 4981,
+    "title": "انتخاب کافه بر اساس تجربه در مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "experiences",
+    "path": "/mashhad/experience",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/mashhad/experience",
+    "width": 390,
+    "scrollWidth": 390,
+    "bodyHeight": 4981,
+    "title": "انتخاب کافه بر اساس تجربه در مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "experiences",
+    "path": "/mashhad/experience",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/mashhad/experience",
+    "width": 390,
+    "scrollWidth": 390,
+    "bodyHeight": 4981,
+    "title": "انتخاب کافه بر اساس تجربه در مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "experiences",
+    "path": "/mashhad/experience",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/mashhad/experience",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "bodyHeight": 3388,
+    "title": "انتخاب کافه بر اساس تجربه در مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "experiences",
+    "path": "/mashhad/experience",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/mashhad/experience",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "bodyHeight": 3388,
+    "title": "انتخاب کافه بر اساس تجربه در مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "experience-detail",
+    "path": "/mashhad/experience/work",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/mashhad/experience/work",
+    "width": 360,
+    "scrollWidth": 360,
+    "bodyHeight": 2648,
+    "title": "کافه‌های مناسب کار و لپ‌تاپ در مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "experience-detail",
+    "path": "/mashhad/experience/work",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/mashhad/experience/work",
+    "width": 360,
+    "scrollWidth": 360,
+    "bodyHeight": 2648,
+    "title": "کافه‌های مناسب کار و لپ‌تاپ در مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "experience-detail",
+    "path": "/mashhad/experience/work",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/mashhad/experience/work",
+    "width": 390,
+    "scrollWidth": 390,
+    "bodyHeight": 2584,
+    "title": "کافه‌های مناسب کار و لپ‌تاپ در مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "experience-detail",
+    "path": "/mashhad/experience/work",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/mashhad/experience/work",
+    "width": 390,
+    "scrollWidth": 390,
+    "bodyHeight": 2584,
+    "title": "کافه‌های مناسب کار و لپ‌تاپ در مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "experience-detail",
+    "path": "/mashhad/experience/work",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/mashhad/experience/work",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "bodyHeight": 2033,
+    "title": "کافه‌های مناسب کار و لپ‌تاپ در مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "experience-detail",
+    "path": "/mashhad/experience/work",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/mashhad/experience/work",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "bodyHeight": 2033,
+    "title": "کافه‌های مناسب کار و لپ‌تاپ در مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "food",
+    "path": "/mashhad/menu",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/mashhad/menu",
+    "width": 360,
+    "scrollWidth": 360,
+    "bodyHeight": 5366,
+    "title": "منوی کافه‌ها و رستوران‌های مشهد با قیمت | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "food",
+    "path": "/mashhad/menu",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/mashhad/menu",
+    "width": 360,
+    "scrollWidth": 360,
+    "bodyHeight": 5366,
+    "title": "منوی کافه‌ها و رستوران‌های مشهد با قیمت | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "food",
+    "path": "/mashhad/menu",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/mashhad/menu",
+    "width": 390,
+    "scrollWidth": 390,
+    "bodyHeight": 5366,
+    "title": "منوی کافه‌ها و رستوران‌های مشهد با قیمت | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "food",
+    "path": "/mashhad/menu",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/mashhad/menu",
+    "width": 390,
+    "scrollWidth": 390,
+    "bodyHeight": 5366,
+    "title": "منوی کافه‌ها و رستوران‌های مشهد با قیمت | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "food",
+    "path": "/mashhad/menu",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/mashhad/menu",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "bodyHeight": 2775,
+    "title": "منوی کافه‌ها و رستوران‌های مشهد با قیمت | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "food",
+    "path": "/mashhad/menu",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/mashhad/menu",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "bodyHeight": 2775,
+    "title": "منوی کافه‌ها و رستوران‌های مشهد با قیمت | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "food-category",
+    "path": "/mashhad/menu/coffee",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/mashhad/menu/coffee",
+    "width": 360,
+    "scrollWidth": 360,
+    "bodyHeight": 12690,
+    "title": "قهوه در کافه‌های مشهد | منو و قیمت | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "food-category",
+    "path": "/mashhad/menu/coffee",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/mashhad/menu/coffee",
+    "width": 360,
+    "scrollWidth": 360,
+    "bodyHeight": 12690,
+    "title": "قهوه در کافه‌های مشهد | منو و قیمت | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "food-category",
+    "path": "/mashhad/menu/coffee",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/mashhad/menu/coffee",
+    "width": 390,
+    "scrollWidth": 390,
+    "bodyHeight": 12576,
+    "title": "قهوه در کافه‌های مشهد | منو و قیمت | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "food-category",
+    "path": "/mashhad/menu/coffee",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/mashhad/menu/coffee",
+    "width": 390,
+    "scrollWidth": 390,
+    "bodyHeight": 12576,
+    "title": "قهوه در کافه‌های مشهد | منو و قیمت | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "food-category",
+    "path": "/mashhad/menu/coffee",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/mashhad/menu/coffee",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "bodyHeight": 9527,
+    "title": "قهوه در کافه‌های مشهد | منو و قیمت | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "food-category",
+    "path": "/mashhad/menu/coffee",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/mashhad/menu/coffee",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "bodyHeight": 9527,
+    "title": "قهوه در کافه‌های مشهد | منو و قیمت | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "events",
+    "path": "/events",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/events",
+    "width": 360,
+    "scrollWidth": 360,
+    "bodyHeight": 1807,
+    "title": "رویدادهای کافه‌ها | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "events",
+    "path": "/events",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/events",
+    "width": 360,
+    "scrollWidth": 360,
+    "bodyHeight": 1807,
+    "title": "رویدادهای کافه‌ها | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "events",
+    "path": "/events",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/events",
+    "width": 390,
+    "scrollWidth": 390,
+    "bodyHeight": 1807,
+    "title": "رویدادهای کافه‌ها | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "events",
+    "path": "/events",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/events",
+    "width": 390,
+    "scrollWidth": 390,
+    "bodyHeight": 1807,
+    "title": "رویدادهای کافه‌ها | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "events",
+    "path": "/events",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/events",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "bodyHeight": 1402,
+    "title": "رویدادهای کافه‌ها | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "events",
+    "path": "/events",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/events",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "bodyHeight": 1402,
+    "title": "رویدادهای کافه‌ها | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "booking-entry",
+    "path": "/cafe/raam-cafe/request",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/cafe/raam-cafe/request",
+    "width": 360,
+    "scrollWidth": 360,
+    "bodyHeight": 1037,
+    "title": "درخواست هماهنگی با کافه | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "booking-entry",
+    "path": "/cafe/raam-cafe/request",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/cafe/raam-cafe/request",
+    "width": 360,
+    "scrollWidth": 360,
+    "bodyHeight": 1037,
+    "title": "درخواست هماهنگی با کافه | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "booking-entry",
+    "path": "/cafe/raam-cafe/request",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/cafe/raam-cafe/request",
+    "width": 390,
+    "scrollWidth": 390,
+    "bodyHeight": 1037,
+    "title": "درخواست هماهنگی با کافه | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "booking-entry",
+    "path": "/cafe/raam-cafe/request",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/cafe/raam-cafe/request",
+    "width": 390,
+    "scrollWidth": 390,
+    "bodyHeight": 1037,
+    "title": "درخواست هماهنگی با کافه | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "booking-entry",
+    "path": "/cafe/raam-cafe/request",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/cafe/raam-cafe/request",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "bodyHeight": 900,
+    "title": "درخواست هماهنگی با کافه | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "booking-entry",
+    "path": "/cafe/raam-cafe/request",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/cafe/raam-cafe/request",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "bodyHeight": 900,
+    "title": "درخواست هماهنگی با کافه | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "profile",
+    "path": "/profile",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/auth",
+    "width": 360,
+    "scrollWidth": 360,
+    "bodyHeight": 1493,
+    "title": "ورود و ثبت‌نام | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "profile",
+    "path": "/profile",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/auth",
+    "width": 360,
+    "scrollWidth": 360,
+    "bodyHeight": 1493,
+    "title": "ورود و ثبت‌نام | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "profile",
+    "path": "/profile",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/auth",
+    "width": 390,
+    "scrollWidth": 390,
+    "bodyHeight": 1515,
+    "title": "ورود و ثبت‌نام | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "profile",
+    "path": "/profile",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/auth",
+    "width": 390,
+    "scrollWidth": 390,
+    "bodyHeight": 1515,
+    "title": "ورود و ثبت‌نام | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "profile",
+    "path": "/profile",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/auth",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "bodyHeight": 1371,
+    "title": "ورود و ثبت‌نام | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "profile",
+    "path": "/profile",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/auth",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "bodyHeight": 1371,
+    "title": "ورود و ثبت‌نام | کو کافه",
+    "hasMain": true,
+    "errors": []
+  }
+]

@@ -174,6 +174,14 @@ export function SearchView({
   const sortKeys: SortKey[] = showingItems
     ? ['rating', 'price_asc', 'price_desc', 'name', 'distance']
     : (Object.keys(SORT_LABELS) as SortKey[])
+  const changeSort = (sort: SortKey) => {
+    if (sort === 'distance') {
+      if (location) apply({ nearMe: true, sort: 'distance' })
+      else requestLocation(true)
+      return
+    }
+    apply({ sort, nearMe: false })
+  }
   const scrollStorageKey = `kucafe:search-scroll:${buildQuery(filters)}`
 
   const rememberSearchScroll = useCallback(() => {
@@ -834,19 +842,12 @@ export function SearchView({
             {[...nativeSortParams.entries()].map(([name, value], index) => (
               <input key={`${name}-${index}`} type="hidden" name={name} value={value} />
             ))}
-            <span className={styles.srOnly}>مرتب‌سازی</span>
+            <label className={styles.srOnly} htmlFor="search-sort-desktop">مرتب‌سازی</label>
             <select
+              id="search-sort-desktop"
               name="sort"
               value={filters.sort}
-              onChange={(event) => {
-                const sort = event.target.value as SortKey
-                if (sort === 'distance') {
-                  if (location) apply({ nearMe: true, sort: 'distance' })
-                  else requestLocation(true)
-                  return
-                }
-                apply({ sort, nearMe: filters.nearMe ? false : filters.nearMe })
-              }}
+              onChange={(event) => changeSort(event.target.value as SortKey)}
             >
               {sortKeys.map((key) => (
                 <option key={key} value={key}>
@@ -854,7 +855,6 @@ export function SearchView({
                 </option>
               ))}
             </select>
-            <button type="submit" className={styles.sortApply}>اعمال</button>
           </form>
 
           {!showingItems && <div className={styles.viewSwitch} role="group" aria-label="نمایش">
@@ -924,31 +924,6 @@ export function SearchView({
         </div>
       )}
 
-      {/* خوراکی محبوب نقطهٔ شروع است، نه ادعای اثبات‌نشدهٔ «بهترین». */}
-      {dishes.length > 0 && (
-        <div className={styles.dishRow} role="group" aria-label="جست‌وجوی خوراکی محبوب">
-          <span className={styles.dishLabel}>شروع از خوراکی:</span>
-          {dishes.slice(0, 12).map((dish) => (
-            <button
-              key={dish.slug}
-              type="button"
-              className={`${styles.dishChip} ${filters.dish === dish.slug ? styles.dishChipOn : ''}`}
-              onClick={() =>
-                apply({
-                  dish: filters.dish === dish.slug ? null : dish.slug,
-                  scope: filters.dish === dish.slug ? filters.scope : 'items',
-                  nearMe: false,
-                  sort: filters.dish === dish.slug ? filters.sort : 'rating',
-                })
-              }
-              aria-pressed={filters.dish === dish.slug}
-            >
-              {dish.nameFa}
-            </button>
-          ))}
-        </div>
-      )}
-
       {/* فیلتر موبایل؛ روی دسکتاپ ستون کناری همیشه در دسترس است. */}
       <div
         id="mobile-search-filters"
@@ -968,6 +943,28 @@ export function SearchView({
               </button>
             </div>
             <div className={styles.filterPanel}>
+            <fieldset>
+              <legend>مرتب‌سازی و نمایش</legend>
+              <label className={styles.mobileSortLabel} htmlFor="search-sort-mobile">ترتیب نتایج</label>
+              <select
+                id="search-sort-mobile"
+                className={styles.filterSelect}
+                value={filters.sort}
+                onChange={(event) => changeSort(event.target.value as SortKey)}
+              >
+                {sortKeys.map((key) => (
+                  <option key={key} value={key}>
+                    {showingItems && key === 'rating' ? 'پیشنهادی' : SORT_LABELS[key]}
+                  </option>
+                ))}
+              </select>
+              {!showingItems && (
+                <div className={styles.mobileViewSwitch} role="group" aria-label="نمایش نتایج">
+                  <Link href={filterHref({ view: 'list', page: filters.page })} aria-current={filters.view === 'list' ? 'page' : undefined} onClick={() => setFiltersOpen(false)}>فهرست</Link>
+                  <Link href={filterHref({ view: 'map', page: filters.page })} aria-current={filters.view === 'map' ? 'page' : undefined} onClick={() => setFiltersOpen(false)}>نقشه</Link>
+                </div>
+              )}
+            </fieldset>
             {renderFilterGroups()}
             {activeCount > 0 && (
               <Link

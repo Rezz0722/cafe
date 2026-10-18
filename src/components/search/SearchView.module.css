@@ -86,7 +86,6 @@
 .filterCount { min-width: 19px; height: 19px; display: grid; place-items: center; padding-inline: 4px; border-radius: 99px; background: var(--c-primary); color: #fff; font-size: .67rem; }
 .sortWrap { display: flex; align-items: center; gap: 6px; }
 .sortWrap select { min-height: 44px; padding: 8px 12px; border: 1px solid var(--c-border); border-radius: var(--r-pill); background: var(--c-surface); color: var(--c-ink-2); font-size: .8rem; font-weight: 700; }
-.sortApply { display: none; }
 .viewSwitch { min-height: 44px; display: inline-flex; overflow: hidden; border: 1px solid var(--c-border); border-radius: var(--r-pill); }
 .viewOn,
 .viewOff { display: inline-flex; align-items: center; padding: 8px 13px; background: var(--c-surface); color: var(--c-ink-2); font-size: .8rem; font-weight: 800; text-decoration: none; }
@@ -98,12 +97,8 @@
 .locationError button,
 .locationError a { min-height: 36px; display: inline-flex; align-items: center; padding: 5px 10px; border: 1px solid currentColor; border-radius: var(--r-pill); color: inherit; font-size: .76rem; font-weight: 900; text-decoration: none; }
 
-.activeFilters,
-.dishRow { display: flex; align-items: center; gap: 7px; overflow-x: auto; scrollbar-width: none; scroll-snap-type: x proximity; }
-.activeFilters::-webkit-scrollbar,
-.dishRow::-webkit-scrollbar,
-.toolbarActions::-webkit-scrollbar { display: none; }
-.activeFilters { margin-top: 12px; padding: 9px 10px; border: 1px solid var(--c-border); border-radius: var(--r-md); background: var(--c-surface-2); }
+.activeFilters { display: flex; align-items: center; gap: 7px; overflow-x: auto; scrollbar-width: none; scroll-snap-type: x proximity; margin-top: 12px; padding: 9px 10px; border: 1px solid var(--c-border); border-radius: var(--r-md); background: var(--c-surface-2); }
+.activeFilters::-webkit-scrollbar { display: none; }
 .activeFiltersLabel { flex: none; color: var(--c-muted); font-size: .74rem; font-weight: 900; }
 .activeFilter { min-height: 40px; display: inline-flex; flex: none; align-items: center; gap: 5px; padding: 6px 10px; border: 1px solid var(--c-primary-border); border-radius: var(--r-pill); background: var(--c-surface); color: var(--c-primary-strong); font-size: .75rem; font-weight: 850; text-decoration: none; white-space: nowrap; scroll-snap-align: start; }
 .activeFilter:hover { background: var(--c-primary-soft); }
@@ -112,12 +107,6 @@
 .chip:hover { border-color: var(--c-primary); }
 .chipOn { border-color: var(--c-primary); background: var(--c-primary); color: #fff; }
 .chipCount { opacity: .72; font-size: .68rem; font-variant-numeric: tabular-nums; }
-.dishRow { margin-top: 7px; padding: 10px 12px; border-radius: var(--r-md); background: var(--c-pastel-lime); }
-.dishLabel { flex: none; color: var(--c-pastel-lime-strong); font-size: .8rem; font-weight: 900; }
-.dishChip { min-height: 40px; flex: none; padding: 5px 11px; border: 1px solid transparent; border-radius: var(--r-pill); background: var(--c-surface); color: var(--c-ink-2); font-size: .78rem; font-weight: 750; white-space: nowrap; scroll-snap-align: start; }
-.dishChip:hover { border-color: var(--c-primary); color: var(--c-primary-strong); }
-.dishChipOn { background: var(--c-inverse-surface); color: var(--c-inverse-text); }
-
 .contentLayout { display: grid; grid-template-columns: minmax(0, 1fr) 286px; gap: 24px; align-items: start; margin-top: 24px; }
 .desktopSidebar { grid-column: 2; position: sticky; inset-block-start: calc(var(--header-h) + var(--view-as-h, 0px) + 18px); display: grid; gap: 12px; max-height: calc(100vh - var(--header-h) - var(--view-as-h, 0px) - 36px); overflow-y: auto; scrollbar-width: thin; }
 .resultColumn { grid-column: 1; grid-row: 1; min-width: 0; }
@@ -137,6 +126,10 @@
 .filterPanel legend { padding-bottom: 8px; color: var(--c-ink); font-size: .83rem; font-weight: 900; }
 .filterSelect { width: 100%; min-height: 46px; padding: 8px 12px; border: 1px solid var(--c-border); border-radius: 13px; background: var(--c-surface); color: var(--c-ink); font: inherit; font-size: .8rem; font-weight: 750; }
 .filterSelect:focus { outline: 3px solid var(--c-primary-soft); border-color: var(--c-primary); }
+.mobileSortLabel { display: block; margin-bottom: 7px; color: var(--c-muted); font-size: .76rem; }
+.mobileViewSwitch { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+.mobileViewSwitch a { min-height: 44px; display: grid; place-items: center; border: 1px solid var(--c-border); border-radius: var(--r-md); color: var(--c-ink-2); font-size: .8rem; font-weight: 800; text-decoration: none; }
+.mobileViewSwitch a[aria-current="page"] { border-color: var(--c-primary); background: var(--c-primary-soft); color: var(--c-primary-strong); }
 .filterOptions { display: flex; flex-wrap: wrap; gap: 6px; }
 .option,
 .optionOn { min-height: 34px; display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border: 1px solid var(--c-border); border-radius: var(--r-pill); background: var(--c-surface); color: var(--c-ink-2); font-size: .75rem; font-weight: 700; }
@@ -206,7 +199,11 @@
   .mobileFilterSheet > .filterPanel { flex: 1; overflow-y: auto; border: 0; border-radius: 0; }
   .mobileFilterDone { min-height: 54px; display: grid; flex: none; place-items: center; margin: 10px 16px calc(10px + env(safe-area-inset-bottom)); border-radius: 15px; background: var(--c-primary); color: #fff; font-weight: 900; text-decoration: none; }
   .contentLayout { display: block; margin-top: 18px; }
-  .toolbarActions { overflow-x: auto; flex-wrap: nowrap; gap: 5px; padding: 1px 2px 4px; }
+  .toolbarActions { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 7px; }
+  .toolbarActions > .toggle,
+  .toolbarActions > .filterButton { width: 100%; justify-content: center; min-width: 0; }
+  .sortWrap,
+  .viewSwitch { display: none; }
   .itemResults { grid-template-columns: 1fr; gap: 12px; }
   .mapSelection { position: fixed; z-index: 130; inset-inline: 12px; inset-block-end: calc(84px + env(safe-area-inset-bottom)); max-width: 440px; }
 }
@@ -239,10 +236,7 @@
   .suggestionActive { min-height: 52px; padding: 7px 8px; }
   .suggestionIcon { width: 36px; height: 36px; border-radius: 10px; }
   .suggestionAll { min-height: 48px; padding-inline: 10px; }
-  .chip,
-  .dishChip { min-height: 44px; }
-  .sortWrap { order: 5; }
-  .sortApply { min-height: 44px; display: inline-flex; align-items: center; padding: 7px 12px; border-radius: var(--r-pill); background: var(--c-inverse-surface); color: var(--c-inverse-text); font-size: .76rem; font-weight: 900; }
+  .chip { min-height: 44px; }
   .detectedUndo { width: 100%; margin-inline-start: 0; }
   .locationError { align-items: stretch; }
   .locationErrorActions { width: 100%; }

@@ -110,7 +110,7 @@ export function PlaceCardView({
     .slice(0, 3)
 
   return (
-    <Link href={paths.cafe(card.slug)} className={`${styles.card} ${card.bloggerReviewCount ? styles.reviewedCard : ''}`}>
+    <Link href={paths.cafe(card.slug)} className={styles.card}>
       <div className={styles.media}>
         {decisionImage ? (
           <img
@@ -123,7 +123,7 @@ export function PlaceCardView({
           />
         ) : (
           <span className={styles.logoEmpty} aria-hidden="true">
-            <Coffee size={34} strokeWidth={1.6} />
+            <Coffee size={26} strokeWidth={1.6} />
           </span>
         )}
         {card.ribbon && <span className={styles.ribbon}>{card.ribbon}</span>}
