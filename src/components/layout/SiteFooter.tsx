@@ -3,6 +3,7 @@ import { searchPath } from '@/core/search/filters'
 import { paths } from '@/routes'
 import styles from './SiteFooter.module.css'
 import { BadgeCheck } from 'lucide-react'
+import { FooterInstallCta } from '@/components/pwa/FooterInstallCta'
 
 const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
   {
@@ -34,7 +35,6 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
   {
     title: 'راهنما',
     links: [
-      { label: 'نصب کوکافه روی گوشی', href: '/install' },
       { label: 'دربارهٔ کو کافه', href: paths.about },
       { label: 'چطور استفاده کنم؟', href: '/#how-it-works' },
       { label: 'روش جمع‌آوری داده', href: paths.methodology },
@@ -81,6 +81,7 @@ export function SiteFooter({
   return (
     <footer className={styles.footer}>
       <div className={`container ${styles.inner}`}>
+        <FooterInstallCta />
         <div className={styles.grid}>
           <div className={styles.brandCol}>
             <div className={styles.footerBrand}>

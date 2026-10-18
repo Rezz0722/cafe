@@ -33,7 +33,7 @@ export function SiteHeader({ siteName = 'کو کافه' }: Props) {
   const accountTarget = isLoggedIn ? paths.profile : authUrl(pathname)
 
   return (
-    <header className={styles.header}>
+    <header className={styles.header} data-home={pathname === paths.home}>
       <div className={`container ${styles.bar}`}>
         <Link href={paths.home} className={styles.brand} aria-label={`${siteName}، صفحه اصلی`}>
           <span className={styles.brandMark} aria-hidden="true">

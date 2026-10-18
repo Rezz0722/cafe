@@ -8,6 +8,29 @@
   padding: 48px var(--page-pad) 28px;
 }
 
+.installBanner {
+  min-height: 126px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-block-end: 38px;
+  padding: 20px 24px;
+  border: 1px solid rgb(134 184 246 / 28%);
+  border-radius: 22px;
+  color: #f5f9ff;
+  background: radial-gradient(circle at 8% 50%, rgb(12 99 222 / 29%), transparent 32%), #092442;
+}
+.installIcon { width: 58px; height: 58px; display: grid; flex: none; place-items: center; border-radius: 17px; color: #fff; background: #075fdc; }
+.installCopy { min-width: 0; flex: 1; }
+.installCopy strong { font-size: clamp(17px, 2.4vw, 23px); line-height: 1.5; }
+.installCopy p { margin: 4px 0 0; color: #bfd1e8; font-size: 13px; line-height: 1.6; }
+.installCopy small { display: block; margin-block-start: 6px; color: #dceafd; font-size: 11px; }
+.installButton { min-width: 146px; min-height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; flex: none; padding: 9px 18px; border: 0; border-radius: 14px; color: #fff; background: #075fdc; box-shadow: 0 8px 20px rgb(0 0 0 / 17%); font: inherit; font-size: 13px; font-weight: 850; text-decoration: none; cursor: pointer; }
+.installButton:hover { background: #0868ff; }
+.installButton:disabled { opacity: .6; cursor: not-allowed; }
+.installButton:focus-visible { outline: 3px solid #9cc8ff; outline-offset: 3px; }
+@media (display-mode: standalone) { .installBanner { display: none; } }
+
 .grid {
   display: grid;
   grid-template-columns: 1.45fr repeat(4, 1fr);
@@ -88,6 +111,10 @@
 @media (max-width: 760px) {
   :global(body:has(#page-top[data-cafe-ready='true'])) .footer { display: none; }
   .inner { padding-top: 38px; }
+  .installBanner { align-items: flex-start; flex-wrap: wrap; gap: 12px; padding: 18px; margin-block-end: 30px; }
+  .installIcon { width: 48px; height: 48px; border-radius: 14px; }
+  .installCopy { flex-basis: calc(100% - 60px); }
+  .installButton { width: 100%; }
 
   .grid {
     grid-template-columns: 1fr 1fr;
