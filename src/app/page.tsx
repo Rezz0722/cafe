@@ -24,7 +24,6 @@ import {
   Trees,
   UtensilsCrossed,
   Users,
-  WalletCards,
 } from 'lucide-react'
 import { CafeCard } from '@/components/cafe/CafeCard'
 import { DiscountDiscovery } from '@/components/cafe/DiscountDiscovery'
@@ -39,7 +38,6 @@ import {
   listDistricts,
   listFilterFacets,
   listPlaceCards,
-  listPopularDishes,
 } from '@/core/places/queries'
 import { searchPath } from '@/core/search/filters'
 import { listExperienceSummaries } from '@/core/experience/queries'
@@ -49,7 +47,7 @@ import { listTrustedReviewCards } from '@/core/discovery/trustedReviews'
 import { maintenanceState } from '@/core/settings/maintenance'
 import { getDiscoveryPolicy, getLocalePolicy } from '@/core/settings/policies'
 import { getSettings } from '@/core/settings/store'
-import { faCount, toman } from '@/lib/format'
+import { faCount } from '@/lib/format'
 import { absoluteUrl, authUrl, paths } from '@/routes'
 import { BRAND_ALIASES } from '@/core/seo/brand'
 import styles from '@/components/home/Home.module.css'
@@ -194,12 +192,11 @@ export default async function HomePage() {
     getLocalePolicy(),
     getSettings(),
   ])
-  const [stats, rankedPlaces, facets, districts, popularDishes, events, trustedReviews] = await Promise.all([
+  const [stats, rankedPlaces, facets, districts, events, trustedReviews] = await Promise.all([
     getSiteStats(),
     listPlaceCards({ limit: Math.max(24, discovery.homeCardCount * 5), sort: 'quality' }),
     listFilterFacets(),
     listDistricts(),
-    listPopularDishes(8),
     listUpcomingPublicEvents({ limit: 2 }),
     listTrustedReviewCards(3),
   ])
@@ -365,34 +362,14 @@ export default async function HomePage() {
             </Link>
           </div>
 
-          <div className={styles.discoveryGrid}>
-            <div className={styles.categoryGrid} aria-label="دسته‌های محبوب منو">
-              {popularFacets.map((facet) => (
-                <Link href={paths.menuCategory(facet.id)} className={styles.categoryCard} key={facet.id} data-discovery-event="food_category_selected" data-discovery-context={facet.id} data-discovery-source="food_discovery">
-                  <span className={styles.categoryIcon}><FacetIcon id={facet.id} size={22} /></span>
-                  <span><b>{facet.labelFa}</b><small>{faCount(facet.placeCount)} مجموعه</small></span>
-                  <ChevronLeft size={17} aria-hidden="true" />
-                </Link>
-              ))}
-            </div>
-
-            {popularDishes.length > 0 && (
-              <aside className={styles.comparePanel} aria-label="مقایسهٔ قیمت‌های محبوب">
-                <div className={styles.compareHeading}>
-                  <WalletCards size={21} aria-hidden="true" />
-                  <span><b>قیمت‌های ثبت‌شده را ببین</b><small>قیمت امروزِ کافه تضمین نمی‌شود</small></span>
-                </div>
-                <div className={styles.dishList}>
-                  {popularDishes.slice(0, 2).map((dish) => (
-                    <Link href={paths.dish(dish.slug)} key={dish.id}>
-                      <span><b>{dish.nameFa}</b><small>{faCount(dish.placeCount)} منو</small></span>
-                      <em>{dish.minPrice !== null ? `از ${toman(dish.minPrice)}` : 'مشاهده'}</em>
-                      <ChevronLeft size={16} aria-hidden="true" />
-                    </Link>
-                  ))}
-                </div>
-              </aside>
-            )}
+          <div className={styles.categoryGrid} aria-label="دسته‌های محبوب منو">
+            {popularFacets.map((facet) => (
+              <Link href={paths.menuCategory(facet.id)} className={styles.categoryCard} key={facet.id} data-discovery-event="food_category_selected" data-discovery-context={facet.id} data-discovery-source="food_discovery">
+                <span className={styles.categoryIcon}><FacetIcon id={facet.id} size={22} /></span>
+                <span><b>{facet.labelFa}</b><small>{faCount(facet.placeCount)} مجموعه</small></span>
+                <ChevronLeft size={17} aria-hidden="true" />
+              </Link>
+            ))}
           </div>
         </section>
 
@@ -414,6 +391,9 @@ export default async function HomePage() {
                 </Link>
               ))}
             </div>
+            <Link href={paths.districtHub} className={styles.experienceAllLink}>
+              مشاهده همه محله‌ها <ArrowLeft size={18} aria-hidden="true" />
+            </Link>
           </section>
         )}
 
@@ -423,7 +403,7 @@ export default async function HomePage() {
               <div className={styles.sectionHeading}>
                 <div>
                   <span className={styles.sectionKicker}>دلیل روشن برای شروع</span>
-                  <h2 id="featured-title">کافه‌های قابل بررسی</h2>
+                  <h2 id="featured-title">از این کافه‌ها شروع کن</h2>
                   <p>هر پیشنهاد بر پایهٔ دادهٔ ثبت‌شده است؛ نه عنوان «بهترین» یا بازدید بالا.</p>
                 </div>
                 <Link href={searchPath({ sort: 'quality' })} className={styles.textLink}>
