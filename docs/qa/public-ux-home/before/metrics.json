@@ -1,0 +1,206 @@
+[
+  {
+    "route": "home",
+    "path": "/",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/",
+    "width": 360,
+    "scrollWidth": 360,
+    "bodyHeight": 5278,
+    "title": "کو کافه | منو، قیمت و کافه‌های مشهد",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "home",
+    "path": "/",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/",
+    "width": 360,
+    "scrollWidth": 360,
+    "bodyHeight": 5278,
+    "title": "کو کافه | منو، قیمت و کافه‌های مشهد",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "home",
+    "path": "/",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/",
+    "width": 390,
+    "scrollWidth": 390,
+    "bodyHeight": 5232,
+    "title": "کو کافه | منو، قیمت و کافه‌های مشهد",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "home",
+    "path": "/",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/",
+    "width": 390,
+    "scrollWidth": 390,
+    "bodyHeight": 5232,
+    "title": "کو کافه | منو، قیمت و کافه‌های مشهد",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "home",
+    "path": "/",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "bodyHeight": 5488,
+    "title": "کو کافه | منو، قیمت و کافه‌های مشهد",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "home",
+    "path": "/",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "bodyHeight": 5488,
+    "title": "کو کافه | منو، قیمت و کافه‌های مشهد",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "search",
+    "path": "/search",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/search",
+    "width": 360,
+    "scrollWidth": 360,
+    "bodyHeight": 6059,
+    "title": "کافه‌های مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "search",
+    "path": "/search",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/search",
+    "width": 360,
+    "scrollWidth": 360,
+    "bodyHeight": 6059,
+    "title": "کافه‌های مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "search",
+    "path": "/search",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/search",
+    "width": 390,
+    "scrollWidth": 390,
+    "bodyHeight": 6045,
+    "title": "کافه‌های مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "search",
+    "path": "/search",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/search",
+    "width": 390,
+    "scrollWidth": 390,
+    "bodyHeight": 6045,
+    "title": "کافه‌های مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "search",
+    "path": "/search",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "theme": "light",
+    "status": 200,
+    "finalPath": "/search",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "bodyHeight": 4762,
+    "title": "کافه‌های مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  },
+  {
+    "route": "search",
+    "path": "/search",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "theme": "dark",
+    "status": 200,
+    "finalPath": "/search",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "bodyHeight": 4762,
+    "title": "کافه‌های مشهد | کو کافه",
+    "hasMain": true,
+    "errors": []
+  }
+]
