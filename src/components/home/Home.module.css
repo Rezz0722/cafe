@@ -573,12 +573,12 @@
 }
 
 .experienceCard {
-  width: min(45vw, 195px);
+  width: min(56vw, 230px);
   min-width: 0;
   height: 226px;
   position: relative;
   display: block;
-  flex: 0 0 min(45vw, 195px);
+  flex: 0 0 min(56vw, 230px);
   overflow: hidden;
   border: 1px solid var(--c-border);
   border-radius: 18px;

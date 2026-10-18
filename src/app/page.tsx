@@ -87,6 +87,16 @@ const HOME_EXPERIENCE_ART: Record<string, string> = Object.fromEntries([
   'study', 'outdoor', 'late-night', 'calm', 'specialty-coffee',
 ].map((slug) => [slug, `/home/experiences/${slug}.webp`]))
 HOME_EXPERIENCE_ART.photogenic = '/home/experiences/photo.webp'
+const HOME_EXPERIENCE_ALT: Record<string, string> = {
+  gathering: 'تصویر نمادین میز دورهمی دوستانه در کافه',
+  birthday: 'تصویر نمادین چیدمان یک جشن تولد کوچک در کافه',
+  breakfast: 'تصویر نمادین صبحانهٔ ایرانی در کافه',
+  desserts: 'تصویر نمادین شیرینی و چیزکیک در کافه',
+  healthy: 'تصویر نمادین سالاد و سبزیجات گریل در کافه',
+  study: 'تصویر نمادین کتاب و دفتر در گوشهٔ مطالعهٔ کافه',
+  outdoor: 'تصویر نمادین میزهای کافه در یک حیاط سبز',
+  'late-night': 'تصویر نمادین فضای گرم کافه در شب',
+}
 
 export async function generateMetadata(): Promise<Metadata> {
   const [settings, locale] = await Promise.all([getSettings(), getLocalePolicy()])
@@ -349,7 +359,7 @@ export default async function HomePage() {
                     data-experience-slug={experience.slug}
                     data-experience-count={candidateCount}
                   >
-                    <img src={HOME_EXPERIENCE_ART[experience.slug] ?? experience.image} alt={experience.imageAlt} width={480} height={640} loading="lazy" />
+                    <img src={HOME_EXPERIENCE_ART[experience.slug] ?? experience.image} alt={HOME_EXPERIENCE_ALT[experience.slug] ?? `تصویر نمادین: ${experience.imageAlt}`} width={480} height={640} loading="lazy" />
                     <span className={styles.experienceShade} aria-hidden="true" />
                     <span className={styles.experienceBadge}><Icon size={21} aria-hidden="true" /></span>
                     <span className={styles.experienceCopy}>

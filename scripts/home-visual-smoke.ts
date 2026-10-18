@@ -57,6 +57,7 @@ try {
     assert.ok(metrics.jsonLd > 0)
     assert.deepEqual(errors, [], `${viewport.width}/${theme}: browser errors`)
     assert.deepEqual(broken, [])
+    let nextCardVisibleFraction: number | null = null
     if (!before) {
       const clippedCards = await page.locator('[class*="featuredEntry"] > a:first-of-type').evaluateAll(cards => cards.filter(card => card.scrollHeight > card.clientHeight + 2).length)
       assert.equal(clippedCards, 0, 'recommended cafe cards must not clip their body')
@@ -74,7 +75,16 @@ try {
           assert.ok(box && box.height >= 48 && box.y + box.height < viewport.height - 82, `${name}: bottom navigation collision`)
         }
         const rail = page.locator('[class*="experienceRail"]')
-        assert.ok(await rail.evaluate(node => node.scrollWidth > node.clientWidth), 'experience swipe remains available')
+        if (await rail.locator('a').count() > 1) {
+          assert.ok(await rail.evaluate(node => node.scrollWidth > node.clientWidth), 'experience swipe remains available')
+          nextCardVisibleFraction = await rail.evaluate(node => {
+            node.scrollLeft = 0
+            const rail = node.getBoundingClientRect()
+            const second = node.querySelectorAll('a')[1].getBoundingClientRect()
+            return Math.max(0, Math.min(innerWidth, rail.right, second.right) - Math.max(0, rail.left, second.left)) / second.width
+          })
+          assert.ok(nextCardVisibleFraction >= .2 && nextCardVisibleFraction <= .85, `${viewport.width}: next experience card must be clearly partial (${nextCardVisibleFraction})`)
+        }
       }
     }
     await page.evaluate(() => scrollTo(0, 0))
@@ -90,7 +100,7 @@ try {
         })
       }
     }
-    results.push({ viewport, theme, ...metrics, images: await images.count(), broken, errors })
+    results.push({ viewport, theme, ...metrics, nextCardVisibleFraction, images: await images.count(), broken, errors })
     await page.close()
   }
 

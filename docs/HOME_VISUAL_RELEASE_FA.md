@@ -30,3 +30,11 @@ Branch: `feat/home-visual-redesign-20261018`.
 نسخهٔ سالم پیش از Merge و Imageهای App/Worker آن ثبت و حفظ می‌شوند. در شکست بحرانی، هر دو سرویس طبق `scripts/docker-deploy.sh` و Runbook Docker به همان نسخهٔ سازگار بازگردند. برای تغییر UI، دیتابیس Restore یا ستون‌ها حذف نشوند. در صورت نیاز به هماهنگ‌کردن GitHub با Runtime، Revert همین تغییر با بررسی مستقل انجام شود.
 
 نتیجهٔ واقعی Merge، URL اجرای Workflow، SHA Runtime و Acceptance پس از اتمام در گزارش تحویل و شواهد همان PR ثبت می‌شود؛ موفقیت Merge به‌تنهایی پذیرش Runtime محسوب نمی‌شود.
+
+## انتشار اصلی و اصلاح تکمیلی Rail
+
+PR [#87](https://github.com/Rezz0722/cafe/pull/87) با Commit `a76984d68170fb0f7dad52716b3d9bde8bceed8e` منتشر شد. [Workflow](https://github.com/Rezz0722/cafe/actions/runs/39142605035) موفق بود؛ App/Worker روی همان SHA و Healthy، بدون Restart بودند. شمار رکوردها و هر دو Fingerprint بالا حفظ شدند. QA مرورگر Production در ۱۲ حالت موفق شد.
+
+اندازه‌گیری واقعی پس از انتشار، ضعف نشانهٔ Swipe را مشخص کرد: در ۳۲۰ و ۳۶۰ پیکسل کارت سوم دیده نمی‌شد و در ۳۹۰ فقط ۲٪ آن پیدا بود. Branch `fix/home-experience-rail-peek-20261018` روی همین Production ساخته شد تا عرض کارت موبایل و Alt متناظر تصاویر نمادین را اصلاح کند. گیت جدید، دیده‌شدن بخشی معنادار از کارت دوم را با هندسهٔ واقعی مرورگر می‌سنجد. تغییر Backend یا Schema وجود ندارد.
+
+انتشار این اصلاح فقط پس از CI و QA همان Head و پایان انتشار اصلی انجام می‌شود؛ Image سالم `sha-a76984d68170` نقطهٔ بازگشت مرحلهٔ دوم است.
