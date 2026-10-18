@@ -8,6 +8,18 @@
   box-shadow: 0 4px 18px rgb(7 24 43 / 4%);
 }
 
+.header[data-home='true'] {
+  border-bottom-color: rgb(255 255 255 / 10%);
+  background: #071d36;
+  box-shadow: none;
+}
+.header[data-home='true'] .brandName,
+.header[data-home='true'] .nav a { color: #f4f8ff; }
+.header[data-home='true'] .brandCopy small,
+.header[data-home='true'] .city { color: #c2d2e7; }
+.header[data-home='true'] .nav a:hover,
+.header[data-home='true'] .city:hover { color: #fff; }
+
 @media (display-mode: standalone) {
   .header { inset-block-start: calc(var(--view-as-h, 0px) + env(safe-area-inset-top, 0px)); }
 }

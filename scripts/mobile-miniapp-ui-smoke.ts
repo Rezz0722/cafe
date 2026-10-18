@@ -64,6 +64,7 @@ try {
           checks++
         }
         await nav.getByRole('link', { name: 'منو' }).click()
+        await page.getByRole('dialog').waitFor({ state: 'visible' })
         assert.equal(await page.getByRole('dialog').count(), 1, 'menu must be one fullscreen, not nested')
         const picker = page.locator('[data-menu-picker]')
         assert.equal(await picker.isVisible(), true, 'ordinary menu entry starts at categories')

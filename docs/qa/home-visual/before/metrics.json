@@ -1,0 +1,218 @@
+[
+  {
+    "viewport": {
+      "width": 320,
+      "height": 568
+    },
+    "theme": "light",
+    "width": 320,
+    "scrollWidth": 320,
+    "bodyHeight": 5552,
+    "canonical": "https://kucafe.ir/",
+    "jsonLd": 1,
+    "heroBottom": 433,
+    "reviewsTop": 821,
+    "foodTop": 2284,
+    "images": 21,
+    "broken": [],
+    "errors": []
+  },
+  {
+    "viewport": {
+      "width": 320,
+      "height": 568
+    },
+    "theme": "dark",
+    "width": 320,
+    "scrollWidth": 320,
+    "bodyHeight": 5552,
+    "canonical": "https://kucafe.ir/",
+    "jsonLd": 1,
+    "heroBottom": 433,
+    "reviewsTop": 821,
+    "foodTop": 2284,
+    "images": 21,
+    "broken": [],
+    "errors": []
+  },
+  {
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "theme": "light",
+    "width": 360,
+    "scrollWidth": 360,
+    "bodyHeight": 5104,
+    "canonical": "https://kucafe.ir/",
+    "jsonLd": 1,
+    "heroBottom": 381,
+    "reviewsTop": 769,
+    "foodTop": 2201,
+    "images": 21,
+    "broken": [],
+    "errors": []
+  },
+  {
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "theme": "dark",
+    "width": 360,
+    "scrollWidth": 360,
+    "bodyHeight": 5104,
+    "canonical": "https://kucafe.ir/",
+    "jsonLd": 1,
+    "heroBottom": 381,
+    "reviewsTop": 769,
+    "foodTop": 2201,
+    "images": 21,
+    "broken": [],
+    "errors": []
+  },
+  {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "theme": "light",
+    "width": 390,
+    "scrollWidth": 390,
+    "bodyHeight": 5058,
+    "canonical": "https://kucafe.ir/",
+    "jsonLd": 1,
+    "heroBottom": 381,
+    "reviewsTop": 770,
+    "foodTop": 2171,
+    "images": 21,
+    "broken": [],
+    "errors": []
+  },
+  {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "theme": "dark",
+    "width": 390,
+    "scrollWidth": 390,
+    "bodyHeight": 5058,
+    "canonical": "https://kucafe.ir/",
+    "jsonLd": 1,
+    "heroBottom": 381,
+    "reviewsTop": 770,
+    "foodTop": 2171,
+    "images": 21,
+    "broken": [],
+    "errors": []
+  },
+  {
+    "viewport": {
+      "width": 430,
+      "height": 932
+    },
+    "theme": "light",
+    "width": 430,
+    "scrollWidth": 430,
+    "bodyHeight": 5024,
+    "canonical": "https://kucafe.ir/",
+    "jsonLd": 1,
+    "heroBottom": 382,
+    "reviewsTop": 775,
+    "foodTop": 2181,
+    "images": 21,
+    "broken": [],
+    "errors": []
+  },
+  {
+    "viewport": {
+      "width": 430,
+      "height": 932
+    },
+    "theme": "dark",
+    "width": 430,
+    "scrollWidth": 430,
+    "bodyHeight": 5024,
+    "canonical": "https://kucafe.ir/",
+    "jsonLd": 1,
+    "heroBottom": 382,
+    "reviewsTop": 775,
+    "foodTop": 2181,
+    "images": 21,
+    "broken": [],
+    "errors": []
+  },
+  {
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "theme": "light",
+    "width": 768,
+    "scrollWidth": 768,
+    "bodyHeight": 6176,
+    "canonical": "https://kucafe.ir/",
+    "jsonLd": 1,
+    "heroBottom": 484,
+    "reviewsTop": 720,
+    "foodTop": 2886,
+    "images": 21,
+    "broken": [],
+    "errors": []
+  },
+  {
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "theme": "dark",
+    "width": 768,
+    "scrollWidth": 768,
+    "bodyHeight": 6176,
+    "canonical": "https://kucafe.ir/",
+    "jsonLd": 1,
+    "heroBottom": 484,
+    "reviewsTop": 720,
+    "foodTop": 2886,
+    "images": 21,
+    "broken": [],
+    "errors": []
+  },
+  {
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "theme": "light",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "bodyHeight": 5390,
+    "canonical": "https://kucafe.ir/",
+    "jsonLd": 1,
+    "heroBottom": 487,
+    "reviewsTop": 723,
+    "foodTop": 2235,
+    "images": 21,
+    "broken": [],
+    "errors": []
+  },
+  {
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "theme": "dark",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "bodyHeight": 5390,
+    "canonical": "https://kucafe.ir/",
+    "jsonLd": 1,
+    "heroBottom": 487,
+    "reviewsTop": 723,
+    "foodTop": 2235,
+    "images": 21,
+    "broken": [],
+    "errors": []
+  }
+]

@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import type { CSSProperties } from 'react'
 import Link from 'next/link'
 import {
   ArrowLeft,
@@ -7,7 +6,6 @@ import {
   CakeSlice,
   Building2,
   Camera,
-  ChevronLeft,
   Clock3,
   Coffee,
   Heart,
@@ -30,9 +28,7 @@ import { DiscountDiscovery } from '@/components/cafe/DiscountDiscovery'
 import { ExperienceClickTracker } from '@/components/experience/ExperienceClickTracker'
 import { DiscoveryClickTracker } from '@/components/home/DiscoveryClickTracker'
 import { HeroSearch } from '@/components/home/HeroSearch'
-import { InstallLink } from '@/components/pwa/InstallApp'
 import { MaintenanceScreen } from '@/components/site/MaintenanceScreen'
-import { FacetIcon } from '@/components/ui/FacetIcon'
 import {
   getSiteStats,
   listDistricts,
@@ -74,6 +70,23 @@ const FAQS = [
       'از بخش «برای کافه‌ها» وارد پنل شو. بعد از تأیید دسترسی می‌توانی اطلاعات شعبه، تصاویر، ساعت کاری، دسته‌بندی و آیتم‌های منو را مدیریت و QR منو دریافت کنی.',
   },
 ] as const
+
+// Editorial category photos describe a kind of food, never a real venue's menu.
+// Counts and destinations still come from the live facet roll-up.
+const HOME_FOOD_ART: Record<string, { image: string; alt: string }> = {
+  coffee: { image: '/home/categories/coffee.webp', alt: 'عکس نمادین یک فنجان قهوه' },
+  breakfast: { image: '/home/categories/breakfast.webp', alt: 'عکس نمادین صبحانه با تخم‌مرغ و نان' },
+  pasta: { image: '/home/categories/pasta.webp', alt: 'عکس نمادین بشقاب پاستا' },
+  pizza: { image: '/home/categories/pizza.webp', alt: 'عکس نمادین پیتزا' },
+  main_dish: { image: '/home/categories/main-dish.webp', alt: 'عکس نمادین غذای اصلی' },
+  cake_dessert: { image: '/home/categories/dessert.webp', alt: 'عکس نمادین یک برش کیک' },
+}
+const HOME_FOOD_ORDER = ['coffee', 'breakfast', 'pasta', 'pizza', 'main_dish', 'cake_dessert'] as const
+const HOME_EXPERIENCE_ART: Record<string, string> = Object.fromEntries([
+  'work', 'date', 'gathering', 'birthday', 'desserts', 'healthy', 'breakfast',
+  'study', 'outdoor', 'late-night', 'calm', 'specialty-coffee',
+].map((slug) => [slug, `/home/experiences/${slug}.webp`]))
+HOME_EXPERIENCE_ART.photogenic = '/home/experiences/photo.webp'
 
 export async function generateMetadata(): Promise<Metadata> {
   const [settings, locale] = await Promise.all([getSettings(), getLocalePolicy()])
@@ -203,14 +216,14 @@ export default async function HomePage() {
   const experienceSummaries = await listExperienceSummaries()
 
   const facetLabels = Object.fromEntries(facets.map((facet) => [facet.id, facet.labelFa]))
-  const popularFacets = facets.filter((facet) => facet.kind !== 'service' && facet.placeCount > 0).slice(0, 6)
-  const activeDistricts = districts.filter((district) => district.placeCount > 0).slice(0, 10)
+  const homeFoodFacets = HOME_FOOD_ORDER.flatMap((id) => facets.filter((facet) => facet.id === id && facet.placeCount > 0))
+  const activeDistricts = districts.filter((district) => district.placeCount > 0).sort((a, b) => b.placeCount - a.placeCount).slice(0, 10)
   const siteDescription = `راهنمای منو، قیمت و انتخاب کافه‌ها و رستوران‌های ${locale.cityName}`
   const availableExperiences = experienceSummaries.filter((item) => item.candidateCount > 0)
   const experienceIcons = { work: Laptop, date: Heart, gathering: Users, birthday: CakeSlice, desserts: CakeSlice, healthy: Salad, breakfast: Sunrise, study: Book, outdoor: Trees, 'late-night': Moon, photogenic: Camera, calm: Leaf, 'specialty-coffee': Coffee }
   const featured = pickHomeRecommendations(rankedPlaces, Math.min(4, discovery.homeCardCount))
   const firstExperience = availableExperiences[0]
-  const firstFood = popularFacets[0]
+  const firstFood = homeFoodFacets[0]
 
   return (
     <div className={styles.home}>
@@ -293,18 +306,20 @@ export default async function HomePage() {
               {trustedReviews.map(card => (
                 <Link key={card.reviewId} href={`${paths.cafe(card.placeSlug)}#reviews`} className={styles.trustedReviewCard}
                   data-discovery-event="review_card_opened" data-discovery-context={String(card.placeId)} data-discovery-source="trusted_reviews">
-                  <span className={styles.trustedReviewVenue}>
-                    {card.placeImage ? <img src={card.placeImage} alt="" width={64} height={64} loading="lazy" /> : <span className={styles.trustedReviewFallback}><Coffee size={22} aria-hidden="true" /></span>}
-                    <span><strong>{card.placeName}</strong><small>{card.districtName ?? 'مشهد'} · {faCount(card.approvedReviewCount)} تجربهٔ تأییدشده</small></span>
+                  <span className={styles.trustedReviewMedia} data-logo={card.placeImage?.includes('/logo/') ?? false}>
+                    {card.placeImage ? <img src={card.placeImage} alt={`تصویر ثبت‌شده از ${card.placeName}`} width={480} height={360} loading="lazy" /> : <span className={styles.trustedReviewFallback}><img src="/brand/app-icon-192.png" alt="کوکافه" width={192} height={192} /></span>}
                   </span>
-                  <span className={styles.trustedReviewMeta}>
-                    {card.rating !== null && <span><Star size={14} fill="currentColor" aria-hidden="true" /> {card.rating.toLocaleString('fa-IR', { maximumFractionDigits: 1 })}</span>}
-                    {card.isBloggerReview && <span>تجربهٔ بلاگر</span>}
-                    {card.placeStatus === 'temporarily_closed' && <span>موقتاً بسته</span>}
-                    <span>{card.reviewedAt.toLocaleDateString('fa-IR', { timeZone: 'Asia/Tehran' })}</span>
+                  <span className={styles.trustedReviewBody}>
+                    <span className={styles.trustedReviewVenue}><strong>{card.placeName}</strong><small>{card.districtName ?? 'مشهد'} · {faCount(card.approvedReviewCount)} تجربهٔ تأییدشده</small></span>
+                    <span className={styles.trustedReviewMeta}>
+                      {card.rating !== null && <span><Star size={14} fill="currentColor" aria-hidden="true" /> {card.rating.toLocaleString('fa-IR', { maximumFractionDigits: 1 })}</span>}
+                      {card.isBloggerReview && <span>تجربهٔ بلاگر</span>}
+                      {card.placeStatus === 'temporarily_closed' && <span>موقتاً بسته</span>}
+                      <span>{card.reviewedAt.toLocaleDateString('fa-IR', { timeZone: 'Asia/Tehran' })}</span>
+                    </span>
+                    <span className={styles.trustedReviewQuote}>«{card.excerpt}»</span>
+                    <span className={styles.trustedReviewFoot}><span><MessageCircle size={15} aria-hidden="true" /> مشاهده تجربه</span><ArrowLeft size={16} aria-hidden="true" /></span>
                   </span>
-                  <span className={styles.trustedReviewQuote}>«{card.excerpt}»</span>
-                  <span className={styles.trustedReviewFoot}><span><MessageCircle size={15} aria-hidden="true" /> خواندن تجربه</span><ArrowLeft size={16} aria-hidden="true" /></span>
                 </Link>
               ))}
             </div>
@@ -333,14 +348,15 @@ export default async function HomePage() {
                     data-experience-track="card_click"
                     data-experience-slug={experience.slug}
                     data-experience-count={candidateCount}
-                    style={{ '--experience-accent': experience.accent } as CSSProperties}
                   >
-                    <img src={experience.image} alt={experience.imageAlt} width={1536} height={1024} loading="lazy" />
+                    <img src={HOME_EXPERIENCE_ART[experience.slug] ?? experience.image} alt={experience.imageAlt} width={480} height={640} loading="lazy" />
+                    <span className={styles.experienceShade} aria-hidden="true" />
+                    <span className={styles.experienceBadge}><Icon size={21} aria-hidden="true" /></span>
                     <span className={styles.experienceCopy}>
-                      <i><Icon size={17} /></i>
                       <b>{experience.shortTitle}</b>
-                      <small>{faCount(candidateCount)}</small>
+                      <small>{faCount(candidateCount)} کافه</small>
                     </span>
+                    <ArrowLeft className={styles.experienceArrow} size={18} aria-hidden="true" />
                   </Link>
                 )
               })}
@@ -362,12 +378,11 @@ export default async function HomePage() {
             </Link>
           </div>
 
-          <div className={styles.categoryGrid} aria-label="دسته‌های محبوب منو">
-            {popularFacets.map((facet) => (
+          <div className={styles.categoryGrid} aria-label="دسته‌های منو">
+            {homeFoodFacets.map((facet) => (
               <Link href={paths.menuCategory(facet.id)} className={styles.categoryCard} key={facet.id} data-discovery-event="food_category_selected" data-discovery-context={facet.id} data-discovery-source="food_discovery">
-                <span className={styles.categoryIcon}><FacetIcon id={facet.id} size={22} /></span>
-                <span><b>{facet.labelFa}</b><small>{faCount(facet.placeCount)} مجموعه</small></span>
-                <ChevronLeft size={17} aria-hidden="true" />
+                <span className={styles.categoryPhoto}><img src={HOME_FOOD_ART[facet.id].image} alt={HOME_FOOD_ART[facet.id].alt} width={960} height={480} loading="lazy" /></span>
+                <span className={styles.categoryCopy}><b>{facet.labelFa}</b><small>{faCount(facet.placeCount)} مجموعه</small><span className={styles.categoryArrow}><ArrowLeft size={16} aria-hidden="true" /></span></span>
               </Link>
             ))}
           </div>
@@ -383,11 +398,11 @@ export default async function HomePage() {
               <Link href={paths.districtHub} className={styles.textLink}>همهٔ محله‌ها <ArrowLeft size={16} /></Link>
             </div>
             <div className={styles.districtRail}>
-              {activeDistricts.map((district) => (
-                <Link href={paths.district(district.slug)} key={district.id} data-discovery-event="discovery_category_clicked" data-discovery-context={district.slug} data-discovery-source="district">
-                  <MapPinned size={19} aria-hidden="true" />
-                  <span><b>{district.name}</b><small>{faCount(district.placeCount)} مجموعه</small></span>
-                  <ChevronLeft size={16} aria-hidden="true" />
+              {activeDistricts.map((district, index) => (
+                <Link href={paths.district(district.slug)} key={district.id} data-featured={index < 3} data-discovery-event="discovery_category_clicked" data-discovery-context={district.slug} data-discovery-source="district">
+                  <span className={styles.districtGraphic} aria-hidden="true"><MapPinned size={30} /></span>
+                  <span className={styles.districtCopy}><b>{district.name}</b><small>{faCount(district.placeCount)} مجموعه</small></span>
+                  <span className={styles.districtArrow}><ArrowLeft size={17} aria-hidden="true" /></span>
                 </Link>
               ))}
             </div>
@@ -447,7 +462,6 @@ export default async function HomePage() {
         <div className={`container ${styles.homeAfterword}`}>
           <span>{faCount(stats.publishedPlaces)} مجموعه · {faCount(stats.menuItems)} آیتم منوی قابل جست‌وجو</span>
           <Link href={paths.methodology}>روش جمع‌آوری اطلاعات</Link>
-          <InstallLink />
         </div>
 
         <section id="faq" className={`container ${styles.faqSection}`} aria-labelledby="faq-title">
