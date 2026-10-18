@@ -75,8 +75,10 @@ try {
       geolocation: { latitude: 36.31, longitude: 59.55 },
     })
     await page.goto(`${base}/search?scope=places`, { waitUntil: 'domcontentloaded' })
-    await page.locator('select[name="sort"]').selectOption('distance')
+    await page.getByRole('button', { name: /فیلترها/ }).click()
+    await page.getByRole('combobox', { name: 'ترتیب نتایج' }).selectOption('distance')
     await page.waitForURL(/near=1/)
+    await page.getByRole('button', { name: /دیدن .* نتیجه/ }).click()
     const firstPage = page.locator('a[href^="/cafe/"]')
     assert.equal(await firstPage.count(), 24, 'نزدیک‌ترین باید پس از sort صفحه‌بندی شود')
     assert.match(await firstPage.first().innerText(), /متر|کیلومتر/)
@@ -89,7 +91,10 @@ try {
     // restoration خود مرورگر رقابت کند و رفتار لمسی را نمایندگی نمی‌کند.
     await page.mouse.wheel(0, 620)
     await page.waitForTimeout(220)
-    await page.locator('a[href^="/cafe/"]').first().click()
+    assert.ok(await page.evaluate(() => window.scrollY > 300), 'پیش از بازکردن نتیجه باید واقعاً اسکرول کرده باشیم')
+    // اولین کارت بالای viewport است و Playwright برای کلیک، صفحه را به بالا
+    // می‌برد؛ یک کارتِ قابل‌دیدن را انتخاب می‌کنیم تا Back واقعی سنجیده شود.
+    await page.locator('a[href^="/cafe/"]').nth(5).click()
     await page.waitForURL(/\/cafe\//)
     await page.goBack({ waitUntil: 'domcontentloaded' })
     await page.waitForURL(/\/search.*page=2/)
@@ -127,7 +132,7 @@ try {
     await page.goto(`${base}/search?scope=places&view=map`, { waitUntil: 'domcontentloaded' })
     const note = page.getByText(/نتیجه مختصات معتبر دارند/)
     await note.waitFor()
-    assert.match(await note.innerText(), /۲۳۹ از ۳۴۶/)
+    assert.match(await note.innerText(), /[۰-۹]+ از [۰-۹]+ نتیجه مختصات معتبر دارند/)
     const zoomButton = page.getByRole('button', { name: 'بزرگ‌نمایی' })
     const mapFallback = page.getByText('نقشه بار نشد', { exact: true })
     await Promise.race([
@@ -141,8 +146,17 @@ try {
         await page.evaluate(() => Object.keys(sessionStorage).some((key) => key.startsWith('kucafe:search-map:'))),
         'محدوده و زوم نقشه باید برای بازگشت حفظ شود',
       )
-      const marker = page.locator('a.maplibregl-marker').first()
-      await marker.waitFor({ timeout: 60_000 })
+      const marker = page.locator('a.maplibregl-marker, a[data-map-pin]').first()
+      await page.locator('.maplibregl-marker, [data-map-pin]').first().waitFor({ timeout: 15_000 })
+      // در زوم اولیه، همهٔ کافه‌ها ممکن است در خوشه‌ها باشند. تا رسیدن به
+      // نشانگر تکی، خوشهٔ واقعی را باز می‌کنیم؛ تعداد ثابتِ کافه فرض نمی‌شود.
+      for (let attempt = 0; attempt < 5 && await marker.count() === 0; attempt += 1) {
+        const cluster = page.locator('button.maplibregl-marker, button[data-map-pin]').first()
+        if (await cluster.count() > 0) await cluster.click()
+        else await zoomButton.click()
+        await page.waitForTimeout(800)
+      }
+      await marker.waitFor({ timeout: 15_000 })
       await marker.click()
       await page.getByText('انتخاب روی نقشه').waitFor()
       assert.match(page.url(), /view=map/)
