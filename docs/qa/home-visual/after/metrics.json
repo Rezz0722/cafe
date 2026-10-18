@@ -13,6 +13,7 @@
     "heroBottom": 433,
     "reviewsTop": 691,
     "foodTop": 2101,
+    "nextCardVisibleFraction": 0.6407394489012905,
     "images": 27,
     "broken": [],
     "errors": []
@@ -31,6 +32,7 @@
     "heroBottom": 433,
     "reviewsTop": 691,
     "foodTop": 2101,
+    "nextCardVisibleFraction": 0.6407394489012905,
     "images": 27,
     "broken": [],
     "errors": []
@@ -49,6 +51,7 @@
     "heroBottom": 381,
     "reviewsTop": 639,
     "foodTop": 2018,
+    "nextCardVisibleFraction": 0.6567973957525965,
     "images": 27,
     "broken": [],
     "errors": []
@@ -67,6 +70,7 @@
     "heroBottom": 381,
     "reviewsTop": 639,
     "foodTop": 2018,
+    "nextCardVisibleFraction": 0.6567973957525965,
     "images": 27,
     "broken": [],
     "errors": []
@@ -85,6 +89,7 @@
     "heroBottom": 381,
     "reviewsTop": 640,
     "foodTop": 1988,
+    "nextCardVisibleFraction": 0.6667382127781355,
     "images": 27,
     "broken": [],
     "errors": []
@@ -103,6 +108,7 @@
     "heroBottom": 381,
     "reviewsTop": 640,
     "foodTop": 1988,
+    "nextCardVisibleFraction": 0.6667382127781355,
     "images": 27,
     "broken": [],
     "errors": []
@@ -121,6 +127,7 @@
     "heroBottom": 382,
     "reviewsTop": 645,
     "foodTop": 1998,
+    "nextCardVisibleFraction": 0.7565217391304347,
     "images": 27,
     "broken": [],
     "errors": []
@@ -139,6 +146,7 @@
     "heroBottom": 382,
     "reviewsTop": 645,
     "foodTop": 1998,
+    "nextCardVisibleFraction": 0.7565217391304347,
     "images": 27,
     "broken": [],
     "errors": []
@@ -157,6 +165,7 @@
     "heroBottom": 484,
     "reviewsTop": 720,
     "foodTop": 1672,
+    "nextCardVisibleFraction": null,
     "images": 27,
     "broken": [],
     "errors": []
@@ -175,6 +184,7 @@
     "heroBottom": 484,
     "reviewsTop": 720,
     "foodTop": 1672,
+    "nextCardVisibleFraction": null,
     "images": 27,
     "broken": [],
     "errors": []
@@ -193,6 +203,7 @@
     "heroBottom": 487,
     "reviewsTop": 723,
     "foodTop": 1661,
+    "nextCardVisibleFraction": null,
     "images": 27,
     "broken": [],
     "errors": []
@@ -211,6 +222,7 @@
     "heroBottom": 487,
     "reviewsTop": 723,
     "foodTop": 1661,
+    "nextCardVisibleFraction": null,
     "images": 27,
     "broken": [],
     "errors": []
