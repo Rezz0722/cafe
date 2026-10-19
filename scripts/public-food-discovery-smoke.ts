@@ -48,9 +48,9 @@ async function cafeLinks(page: Page) {
 }
 
 try {
-  for (const width of [320, 360, 390, 430, 768, 1440]) {
-    for (const colorScheme of ['light', 'dark'] as const) {
-      const context = await browser.newContext({ viewport: { width, height: 900 }, colorScheme, isMobile: width <= 430, hasTouch: width <= 430, locale: 'fa-IR', timezoneId: 'Asia/Tehran', userAgent: 'Googlebot KuCafeFoodReadOnlyQA' })
+  for (const width of [390, 320, 360, 430, 768, 1440]) {
+    for (const colorScheme of ['dark', 'light'] as const) {
+      const context = await browser.newContext({ viewport: { width, height: 900 }, colorScheme, isMobile: width <= 430, hasTouch: width <= 430, locale: 'fa-IR', timezoneId: 'Asia/Tehran' })
       context.setDefaultNavigationTimeout(120_000)
       await context.route('**/*', route => ['GET', 'HEAD'].includes(route.request().method())
         ? route.continue()
@@ -103,6 +103,9 @@ try {
         await page.goForward({ waitUntil: 'networkidle' })
         await page.waitForFunction(expected => document.querySelector('#results a[href^="/cafe/"]')?.getAttribute('href') === expected, second[0])
         assert.deepEqual(await cafeLinks(page), second, 'forward restores page two')
+        console.log('✓ distinct stable pages, canonical, reload, back and forward')
+        // Start sorting from a fresh document, independently of browser form restoration.
+        await page.reload({ waitUntil: 'networkidle' })
         await page.getByLabel('مرتب‌سازی', { exact: true }).selectOption('name')
         await page.getByRole('button', { name: 'نمایش', exact: true }).click()
         await page.waitForURL('**/coffee?sort=name#results')
@@ -111,6 +114,7 @@ try {
         await page.getByRole('link', { name: 'صفحه بعد', exact: true }).click()
         await page.waitForURL('**/coffee?sort=name&page=2#results')
         assert.match(await page.locator('link[rel="canonical"]').getAttribute('href') ?? '', /\/coffee\?sort=name&page=2$/)
+        console.log('✓ sort selection, filter handoff, preserved sorted page URL and canonical')
         for (const query of ['page=0', 'page=-2', 'page=broken', 'page=1.5', 'page=2&page=3', 'sort=broken']) {
           await page.goto(new URL(`/mashhad/menu/coffee?${query}`, base).href, { waitUntil: 'networkidle' })
           assert.deepEqual(await cafeLinks(page), first, `invalid query ${query} falls back to first page`)
