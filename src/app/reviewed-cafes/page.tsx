@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { cache } from 'react'
+import Link from 'next/link'
 import { listPlaceCards } from '@/core/places/queries'
 import { PlaceCardView } from '@/components/cafe/PlaceCardView'
 import { BreadcrumbJsonLd } from '@/components/seo/PlaceJsonLd'
@@ -46,8 +47,8 @@ export default async function ReviewedCafesPage() {
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }} />
     <BreadcrumbJsonLd items={[{ name: 'کو کافه', path: paths.home }, { name: 'کافه‌های بررسی‌شده مشهد', path: paths.reviewedCafes }]} />
     <main className={styles.page}>
-    <header className={styles.hero}><span>راهنمای تحریریه</span><h1>کافه‌های بررسی‌شده</h1><p>تجربه‌های حضوری بلاگرهای تأییدشده؛ ویدئوی اصلی هر بررسی داخل صفحه همان کافه در دسترس است.</p></header>
-    {cards.length ? <ul className={styles.grid}>{cards.map(card => <li key={card.id}><PlaceCardView card={card} /></li>)}</ul> : <div className={styles.empty}>اولین بررسی‌های تأییدشده به‌زودی اینجا نمایش داده می‌شوند.</div>}
+    <header className={styles.hero}><span>راهنمای تحریریه</span><h1>بررسی کافه‌ها توسط بلاگرها</h1><p>تجربه‌های حضوری بلاگرهای تأییدشده؛ ویدئوی اصلی هر بررسی داخل صفحه همان کافه در دسترس است.</p><Link href={paths.reviews} className={styles.publicReviews}>نظرهای عمومی کاربران و بلاگرها ←</Link></header>
+    {cards.length ? <ul className={styles.grid} data-short-list={cards.length === 1}>{cards.map(card => <li key={card.id}><PlaceCardView card={card} /></li>)}</ul> : <div className={styles.empty}>اولین بررسی‌های تأییدشده به‌زودی اینجا نمایش داده می‌شوند.</div>}
     </main>
   </>
 }

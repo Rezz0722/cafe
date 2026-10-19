@@ -38,6 +38,7 @@ export const paths = {
   /** صفحه جذب و تحویل پنل به کافه‌دارهای جدید. */
   ownerLanding: '/for-cafes',
   methodology: '/methodology',
+  reviews: '/reviews',
   reviewedCafes: '/reviewed-cafes',
   editorialPolicy: '/editorial-policy',
   privacy: '/privacy',
