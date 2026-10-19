@@ -44,3 +44,11 @@
 | فهرست مطالب | — | [روش داده‌ها](qa/public-supporting-ux/methodology-after-390-dark.png)، [حریم خصوصی](qa/public-supporting-ux/privacy-after-390-dark.png) |
 
 تمام تصاویر ماتریس و بررسی‌های زندهٔ Overview در `/tmp/kucafe-public-support-qa/` این محیط نگه‌داری می‌شوند؛ تصاویر منتخب داخل مخزن قابل بررسی‌اند. نوار ثابت پایین در اسکرین‌شات full-page در ارتفاع viewport دیده می‌شود؛ این به‌تنهایی اثبات انسداد هنگام اسکرول نیست.
+
+## تکمیل رنگ CTA مالک
+
+در بازبینی تصویر واقعی مشخص شد دکمهٔ اصلی Hero مالک هنوز سبز نعنایی بود. فقط پس‌زمینهٔ `.primaryButton` به توکن موجود `--c-primary-action-strong`، متن به سفید و outline فوکوس روی Hero به سفید تغییر کرد. تفاوت فایل CSS با مبنا دقیقاً همین دو قانون رنگ است؛ فرم، رضایت، tracking، تماس‌ها و چیدمان تغییری نکردند.
+
+بررسی مستقل ۳۲۰×۵۶۸ و ۳۹۰×۸۴۴ در هر دو تم: ۴/۴ پاس؛ رنگ آبی توکن، متن سفید، فوکوس قابل‌دیدن سفید، نبود overflow، source برابر `home`، پنج ورودی الزامی و هر مسیر تماس فقط یک بار تأیید شدند. تمام درخواست‌های غیر GET/HEAD و analytics مسدود بودند. برای این تغییر رنگ منفرد، ماتریس ۷۲تایی تکرار نشد.
+
+تصاویر جدید: [۳۲۰ روشن](qa/public-supporting-ux/owner-brand-320-light.png)، [۳۲۰ تیره](qa/public-supporting-ux/owner-brand-320-dark.png)، [۳۹۰ روشن](qa/public-supporting-ux/owner-brand-390-light.png)، [۳۹۰ تیره](qa/public-supporting-ux/owner-brand-390-dark.png)، [فوکوس کیبورد](qa/public-supporting-ux/owner-brand-focus-390-dark.png).
