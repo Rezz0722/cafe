@@ -79,7 +79,7 @@ export default async function ExperienceHubPage() {
               data-experience-slug={experience.slug}
               data-experience-count={candidateCount}
             >
-              <img src={experience.image} alt="" width={1536} height={1024} loading="lazy" />
+              <img src={`/home/experiences/${experience.slug === 'photogenic' ? 'photo' : experience.slug}.webp`} alt="" width={480} height={640} loading="lazy" />
               <span>
                 <span><b>{experience.shortTitle}</b><small>{experience.description}</small></span>
                 <em className={styles.count}>{faCount(candidateCount)}</em>

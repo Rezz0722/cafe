@@ -4,7 +4,7 @@
 .number, .direction { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; border: 1px solid var(--c-border); border-radius: 12px; background: var(--c-surface); color: var(--c-ink); text-decoration: none; font-weight: 800; }
 .number { min-width: 44px; padding: 6px; }
 .direction { padding: 8px 14px; font-size: .84rem; }
-.number[aria-current='page'] { background: var(--c-primary); border-color: var(--c-primary); color: #fff; }
+.number[aria-current='page'] { background: var(--c-primary-action-strong); border-color: var(--c-primary-action-strong); color: #fff; }
 .number:focus-visible, .direction:focus-visible { outline: 3px solid var(--c-primary); outline-offset: 3px; }
 .number:hover, .direction:hover { border-color: var(--c-primary); }
 .gap { color: var(--c-muted); }

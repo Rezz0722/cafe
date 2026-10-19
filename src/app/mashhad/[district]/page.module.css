@@ -55,14 +55,25 @@
 
 .mapSection {
   margin-bottom: 20px;
+  border-radius: 18px;
+  overflow: hidden;
+  scroll-margin-top: calc(var(--header-h) + 12px);
 }
+
+.moreFilters { margin-top: 9px; color: var(--c-primary-strong); font-size: .82rem; }
+.moreFilters summary { cursor: pointer; min-height: 40px; padding-block: 8px; font-weight: 800; }
+.quickLinks { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.quickLinks a { display: inline-flex; align-items: center; min-height: 42px; padding: 7px 12px; border: 1px solid var(--c-primary-border); border-radius: 12px; color: var(--c-primary-strong); background: var(--c-primary-soft); font-size: .8rem; font-weight: 800; }
+.results { scroll-margin-top: calc(var(--header-h) + 12px); }
+.results h2 { font-size: 1.15rem; }
+.results > p { margin-bottom: 12px; }
 
 .list {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
   gap: 9px;
 }
 

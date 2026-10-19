@@ -1,12 +1,11 @@
 import 'server-only'
 
-import { and, eq, inArray } from 'drizzle-orm'
+import { and, eq, gte, inArray } from 'drizzle-orm'
 import { getDb } from '@/db/client'
-import { placeAttribute as placeAttributeTable } from '@/db/schema'
+import { place as placeTable, placeAttribute as placeAttributeTable } from '@/db/schema'
 import { ATTRIBUTE_BY_ID } from '@/core/taxonomy/attributes'
 import { FACET_BY_ID } from '@/core/taxonomy/menuTaxonomy'
 import {
-  countPlaces,
   listAttributeCounts,
   listPlaceCards,
   type PlaceCard,
@@ -52,16 +51,18 @@ export async function listExperienceSummaries(): Promise<ExperienceSummary[]> {
 export async function listExperienceCandidates(
   experience: ExperienceDefinition,
   limit = 60,
+  offset = 0,
 ): Promise<{ candidates: ExperienceCandidate[]; total: number }> {
-  const [cards, total] = await Promise.all([
-    listPlaceCards({
-      attributeIds: [experience.primaryAttributeId],
-      limit,
-      sort: 'quality',
-    }),
-    countPlaces({ attributeIds: [experience.primaryAttributeId] }),
-  ])
-  if (cards.length === 0) return { candidates: [], total }
+  // Rank lightweight eligible IDs with the existing ranking contract BEFORE
+  // taking a page. Ranking a quality-limited window loses candidates and makes
+  // page boundaries unstable. Only the selected page hydrates full cards/facets.
+  const eligible = await getDb().select({ id: placeTable.id, qualityScore: placeTable.qualityScore })
+    .from(placeTable)
+    .innerJoin(placeAttributeTable, and(eq(placeAttributeTable.placeId, placeTable.id),
+      eq(placeAttributeTable.attributeId, experience.primaryAttributeId), gte(placeAttributeTable.value, 1)))
+    .where(eq(placeTable.status, 'published'))
+  const total = eligible.length
+  if (total === 0) return { candidates: [], total }
 
   const relevantAttributeIds = [
     experience.primaryAttributeId,
@@ -78,7 +79,7 @@ export async function listExperienceCandidates(
     })
     .from(placeAttributeTable)
     .where(and(
-      inArray(placeAttributeTable.placeId, cards.map((card) => card.id)),
+      inArray(placeAttributeTable.placeId, eligible.map((row) => row.id)),
       inArray(placeAttributeTable.attributeId, relevantAttributeIds),
     ))
 
@@ -89,7 +90,17 @@ export async function listExperienceCandidates(
     signalsByPlace.set(row.placeId, list)
   }
 
-  const candidates = cards.map((card): ExperienceCandidate => {
+  const ranked = eligible.map(row => ({ ...row, rank: experienceRank(experience, signalsByPlace.get(row.id) ?? []) }))
+    .sort((a, b) => compareExperienceRank(a.rank, b.rank) || b.qualityScore - a.qualityScore || a.id - b.id)
+  const safeOffset = Number.isSafeInteger(offset) && offset > 0 ? offset : 0
+  const safeLimit = Number.isSafeInteger(limit) ? Math.max(1, Math.min(200, limit)) : 60
+  const selected = ranked.slice(safeOffset, safeOffset + safeLimit)
+  if (!selected.length) return { candidates: [], total }
+  const cards = await listPlaceCards({ placeIds: selected.map(row => row.id), limit: selected.length, sort: 'quality' })
+  const cardById = new Map(cards.map(card => [card.id, card]))
+  const candidates = selected.flatMap(({ id }): ExperienceCandidate[] => {
+    const card = cardById.get(id)
+    if (!card) return [] // A concurrently unpublished venue must fail closed.
     const signals = signalsByPlace.get(card.id) ?? []
     const primary = signals.find((signal) => signal.attributeId === experience.primaryAttributeId)
     const positiveSignals = signals
@@ -110,20 +121,14 @@ export async function listExperienceCandidates(
       }
     }
 
-    return {
+    return [{
       card,
       reasons: [...new Set(reasons)].slice(0, 3),
       rank: experienceRank(experience, signals),
       source: primary?.source ?? null,
       verifiedAt: primary?.verifiedAt ?? null,
-    }
+    }]
   })
-
-  candidates.sort((a, b) =>
-    compareExperienceRank(a.rank, b.rank) ||
-    b.card.qualityScore - a.card.qualityScore ||
-    a.card.id - b.card.id,
-  )
 
   return { candidates, total }
 }
