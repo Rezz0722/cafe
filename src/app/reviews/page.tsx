@@ -57,7 +57,7 @@ export default async function PublicReviewsPage({ searchParams }: Props) {
                 <div className={styles.meta}>
                   <span className={styles.badge} data-blogger={card.isBloggerReview}>{card.isBloggerReview ? 'نظر بلاگر' : 'نظر کاربر'}</span>
                   {card.stars !== null && <span className={styles.stars} aria-label={`${card.stars.toLocaleString('fa-IR')} از ۵ ستاره`}><Star size={14} fill="currentColor" aria-hidden="true" /> {card.stars.toLocaleString('fa-IR')} از ۵</span>}
-                  <time dateTime={card.reviewedAt.toISOString()}>{card.reviewedAt.toLocaleDateString('fa-IR', { timeZone: 'Asia/Tehran' })}</time>
+                  {card.reviewedAt && <time dateTime={card.reviewedAt.toISOString()}>{card.reviewedAt.toLocaleDateString('fa-IR', { timeZone: 'Asia/Tehran' })}</time>}
                 </div>
                 {card.excerpt && card.excerpt !== '…'
                   ? <blockquote>{card.excerpt}</blockquote>

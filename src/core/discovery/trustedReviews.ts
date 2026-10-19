@@ -151,8 +151,13 @@ export interface PublicReviewCard {
   districtName: string | null
   stars: number | null
   excerpt: string
-  reviewedAt: Date
+  reviewedAt: Date | null
   isBloggerReview: boolean
+}
+
+/** Legacy zero dates may decode to Invalid Date; omit them without inventing a date. */
+export function publicReviewDate(value: unknown): Date | null {
+  return value instanceof Date && Number.isFinite(value.getTime()) ? value : null
 }
 
 function publicReviewVisibility() {
@@ -203,7 +208,7 @@ export async function listPublicReviewPage(requestedPage?: string | string[]) {
     districtName: row.districtName,
     stars: row.stars >= 1 && row.stars <= 5 ? row.stars : null,
     excerpt: publicReviewExcerpt(row.text ?? '', 320),
-    reviewedAt: row.reviewedAt,
+    reviewedAt: publicReviewDate(row.reviewedAt),
     isBloggerReview: row.isBloggerReview,
   }))
   return { reviews, pagination }

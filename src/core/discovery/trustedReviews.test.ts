@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { publicReviewExcerpt, rankTrustedReviews } from './trustedReviews'
+import { publicReviewDate, publicReviewExcerpt, rankTrustedReviews } from './trustedReviews'
 
 const now = new Date('2026-10-17T10:00:00Z')
 function card(id: number, patch: Record<string, unknown> = {}) {
@@ -27,6 +27,16 @@ test('trusted review excerpts redact contact-like content and bound length', () 
   assert.equal(publicReviewExcerpt('خوب بود test@example.com 09123456789 @private https://example.com/x'), 'خوب بود … … … …')
   assert.equal(publicReviewExcerpt('شماره ۰۹۱۲۳۴۵۶۷۸۹'), 'شماره …')
   assert.equal(Array.from(publicReviewExcerpt('آ'.repeat(180))).length, 151)
+})
+
+test('public review dates retain valid dates and omit invalid or absent dates', () => {
+  const valid = new Date('2026-10-18T10:00:00Z')
+  assert.equal(publicReviewDate(valid), valid)
+  assert.equal(publicReviewDate(new Date('0000-00-00')), null)
+  assert.equal(publicReviewDate(new Date(Number.NaN)), null)
+  assert.equal(publicReviewDate(null), null)
+  assert.equal(publicReviewDate(undefined), null)
+  assert.equal(publicReviewDate('2026-10-18'), null)
 })
 
 test('review discovery requires three venues and chooses one real review per venue', () => {
