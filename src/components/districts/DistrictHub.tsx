@@ -90,6 +90,7 @@ export function DistrictHub({ cityName, districts, totalPlaces, labels, mapConfi
   )
 
   const noResults = filtered.length === 0
+  const visibleSelected = selected && filtered.some(district => district.id === selected.id) ? selected : null
 
   return (
     <div className={styles.page}>
@@ -130,6 +131,8 @@ export function DistrictHub({ cityName, districts, totalPlaces, labels, mapConfi
       </header>
 
       {/* ── نقشه ─────────────────────────────────────────────────── */}
+      <details className={styles.mapDisclosure} id="district-map">
+      <summary>نمایش نقشهٔ محله‌های {cityName}</summary>
       <section className={styles.mapSection} aria-label={`نقشه‌ی محله‌های ${cityName}`}>
         <LazyCafeMap
           places={mapPlaces}
@@ -138,7 +141,7 @@ export function DistrictHub({ cityName, districts, totalPlaces, labels, mapConfi
           zoom={mapConfig.zoom}
           minZoom={mapConfig.minZoom}
           maxZoom={mapConfig.maxZoom}
-          height="380px"
+          height="280px"
           // ۲۹ محله باید ۲۹ نشانگرِ نام‌دار بمانند، در هر زوم.
           cluster={false}
           alwaysLabel
@@ -150,8 +153,8 @@ export function DistrictHub({ cityName, districts, totalPlaces, labels, mapConfi
           }}
         />
 
-        {selected && (
-          <div className={styles.mapPanel} role="dialog" aria-label={selected.name}>
+        {visibleSelected && (
+          <div className={styles.mapPanel} role="dialog" aria-label={visibleSelected.name}>
             <button
               type="button"
               className={styles.mapPanelClose}
@@ -160,17 +163,18 @@ export function DistrictHub({ cityName, districts, totalPlaces, labels, mapConfi
             >
               <X size={18} aria-hidden="true" />
             </button>
-            <p className={styles.mapPanelName}>{selected.name}</p>
+            <p className={styles.mapPanelName}>{visibleSelected.name}</p>
             <p className={styles.mapPanelMeta}>
-              {fa(selected.placeCount)} کافه
-              {selected.priceMedian !== null && <> · میانه‌ی منو {toman(selected.priceMedian)}</>}
+              {fa(visibleSelected.placeCount)} کافه
+              {visibleSelected.priceMedian !== null && <> · میانه‌ی منو {toman(visibleSelected.priceMedian)}</>}
             </p>
-            <Link href={paths.district(selected.slug)} className={styles.mapPanelCta}>
-              دیدن کافه‌های {selected.name}
+            <Link href={paths.district(visibleSelected.slug)} className={styles.mapPanelCta}>
+              دیدن کافه‌های {visibleSelected.name}
             </Link>
           </div>
         )}
       </section>
+      </details>
 
       {/* ── شبکه‌ی کارت ──────────────────────────────────────────── */}
       {noResults ? (
@@ -210,11 +214,6 @@ export function DistrictHub({ cityName, districts, totalPlaces, labels, mapConfi
                     <Coffee size={13} aria-hidden="true" />
                     {fa(district.placeCount)} کافه
                   </span>
-                  {district.priceMedian !== null && (
-                    <span className={styles.cardPrice}>
-                      میانه‌ی منو {toman(district.priceMedian)}
-                    </span>
-                  )}
                 </span>
 
                 <MapPin size={16} aria-hidden="true" className={styles.cardArrow} />
@@ -224,7 +223,8 @@ export function DistrictHub({ cityName, districts, totalPlaces, labels, mapConfi
         </ul>
       )}
 
-      <section className={styles.guide} aria-labelledby="mashhad-cafe-guide">
+      <details className={styles.guide}>
+        <summary id="mashhad-cafe-guide">راهنمای انتخاب کافه در {cityName}</summary>
         <span className={styles.guideKicker}>راهنمای انتخاب</span>
         <h2 id="mashhad-cafe-guide">بهترین کافه مشهد برای تو کدام است؟</h2>
         <p>
@@ -237,7 +237,7 @@ export function DistrictHub({ cityName, districts, totalPlaces, labels, mapConfi
           <Link href={paths.search}>جست‌وجوی کافه یا خوراکی</Link>
           <Link href={`${paths.search}?open=1`}>کافه‌های بازِ مشهد</Link>
         </div>
-      </section>
+      </details>
     </div>
   )
 }

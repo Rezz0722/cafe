@@ -1,0 +1,380 @@
+[
+  {
+    "index": 1,
+    "path": "/",
+    "label": "رفتن به محتوای اصلی",
+    "screenshot": "01-home-6666cd.jpg"
+  },
+  {
+    "index": 2,
+    "path": "/search",
+    "label": "کشف کافه",
+    "screenshot": "02-search-18fc53.jpg"
+  },
+  {
+    "index": 3,
+    "path": "/mashhad/menu",
+    "label": "منو و قیمت",
+    "screenshot": "03-mashhad-menu-1759f6.jpg"
+  },
+  {
+    "index": 4,
+    "path": "/mashhad",
+    "label": "محله‌ها",
+    "screenshot": "04-mashhad-ae8ce6.jpg"
+  },
+  {
+    "index": 5,
+    "path": "/events",
+    "label": "رویدادها",
+    "screenshot": "05-events-c46895.jpg"
+  },
+  {
+    "index": 6,
+    "path": "/auth?redirect=%2F",
+    "label": "ورود | ثبت‌نام",
+    "screenshot": "06-auth-redirect-2F-2c759e.jpg"
+  },
+  {
+    "index": 7,
+    "path": "/search?near=1",
+    "label": "نزدیک من",
+    "screenshot": "07-search-near-1-a33098.jpg"
+  },
+  {
+    "index": 8,
+    "path": "/search?open=1",
+    "label": "الان باز است",
+    "screenshot": "08-search-open-1-8198e9.jpg"
+  },
+  {
+    "index": 9,
+    "path": "/mashhad/experience/work",
+    "label": "حال‌وهوا و مناسبت",
+    "screenshot": "09-mashhad-experience-work-c73a4a.jpg"
+  },
+  {
+    "index": 10,
+    "path": "/mashhad/menu/coffee",
+    "label": "غذا و نوشیدنی",
+    "screenshot": "10-mashhad-menu-coffee-11ee9f.jpg"
+  },
+  {
+    "index": 11,
+    "path": "/mashhad/experience",
+    "label": "همهٔ تجربه‌ها",
+    "screenshot": "11-mashhad-experience-5fe199.jpg"
+  },
+  {
+    "index": 12,
+    "path": "/reviewed-cafes",
+    "label": "همهٔ تجربه‌ها",
+    "screenshot": "12-reviewed-cafes-70aa15.jpg"
+  },
+  {
+    "index": 13,
+    "path": "/cafe/ramouz-cafe",
+    "label": "کافه راموز — شعبه قاضی طباطبایی خیام · ۵ تجربهٔ تأییدشده ۴٫۸ ۱۴۰۵/۶/۲۷ «عالی و خوشمزه بود» مشاهده تجربه",
+    "screenshot": "13-cafe-ramouz-cafe-eded70.jpg"
+  },
+  {
+    "index": 14,
+    "path": "/cafe/signalfastfood",
+    "label": "رستوران سیگنال شعبه(فارغ التحصیلان) وکیل‌آباد · ۳ تجربهٔ تأییدشده ۵ تجربهٔ بلاگر ۱۴۰۵/۶/۲۵ «🍔 رستوران سیگنال وکیل‌آباد رو امتحان کردم و **مدیوم پک، ا",
+    "screenshot": "14-cafe-signalfastfood-f9f4e9.jpg"
+  },
+  {
+    "index": 15,
+    "path": "/cafe/palladium-cafe-restaurant",
+    "label": "کافه رستوران پالادیوم احمدآباد · ۲ تجربهٔ تأییدشده ۴ ۱۴۰۵/۷/۲۴ «با تشکر از مجموعه کیفیتش خوب بود کمی کم نمک بود فقط که نمک در اختیار گذاشتن» مشاهده تج",
+    "screenshot": "15-cafe-palladium-cafe-restaurant-8e06f9.jpg"
+  },
+  {
+    "index": 16,
+    "path": "/mashhad/experience/date",
+    "label": "برای قرار ۹ کافه",
+    "screenshot": "16-mashhad-experience-date-8af4e4.jpg"
+  },
+  {
+    "index": 17,
+    "path": "/mashhad/experience/gathering",
+    "label": "برای دورهمی ۲۶ کافه",
+    "screenshot": "17-mashhad-experience-gathering-f33d3d.jpg"
+  },
+  {
+    "index": 18,
+    "path": "/mashhad/experience/birthday",
+    "label": "برای تولد ۱۳ کافه",
+    "screenshot": "18-mashhad-experience-birthday-7dbc69.jpg"
+  },
+  {
+    "index": 19,
+    "path": "/mashhad/experience/desserts",
+    "label": "برای دسر ۱۸۱ کافه",
+    "screenshot": "19-mashhad-experience-desserts-87241e.jpg"
+  },
+  {
+    "index": 20,
+    "path": "/mashhad/experience/healthy",
+    "label": "برای غذای سالم ۱۹ کافه",
+    "screenshot": "20-mashhad-experience-healthy-758bbb.jpg"
+  },
+  {
+    "index": 21,
+    "path": "/mashhad/experience/breakfast",
+    "label": "برای صبحانه ۱۲۳ کافه",
+    "screenshot": "21-mashhad-experience-breakfast-a10ee6.jpg"
+  },
+  {
+    "index": 22,
+    "path": "/mashhad/experience/study",
+    "label": "برای مطالعه ۶ کافه",
+    "screenshot": "22-mashhad-experience-study-783c27.jpg"
+  },
+  {
+    "index": 23,
+    "path": "/mashhad/experience/outdoor",
+    "label": "برای فضای باز ۲۱ کافه",
+    "screenshot": "23-mashhad-experience-outdoor-499ab8.jpg"
+  },
+  {
+    "index": 24,
+    "path": "/mashhad/experience/late-night",
+    "label": "برای شب‌نشینی ۲۳ کافه",
+    "screenshot": "24-mashhad-experience-late-night-87e570.jpg"
+  },
+  {
+    "index": 25,
+    "path": "/mashhad/experience/photogenic",
+    "label": "برای عکس ۹ کافه",
+    "screenshot": "25-mashhad-experience-photogenic-a79024.jpg"
+  },
+  {
+    "index": 26,
+    "path": "/mashhad/experience/calm",
+    "label": "برای آرامش ۵ کافه",
+    "screenshot": "26-mashhad-experience-calm-8da47a.jpg"
+  },
+  {
+    "index": 27,
+    "path": "/mashhad/experience/specialty-coffee",
+    "label": "برای قهوه ۵۹ کافه",
+    "screenshot": "27-mashhad-experience-specialty-coffee-da4f98.jpg"
+  },
+  {
+    "index": 28,
+    "path": "/mashhad/menu/breakfast",
+    "label": "صبحانه ۱۳۵ مجموعه",
+    "screenshot": "28-mashhad-menu-breakfast-19f6e6.jpg"
+  },
+  {
+    "index": 29,
+    "path": "/mashhad/menu/pasta",
+    "label": "پاستا ۱۱۴ مجموعه",
+    "screenshot": "29-mashhad-menu-pasta-dcb33e.jpg"
+  },
+  {
+    "index": 30,
+    "path": "/mashhad/menu/pizza",
+    "label": "پیتزا ۱۳۵ مجموعه",
+    "screenshot": "30-mashhad-menu-pizza-e2f69f.jpg"
+  },
+  {
+    "index": 31,
+    "path": "/mashhad/menu/main_dish",
+    "label": "غذای اصلی ۱۴۴ مجموعه",
+    "screenshot": "31-mashhad-menu-maindish-a6541d.jpg"
+  },
+  {
+    "index": 32,
+    "path": "/mashhad/menu/cake_dessert",
+    "label": "کیک و دسر ۱۲۲ مجموعه",
+    "screenshot": "32-mashhad-menu-cakedessert-65fbec.jpg"
+  },
+  {
+    "index": 33,
+    "path": "/mashhad/vakilabad",
+    "label": "وکیل‌آباد ۳۸ مجموعه",
+    "screenshot": "33-mashhad-vakilabad-5b2b9f.jpg"
+  },
+  {
+    "index": 34,
+    "path": "/mashhad/emam-reza",
+    "label": "امام رضا ۳۰ مجموعه",
+    "screenshot": "34-mashhad-emam-reza-c3edea.jpg"
+  },
+  {
+    "index": 35,
+    "path": "/mashhad/hashemieh",
+    "label": "هاشمیه ۲۰ مجموعه",
+    "screenshot": "35-mashhad-hashemieh-6f40cc.jpg"
+  },
+  {
+    "index": 36,
+    "path": "/mashhad/sajad",
+    "label": "سجاد ۱۹ مجموعه",
+    "screenshot": "36-mashhad-sajad-0cf441.jpg"
+  },
+  {
+    "index": 37,
+    "path": "/mashhad/haft-tir",
+    "label": "هفت تیر ۱۶ مجموعه",
+    "screenshot": "37-mashhad-haft-tir-020b12.jpg"
+  },
+  {
+    "index": 38,
+    "path": "/mashhad/khayyam",
+    "label": "خیام ۱۱ مجموعه",
+    "screenshot": "38-mashhad-khayyam-092137.jpg"
+  },
+  {
+    "index": 39,
+    "path": "/mashhad/ghasemabad",
+    "label": "قاسم‌آباد ۸ مجموعه",
+    "screenshot": "39-mashhad-ghasemabad-7b539f.jpg"
+  },
+  {
+    "index": 40,
+    "path": "/mashhad/ahmadabad",
+    "label": "احمدآباد ۷ مجموعه",
+    "screenshot": "40-mashhad-ahmadabad-2bb6a8.jpg"
+  },
+  {
+    "index": 41,
+    "path": "/mashhad/pirouzi",
+    "label": "پیروزی ۷ مجموعه",
+    "screenshot": "41-mashhad-pirouzi-23e979.jpg"
+  },
+  {
+    "index": 42,
+    "path": "/mashhad/torghabeh",
+    "label": "طرقبه ۷ مجموعه",
+    "screenshot": "42-mashhad-torghabeh-a35db3.jpg"
+  },
+  {
+    "index": 43,
+    "path": "/search?sort=quality",
+    "label": "همهٔ کافه‌ها",
+    "screenshot": "43-search-sort-quality-f194c5.jpg"
+  },
+  {
+    "index": 44,
+    "path": "/cafe/ramouz-cafe?menu=1",
+    "label": "دیدن منو",
+    "screenshot": "44-cafe-ramouz-cafe-menu-1-06e199.jpg"
+  },
+  {
+    "index": 45,
+    "path": "/cafe/baharatcafe",
+    "label": "باهارات کافه رستوران کوثر پیش غذا صبحانه ۳۹۵٬۰۰۰ تومان",
+    "screenshot": "45-cafe-baharatcafe-177f2b.jpg"
+  },
+  {
+    "index": 46,
+    "path": "/cafe/baharatcafe?menu=1",
+    "label": "دیدن منو",
+    "screenshot": "46-cafe-baharatcafe-menu-1-48eff9.jpg"
+  },
+  {
+    "index": 47,
+    "path": "/cafe/jan-boutique-restaurant",
+    "label": "جان بوتیک رستوران وکیل‌آباد پیش غذا کیک و دسر ۴٫۷ · ۳۵۰٬۰۰۰ تومان",
+    "screenshot": "47-cafe-jan-boutique-restaurant-d45bca.jpg"
+  },
+  {
+    "index": 48,
+    "path": "/cafe/jan-boutique-restaurant?menu=1",
+    "label": "دیدن منو",
+    "screenshot": "48-cafe-jan-boutique-restaurant-menu-1-3233a6.jpg"
+  },
+  {
+    "index": 49,
+    "path": "/cafe/palladium-cafe-restaurant?menu=1",
+    "label": "دیدن منو",
+    "screenshot": "49-cafe-palladium-cafe-restaurant-menu-1-d5d44b.jpg"
+  },
+  {
+    "index": 50,
+    "path": "/for-cafes?from=home",
+    "label": "دریافت پنل کافه",
+    "screenshot": "50-for-cafes-from-home-ec0c2b.jpg"
+  },
+  {
+    "index": 51,
+    "path": "/auth?redirect=%2Fadmin%2Fvenue",
+    "label": "ورود اعضا",
+    "screenshot": "51-auth-redirect-2Fadmin2Fvenue-3f9946.jpg"
+  },
+  {
+    "index": 52,
+    "path": "/methodology",
+    "label": "روش جمع‌آوری اطلاعات",
+    "screenshot": "52-methodology-f2d226.jpg"
+  },
+  {
+    "index": 53,
+    "path": "/search?view=map",
+    "label": "نقشه",
+    "screenshot": "53-search-view-map-3bf5ff.jpg"
+  },
+  {
+    "index": 54,
+    "path": "/profile",
+    "label": "پروفایل",
+    "screenshot": "54-profile-c838c8.jpg"
+  },
+  {
+    "index": 55,
+    "path": "/install",
+    "label": "نصب نرم افزار",
+    "screenshot": "55-install-de491c.jpg"
+  },
+  {
+    "index": 56,
+    "path": "/mashhad/menu/brewed_coffee",
+    "label": "قهوه دمی",
+    "screenshot": "56-mashhad-menu-brewedcoffee-b41e5c.jpg"
+  },
+  {
+    "index": 57,
+    "path": "/mashhad/kuhsangi",
+    "label": "کوهسنگی",
+    "screenshot": "57-mashhad-kuhsangi-71042d.jpg"
+  },
+  {
+    "index": 58,
+    "path": "/about",
+    "label": "دربارهٔ کو کافه",
+    "screenshot": "58-about-77102f.jpg"
+  },
+  {
+    "index": 59,
+    "path": "/editorial-policy",
+    "label": "سیاست محتوا و نظرها",
+    "screenshot": "59-editorial-policy-78c817.jpg"
+  },
+  {
+    "index": 60,
+    "path": "/privacy",
+    "label": "حریم خصوصی",
+    "screenshot": "60-privacy-71ee28.jpg"
+  },
+  {
+    "index": 61,
+    "path": "/contribute",
+    "label": "مشارکت",
+    "screenshot": "61-contribute-40f87f.jpg"
+  },
+  {
+    "index": 62,
+    "path": "/admin/venue",
+    "label": "پنل مدیریت کافه",
+    "screenshot": "62-admin-venue-eeb696.jpg"
+  },
+  {
+    "index": 63,
+    "path": "/profile/submit",
+    "label": "ثبت کافهٔ جدید",
+    "screenshot": "63-profile-submit-735f11.jpg"
+  }
+]

@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { authUrl, paths } from '@/routes'
 import { ThemeSwitcher } from '@/components/theme/ThemeSwitcher'
 import styles from './SiteHeader.module.css'
+import { isHeaderDestinationCurrent } from './siteHeaderState'
 
 const NAV_LINKS = [
   { label: 'کشف کافه', href: paths.search },
@@ -18,11 +19,6 @@ const NAV_LINKS = [
 
 interface Props {
   siteName?: string
-}
-
-function isCurrent(pathname: string, href: string): boolean {
-  if (href === paths.home) return pathname === href
-  return pathname === href || pathname.startsWith(`${href}/`)
 }
 
 export function SiteHeader({ siteName = 'کو کافه' }: Props) {
@@ -50,7 +46,7 @@ export function SiteHeader({ siteName = 'کو کافه' }: Props) {
             <Link
               key={link.href}
               href={link.href}
-              aria-current={isCurrent(pathname, link.href) ? 'page' : undefined}
+              aria-current={isHeaderDestinationCurrent(pathname, link.href) ? 'page' : undefined}
             >
               {link.label}
             </Link>
