@@ -9,6 +9,7 @@ import {
 import { isIndexable } from '@/core/seo/indexability'
 import { listExperienceSummaries } from '@/core/experience/queries'
 import { listUpcomingPublicEvents } from '@/core/events/service'
+import { countPublicReviews } from '@/core/discovery/trustedReviews'
 import { absoluteUrl, paths } from '@/routes'
 
 // جدول‌های افزایشی رویداد ممکن است هنگام Docker build هنوز migrate نشده باشند.
@@ -28,7 +29,7 @@ export const dynamic = 'force-dynamic'
  * صفحات کانونی: خانه، محله، کافه و Dishهای محبوب با دادهٔ مقایسه‌ای کافی.
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [slugs, districts, dishes, facets, reviewedCards, experiences, events] = await Promise.all([
+  const [slugs, districts, dishes, facets, reviewedCards, experiences, events, publicReviewCount] = await Promise.all([
     listPublishedSlugs(),
     listDistricts(),
     listSeoDishes(),
@@ -36,6 +37,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     listPlaceCards({ bloggerReviewedOnly: true, limit: 1 }),
     listExperienceSummaries(),
     listUpcomingPublicEvents({ limit: 100 }),
+    countPublicReviews(),
   ])
 
   const entries: MetadataRoute.Sitemap = [
@@ -51,6 +53,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   if (reviewedCards.length > 0) {
     entries.push({ url: absoluteUrl(paths.reviewedCafes), changeFrequency: 'daily', priority: 0.75 })
+  }
+  if (publicReviewCount > 0) {
+    entries.push({ url: absoluteUrl(paths.reviews), changeFrequency: 'daily', priority: 0.75 })
   }
   if (events.length > 0) {
     entries.push({ url: absoluteUrl(paths.events), changeFrequency: 'daily', priority: 0.72 })
