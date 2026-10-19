@@ -1,12 +1,13 @@
 import 'server-only'
 
-import { and, desc, eq, inArray, sql } from 'drizzle-orm'
+import { and, count, desc, eq, inArray, sql } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/mysql-core'
 import { getDb } from '@/db/client'
 import { district, media, place, review } from '@/db/schema'
 import { mediaPublicUrl } from '@/core/media/store'
 import { PUBLIC_PLACE_STATUSES } from '@/core/places/queries'
 import { bayesianAverage, rawAverage } from '@/core/rating/bayesian'
+import { getDiscoveryPage } from './pagination'
 
 /** Only public, approved review content; author/contact identifiers never leave this query. */
 export interface TrustedReviewCard {
@@ -138,4 +139,77 @@ export async function listTrustedReviewCards(limit = 3): Promise<TrustedReviewCa
     }]
   })
   return rankTrustedReviews(candidates, Math.min(6, Math.max(1, limit)))
+}
+
+export interface PublicReviewCard {
+  reviewId: number
+  placeId: number
+  placeName: string
+  placeSlug: string
+  placeStatus: 'published' | 'temporarily_closed'
+  placeImage: string | null
+  districtName: string | null
+  stars: number | null
+  excerpt: string
+  reviewedAt: Date | null
+  isBloggerReview: boolean
+}
+
+/** Legacy zero dates may decode to Invalid Date; omit them without inventing a date. */
+export function publicReviewDate(value: unknown): Date | null {
+  return value instanceof Date && Number.isFinite(value.getTime()) ? value : null
+}
+
+function publicReviewVisibility() {
+  return and(eq(review.status, 'approved'), inArray(place.status, [...PUBLIC_PLACE_STATUSES]))
+}
+
+export async function countPublicReviews(): Promise<number> {
+  const [summary] = await getDb().select({ total: count() }).from(review)
+    .innerJoin(place, eq(review.placeId, place.id)).where(publicReviewVisibility())
+  return summary?.total ?? 0
+}
+
+/** A bounded public feed, independent of the homepage's venue-ranking rail.
+ * Only selected public fields leave this server module; moderation stays authoritative. */
+export async function listPublicReviewPage(requestedPage?: string | string[]) {
+  const db = getDb()
+  const pagination = getDiscoveryPage(requestedPage, await countPublicReviews())
+  const cover = alias(media, 'public_review_cover')
+  const logo = alias(media, 'public_review_logo')
+  const rows = await db.select({
+    reviewId: review.id,
+    text: review.text,
+    stars: review.stars,
+    reviewedAt: review.createdAt,
+    isBloggerReview: review.isBloggerReview,
+    placeId: place.id,
+    placeName: place.name,
+    placeSlug: place.slug,
+    placeStatus: place.status,
+    districtName: district.name,
+    coverPath: cover.localPath,
+    logoPath: logo.localPath,
+  }).from(review)
+    .innerJoin(place, eq(review.placeId, place.id))
+    .leftJoin(district, eq(place.districtId, district.id))
+    .leftJoin(cover, and(eq(place.coverMediaId, cover.id), eq(cover.status, 'ok')))
+    .leftJoin(logo, and(eq(place.logoMediaId, logo.id), eq(logo.status, 'ok')))
+    .where(publicReviewVisibility())
+    .orderBy(desc(review.createdAt), desc(review.id))
+    .limit(pagination.limit).offset(pagination.offset)
+  const reviews: PublicReviewCard[] = rows.map(row => ({
+    reviewId: row.reviewId,
+    placeId: row.placeId,
+    placeName: row.placeName,
+    placeSlug: row.placeSlug,
+    placeStatus: row.placeStatus as PublicReviewCard['placeStatus'],
+    placeImage: mediaPublicUrl(row.coverPath ?? row.logoPath),
+    districtName: row.districtName,
+    stars: row.stars >= 1 && row.stars <= 5 ? row.stars : null,
+    excerpt: publicReviewExcerpt(row.text ?? '', 320),
+    reviewedAt: publicReviewDate(row.reviewedAt),
+    isBloggerReview: row.isBloggerReview,
+  }))
+  return { reviews, pagination }
 }

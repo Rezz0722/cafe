@@ -310,7 +310,7 @@ export default async function HomePage() {
                 <h2 id="home-reviews-title">کافه‌هایی که مردم درباره‌شون نوشتن</h2>
                 <p>گزیده‌ای از نظرهای تأییدشده؛ برای تصمیم خودت متن کامل را در صفحهٔ کافه ببین.</p>
               </div>
-              <Link href={paths.reviewedCafes} className={styles.textLink}>همهٔ تجربه‌ها <ArrowLeft size={16} aria-hidden="true" /></Link>
+              <Link href={paths.reviews} className={styles.textLink}>همهٔ نظرها <ArrowLeft size={16} aria-hidden="true" /></Link>
             </div>
             <div className={styles.trustedReviewGrid}>
               {trustedReviews.map(card => (
