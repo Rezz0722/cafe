@@ -37,7 +37,11 @@ try {
   assert.ok(await page.locator('main article').count() > 0)
   assert.ok(await page.locator('main article').count() <= 12)
   assert.ok(await page.getByText('نظر کاربر', { exact: true }).count() > 0)
+  console.log('Homepage CTA navigation canonical URLs:', await page.locator('link[rel="canonical"]').evaluateAll(links => links.map(link => link.getAttribute('href'))))
+  // Inspect SSR metadata separately from the development router's metadata lifecycle.
+  await page.reload({ waitUntil: 'networkidle' })
   assert.equal(await page.locator('link[rel="canonical"]').getAttribute('href'), `${canonicalOrigin}/reviews`)
+  assert.equal(await page.locator('main article img').evaluateAll(images => images.filter(image => !(image as HTMLImageElement).complete || (image as HTMLImageElement).naturalWidth === 0).length), 0)
   await assertNoOverflow(page)
   await page.screenshot({ path: `${output}/after-reviews-dark.png` })
   const pagination = page.getByRole('navigation', { name: 'صفحه‌های نتایج' })
@@ -61,6 +65,8 @@ try {
   const nav = page.getByRole('navigation', { name: 'دسترسی سریع موبایل' })
   await nav.locator('a[href="/search?view=map"][aria-current="page"]').waitFor()
   assert.equal(await nav.locator('[aria-current="page"]').count(), 1)
+  await page.locator('.maplibregl-canvas').waitFor({ state: 'visible', timeout: 60_000 })
+  await page.getByText('بارگذاری جزئیات نقشه…', { exact: true }).waitFor({ state: 'hidden', timeout: 60_000 })
   await page.screenshot({ path: `${output}/after-map-dark.png` })
   await nav.getByRole('link', { name: 'کشف', exact: true }).click()
   await page.waitForURL(`${base}/search`)
@@ -68,6 +74,7 @@ try {
   assert.equal(await nav.locator('[aria-current="page"]').count(), 1)
   await page.goto(`${base}/reviews`, { waitUntil: 'networkidle' })
   await page.emulateMedia({ colorScheme: 'light' })
+  await page.waitForFunction(() => document.documentElement.dataset.theme === 'light')
   await assertNoOverflow(page)
   await page.screenshot({ path: `${output}/after-reviews-light.png` })
   for (const width of [320, 1440]) {

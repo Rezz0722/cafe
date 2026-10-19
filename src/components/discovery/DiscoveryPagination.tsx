@@ -11,6 +11,7 @@ interface Props {
 
 export function DiscoveryPagination({ basePath, page, totalPages, query, anchor }: Props) {
   if (totalPages <= 1) return null
+  // Each URL page uses a full SSR navigation, including its metadata and history entry.
   const pages = [...new Set([1, page - 1, page, page + 1, totalPages])]
     .filter(value => value >= 1 && value <= totalPages)
     .sort((a, b) => a - b)
