@@ -56,7 +56,11 @@ try {
         ? route.continue()
         : route.fulfill({ status: 204 }))
       const page = await context.newPage()
-      page.on('pageerror', error => failures.push(error.message))
+      page.on('pageerror', error => {
+        const detail = `${page.url()}: ${error.message}`
+        failures.push(detail)
+        console.error(detail)
+      })
       await page.goto(new URL('/mashhad/menu', base).href, { waitUntil: 'networkidle' })
       assert.equal(await page.getByText('مقایسهٔ مستقیم').count(), 0)
       assert.equal(await page.getByText('خوراکی‌های محبوب', { exact: true }).count(), 0)
