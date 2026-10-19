@@ -23,6 +23,8 @@ App و Worker هر دو Healthy، صفر restart، دیتابیس در `db:verif
 
 Merge مرحلهٔ اول: `7353b026a19ddd6ffe4aa5f0857acce62b810ff2`؛ [Workflow استاندارد](https://github.com/Rezz0722/cafe/actions/runs/39254417021). هنگام ثبت اولیهٔ این سند، Workflow در حال اجرا بود؛ Merge به‌تنهایی پذیرش نیست. اتصال Broker Runner یک Timeout داشت؛ پس از تأیید نبود Worker/Deploy فعال و آزادبودن قفل‌ها، فقط سرویس Runner بیکار restart شد و همان Workflow ادامه یافت. Workflow موازی ساخته نشد.
 
+به‌روزرسانی پذیرش: مرحلهٔ اول واقعاً پذیرفته شد؛ هر دو Runtime روی `7353b026…` Healthy و صفر restart، ده بازدید زنده در دو تم موفق، و snapshot کامل داده/schema با خط مبنا برابر بود. [شاهد پذیرش](https://github.com/Rezz0722/cafe/pull/89#issuecomment-6267753523). سپس #91 با Merge `1b9c90b486b45dbe245c58eb0b75d2f8d875c481` وارد [Workflow مرحلهٔ دوم](https://github.com/Rezz0722/cafe/actions/runs/39256160344) شد؛ پذیرش این مرحله مستقل از Merge کنترل می‌شود.
+
 SHAها و شواهد واقعی مراحل بعد، وضعیت نهایی و لینک نتایج smoke در نظرات پذیرش همین PRها ثبت می‌شوند؛ این سند از پیش نتیجهٔ آینده را Success اعلام نمی‌کند. مستندسازی نهایی با بستهٔ آخر همراه می‌شود، نه Deploy جدا صرفاً برای گزارش.
 
 ## پذیرش هر مرحله
