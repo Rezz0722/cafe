@@ -44,7 +44,7 @@ try {
       if (path === '/search?view=map') await page.getByRole('navigation', { name: 'دسترسی سریع موبایل' }).locator('a[href="/search?view=map"][aria-current="page"]').waitFor()
       if (path.includes('menu=1')) { await page.locator('[data-menu-picker]').waitFor(); assert.equal(await page.getByRole('dialog').count(), 1) }
       if (theme === 'dark') await page.screenshot({ path: `${output}/${stage}-${index}-dark.jpg`, type: 'jpeg', quality: 80 })
-      results.push({ path, theme, status: response.status(), finalPath: new URL(page.url()).pathname, ...metrics, errors, assetErrors })
+      results.push({ path, requestedTheme: theme, status: response.status(), finalPath: new URL(page.url()).pathname, ...metrics, errors, assetErrors })
       page.off('pageerror', onError); page.off('response', onResponse)
     }
     await context.close()
