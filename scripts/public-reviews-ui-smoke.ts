@@ -38,6 +38,10 @@ try {
   assert.ok(await page.locator('main article').count() <= 12)
   assert.ok(await page.getByText('نظر کاربر', { exact: true }).count() > 0)
   console.log('Homepage CTA navigation canonical URLs:', await page.locator('link[rel="canonical"]').evaluateAll(links => links.map(link => link.getAttribute('href'))))
+  if (process.env.QA_PRODUCTION_BUILD === '1') {
+    assert.equal(await page.locator('link[rel="canonical"]').count(), 1)
+    assert.equal(await page.locator('link[rel="canonical"]').getAttribute('href'), `${canonicalOrigin}/reviews`)
+  }
   // Inspect SSR metadata separately from the development router's metadata lifecycle.
   await page.reload({ waitUntil: 'networkidle' })
   assert.equal(await page.locator('link[rel="canonical"]').getAttribute('href'), `${canonicalOrigin}/reviews`)
@@ -65,7 +69,12 @@ try {
   const nav = page.getByRole('navigation', { name: 'دسترسی سریع موبایل' })
   await nav.locator('a[href="/search?view=map"][aria-current="page"]').waitFor()
   assert.equal(await nav.locator('[aria-current="page"]').count(), 1)
-  await page.locator('.maplibregl-canvas').waitFor({ state: 'visible', timeout: 60_000 })
+  // Headless hosts may use the existing WebGL-free renderer of the same real data.
+  const map = page.locator('.maplibregl-canvas, [data-map-renderer="2d"] [aria-label="نقشهٔ موقعیت مجموعه‌ها"]')
+  await map.waitFor({ state: 'visible', timeout: 60_000 })
+  const mapBounds = await map.boundingBox()
+  assert.ok(mapBounds && mapBounds.width > 250 && mapBounds.height > 200)
+  assert.ok(await page.locator('[data-map-pin]').count() > 0, 'real map markers must be present')
   await page.getByText('بارگذاری جزئیات نقشه…', { exact: true }).waitFor({ state: 'hidden', timeout: 60_000 })
   await page.screenshot({ path: `${output}/after-map-dark.png` })
   await nav.getByRole('link', { name: 'کشف', exact: true }).click()
