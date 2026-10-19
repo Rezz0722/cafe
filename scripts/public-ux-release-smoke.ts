@@ -27,13 +27,23 @@ try {
         if (/\/_next\/static\//.test(response.url()) && response.status() >= 400) assetErrors.push(`${response.status()} ${new URL(response.url()).pathname}`)
       }
       page.on('pageerror', onError); page.on('response', onResponse)
+      const previousUrl = new URL(page.url())
       const response = await page.goto(origin + path, { waitUntil: 'networkidle', timeout: 60_000 })
+      const currentUrl = new URL(page.url())
+      const sameDocument = response === null && previousUrl.origin === currentUrl.origin
+        && previousUrl.pathname === currentUrl.pathname && previousUrl.search === currentUrl.search
+        && previousUrl.hash !== currentUrl.hash
+      assert.ok(response ? response.status() < 400 : sameDocument, `${path}: HTTP ${response?.status()} or invalid same-document navigation`)
+      if (sameDocument) {
+        const screen = currentUrl.hash === '#map' ? 'info' : currentUrl.hash.slice(1)
+        assert.ok(['overview', 'menu', 'reviews', 'info'].includes(screen), 'recognized cafe screen required')
+        await page.locator(`#page-top[data-cafe-screen="${screen}"]`).waitFor()
+      }
       await page.evaluate(() => document.fonts.ready)
       const metrics = await page.evaluate(() => ({ width: innerWidth, scrollWidth: document.documentElement.scrollWidth, theme: document.documentElement.dataset.theme,
         heading: document.querySelector('main h1')?.textContent,
         broken: [...document.querySelectorAll<HTMLImageElement>('main img')].filter(img => img.getBoundingClientRect().height > 0 && img.loading !== 'lazy' && img.complete && !img.naturalWidth).length,
       }))
-      assert.ok(response && response.status() < 400, `${path}: HTTP ${response?.status()}`)
       assert.ok(metrics.scrollWidth <= metrics.width + 1, `${path}: overflow`)
       assert.equal(metrics.broken, 0, `${path}: visible eager broken image`)
       assert.equal(metrics.theme, theme)
@@ -44,7 +54,7 @@ try {
       if (path === '/search?view=map') await page.getByRole('navigation', { name: 'دسترسی سریع موبایل' }).locator('a[href="/search?view=map"][aria-current="page"]').waitFor()
       if (path.includes('menu=1')) { await page.locator('[data-menu-picker]').waitFor(); assert.equal(await page.getByRole('dialog').count(), 1) }
       if (theme === 'dark') await page.screenshot({ path: `${output}/${stage}-${index}-dark.jpg`, type: 'jpeg', quality: 80 })
-      results.push({ path, requestedTheme: theme, status: response.status(), finalPath: new URL(page.url()).pathname, ...metrics, errors, assetErrors })
+      results.push({ path, requestedTheme: theme, status: response?.status() ?? null, navigation: sameDocument ? 'same-document' : 'document', finalPath: new URL(page.url()).pathname, ...metrics, errors, assetErrors })
       page.off('pageerror', onError); page.off('response', onResponse)
     }
     await context.close()
