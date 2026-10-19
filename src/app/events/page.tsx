@@ -27,6 +27,7 @@ export default async function EventsPage({ searchParams }: { searchParams: Promi
   const query = await searchParams
   const fromDate = query.date && validLocalDate(query.date) ? query.date : undefined
   const districtId = query.district && /^[a-z0-9_-]{1,48}$/i.test(query.district) ? query.district : undefined
+  const hasFilters = Boolean(fromDate || query.cafe?.trim() || districtId)
   const [events, districts] = await Promise.all([
     listUpcomingPublicEvents({ fromDate, venueQuery: query.cafe, districtId, limit: 100 }),
     getDb().selectDistinct({ id: district.id, name: district.name }).from(venueEvent)
@@ -39,15 +40,18 @@ export default async function EventsPage({ searchParams }: { searchParams: Promi
     <header className={styles.hero}><span className={styles.kicker}>قرارهای واقعی، اطلاعات روشن</span><h1>رویدادهای کافه‌ها</h1>
       <p>فقط برنامه‌هایی که کافه منتشر کرده نمایش داده می‌شوند. علاقه‌مندی یا درخواست شرکت، بلیت یا حضور قطعی نیست.</p>
     </header>
+    <details className={styles.filterPanel} open={hasFilters || events.length > 0}>
+      <summary>فیلتر بر اساس تاریخ، کافه و محله</summary>
     <form method="get" className={styles.filters} aria-label="فیلتر رویدادها">
-      <label>از تاریخ<input type="date" name="date" min={tehranCivilNow().date} defaultValue={fromDate} /></label>
+      <label>از تاریخ (میلادی)<input type="date" name="date" dir="ltr" min={tehranCivilNow().date} defaultValue={fromDate} aria-describedby="event-date-help" /><small id="event-date-help">از انتخابگر تاریخ مرورگر استفاده کنید. خالی بگذارید تا همهٔ برنامه‌های آینده را ببینید.</small></label>
       <label>کافه<input type="search" name="cafe" maxLength={60} defaultValue={query.cafe ?? ''} placeholder="نام کافه" /></label>
       <label>محله<select name="district" defaultValue={districtId ?? ''}><option value="">همهٔ محله‌ها</option>{districts.map(row => <option key={row.id} value={row.id}>{row.name}</option>)}</select></label>
       <button type="submit">نمایش رویدادها</button>
     </form>
+    </details>
     <section className={styles.results} aria-label="رویدادهای آینده">
       <div className={styles.resultsHead}><h2>برنامه‌های پیش رو</h2><span>{new Intl.NumberFormat('fa-IR').format(events.length)} رویداد</span></div>
-      {events.length === 0 ? <div className={styles.empty}><CalendarDays size={32} aria-hidden="true" /><h3>فعلاً رویدادی با این شرایط ثبت نشده</h3><p>وقتی کافه‌ها برنامهٔ واقعی منتشر کنند، اینجا با زمان و شرایط آن نمایش داده می‌شود.</p></div>
+      {events.length === 0 ? <div className={styles.empty}><CalendarDays size={32} aria-hidden="true" /><h3>{hasFilters ? 'رویدادی با این فیلترها پیدا نشد' : 'فعلاً برنامه‌ای برای نمایش نیست'}</h3><p>{hasFilters ? 'تاریخ یا نام کافه را تغییر دهید، یا فیلترها را پاک کنید.' : 'وقتی کافه‌ها برنامهٔ واقعی منتشر کنند، زمان و شرایط آن اینجا نمایش داده می‌شود. تا آن موقع، کافه‌ها و منوهای مشهد را ببینید.'}</p><Link className={styles.discoverLink} href={paths.search}>کشف کافه‌های مشهد</Link>{hasFilters && <Link className={styles.resetLink} href={paths.events}>پاک کردن فیلترها</Link>}</div>
         : <div className={styles.grid}>{events.map(({ event, placeName, placeSlug, coverUrl }) => <article className={styles.card} key={event.id}>
           <Link href={paths.event(event.id)} className={styles.cardLink} aria-label={`جزئیات ${event.title}`}>
             <div className={styles.cover}>{coverUrl ? <img src={coverUrl} alt="" width={720} height={405} loading="lazy" /> : <Coffee size={38} aria-hidden="true" />}</div>

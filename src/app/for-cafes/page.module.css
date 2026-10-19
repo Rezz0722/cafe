@@ -8,3 +8,8 @@
 @media (max-width:850px){.hero{grid-template-columns:1fr;gap:28px}.benefitGrid{grid-template-columns:repeat(2,1fr)}.contactCard{align-items:flex-start;flex-direction:column}.contactActions{width:100%}.contactActions a{flex:1}}
 @media (max-width:560px){.page{width:min(100% - 24px,1120px);padding-top:16px}.hero{padding:27px 21px;border-radius:24px}.hero h1{font-size:2.15rem}.heroActions{display:grid}.heroActions a{width:100%}.heroPanel{padding:18px}.benefits,.process,.faq{padding-top:54px}.benefitGrid,.steps,.faqGrid{grid-template-columns:1fr}.benefit{min-height:auto}.steps li{padding:20px}.contactCard{margin-top:54px;padding:22px 19px}.contactActions{display:grid}.contactActions a{width:100%}.footerCta{align-items:flex-start;flex-direction:column;margin-top:54px;padding:22px}.loginButton{width:100%}}
 @media (prefers-reduced-motion:reduce){.heroActions a,.contactActions a,.loginButton{transition:none}.heroActions a:hover,.contactActions a:hover,.loginButton:hover{transform:none}}
+.contactLinks{display:flex;flex-wrap:wrap;align-items:center;gap:4px 16px;margin-top:12px;font-size:.8rem;color:#e1f4f3}
+.contactLinks a{display:inline-flex;align-items:center;gap:5px;min-height:44px;color:#fff;text-decoration:underline;text-underline-offset:4px;font-weight:750}
+.page :is(a,summary):focus-visible{outline:3px solid var(--c-primary-strong);outline-offset:3px}
+.hero a:focus-visible{outline-color:#d8ffed}
+@media(max-width:560px){.heroPanel{display:none}.hero{gap:0}.contactLinks{gap:4px 14px}.heroActions{margin-top:22px}}

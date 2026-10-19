@@ -94,6 +94,21 @@
   margin-top: 28px;
 }
 
+.contents {
+  margin-top: 20px;
+  padding: 4px 18px;
+  border: 1px solid var(--c-border);
+  border-radius: 18px;
+  background: var(--c-surface);
+  color: var(--c-ink);
+}
+
+.contents summary { min-height: 44px; padding-block: 11px; cursor: pointer; font-weight: 800; }
+.contents ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 20px; margin: 0 0 12px; padding-inline-start: 20px; }
+.contents a { display: inline-flex; align-items: center; min-height: 44px; color: var(--c-primary-strong); font-size: .85rem; line-height: 1.7; text-decoration: underline; text-underline-offset: 3px; }
+.contents :is(a, summary):focus-visible { outline: 3px solid var(--c-primary-strong); outline-offset: 3px; }
+@media(max-width:600px) { .contents ul { grid-template-columns: 1fr; } }
+
 .section {
   scroll-margin-top: 100px;
   padding: clamp(22px, 4vw, 36px);

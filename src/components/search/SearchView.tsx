@@ -576,7 +576,7 @@ export function SearchView({
       </fieldset>}
 
       <fieldset>
-        <legend>{showingItems ? 'قیمت خود آیتم، حداکثر' : 'میانگین قیمت منو، حداکثر'}</legend>
+        <legend>{showingItems ? 'قیمت خود آیتم، حداکثر' : 'میانهٔ قیمت منو، حداکثر'}</legend>
         <div className={styles.filterOptions} role="group" aria-label="سقف قیمت">
           {priceCaps.map((cap) => (
             <Link

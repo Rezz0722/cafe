@@ -12,7 +12,7 @@ import { BadgeCheck, Coffee, Star } from 'lucide-react'
  * فقط چیزهایی که در تصمیمِ «کلیک کنم یا نه» نقش دارند:
  *
  *   نام + نوع + محله      هویت
- *   میانگین قیمت منو      اولین سؤال واقعی کاربر ایرانی
+ *   میانهٔ قیمت منو       مبنای مقایسهٔ سطح قیمت
  *   فاصله                 وقتی موقعیت داریم
  *   قیمت دیشِ فیلترشده    در «بهترین پاستا نزدیک من»، پاستای همین کافه چند است
  *   دسته‌های شاخص         «پاستا · برگر · صبحانه»
@@ -165,23 +165,23 @@ export function PlaceCardView({
 
         <div className={styles.priceRow}>
           <span className={styles.priceCol}>
-            {/* در حالت فیلتر دیش، قیمتِ همان دیش مهم‌تر از میانگین کل منوست:
+            {/* در حالت فیلتر دیش، قیمتِ همان دیش مهم‌تر از میانهٔ کل منوست:
                 کاربری که «بهترین پاستا» را می‌جوید، قیمت پاستا را می‌خواهد. */}
             {dishLabel && card.dishPrice !== null && card.dishPrice !== undefined ? (
               <>
-                <span className={styles.dishPrice}>{toman(card.dishPrice)}</span>
                 <span className={styles.priceLabel}>{dishLabel}</span>
+                <span className={styles.dishPrice}>{toman(card.dishPrice)}</span>
               </>
             ) : card.priceMedian !== null ? (
               <>
+                <span className={styles.priceLabel}>میانهٔ قیمت منو</span>
                 <span className={styles.price}>{toman(card.priceMedian)}</span>
-                <span className={styles.priceLabel}>میانگین منو</span>
               </>
             ) : (
               <span className={styles.priceLabel}>قیمت ثبت نشده</span>
             )}
           </span>
-          {card.priceMedian !== null && <span className={styles.tier}>{TIER_MARK[card.priceTier]}</span>}
+          {card.priceMedian !== null && <span className={styles.tier} title="سطح قیمت بر اساس میانهٔ قیمت آیتم‌های مشمول منو">سطح: {TIER_MARK[card.priceTier]}</span>}
         </div>
       </div>
     </Link>
