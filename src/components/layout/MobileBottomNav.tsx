@@ -1,10 +1,12 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { Suspense } from 'react'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { House, MapPinned, Search, UserRound } from 'lucide-react'
 import { paths } from '@/routes'
 import styles from './MobileBottomNav.module.css'
+import { mobileBottomNavHref } from './mobileBottomNavState'
 
 const ITEMS = [
   { label: 'خانه', href: paths.home, icon: House },
@@ -14,7 +16,13 @@ const ITEMS = [
 ]
 
 export function MobileBottomNav() {
+  return <Suspense fallback={null}><MobileBottomNavContent /></Suspense>
+}
+
+function MobileBottomNavContent() {
   const pathname = usePathname() ?? paths.home
+  const searchParams = useSearchParams()
+  const currentHref = mobileBottomNavHref(pathname, searchParams.get('view'))
   const isCafeDetail = /^\/cafe\/[^/]+\/?$/.test(pathname)
 
   if (pathname.startsWith(paths.admin) || pathname.startsWith(paths.auth) || isCafeDetail) return null
@@ -23,11 +31,7 @@ export function MobileBottomNav() {
     <nav className={styles.nav} aria-label="دسترسی سریع موبایل">
       {ITEMS.map((item) => {
         const Icon = item.icon
-        const current = item.href.includes('#')
-          ? false
-          : item.href === paths.home
-          ? pathname === paths.home
-          : !item.href.includes('?') && pathname.startsWith(item.href)
+        const current = item.href === currentHref
 
         return (
           <Link

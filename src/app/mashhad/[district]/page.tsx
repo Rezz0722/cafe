@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { PlaceCardView } from '@/components/cafe/PlaceCardView'
+import { DiscoveryPagination } from '@/components/discovery/DiscoveryPagination'
+import { getDiscoveryPage, pagePath } from '@/core/discovery/pagination'
 import { LazyCafeMap } from '@/components/map/LazyCafeMap'
 import { BreadcrumbJsonLd } from '@/components/seo/PlaceJsonLd'
 import { getMapLabels } from '@/core/map/labels'
@@ -10,6 +12,7 @@ import {
   listDistricts,
   listFilterFacets,
   listPlaceCards,
+  countPlaces,
 } from '@/core/places/queries'
 import { searchPath } from '@/core/search/filters'
 import { fa, toman } from '@/lib/format'
@@ -34,6 +37,7 @@ import { FacetIcon } from '@/components/ui/FacetIcon'
 
 interface PageProps {
   params: Promise<{ district: string }>
+  searchParams: Promise<{ page?: string | string[] }>
 }
 
 export async function generateStaticParams() {
@@ -43,20 +47,23 @@ export async function generateStaticParams() {
   }))
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
   const { district: slug } = await params
   const [district, locale] = await Promise.all([getDistrictBySlug(slug), getLocalePolicy()])
   if (!district) return { title: 'محله پیدا نشد' }
+  const page = getDiscoveryPage((await searchParams).page, district.placeCount)
+  const canonical = pagePath(paths.district(district.slug), page.page)
 
   return {
     title: `کافه‌ها و رستوران‌های ${district.name}، ${locale.cityName}`,
     description: `${fa(district.placeCount)} مجموعه در ${district.name}. قیمت واقعی منو، ساعت کاری، نقشه و مسیریابی.`,
-    alternates: { canonical: paths.district(district.slug) },
+    alternates: { canonical },
+    openGraph: { type: 'website', title: `کافه‌های ${district.name}، ${locale.cityName}`, url: canonical },
     robots: robotsFor(district.placeCount),
   }
 }
 
-export default async function DistrictPage({ params }: PageProps) {
+export default async function DistrictPage({ params, searchParams }: PageProps) {
   const gate = await maintenanceState()
   if (gate.closed) {
     return <MaintenanceScreen siteName={gate.siteName} message={gate.message} />
@@ -66,15 +73,18 @@ export default async function DistrictPage({ params }: PageProps) {
   const district = await getDistrictBySlug(slug)
   if (!district || district.placeCount === 0) notFound()
 
+  const total = await countPlaces({ districtId: district.id })
+  const page = getDiscoveryPage((await searchParams).page, total)
   const [cards, facets, allDistricts, map, siteName] = await Promise.all([
-    // یک محله همیشه در یک صفحه جا می‌شود (بزرگ‌ترین ۳۹ مجموعه دارد)، ولی
-    // سقف باید از تنظیمات بیاید تا اگر داده رشد کرد، عددِ ثابت گمراه نکند.
-    listPlaceCards({ districtId: district.id, limit: 200, sort: 'quality' }),
+    // Retain district-wide map/facet summaries; only one page enters the DOM.
+    // These are light card rows, never the menu catalogue.
+    listPlaceCards({ districtId: district.id, limit: Math.max(total, 1), sort: 'quality' }),
     listFilterFacets(),
     listDistricts(),
     getMapPolicy(),
     getSiteName(),
   ])
+  const visibleCards = cards.slice(page.offset, page.offset + page.limit)
 
   const mapPlaces = cards
     .filter((card) => card.coords)
@@ -104,7 +114,6 @@ export default async function DistrictPage({ params }: PageProps) {
     .filter((facet) => (localCounts.get(facet.id) ?? 0) > 0)
     .map((facet) => ({ ...facet, localCount: localCounts.get(facet.id)! }))
     .sort((a, b) => b.localCount - a.localCount)
-    .slice(0, 10)
 
   const priced = cards.map((card) => card.priceMedian).filter((value): value is number => value !== null)
   const medianOfMedians =
@@ -123,18 +132,18 @@ export default async function DistrictPage({ params }: PageProps) {
         ]}
       />
 
-      <div className={styles.page}>
+      <main className={styles.page}>
         <header className={styles.head}>
           <h1 className={styles.title}>کافه‌ها و رستوران‌های {district.name}</h1>
           <p className={styles.lead}>
-            {fa(district.placeCount)} مجموعه
+            {fa(total)} مجموعه
             {medianOfMedians !== null && <> · میانه‌ی قیمت منو {toman(medianOfMedians)}</>}
             {mapPlaces.length > 0 && <> · {fa(mapPlaces.length)} مجموعه روی نقشه</>}
           </p>
 
           {localFacets.length > 0 && (
             <div className={styles.chips}>
-              {localFacets.map((facet) => (
+              {localFacets.slice(0, 4).map((facet) => (
                 <Link
                   key={facet.id}
                   href={searchPath({ districtId: district.id, facets: [facet.id] })}
@@ -146,27 +155,34 @@ export default async function DistrictPage({ params }: PageProps) {
               ))}
             </div>
           )}
+          {localFacets.length > 4 && <details className={styles.moreFilters}><summary>نمایش فیلترهای بیشتر</summary><div className={styles.chips}>{localFacets.slice(4).map(facet => <Link key={facet.id} className={styles.chip} href={searchPath({ districtId: district.id, facets: [facet.id] })}><FacetIcon id={facet.id} size={14} />{facet.labelFa}<span className={styles.chipCount}>{fa(facet.localCount)}</span></Link>)}</div></details>}
+          <nav className={styles.quickLinks} aria-label="دسترسی محله"><Link href={paths.districtHub}>همه محله‌ها</Link><Link href="#district-results">دیدن کافه‌ها</Link>{mapPlaces.length > 0 && <Link href="#district-map">نقشهٔ محله</Link>}</nav>
         </header>
 
         {mapPlaces.length > 0 && (
-          <section className={styles.mapSection}>
+          <section className={styles.mapSection} id="district-map" aria-label="نقشهٔ کافه‌های محله">
             <LazyCafeMap
               places={mapPlaces}
               labels={getMapLabels({ zoom: 14, limit: 24 })}
               center={district.center}
               zoom={Math.min(14, map.maxZoom)}
-              height="320px"
+              height="260px"
             />
           </section>
         )}
 
+        <section id="district-results" className={styles.results} aria-labelledby="district-results-title">
+        <h2 id="district-results-title">کافه‌های {district.name}</h2>
+        <p className={styles.lead}>{fa(visibleCards.length)} گزینه از {fa(total)} مجموعه · صفحهٔ {fa(page.page)}</p>
         <ul className={styles.list}>
-          {cards.map((card) => (
-            <li key={card.id}>
+          {visibleCards.map((card) => (
+            <li key={card.id} data-discovery-card={card.id}>
               <PlaceCardView card={card} />
             </li>
           ))}
         </ul>
+        <DiscoveryPagination basePath={paths.district(district.slug)} page={page.page} totalPages={page.totalPages} anchor="district-results" />
+        </section>
 
         <section className={styles.neighbours}>
           <h2>محله‌های دیگر</h2>
@@ -179,7 +195,7 @@ export default async function DistrictPage({ params }: PageProps) {
             ))}
           </div>
         </section>
-      </div>
+      </main>
     </>
   )
 }

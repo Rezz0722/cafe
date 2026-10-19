@@ -91,6 +91,8 @@ jobs:
         run: KUCAFE_RESEARCH_DB_TEST=1 node --import tsx --conditions=react-server --test src/core/experience/researchBatch.integration.test.ts
       - name: Approved public review discovery and moderation integration
         run: KUCAFE_TRUSTED_REVIEWS_DB_TEST=1 node --import tsx --conditions=react-server --test src/core/discovery/trustedReviews.integration.test.ts
+      - name: Stable discovery pagination and evidence ranking integration
+        run: KUCAFE_DISCOVERY_DB_TEST=1 node --import tsx --conditions=react-server --test src/core/experience/discoveryPagination.integration.test.ts
       - name: Production build
         run: npm run build
       - name: Signed HTTP booking route and privacy smoke

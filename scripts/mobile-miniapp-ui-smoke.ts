@@ -70,6 +70,7 @@ try {
         assert.equal(await picker.isVisible(), true, 'ordinary menu entry starts at categories')
         await page.screenshot({ path: `${output}/categories-${viewport.width}-${theme}.png` })
         await picker.locator('[class*="categoryGrid"]').getByRole('button').first().click()
+        await page.getByRole('searchbox', { name: 'جست‌وجو در تمام منو' }).waitFor({ state: 'visible' })
         assert.equal(await page.getByRole('searchbox', { name: 'جست‌وجو در تمام منو' }).isVisible(), true)
         assert.equal(await page.getByRole('button', { name: 'تصویری' }).getAttribute('aria-pressed'), 'true')
         await noOverflow(page, `${viewport.width} menu ${theme}`)

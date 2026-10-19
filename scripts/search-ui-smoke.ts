@@ -7,6 +7,13 @@ await mkdir('var/qa/phase3', { recursive: true })
 
 const browser = await chromium.launch({ headless: true, timeout: 15_000 })
 
+async function protectReadOnly(context: BrowserContext) {
+  await context.route('**/*', route => ['GET', 'HEAD'].includes(route.request().method()) ? route.continue() : route.fulfill({ status: 403 }))
+  for (const endpoint of ['track', 'experience-track', 'discovery-track']) {
+    await context.route(`**/api/${endpoint}**`, route => route.fulfill({ status: 204 }))
+  }
+}
+
 function observe(page: Page) {
   const errors: string[] = []
   page.on('pageerror', (error) => errors.push(`pageerror: ${error.message}`))
@@ -35,8 +42,10 @@ async function newMobile(options: Parameters<typeof browser.newContext>[0] = {})
     timezoneId: 'Asia/Tehran',
     isMobile: true,
     hasTouch: true,
+    serviceWorkers: 'block',
     ...options,
   })
+  await protectReadOnly(context)
   const page = await context.newPage()
   page.setDefaultTimeout(20_000)
   page.setDefaultNavigationTimeout(30_000)
@@ -174,7 +183,8 @@ try {
 
   // دسکتاپ: ساختار دو ستونه و سلامت runtime.
   {
-    const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, locale: 'fa-IR' })
+    const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, locale: 'fa-IR', serviceWorkers: 'block' })
+    await protectReadOnly(context)
     const page = await context.newPage()
     page.setDefaultTimeout(30_000)
     const errors = observe(page)

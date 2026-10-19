@@ -350,6 +350,8 @@ export interface ListFilters {
   /** فقط منتشرشده‌ها. پیش‌فرض true — پنل ادمین می‌تواند خاموشش کند. */
   publishedOnly?: boolean
   districtId?: string | null
+  /** Trusted ranked discovery IDs; an empty selection must never widen scope. */
+  placeIds?: number[]
   /** شناسه‌ی facet — مکان باید **همه‌ی** آن‌ها را داشته باشد. */
   facetIds?: string[]
   /**
@@ -393,6 +395,7 @@ function buildPlaceConditions(filters: ListFilters): SQL[] {
   const {
     publishedOnly = true,
     districtId,
+    placeIds,
     facetIds = [],
     attributeIds = [],
     dishId,
@@ -407,6 +410,7 @@ function buildPlaceConditions(filters: ListFilters): SQL[] {
 
   if (publishedOnly) conditions.push(eq(placeTable.status, 'published') as SQL)
   if (districtId) conditions.push(eq(placeTable.districtId, districtId) as SQL)
+  if (placeIds) conditions.push(placeIds.length ? inArray(placeTable.id, placeIds) as SQL : sql`1 = 0`)
   if (priceTiers?.length) {
     // ردهٔ «متوسط» ذخیره‌شده روی رکورد بی‌قیمت یک پیش‌فرض فنی است، نه داده.
     // ناشناخته نباید با انتخاب ردهٔ قیمت، متوسط یا ارزان تفسیر شود.
