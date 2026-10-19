@@ -83,14 +83,12 @@ export default async function ForCafesPage({ searchParams }: { searchParams: Pro
             <p>یک صفحهٔ اختصاصی، منوی دیجیتال و QR شعبه؛ با همراهی مستقیم تیم کو کافه راه‌اندازی می‌شود.</p>
             <div className={styles.heroActions}>
               <a className={styles.primaryButton} href="#panel-request">ثبت درخواست پنل <ArrowLeft size={17} aria-hidden="true" /></a>
-              <a className={styles.secondaryButton} href={OWNER_TELEGRAM_LINK} target="_blank" rel="noreferrer">
-                <MessageCircle size={18} aria-hidden="true" /> شروع گفتگو در تلگرام <ExternalLink size={14} aria-hidden="true" />
-              </a>
-              <a className={styles.secondaryButton} href={OWNER_PHONE_LINK}>
-                تماس با علیرضا <ArrowLeft size={17} aria-hidden="true" />
-              </a>
             </div>
-            <p className={styles.heroNote}>پاسخ‌گویی مستقیم: {OWNER_PHONE} · تلگرام: @{OWNER_TELEGRAM}</p>
+            <div className={styles.contactLinks} aria-label="راه‌های دیگر ارتباط">
+              <span>پرسشی دارید؟</span>
+              <a href={OWNER_PHONE_LINK}>تماس با علیرضا</a>
+              <a href={OWNER_TELEGRAM_LINK} target="_blank" rel="noreferrer"><MessageCircle size={16} aria-hidden="true" /> تلگرام <ExternalLink size={13} aria-hidden="true" /></a>
+            </div>
           </div>
           <div className={styles.heroPanel} aria-label="نمایی از امکانات پنل کافه">
             <div className={styles.panelTop}><span className={styles.panelDot} /><span>پنل اختصاصی شعبه</span><BadgeCheck size={19} aria-hidden="true" /></div>
@@ -122,14 +120,6 @@ export default async function ForCafesPage({ searchParams }: { searchParams: Pro
             <li><b>شماره و مالکیت را بررسی می‌کنیم</b><span>با شمارهٔ تأییدشده وارد شوید و شعبه را برای بررسی انسانی مالکیت انتخاب کنید.</span></li>
             <li><b>پنل را تحویل بگیرید</b><span>حساب شما به شعبه وصل می‌شود و لینک پنل و QR را دریافت می‌کنید.</span></li>
           </ol>
-        </section>
-
-        <section className={styles.contactCard} aria-labelledby="contact-title">
-          <div><span className={styles.sectionKicker}>آماده‌ای شروع کنیم؟</span><h2 id="contact-title">مستقیم با علیرضا در ارتباط باش</h2><p>نام کافه، شهر و تعداد شعبه را بفرستید تا مسیر مناسب راه‌اندازی را هماهنگ کنیم.</p></div>
-          <div className={styles.contactActions}>
-            <a href={OWNER_PHONE_LINK} className={styles.contactPhone}><span dir="ltr">{OWNER_PHONE}</span> <span>تماس مستقیم</span></a>
-            <a href={OWNER_TELEGRAM_LINK} target="_blank" rel="noreferrer" className={styles.contactTelegram}>@{OWNER_TELEGRAM} <span>تلگرام</span><ExternalLink size={14} aria-hidden="true" /></a>
-          </div>
         </section>
 
         <section className={styles.faq} aria-labelledby="faq-title">

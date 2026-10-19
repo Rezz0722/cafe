@@ -46,13 +46,18 @@ const FACET_ARTWORK = new Map(
   CATEGORY_ARTWORK_OPTIONS.flatMap((option) => option.facetIds.map((facetId) => [facetId, option.path] as const)),
 )
 
+// This imported source artwork is an empty place setting, not a dish or a
+// category illustration (verified on Jan Boutique's chef-special category).
+// Keep the stored media intact; only use the normal presentation fallback.
+const EMPTY_PLACE_SETTING = /^\/media\/section\/ec\/ec2236fe0e5dfa1d86b4e1d9b6392a34d85948e8(?:\.full)?\.webp$/
+
 /** تصویر اختصاصی دسته مقدم است؛ سپس facet و در نهایت نام خام دسته. */
 export function categoryArtwork(
   name: string,
   facetId?: string | null,
   customUrl?: string | null,
 ): string {
-  if (customUrl) return customUrl
+  if (customUrl && !EMPTY_PLACE_SETTING.test(customUrl)) return customUrl
   if (facetId && FACET_ARTWORK.has(facetId)) return FACET_ARTWORK.get(facetId)!
 
   const text = normalizeFa(name).toLowerCase()
