@@ -16,6 +16,8 @@ export interface RequestCodeState {
   devMode?: boolean
   /** شماره حساب کامل ندارد و باید به مسیر ثبت‌نام برود. */
   needsRegistration?: boolean
+  /** حساب کامل دارد؛ ثبت‌نام نباید پیامکی بفرستد. */
+  needsLogin?: boolean
   challengeId?: number
   serverNow?: number
   expiresAt?: number

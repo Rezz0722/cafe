@@ -124,6 +124,7 @@ export function RegisterScreen({ config }: { config: AuthConfig }) {
       {phoneVerified && !expired && <p className={styles.compactNote} role="status">شماره موبایل تأیید شد؛ مشخصات و رمز حساب را کامل کن.</p>}
       {challenge && !challenge.verified && <OtpTiming remaining={codeRemaining} resendRemaining={resendRemaining} />}
       {challenge && !challenge.verified && <form action={requestAction} onSubmit={prepareRequest} className={styles.form} aria-label="ارسال دوبارهٔ کد ثبت‌نام">
+        <input type="hidden" name="redirectTo" value={redirectTo} />
         <input type="hidden" name="phone" value={phone} />
         {requestState.error && <div role="alert" className={styles.error}>{requestState.error}</div>}
         <AuthSubmit label={resendRemaining > 0 ? `ارسال مجدد تا ${fa(resendRemaining)} ثانیهٔ دیگر` : 'ارسال دوبارهٔ کد'} pendingLabel="در حال ارسال…" disabled={resendRemaining > 0} />
@@ -134,6 +135,7 @@ export function RegisterScreen({ config }: { config: AuthConfig }) {
         <button type="button" className={styles.primary} onClick={restartPhone}>تأیید دوبارهٔ شماره</button>
       </div> : step === 1 ? (
         <form action={requestAction} onSubmit={prepareRequest} className={styles.form}>
+          <input type="hidden" name="redirectTo" value={redirectTo} />
           <h1 className={styles.title}>ساخت حساب</h1>
           <p className={styles.lede}>اول شماره موبایلت را تأیید می‌کنیم؛ بعد برای ورودهای همیشگی رمز می‌سازی.</p>
           {!config.allowSmsVerification && <div className={styles.error} role="alert">ثبت‌نام پیامکی موقتاً غیرفعال است.</div>}
