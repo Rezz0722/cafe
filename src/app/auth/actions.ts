@@ -69,9 +69,9 @@ import type {
  *
  * ═══ قاعده‌ی امنیتی در کل فایل ═══
  *
- * **پیام خطا نباید بگوید حساب وجود دارد یا نه.** «کد فرستاده شد» برای
- * شماره‌ی ثبت‌نشده هم همان است، و شکستِ ورود با رمز یک پیام دارد — وگرنه این
- * فرم‌ها ابزار فهرست‌برداری از شماره‌ها و یوزرنیم‌ها می‌شوند.
+ * شکستِ ورود با رمز و پاسخ بازیابی برای حساب‌های ناموجود و نامعتبر یکسان
+ * است. انتخاب مسیر ورود/ثبت‌نام، کاربر را به فرم مناسب حساب کامل یا ناقص
+ * می‌برد؛ درخواست ثبت‌نامِ حساب کامل نباید اعتبار پیامک مصرف کند.
  */
 
 function str(form: FormData, key: string): string {
@@ -157,6 +157,15 @@ async function issuePurposeCode(
     console.info('[auth:otp]', JSON.stringify({ requestId, purpose, phoneSuffix: phone.slice(-4), outcome, at: new Date().toISOString(), ...extra }))
   }
   trace('received')
+  // Check under the issuance lock, before rate limits or the SMS provider.
+  // Legacy incomplete phone accounts still need to finish registration.
+  if (purpose === 'verify_phone') {
+    const account = await findUserByPhone(phone)
+    if (account && !isUnregisteredPhoneAccount(account)) {
+      trace('skipped', { reason: 'login-required' })
+      return { ok: false, needsLogin: true }
+    }
+  }
   if (!SESSION_SECRET) {
     trace('blocked', { reason: 'session-config' })
     return { ok: false, error: 'سرویس ورود تنظیم نشده است. (SESSION_SECRET)' }
@@ -289,7 +298,11 @@ export async function requestRegistrationCodeAction(
   }
   const phone = normalizePhone(str(form, 'phone'))
   if (!phone) return { ok: false, error: 'شماره موبایل معتبر نیست. مثال: ۰۹۱۵۱۲۳۴۵۶۷' }
-  return requestPurposeCode(phone, 'verify_phone')
+  const result = await requestPurposeCode(phone, 'verify_phone')
+  if (result.needsLogin) {
+    redirect(`${withAuthRedirect(paths.auth, str(form, 'redirectTo'))}&mode=login`)
+  }
+  return result
 }
 
 export async function requestResetCodeAction(
