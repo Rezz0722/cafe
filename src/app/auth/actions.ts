@@ -1,5 +1,6 @@
 'use server'
 
+import { randomUUID } from 'node:crypto'
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { headers } from 'next/headers'
@@ -126,12 +127,20 @@ async function requestPurposeCode(
   phone: string,
   purpose: OtpPurpose,
 ): Promise<RequestCodeState> {
+  const requestId = randomUUID()
+  const trace = (outcome: string, extra: Record<string, unknown> = {}) => {
+    // Trace metadata excludes full phone numbers, credentials, and codes.
+    console.info('[auth:otp]', JSON.stringify({ requestId, purpose, phoneSuffix: phone.slice(-4), outcome, ...extra }))
+  }
+  trace('received')
   if (!SESSION_SECRET) {
+    trace('blocked', { reason: 'session-config' })
     return { ok: false, error: 'سرویس ورود تنظیم نشده است. (SESSION_SECRET)' }
   }
 
   const policy = await getAuthPolicy()
   if (purpose === 'login' ? !policy.allowOtpLogin : !policy.allowSmsVerification) {
+    trace('blocked', { reason: 'sms-disabled' })
     return {
       ok: false,
       error: purpose === 'login'
@@ -169,6 +178,7 @@ async function requestPurposeCode(
 
   const decision = canRequestCode(existing, Date.now(), policy.otp)
   if (!decision.allowed) {
+    trace('blocked', { reason: 'phone-rate-limit', retryAfterSec: decision.retryAfterSec })
     return { ok: false, error: decision.reason, retryAfterSec: decision.retryAfterSec }
   }
 
@@ -180,6 +190,7 @@ async function requestPurposeCode(
    */
   const globalRequests = pruneGlobal(await listRecentOtpTimesGlobal(HOUR_SEC))
   if (isGlobalLimitReached(globalRequests, Date.now(), policy.otp.maxGlobalPerHour)) {
+    trace('blocked', { reason: 'global-rate-limit' })
     console.warn('[auth] global OTP rate limit hit — possible abuse')
     return { ok: false, error: 'سرویس ورود موقتاً شلوغ است. چند دقیقه بعد دوباره تلاش کنید.' }
   }
@@ -194,11 +205,13 @@ async function requestPurposeCode(
       || account.status !== 'active'
       || !account.passwordHash
     ) {
+      trace('skipped', { reason: 'reset-account-ineligible' })
       return { ok: true, phone }
     }
   } else if (purpose === 'login') {
     const account = await findUserByPhone(phone)
     if (!account || isUnregisteredPhoneAccount(account)) {
+      trace('skipped', { reason: 'registration-required' })
       if (policy.allowRegistration) {
         return {
           ok: false,
@@ -211,27 +224,32 @@ async function requestPurposeCode(
     if (
       account.status !== 'active' || account.blocked
     ) {
+      trace('skipped', { reason: 'account-inactive' })
       return { ok: true, phone }
     }
   }
 
   const code = generateCode(policy.otp.length)
+  trace('provider-requested')
   const sent = await sendVerificationCode(phone, code, {
     devMode: policy.smsDevMode,
     siteName: policy.siteName,
   })
   if (!sent.ok) {
+    trace('provider-rejected', { method: sent.method })
     // لاگ سرور جزئیات را دارد؛ کاربر فقط پیام عمومی می‌بیند.
     console.error('[auth] SMS send failed', sent.detail ?? sent.error)
     return { ok: false, error: sent.error ?? 'ارسال پیامک ناموفق بود.' }
   }
 
+  trace(sent.method === 'dev' ? 'development-only' : 'provider-accepted', { method: sent.method, messageId: sent.messageId })
   await saveOtp({
     phone,
     codeHash: hashCode(phone, code),
     ttlSec: policy.otp.ttlSeconds,
     purpose,
   })
+  trace('code-stored')
   return { ok: true, phone, devMode: sent.method === 'dev' }
 }
 

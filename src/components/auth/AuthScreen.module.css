@@ -221,8 +221,10 @@
 
 .primary:disabled {
   opacity: 0.6;
-  cursor: progress;
+  cursor: not-allowed;
 }
+
+.primary[aria-busy='true'] { cursor: progress; }
 
 .primary:focus-visible,
 .linkButton:focus-visible,
@@ -298,6 +300,12 @@
   color: var(--c-primary-strong, #2f6fd0);
   cursor: pointer;
   text-decoration: underline;
+}
+
+.linkButton:disabled {
+  color: var(--c-ink-soft);
+  cursor: not-allowed;
+  text-decoration: none;
 }
 
 .muted {

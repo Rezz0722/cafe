@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState, useEffect, useRef, useState, type ReactNode } from 'react'
+import { useActionState, useEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
 import { useFormStatus } from 'react-dom'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -10,6 +10,7 @@ import { maskPhone } from '@/core/auth/phone'
 import { safeAuthRedirect, withAuthRedirect } from '@/core/auth/redirect'
 import { fa } from '@/lib/format'
 import { paths } from '@/routes'
+import { useInterval } from '@/hooks/useInterval'
 import styles from './AuthScreen.module.css'
 
 export interface AuthConfig {
@@ -46,10 +47,10 @@ export function AuthProgress({ steps, current }: { steps: string[]; current: num
   )
 }
 
-export function AuthSubmit({ label, pendingLabel }: { label: string; pendingLabel: string }) {
+export function AuthSubmit({ label, pendingLabel, disabled = false }: { label: string; pendingLabel: string; disabled?: boolean }) {
   const { pending } = useFormStatus()
   return (
-    <button type="submit" className={styles.primary} disabled={pending} aria-disabled={pending}>
+    <button type="submit" className={styles.primary} disabled={pending || disabled} aria-disabled={pending || disabled} aria-busy={pending}>
       {pending ? pendingLabel : label}
     </button>
   )
@@ -127,12 +128,29 @@ export function AuthScreen({ config }: { config: AuthConfig }) {
   )
 }
 
+function ResendCodeSubmit({ remaining }: { remaining: number }) {
+  const { pending } = useFormStatus()
+  return (
+    <button type="submit" className={`${styles.linkButton} ${styles.centerLink}`} disabled={pending || remaining > 0}>
+      {pending ? 'در حال ارسال…' : remaining > 0 ? `ارسال دوباره تا ${fa(remaining)} ثانیهٔ دیگر` : 'ارسال دوبارهٔ کد'}
+    </button>
+  )
+}
+
 function OtpLogin({ redirectTo, config }: { redirectTo: string; config: AuthConfig }) {
   const router = useRouter()
   const codeRef = useRef<HTMLInputElement>(null)
   const [phone, setPhone] = useState('')
-  const [requestState, requestAction] = useActionState(requestCodeAction, EMPTY_REQUEST_STATE)
-  const [verifyState, verifyAction] = useActionState(verifyCodeAction, EMPTY_VERIFY_STATE)
+  const [requestState, requestAction, requestPending] = useActionState(requestCodeAction, EMPTY_REQUEST_STATE)
+  const [now, setNow] = useState(Date.now)
+  const [expiresAt, setExpiresAt] = useState<number | null>(null)
+  const [resendAt, setResendAt] = useState<number | null>(null)
+  const remaining = resendAt === null ? 0 : Math.max(0, Math.ceil((resendAt - now) / 1000))
+  const expired = expiresAt !== null && now >= expiresAt
+
+  // Use elapsed wall time so returning from a background tab cannot leave an
+  // expired code looking fresh. No request is retried automatically.
+  useInterval(() => setNow(Date.now()), phone && (remaining > 0 || !expired) ? 1000 : null)
 
   useEffect(() => {
     if (requestState.needsRegistration) {
@@ -140,21 +158,24 @@ function OtpLogin({ redirectTo, config }: { redirectTo: string; config: AuthConf
       router.refresh()
       return
     }
-    if (!requestState.ok || !requestState.phone) return
-    setPhone(requestState.phone)
-    queueMicrotask(() => codeRef.current?.focus())
-  }, [requestState, redirectTo, router])
-
-  useEffect(() => {
-    if (verifyState.needsRegistration) {
-      router.replace(withAuthRedirect(paths.authRegister, redirectTo))
-      router.refresh()
+    const receivedAt = Date.now()
+    if (!requestState.ok || !requestState.phone) {
+      if (requestState.retryAfterSec) {
+        setNow(receivedAt)
+        setResendAt(receivedAt + requestState.retryAfterSec * 1000)
+      }
       return
     }
-    if (!verifyState.ok) return
-    router.replace(redirectTo)
-    router.refresh()
-  }, [verifyState, redirectTo, router])
+    setNow(receivedAt)
+    setExpiresAt(receivedAt + config.otpTtlSeconds * 1000)
+    setResendAt(receivedAt + config.resendCooldownSeconds * 1000)
+    setPhone(requestState.phone)
+    queueMicrotask(() => {
+      if (!codeRef.current) return
+      codeRef.current.value = ''
+      codeRef.current.focus()
+    })
+  }, [requestState, redirectTo, router, config.otpTtlSeconds, config.resendCooldownSeconds])
 
   /**
    * Web OTP روی Android Chrome کد را از SMS دامنه‌محور می‌خواند. این API
@@ -194,7 +215,7 @@ function OtpLogin({ redirectTo, config }: { redirectTo: string; config: AuthConf
       cancelled = true
       controller.abort()
     }
-  }, [phone, config.otpLength])
+  }, [phone, config.otpLength, expiresAt])
 
   if (!phone) {
     return (
@@ -211,17 +232,54 @@ function OtpLogin({ redirectTo, config }: { redirectTo: string; config: AuthConf
   }
 
   return (
-    <form action={verifyAction} className={styles.form}>
-      <input type="hidden" name="phone" value={phone} />
-      <p className={styles.compactNote}>کد ارسال‌شده به <b dir="ltr">{maskPhone(phone)}</b> را وارد کنید؛ این کد فقط {fa(config.otpTtlSeconds)} ثانیه اعتبار دارد.</p>
+    <div className={styles.form}>
+      <p id="otp-code-status" className={styles.compactNote} role="status">
+        {expired
+          ? 'اعتبار این کد تمام شده است. برای دریافت کد تازه، ارسال دوبارهٔ کد را بزنید.'
+          : <>کد ارسال‌شده به <b dir="ltr">{maskPhone(phone)}</b> را وارد کنید؛ این کد فقط {fa(config.otpTtlSeconds)} ثانیه اعتبار دارد.</>}
+      </p>
       {requestState.devMode && <div className={styles.devNote}>حالت توسعه پیامک فعال است.</div>}
+      <OtpVerifyForm key={expiresAt} codeRef={codeRef} phone={phone} redirectTo={redirectTo} otpLength={config.otpLength} disabled={expired || requestPending} />
+      <form action={requestAction} className={styles.form} aria-label="ارسال دوبارهٔ کد ورود">
+        <input type="hidden" name="phone" value={phone} />
+        {requestState.error && <div className={styles.error} role="alert">{requestState.error}</div>}
+        <ResendCodeSubmit remaining={remaining} />
+      </form>
+      <button type="button" className={`${styles.linkButton} ${styles.centerLink}`} disabled={requestPending} onClick={() => setPhone('')}>تغییر شماره</button>
+    </div>
+  )
+}
+
+/** A new code resets both the input and errors from the previous code. */
+function OtpVerifyForm({ codeRef, phone, redirectTo, otpLength, disabled }: {
+  codeRef: RefObject<HTMLInputElement | null>
+  phone: string
+  redirectTo: string
+  otpLength: number
+  disabled: boolean
+}) {
+  const router = useRouter()
+  const [state, action] = useActionState(verifyCodeAction, EMPTY_VERIFY_STATE)
+  useEffect(() => {
+    if (state.needsRegistration) {
+      router.replace(withAuthRedirect(paths.authRegister, redirectTo))
+      router.refresh()
+      return
+    }
+    if (!state.ok) return
+    router.replace(redirectTo)
+    router.refresh()
+  }, [state, redirectTo, router])
+
+  return (
+    <form action={action} className={styles.form}>
+      <input type="hidden" name="phone" value={phone} />
       <label className={styles.field}>
         <span className={styles.label}>کد یک‌بارمصرف</span>
-        <input ref={codeRef} name="code" className={`${styles.input} ${styles.codeInput}`} inputMode="numeric" autoComplete="one-time-code" maxLength={config.otpLength} dir="ltr" required />
+        <input ref={codeRef} name="code" className={`${styles.input} ${styles.codeInput}`} inputMode="numeric" autoComplete="one-time-code" maxLength={otpLength} dir="ltr" required aria-invalid={Boolean(state.error)} aria-describedby={state.error ? 'otp-code-status otp-verify-error' : 'otp-code-status'} />
       </label>
-      {verifyState.error && <div className={styles.error} role="alert">{verifyState.error}</div>}
-      <AuthSubmit label="تأیید و ورود" pendingLabel="در حال بررسی…" />
-      <button type="button" className={`${styles.linkButton} ${styles.centerLink}`} onClick={() => setPhone('')}>تغییر شماره</button>
+      {state.error && <div id="otp-verify-error" className={styles.error} role="alert">{state.error}</div>}
+      <AuthSubmit label="تأیید و ورود" pendingLabel="در حال بررسی…" disabled={disabled} />
     </form>
   )
 }
