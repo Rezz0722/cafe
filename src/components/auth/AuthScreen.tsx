@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState, useEffect, useRef, useState, type ReactNode } from 'react'
+import { useActionState, useEffect, useState, type ReactNode } from 'react'
 import { useFormStatus } from 'react-dom'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -10,6 +10,10 @@ import { maskPhone } from '@/core/auth/phone'
 import { safeAuthRedirect, withAuthRedirect } from '@/core/auth/redirect'
 import { fa } from '@/lib/format'
 import { paths } from '@/routes'
+import { useOtpChallenge } from '@/hooks/useOtpChallenge'
+import { useWebOtp } from '@/hooks/useWebOtp'
+import { toAsciiDigits } from '@/core/text/normalize'
+import { OtpTiming } from './OtpTiming'
 import styles from './AuthScreen.module.css'
 
 export interface AuthConfig {
@@ -22,6 +26,7 @@ export interface AuthConfig {
   allowOtpLogin: boolean
   allowSmsVerification: boolean
   registrationRequiresPhoneVerification: boolean
+  initialOtp?: boolean
 }
 
 export function AuthProgress({ steps, current }: { steps: string[]; current: number }) {
@@ -46,10 +51,10 @@ export function AuthProgress({ steps, current }: { steps: string[]; current: num
   )
 }
 
-export function AuthSubmit({ label, pendingLabel }: { label: string; pendingLabel: string }) {
+export function AuthSubmit({ label, pendingLabel, disabled = false }: { label: string; pendingLabel: string; disabled?: boolean }) {
   const { pending } = useFormStatus()
   return (
-    <button type="submit" className={styles.primary} disabled={pending} aria-disabled={pending}>
+    <button type="submit" className={styles.primary} disabled={pending || disabled} aria-disabled={pending || disabled} aria-busy={pending}>
       {pending ? pendingLabel : label}
     </button>
   )
@@ -71,7 +76,7 @@ export function AuthScreen({ config }: { config: AuthConfig }) {
   const redirectTo = safeAuthRedirect(params?.get('redirect'), paths.profile)
   const [state, action] = useActionState(passwordLoginAction, EMPTY_PASSWORD_STATE)
   const [showPassword, setShowPassword] = useState(false)
-  const [mode, setMode] = useState<'password' | 'otp'>(config.allowPasswordLogin ? 'password' : 'otp')
+  const [mode, setMode] = useState<'password' | 'otp'>(config.initialOtp || !config.allowPasswordLogin ? 'otp' : 'password')
 
   useEffect(() => {
     if (!state.ok) return
@@ -87,6 +92,13 @@ export function AuthScreen({ config }: { config: AuthConfig }) {
         <p className={styles.lede}>برای ذخیره کافه‌ها، ثبت تجربه و مدیریت حساب وارد شوید.</p>
       </div>
 
+      {config.allowRegistration && (
+        <div className={styles.signupPrompt}>
+          <span>هنوز حساب نداری؟</span>
+          <Link href={withAuthRedirect(paths.authRegister, redirectTo)}>ساخت حساب رایگان</Link>
+        </div>
+      )}
+
       {config.allowPasswordLogin && config.allowOtpLogin && (
         <div className={styles.methodTabs} role="tablist" aria-label="روش ورود">
           <button type="button" role="tab" aria-selected={mode === 'password'} onClick={() => setMode('password')}>رمز عبور</button>
@@ -96,6 +108,7 @@ export function AuthScreen({ config }: { config: AuthConfig }) {
 
       {mode === 'password' && config.allowPasswordLogin ? (
         <form action={action} className={styles.form}>
+      <input type="hidden" name="redirectTo" value={redirectTo} />
           <label className={styles.field}>
             <span className={styles.label}>شماره موبایل یا نام کاربری</span>
             <input name="identifier" className={styles.input} autoComplete="username" maxLength={100} dir="ltr" placeholder="مثلاً 09151234567" required autoFocus />
@@ -117,111 +130,96 @@ export function AuthScreen({ config }: { config: AuthConfig }) {
         <div className={styles.error} role="alert">ورود موقتاً غیرفعال است.</div>
       )}
 
-      {config.allowRegistration && (
-        <div className={styles.signupPrompt}>
-          <span>هنوز حساب نداری؟</span>
-          <Link href={withAuthRedirect(paths.authRegister, redirectTo)}>ساخت حساب رایگان</Link>
-        </div>
-      )}
+
     </AuthShell>
+  )
+}
+
+function ResendCodeSubmit({ remaining }: { remaining: number }) {
+  const { pending } = useFormStatus()
+  return (
+    <button type="submit" className={`${styles.linkButton} ${styles.centerLink}`} disabled={pending || remaining > 0}>
+      {pending ? 'در حال ارسال…' : remaining > 0 ? `ارسال دوباره تا ${fa(remaining)} ثانیهٔ دیگر` : 'ارسال دوبارهٔ کد'}
+    </button>
   )
 }
 
 function OtpLogin({ redirectTo, config }: { redirectTo: string; config: AuthConfig }) {
   const router = useRouter()
-  const codeRef = useRef<HTMLInputElement>(null)
-  const [phone, setPhone] = useState('')
-  const [requestState, requestAction] = useActionState(requestCodeAction, EMPTY_REQUEST_STATE)
-  const [verifyState, verifyAction] = useActionState(verifyCodeAction, EMPTY_VERIFY_STATE)
-
+  const [code, setCode] = useState('')
+  const [requestState, requestAction, requestPending] = useActionState(requestCodeAction, EMPTY_REQUEST_STATE)
+  const { challenge, codeRemaining, resendRemaining, expired, reset } = useOtpChallenge('login', requestState)
+  const { start: startWebOtp, stop: stopWebOtp, restore: restoreWebOtp } = useWebOtp(config.otpLength, setCode)
+  const phone = challenge?.phone ?? ''
+  useEffect(() => { if (phone && !expired) restoreWebOtp() }, [phone, expired, restoreWebOtp])
+  const prepareRequest = () => { setCode(''); startWebOtp() }
   useEffect(() => {
-    if (requestState.needsRegistration) {
-      router.replace(withAuthRedirect(paths.authRegister, redirectTo))
-      router.refresh()
-      return
-    }
-    if (!requestState.ok || !requestState.phone) return
-    setPhone(requestState.phone)
-    queueMicrotask(() => codeRef.current?.focus())
+    if (!requestState.needsRegistration) return
+    router.replace(withAuthRedirect(paths.authRegister, redirectTo))
+    router.refresh()
   }, [requestState, redirectTo, router])
 
+  if (!phone) return (
+    <form action={requestAction} onSubmit={prepareRequest} className={styles.form}>
+      <p className={styles.compactNote}>حساب جدید می‌خواهی؟ <Link href={withAuthRedirect(paths.authRegister, redirectTo)}>ساخت حساب رایگان</Link></p>
+      <label className={styles.field}>
+        <span className={styles.label}>شماره موبایل</span>
+        <input name="phone" className={styles.input} type="tel" inputMode="numeric" autoComplete="tel" placeholder="09151234567" dir="ltr" required autoFocus />
+      </label>
+      {requestState.error && <div className={styles.error} role="alert">{requestState.error}</div>}
+      <AuthSubmit label="دریافت کد ورود" pendingLabel="در حال ارسال…" />
+    </form>
+  )
+  return (
+    <div className={styles.form}>
+      <p id="otp-code-status" className={styles.compactNote}>کد فرستاده‌شده به <b dir="ltr">{maskPhone(phone)}</b> را وارد کنید.</p>
+      <OtpTiming remaining={codeRemaining} resendRemaining={resendRemaining} />
+      {requestState.devMode && <div className={styles.devNote}>حالت توسعه پیامک فعال است.</div>}
+      <OtpVerifyForm key={challenge?.challengeId} challengeId={challenge?.challengeId} code={code} onCode={setCode} phone={phone} redirectTo={redirectTo} otpLength={config.otpLength} disabled={expired || requestPending} />
+      <form action={requestAction} onSubmit={prepareRequest} className={styles.form} aria-label="ارسال دوبارهٔ کد ورود">
+        <input type="hidden" name="phone" value={phone} />
+        {requestState.error && <div className={styles.error} role="alert">{requestState.error}</div>}
+        <ResendCodeSubmit remaining={resendRemaining} />
+      </form>
+      <button type="button" className={`${styles.linkButton} ${styles.centerLink}`} disabled={requestPending} onClick={() => { stopWebOtp(); setCode(''); reset() }}>تغییر شماره</button>
+    </div>
+  )
+}
+
+/** A new code resets both the input and errors from the previous code. */
+function OtpVerifyForm({ code, onCode, phone, redirectTo, otpLength, disabled, challengeId }: {
+  challengeId?: number
+  code: string
+  onCode: (value: string) => void
+  phone: string
+  redirectTo: string
+  otpLength: number
+  disabled: boolean
+}) {
+  const router = useRouter()
+  const [state, action] = useActionState(verifyCodeAction, EMPTY_VERIFY_STATE)
   useEffect(() => {
-    if (verifyState.needsRegistration) {
+    if (state.needsRegistration) {
       router.replace(withAuthRedirect(paths.authRegister, redirectTo))
       router.refresh()
       return
     }
-    if (!verifyState.ok) return
+    if (!state.ok) return
     router.replace(redirectTo)
     router.refresh()
-  }, [verifyState, redirectTo, router])
-
-  /**
-   * Web OTP روی Android Chrome کد را از SMS دامنه‌محور می‌خواند. این API
-   * اختیاری است و در iOS، دسکتاپ یا SMSهای قدیمی وجود ندارد؛ در آن حالت
-   * `autocomplete="one-time-code"` و ورود دستی همچنان کار می‌کنند.
-   * هر بار عوض‌شدن شماره، listener قبلی با AbortController متوقف می‌شود تا
-   * کد شماره‌ی قبلی روی فرم شماره‌ی جدید نوشته نشود.
-   */
-  useEffect(() => {
-    if (!phone || typeof window === 'undefined' || !window.isSecureContext) return
-    if (!('OTPCredential' in window) || !navigator.credentials?.get) return
-
-    const controller = new AbortController()
-    let cancelled = false
-
-    void navigator.credentials
-      .get({
-        otp: { transport: ['sms'] },
-        signal: controller.signal,
-      } as CredentialRequestOptions & { otp: { transport: ['sms'] } })
-      .then((credential) => {
-        if (cancelled || !credential) return
-        const value = credential as Credential & { code?: string }
-        const code = value.code?.replace(/\D/g, '').slice(0, config.otpLength)
-        if (!code || !codeRef.current) return
-        codeRef.current.value = code
-        codeRef.current.dispatchEvent(new Event('input', { bubbles: true }))
-      })
-      .catch((error: unknown) => {
-        // لغو هنگام تغییر شماره/خروج، خطای واقعی نیست. خطاهای Web OTP نباید
-        // فرم ورود دستی را خراب کنند یا در UI به کاربر نشان داده شوند.
-        if (error instanceof DOMException && error.name === 'AbortError') return
-        if (process.env.NODE_ENV !== 'production') console.debug('[auth] Web OTP unavailable', error)
-      })
-
-    return () => {
-      cancelled = true
-      controller.abort()
-    }
-  }, [phone, config.otpLength])
-
-  if (!phone) {
-    return (
-      <form action={requestAction} className={styles.form}>
-        <p className={styles.compactNote}>ورود پیامکی فقط برای حساب‌های ثبت‌شده است. برای شماره جدید، ابتدا «ساخت حساب رایگان» را انتخاب کنید.</p>
-        <label className={styles.field}>
-          <span className={styles.label}>شماره موبایل</span>
-          <input name="phone" className={styles.input} type="tel" inputMode="numeric" autoComplete="tel" placeholder="09151234567" dir="ltr" required autoFocus />
-        </label>
-        {requestState.error && <div className={styles.error} role="alert">{requestState.error}</div>}
-        <AuthSubmit label="دریافت کد ورود" pendingLabel="در حال ارسال…" />
-      </form>
-    )
-  }
+  }, [state, redirectTo, router])
 
   return (
-    <form action={verifyAction} className={styles.form}>
+    <form action={action} className={styles.form}>
+      <input type="hidden" name="redirectTo" value={redirectTo} />
       <input type="hidden" name="phone" value={phone} />
-      <p className={styles.compactNote}>کد ارسال‌شده به <b dir="ltr">{maskPhone(phone)}</b> را وارد کنید؛ این کد فقط {fa(config.otpTtlSeconds)} ثانیه اعتبار دارد.</p>
-      {requestState.devMode && <div className={styles.devNote}>حالت توسعه پیامک فعال است.</div>}
+      <input type="hidden" name="challengeId" value={challengeId ?? ''} />
       <label className={styles.field}>
         <span className={styles.label}>کد یک‌بارمصرف</span>
-        <input ref={codeRef} name="code" className={`${styles.input} ${styles.codeInput}`} inputMode="numeric" autoComplete="one-time-code" maxLength={config.otpLength} dir="ltr" required />
+        <input value={code} onChange={event => onCode(toAsciiDigits(event.target.value).replace(/\D/g, '').slice(0, otpLength))} autoFocus name="code" className={`${styles.input} ${styles.codeInput}`} inputMode="numeric" autoComplete="one-time-code" maxLength={otpLength} dir="ltr" required aria-invalid={Boolean(state.error)} aria-describedby={state.error ? 'otp-code-status otp-verify-error' : 'otp-code-status'} />
       </label>
-      {verifyState.error && <div className={styles.error} role="alert">{verifyState.error}</div>}
-      <AuthSubmit label="تأیید و ورود" pendingLabel="در حال بررسی…" />
-      <button type="button" className={`${styles.linkButton} ${styles.centerLink}`} onClick={() => setPhone('')}>تغییر شماره</button>
+      {state.error && <div id="otp-verify-error" className={styles.error} role="alert">{state.error}</div>}
+      <AuthSubmit label="تأیید و ورود" pendingLabel="در حال بررسی…" disabled={disabled} />
     </form>
   )
 }

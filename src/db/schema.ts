@@ -24,7 +24,7 @@
  *     نه صفر — چون صفر یک قیمتِ معتبر است و «قیمت روز» نیست.
  */
 
-import { relations } from 'drizzle-orm'
+import { relations, sql } from 'drizzle-orm'
 import {
   bigint,
   boolean,
@@ -979,7 +979,7 @@ export const otpCode = mysqlTable(
       .notNull()
       .default('login'),
     attempts: tinyint('attempts').notNull().default(0),
-    expiresAt: timestamp('expires_at').notNull(),
+    expiresAt: timestamp('expires_at').notNull().default(sql`'1970-01-02 00:00:00'`),
     consumedAt: timestamp('consumed_at'),
     createdAt: timestamp('created_at').notNull().defaultNow(),
   },

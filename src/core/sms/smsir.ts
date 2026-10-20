@@ -24,6 +24,8 @@ export type SendMethod = 'dev' | 'template' | 'bulk'
 export interface SendResult {
   ok: boolean
   method: SendMethod
+  /** Provider acceptance reference; this does not confirm handset delivery. */
+  messageId?: number
   /** پیام خطای قابل نمایش به کاربر — هرگز شامل کلید یا جزئیات داخلی. */
   error?: string
   /** جزئیات فنی برای لاگ سرور. */
@@ -111,33 +113,33 @@ export async function sendVerificationCode(
   try {
     // ── روش ۱: قالب OTP ──
     if (SMSIR.templateId) {
-      const { ok, json } = await post('/v1/send/verify', {
+      const { ok, status, json } = await post('/v1/send/verify', {
         mobile,
         templateId: Number(SMSIR.templateId),
         parameters: [{ name: SMSIR.templateParam, value: code }],
       })
-      if (ok) return { ok: true, method: 'template' }
+      if (ok) return { ok: true, method: 'template', messageId: json?.data?.messageId }
       return {
         ok: false,
         method: 'template',
         error: 'ارسال پیامک ناموفق بود. چند لحظه بعد دوباره تلاش کنید.',
-        detail: `status=${json?.status} message=${json?.message}`,
+        detail: `http=${status} status=${json?.status} message=${json?.message}`,
       }
     }
 
     // ── روش ۲: خط عادی ──
     if (SMSIR.lineNumber) {
-      const { ok, json } = await post('/v1/send/bulk', {
+      const { ok, status, json } = await post('/v1/send/bulk', {
         lineNumber: Number(SMSIR.lineNumber),
         messageText: `${siteName}\nکد ورود شما: ${code}\nاین کد را در اختیار کسی قرار ندهید.`,
         mobiles: [mobile],
       })
-      if (ok) return { ok: true, method: 'bulk' }
+      if (ok) return { ok: true, method: 'bulk', messageId: json?.data?.messageIds?.[0] }
       return {
         ok: false,
         method: 'bulk',
         error: 'ارسال پیامک ناموفق بود. چند لحظه بعد دوباره تلاش کنید.',
-        detail: `status=${json?.status} message=${json?.message}`,
+        detail: `http=${status} status=${json?.status} message=${json?.message}`,
       }
     }
 

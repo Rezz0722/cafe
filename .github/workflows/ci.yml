@@ -53,6 +53,8 @@ jobs:
         run: npm run db:migrate
       - name: Legacy MariaDB timestamp integrity regression
         run: KUCAFE_TIMESTAMP_DB_TEST=1 node scripts/place-timestamp-regression.mjs
+      - name: OTP expiry, retry, replay and migration integrity regression
+        run: KUCAFE_AUTH_DB_TEST=1 node --import tsx --conditions=react-server --test src/core/auth/otpExpiry.integration.test.ts
       - run: npm run typecheck
       - run: npm test
       - name: TopMenuMarket scraper contract (mocked source, no live requests)

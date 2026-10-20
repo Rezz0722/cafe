@@ -1,5 +1,8 @@
 'use server'
 
+import { randomUUID } from 'node:crypto'
+import { withDbNamedLock } from '@/db/client'
+import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { headers } from 'next/headers'
@@ -11,16 +14,13 @@ import {
   hashCode,
   isGlobalLimitReached,
   pruneGlobal,
-  verifyCode,
   type OtpRecord,
 } from '@/core/auth/otp'
 import { hashPassword, MAX_PASSWORD_LENGTH, verifyPassword } from '@/core/auth/password'
 import { normalizePhone } from '@/core/auth/phone'
 import { createSessionToken, SESSION_COOKIE } from '@/core/auth/session'
 import {
-  bumpOtpAttempts,
   clearFailedLogins,
-  consumeOtp,
   createAuthSession,
   createUser,
   deactivateUser,
@@ -44,6 +44,11 @@ import {
   isUnregisteredPhoneAccount,
 } from '@/core/auth/userRepo'
 import { SESSION_SECRET } from '@/core/config/env'
+import { verifyStoredOtp } from '@/core/auth/otpVerification'
+import { bindOtpBrowser, readOtpBrowser, bindRegistrationProof, readRegistrationProof, REGISTRATION_PROOF_COOKIE } from '@/core/auth/otpBrowser'
+import { toAsciiDigits } from '@/core/text/normalize'
+import { safeAuthRedirect, withAuthRedirect } from '@/core/auth/redirect'
+import { paths } from '@/routes'
 import { getAuthPolicy } from '@/core/settings/policies'
 import { sendVerificationCode } from '@/core/sms/smsir'
 import { cleanUserText } from '@/core/security/input'
@@ -72,6 +77,18 @@ import type {
 function str(form: FormData, key: string): string {
   const value = form.get(key)
   return typeof value === 'string' ? value.trim() : ''
+}
+
+/** Navigation after a cookie write must not depend on a client component that
+ * the action's layout revalidation can replace. Validate the destination here. */
+function finishAuth(form: FormData, mustChangePassword = false): void {
+  if (!form.has('redirectTo')) return // Compatibility with an already-open old form.
+  const destination = safeAuthRedirect(str(form, 'redirectTo'))
+  const target = mustChangePassword ? withAuthRedirect(paths.changePassword, destination) : destination
+  // The App Router's server-action redirect can discard a destination hash.
+  // Finish on a small authenticated page that performs a browser navigation,
+  // preserving #reviews and replacing the cached anonymous page/layout.
+  redirect(`/auth/complete?redirect=${encodeURIComponent(target)}`)
 }
 
 const COOKIE_BASE = {
@@ -126,12 +143,34 @@ async function requestPurposeCode(
   phone: string,
   purpose: OtpPurpose,
 ): Promise<RequestCodeState> {
+  const result = await withDbNamedLock(`otp:${hashCode(phone, 'issuance')}`, () => issuePurposeCode(phone, purpose))
+  return result.acquired ? result.value : { ok: false, error: 'درخواست ارسال کد در حال انجام است. چند لحظه صبر کنید.' }
+}
+
+async function issuePurposeCode(
+  phone: string,
+  purpose: OtpPurpose,
+): Promise<RequestCodeState> {
+  const requestId = randomUUID()
+  const trace = (outcome: string, extra: Record<string, unknown> = {}) => {
+    // Trace metadata excludes full phone numbers, credentials, and codes.
+    console.info('[auth:otp]', JSON.stringify({ requestId, purpose, phoneSuffix: phone.slice(-4), outcome, at: new Date().toISOString(), ...extra }))
+  }
+  trace('received')
   if (!SESSION_SECRET) {
+    trace('blocked', { reason: 'session-config' })
     return { ok: false, error: 'سرویس ورود تنظیم نشده است. (SESSION_SECRET)' }
   }
 
   const policy = await getAuthPolicy()
+  const storeChallenge = async (code: string, devMode = false): Promise<RequestCodeState> => {
+    const challenge = await saveOtp({ phone, codeHash: hashCode(phone, code), ttlSec: policy.otp.ttlSeconds, purpose })
+    await bindOtpBrowser(challenge)
+    trace('code-stored', { challengeId: challenge.id, createdAt: challenge.createdAt.toISOString(), expiresAt: challenge.expiresAt.toISOString() })
+    return { ok: true, phone, devMode, challengeId: challenge.id, serverNow: Date.now(), expiresAt: challenge.expiresAt.getTime(), resendAt: challenge.createdAt.getTime() + policy.otp.resendCooldownSeconds * 1000 }
+  }
   if (purpose === 'login' ? !policy.allowOtpLogin : !policy.allowSmsVerification) {
+    trace('blocked', { reason: 'sms-disabled' })
     return {
       ok: false,
       error: purpose === 'login'
@@ -169,6 +208,7 @@ async function requestPurposeCode(
 
   const decision = canRequestCode(existing, Date.now(), policy.otp)
   if (!decision.allowed) {
+    trace('blocked', { reason: 'phone-rate-limit', retryAfterSec: decision.retryAfterSec })
     return { ok: false, error: decision.reason, retryAfterSec: decision.retryAfterSec }
   }
 
@@ -180,6 +220,7 @@ async function requestPurposeCode(
    */
   const globalRequests = pruneGlobal(await listRecentOtpTimesGlobal(HOUR_SEC))
   if (isGlobalLimitReached(globalRequests, Date.now(), policy.otp.maxGlobalPerHour)) {
+    trace('blocked', { reason: 'global-rate-limit' })
     console.warn('[auth] global OTP rate limit hit — possible abuse')
     return { ok: false, error: 'سرویس ورود موقتاً شلوغ است. چند دقیقه بعد دوباره تلاش کنید.' }
   }
@@ -194,11 +235,15 @@ async function requestPurposeCode(
       || account.status !== 'active'
       || !account.passwordHash
     ) {
-      return { ok: true, phone }
+      trace('skipped', { reason: 'reset-account-ineligible' })
+      // Keep the same browser challenge and rate-limit behaviour without
+      // sending anything or revealing whether the reset account exists.
+      return storeChallenge(generateCode(policy.otp.length))
     }
   } else if (purpose === 'login') {
     const account = await findUserByPhone(phone)
     if (!account || isUnregisteredPhoneAccount(account)) {
+      trace('skipped', { reason: 'registration-required' })
       if (policy.allowRegistration) {
         return {
           ok: false,
@@ -211,28 +256,26 @@ async function requestPurposeCode(
     if (
       account.status !== 'active' || account.blocked
     ) {
-      return { ok: true, phone }
+      trace('skipped', { reason: 'account-inactive' })
+      return storeChallenge(generateCode(policy.otp.length))
     }
   }
 
   const code = generateCode(policy.otp.length)
+  trace('provider-requested')
   const sent = await sendVerificationCode(phone, code, {
     devMode: policy.smsDevMode,
     siteName: policy.siteName,
   })
   if (!sent.ok) {
+    trace('provider-rejected', { method: sent.method })
     // لاگ سرور جزئیات را دارد؛ کاربر فقط پیام عمومی می‌بیند.
     console.error('[auth] SMS send failed', sent.detail ?? sent.error)
     return { ok: false, error: sent.error ?? 'ارسال پیامک ناموفق بود.' }
   }
 
-  await saveOtp({
-    phone,
-    codeHash: hashCode(phone, code),
-    ttlSec: policy.otp.ttlSeconds,
-    purpose,
-  })
-  return { ok: true, phone, devMode: sent.method === 'dev' }
+  trace(sent.method === 'dev' ? 'development-only' : 'provider-accepted', { method: sent.method, messageId: sent.messageId })
+  return storeChallenge(code, sent.method === 'dev')
 }
 
 export async function requestRegistrationCodeAction(
@@ -258,42 +301,23 @@ export async function requestResetCodeAction(
   return requestPurposeCode(phone, 'reset_password')
 }
 
-async function verifyPurposeCode(
-  phone: string,
-  code: string,
-  purpose: OtpPurpose,
-): Promise<{ ok: true } | { ok: false; error: string }> {
+export async function verifyRegistrationCodeAction(_previous: RequestCodeState, form: FormData): Promise<RequestCodeState> {
   const policy = await getAuthPolicy()
+  if (!policy.allowRegistration || !policy.allowSmsVerification) return { ok: false, error: 'ثبت‌نام پیامکی موقتاً غیرفعال است.' }
+  const phone = normalizePhone(str(form, 'phone'))
+  if (!phone) return { ok: false, error: 'شماره موبایل معتبر نیست.' }
+  const bound = await readOtpBrowser('verify_phone')
+  const result = await verifyPurposeCode(phone, toAsciiDigits(str(form, 'code')).replace(/\D/g, ''), 'verify_phone', form.has('challengeId') ? Number(str(form, 'challengeId')) : undefined)
+  if (!result.ok) return { ...result, challengeId: bound?.id }
+  return bindRegistrationProof(phone, bound?.id ?? 0)
+}
 
-  if (!code) return { ok: false, error: 'کد را وارد کنید.' }
-
-  const active = await getActiveOtp(phone, purpose)
-  const record: OtpRecord | null = active
-    ? {
-        phone,
-        codeHash: active.codeHash,
-        expiresAt: active.expiresAt.getTime(),
-        attempts: active.attempts,
-        createdAt: active.createdAt.getTime(),
-        recentRequests: [],
-      }
-    : null
-
-  const result = verifyCode(record, phone, code, Date.now(), policy.otp.maxAttempts)
-  if (!result.ok) {
-    if (active) {
-      // `burned` یعنی رکورد دیگر قابل استفاده نیست — مصرفش کن تا تلاش
-      // بعدی روی همان کد بی‌فایده باشد.
-      if (result.burned) await consumeOtp(active.id)
-      else await bumpOtpAttempts(active.id)
-    }
-    return { ok: false, error: result.reason }
-  }
-
-  // کد درست بود — بلافاصله بسوزانش تا دوبار قابل استفاده نباشد.
-  if (active) await consumeOtp(active.id)
-
-  return { ok: true }
+async function verifyPurposeCode(phone: string, code: string, purpose: OtpPurpose, submittedId?: number): Promise<{ ok: true } | { ok: false; error: string }> {
+  const policy = await getAuthPolicy()
+  const bound = await readOtpBrowser(purpose)
+  if (submittedId !== undefined && (!bound || submittedId !== bound.id)) return { ok: false, error: 'کد این صفحه جایگزین شده است. کد تازه درخواست کنید.' }
+  if (bound && bound.phone !== phone) return { ok: false, error: 'شمارهٔ این درخواست تغییر کرده است. کد تازه بگیرید.' }
+  return verifyStoredOtp(phone, code, purpose, policy.otp, bound?.id)
 }
 
 export async function requestCodeAction(
@@ -317,10 +341,10 @@ export async function verifyCodeAction(
     return { ok: false, error: 'ورود پیامکی غیرفعال است؛ با رمز وارد شوید.' }
   }
   const phone = normalizePhone(str(form, 'phone'))
-  const code = str(form, 'code').replace(/\D/g, '')
+  const code = toAsciiDigits(str(form, 'code')).replace(/\D/g, '')
   if (!phone) return { ok: false, error: 'شماره موبایل معتبر نیست.' }
 
-  const verified = await verifyPurposeCode(phone, code, 'login')
+  const verified = await verifyPurposeCode(phone, code, 'login', form.has('challengeId') ? Number(str(form, 'challengeId')) : undefined)
   if (!verified.ok) return { ok: false, error: verified.error }
 
   const existing = await findUserByPhone(phone)
@@ -346,6 +370,7 @@ export async function verifyCodeAction(
     user = (await markPhoneVerified(user.id)) ?? user
   }
   await startSession(user, policy.sessionMaxAgeSec, 'otp')
+  finishAuth(form)
   return { ok: true, role: user.role, needsName: !user.name }
 }
 
@@ -398,6 +423,7 @@ export async function passwordLoginAction(
 
   await clearFailedLogins(user.id)
   await startSession(user, policy.sessionMaxAgeSec, 'password')
+  finishAuth(form, user.mustChangePassword)
 
   return {
     ok: true,
@@ -435,7 +461,7 @@ export async function registerAction(
   const name = cleanUserText(str(form, 'name'), 60)
   const password = str(form, 'password')
   const confirm = str(form, 'passwordConfirm')
-  const code = str(form, 'code').replace(/\D/g, '')
+  const code = toAsciiDigits(str(form, 'code')).replace(/\D/g, '')
   const username = str(form, 'username').toLowerCase()
 
   if (!name) return { ok: false, error: 'نام را وارد کنید.' }
@@ -467,8 +493,11 @@ export async function registerAction(
   }
 
   if (requirePhoneVerification) {
-    const verified = await verifyPurposeCode(phone!, code, 'verify_phone')
-    if (!verified.ok) return { ok: false, error: verified.error }
+    const proof = await readRegistrationProof()
+    if (proof?.phone !== phone) {
+      const verified = await verifyPurposeCode(phone!, code, 'verify_phone')
+      if (!verified.ok) return { ok: false, error: verified.error }
+    }
   }
 
   const existing = phone ? await findUserByPhone(phone) : null
@@ -492,6 +521,8 @@ export async function registerAction(
     if (name && !existing.name) await updateUser(existing.id, { name })
     const updated = (await findUserById(existing.id))!
     await startSession(updated, policy.sessionMaxAgeSec, 'password')
+    ;(await cookies()).delete(REGISTRATION_PROOF_COOKIE)
+    finishAuth(form)
     return { ok: true, role: updated.role, linkedExisting: true }
   }
 
@@ -514,6 +545,8 @@ export async function registerAction(
   }
 
   await startSession(user, policy.sessionMaxAgeSec, 'password')
+  ;(await cookies()).delete(REGISTRATION_PROOF_COOKIE)
+  finishAuth(form)
   return { ok: true, role: user.role }
 }
 
@@ -526,7 +559,7 @@ export async function resetPasswordAction(
   form: FormData,
 ): Promise<ResetPasswordState> {
   const phone = normalizePhone(str(form, 'phone'))
-  const code = str(form, 'code').replace(/\D/g, '')
+  const code = toAsciiDigits(str(form, 'code')).replace(/\D/g, '')
   const password = str(form, 'password')
   const confirm = str(form, 'passwordConfirm')
   const policy = await getAuthPolicy()
@@ -538,7 +571,7 @@ export async function resetPasswordAction(
   if (password.length > MAX_PASSWORD_LENGTH) return { ok: false, error: 'رمز عبور بیش از حد طولانی است.' }
   if (password !== confirm) return { ok: false, error: 'دو رمز یکسان نیستند.' }
 
-  const verified = await verifyPurposeCode(phone, code, 'reset_password')
+  const verified = await verifyPurposeCode(phone, code, 'reset_password', form.has('challengeId') ? Number(str(form, 'challengeId')) : undefined)
   if (!verified.ok) return { ok: false, error: 'کد نامعتبر یا منقضی است.' }
 
   const account = await findUserByPhone(phone)
@@ -553,6 +586,7 @@ export async function resetPasswordAction(
   await markPhoneVerified(account.id)
   await revokeAllSessions(account.id)
   await startSession(account, policy.sessionMaxAgeSec, 'password')
+  finishAuth(form)
   return { ok: true }
 }
 
@@ -608,6 +642,7 @@ export async function changePasswordAction(
   // تغییر رمز باید همهٔ دستگاه‌های دیگر را بیرون کند؛ نشست جاری معتبر می‌ماند.
   await revokeAllSessions(account.id, sessionId ?? undefined)
   revalidatePath('/', 'layout')
+  finishAuth(form)
   return { ok: true }
 }
 

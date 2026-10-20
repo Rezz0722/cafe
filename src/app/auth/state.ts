@@ -16,6 +16,11 @@ export interface RequestCodeState {
   devMode?: boolean
   /** شماره حساب کامل ندارد و باید به مسیر ثبت‌نام برود. */
   needsRegistration?: boolean
+  challengeId?: number
+  serverNow?: number
+  expiresAt?: number
+  resendAt?: number
+  verified?: boolean
 }
 
 export interface VerifyCodeState {

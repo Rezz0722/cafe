@@ -28,14 +28,17 @@ function SaveButton({ label }: { label: string }) {
 export function ChangePasswordForm({
   hasPassword,
   mustChange,
+  redirectTo,
 }: {
   hasPassword: boolean
   mustChange: boolean
+  redirectTo?: string
 }) {
   const [state, action] = useActionState(changePasswordAction, EMPTY_CHANGE_PASSWORD_STATE)
 
   return (
     <form action={action} className={styles.form}>
+      {redirectTo && <input type="hidden" name="redirectTo" value={redirectTo} />}
       {mustChange && (
         <p className={styles.error}>
           رمز فعلی‌تان موقتی است و مدیر آن را صادر کرده. تا عوضش نکنید، هر بار
