@@ -5,7 +5,7 @@ import { chromium, type Page } from 'playwright'
 // or write an account while checking the expiry/resend behaviour.
 const base = process.env.KUCAFE_OTP_QA_URL || 'http://127.0.0.1:3197'
 assert.ok(['127.0.0.1', 'localhost'].includes(new URL(base).hostname), 'Use an isolated local server')
-const phone = '09120000000'
+const phone = process.env.KUCAFE_AUTH_QA_PHONE || '09000000000' // Fully mocked; never sent to a provider.
 const browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] })
 
 async function chooseSms(page: Page) {
@@ -17,6 +17,7 @@ async function chooseSms(page: Page) {
 try {
   const page = await browser.newPage()
   let requests = 0
+  await page.route('**/api/auth/otp?*', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: false }) }))
   await page.route('**/auth*', async route => {
     const request = route.request()
     if (request.method() !== 'POST') return route.continue()
@@ -24,7 +25,7 @@ try {
     assert.ok(request.postData()?.includes(phone), 'Resend must preserve the selected phone')
     const result = requests === 3
       ? { ok: false, error: 'تا ارسال دوباره ۱۲۰ ثانیه صبر کنید.', retryAfterSec: 120 }
-      : { ok: true, phone, devMode: false }
+      : { ok: true, phone, devMode: false, challengeId: requests, serverNow: Date.now(), expiresAt: Date.now() + 60_000, resendAt: Date.now() + 90_000 }
     await route.fulfill({
       status: 200,
       contentType: 'text/x-component',
@@ -52,14 +53,14 @@ try {
   assert.equal(requests, 2)
   assert.equal(await page.getByRole('button', { name: 'تأیید و ورود', exact: true }).isEnabled(), true)
   assert.equal(await resend.isDisabled(), true, 'A successful resend starts a new cooldown')
-  assert.doesNotMatch(await page.locator('#otp-code-status').innerText(), /تمام شده/)
+  assert.equal(await page.locator('output').innerText(), '۰۱:۰۰')
 
   await page.clock.fastForward(91_000)
   await page.getByRole('button', { name: 'ارسال دوبارهٔ کد', exact: true }).waitFor()
   await resend.click()
   await page.getByRole('alert').filter({ hasText: '۱۲۰ ثانیه' }).waitFor()
   assert.equal(await resend.isDisabled(), true, 'Honour a longer cooldown returned by the server')
-  assert.match(await page.locator('#otp-code-status').innerText(), /تمام شده/)
+  await page.getByRole('status').filter({ hasText: 'اعتبار این کد تمام شده است' }).waitFor()
   assert.equal(requests, 3)
   await page.clock.fastForward(121_000)
   await page.getByRole('button', { name: 'ارسال دوبارهٔ کد', exact: true }).waitFor()

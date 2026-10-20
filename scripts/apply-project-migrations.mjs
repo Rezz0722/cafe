@@ -21,6 +21,7 @@ const files = [
   'drizzle/0017_provenance_timestamp_integrity.sql',
   'drizzle/0018_booking_core.sql',
   'drizzle/0019_venue_events.sql',
+  'drizzle/0020_auth_otp_expiry_integrity.sql',
 ]
 
 for (const file of files) {

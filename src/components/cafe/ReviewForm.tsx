@@ -190,8 +190,30 @@ export function ReviewForm(props: Props) {
   const [version, setVersion] = useState(0)
   const [message, setMessage] = useState('')
   const completed = useRef(false)
+  const launcher = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!props.signedIn) return
+    let frame = 0, tries = 0
+    const resume = () => {
+      const url = new URL(window.location.href)
+      if (url.searchParams.get('authIntent') !== 'review') return
+      const button = launcher.current?.querySelector<HTMLButtonElement>('button[aria-haspopup="dialog"]')
+      if (button?.getClientRects().length) {
+        // Keep the intent until the user closes the dialog. A session/layout
+        // refresh can replace this instance during the authentication redirect.
+        if (!document.querySelector('dialog[open]')) button.click()
+      } else if (++tries < 60) frame = requestAnimationFrame(resume)
+    }
+    frame = requestAnimationFrame(resume)
+    return () => cancelAnimationFrame(frame)
+  }, [props.signedIn])
   const onSuccess = useCallback((notice: string) => { completed.current = true; setMessage(notice) }, [])
   const onClose = () => {
+    const url = new URL(window.location.href)
+    if (url.searchParams.get('authIntent') === 'review') {
+      url.searchParams.delete('authIntent')
+      window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`)
+    }
     if (!completed.current) return // Preserve an unfinished draft when dismissing.
     completed.current = false
     setVersion(value => value + 1)
@@ -203,7 +225,7 @@ export function ReviewForm(props: Props) {
   if (!props.signedIn) return props.compact
     ? <a href={props.authHref} className={styles.signInLink}>ورود و ثبت اولین تجربه</a>
     : <div className={styles.signInPrompt}><div><strong>تو تجربه کردی؛ بقیه بهتر انتخاب می‌کنند</strong><p>برای ثبت تجربه و سفارش‌ها وارد حساب شو.</p></div><a href={props.authHref} className={styles.signInLink}>ورود و ثبت تجربه</a></div>
-  return <div className={styles.launcher}><p>در سه قدم کوتاه؛ امتیاز، سفارش و تاریخ.</p>
+  return <div ref={launcher} className={styles.launcher}><p>در سه قدم کوتاه؛ امتیاز، سفارش و تاریخ.</p>
     <CafePopover label={props.existing ? 'ویرایش تجربه' : 'ثبت تجربهٔ من'} title={props.existing ? 'ویرایش تجربهٔ شما' : 'تجربه‌ات را با دیگران شریک شو'} onClose={onClose}>
       {({ close }) => <ReviewWizard key={`${props.existing?.id ?? 'new'}-${version}`} props={props} onSuccess={onSuccess} onConfirm={close} />}
     </CafePopover>

@@ -684,9 +684,10 @@ export type OtpPurpose = 'login' | 'verify_phone' | 'reset_password'
 export async function getActiveOtp(
   phone: string,
   purpose: OtpPurpose = 'login',
+  lock = false,
 ): Promise<StoredOtp | null> {
   const db = getDb()
-  const [row] = await db
+  const query = db
     .select()
     .from(otpCode)
     .where(and(
@@ -694,8 +695,9 @@ export async function getActiveOtp(
       eq(otpCode.purpose, purpose),
       sql`${otpCode.consumedAt} IS NULL`,
     ))
-    .orderBy(desc(otpCode.createdAt))
+    .orderBy(desc(otpCode.id))
     .limit(1)
+  const [row] = await (lock ? query.for('update') : query)
   if (!row) return null
   return {
     id: row.id,
@@ -713,39 +715,43 @@ export async function saveOtp(input: {
   codeHash: string
   ttlSec: number
   purpose?: OtpPurpose
-}): Promise<void> {
+}): Promise<StoredOtp> {
   const db = getDb()
   const purpose = input.purpose ?? 'login'
   // کدهای قبلیِ همان شماره باطل می‌شوند: دو کد معتبر هم‌زمان یعنی پنجره‌ی
   // حمله دو برابر می‌شود.
   await db
     .update(otpCode)
-    .set({ consumedAt: new Date() })
+    .set({ consumedAt: new Date(), expiresAt: sql`${otpCode.expiresAt}` })
     .where(and(
       eq(otpCode.phone, input.phone),
       eq(otpCode.purpose, purpose),
       sql`${otpCode.consumedAt} IS NULL`,
     ))
 
-  await db.insert(otpCode).values({
+  const createdAt = new Date(Math.floor(Date.now() / 1000) * 1000)
+  const expiresAt = new Date(createdAt.getTime() + input.ttlSec * 1000)
+  const [{ insertId }] = await db.insert(otpCode).values({
     phone: input.phone,
     codeHash: input.codeHash,
     purpose,
-    expiresAt: new Date(Date.now() + input.ttlSec * 1000),
+    createdAt,
+    expiresAt,
   })
+  return { id: insertId, phone: input.phone, codeHash: input.codeHash, purpose, createdAt, expiresAt, attempts: 0 }
 }
 
 export async function bumpOtpAttempts(id: number): Promise<void> {
   const db = getDb()
   await db
     .update(otpCode)
-    .set({ attempts: sql`${otpCode.attempts} + 1` })
+    .set({ attempts: sql`${otpCode.attempts} + 1`, expiresAt: sql`${otpCode.expiresAt}` })
     .where(eq(otpCode.id, id))
 }
 
 export async function consumeOtp(id: number): Promise<void> {
   const db = getDb()
-  await db.update(otpCode).set({ consumedAt: new Date() }).where(eq(otpCode.id, id))
+  await db.update(otpCode).set({ consumedAt: new Date(), expiresAt: sql`${otpCode.expiresAt}` }).where(eq(otpCode.id, id))
 }
 
 /**

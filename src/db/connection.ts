@@ -139,6 +139,29 @@ export async function withDbTransaction<T>(work: () => Promise<T>): Promise<T> {
   return value
 }
 
+/** Serialize OTP issuance across processes without an extra table. The lock
+ * stays on this connection until its transaction commits, and never queues a
+ * second provider call. Database-qualified names also isolate QA from live. */
+export async function withDbNamedLock<T>(key: string, work: () => Promise<T>): Promise<{ acquired: true; value: T } | { acquired: false }> {
+  const connection = await getPool().getConnection()
+  let acquired = false
+  try {
+    const [rows] = await connection.query<mysql.RowDataPacket[]>("SELECT GET_LOCK(SHA2(CONCAT(DATABASE(), ':', ?), 256), 0) AS acquired", [key])
+    acquired = Number(rows[0]?.acquired) === 1
+    if (!acquired) return { acquired: false }
+    const committed: (() => void)[] = []
+    const db = drizzle(connection, { schema, mode: 'default' })
+    const value = await db.transaction(tx => transactions.run({ db: tx as unknown as Db, committed }, work))
+    for (const effect of committed) {
+      try { effect() } catch { console.warn('[db] post-commit cache invalidation failed; data is committed') }
+    }
+    return { acquired: true, value }
+  } finally {
+    try { if (acquired) await connection.query("SELECT RELEASE_LOCK(SHA2(CONCAT(DATABASE(), ':', ?), 256))", [key]) }
+    finally { connection.release() }
+  }
+}
+
 export function afterDbCommit(effect: () => void): void {
   const active = transactions.getStore()
   if (active) active.committed.push(effect)

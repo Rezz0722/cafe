@@ -317,7 +317,7 @@ export default async function CafePage({ params }: PageProps) {
   const reviewFormProps = {
     placeId: place.id, slug: place.slug, placeName: place.name, signedIn: !!user,
     existing: null, menuItems: reviewableMenuItems,
-    authHref: authUrl(`${paths.cafe(place.slug)}#reviews`),
+    authHref: authUrl(`${paths.cafe(place.slug)}?authIntent=review#reviews`),
     minTextLength: moderation.reviewMinTextLength,
     maxTextLength: moderation.reviewMaxTextLength,
     isBlogger: account?.isBlogger === true,
@@ -606,7 +606,7 @@ export default async function CafePage({ params }: PageProps) {
                         <span className={styles.reviewEditLabel}>ویرایش نظر <ChevronDown size={17} aria-hidden="true" /></span>
                       </summary>
                       <div className={styles.reviewEditorBody}>
-                        <ReviewForm placeId={place.id} slug={place.slug} placeName={place.name} signedIn existing={myReview} menuItems={reviewableMenuItems} authHref={authUrl(`${paths.cafe(place.slug)}#reviews`)} minTextLength={moderation.reviewMinTextLength} maxTextLength={moderation.reviewMaxTextLength} isBlogger={account?.isBlogger === true} />
+                        <ReviewForm placeId={place.id} slug={place.slug} placeName={place.name} signedIn existing={myReview} menuItems={reviewableMenuItems} authHref={authUrl(`${paths.cafe(place.slug)}?authIntent=review#reviews`)} minTextLength={moderation.reviewMinTextLength} maxTextLength={moderation.reviewMaxTextLength} isBlogger={account?.isBlogger === true} />
                       </div>
                     </details>
                   )}

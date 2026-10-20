@@ -6,6 +6,7 @@ import { getCurrentUser } from '@/core/auth/currentUser'
 import { getAuthPolicy } from '@/core/settings/policies'
 import { paths } from '@/routes'
 import { safeAuthRedirect } from '@/core/auth/redirect'
+import { readOtpBrowser } from '@/core/auth/otpBrowser'
 
 /**
  * صفحه‌ی ورود — خصوصی، پس از ایندکس بیرون است.
@@ -35,11 +36,18 @@ export default async function AuthPage({ searchParams }: PageProps) {
   }
 
   const policy = await getAuthPolicy()
+  const pendingOtp = await readOtpBrowser('login')
+  const params = await searchParams
+  const returnTo = safeAuthRedirect(typeof params.redirect === 'string' ? params.redirect : null)
+  if (policy.allowRegistration && returnTo.startsWith('/cafe/') && returnTo.endsWith('#reviews') && params.mode !== 'login' && !pendingOtp) {
+    redirect(`${paths.authRegister}?redirect=${encodeURIComponent(returnTo)}`)
+  }
 
   return (
     <Suspense fallback={null}>
       <AuthScreen
         config={{
+          initialOtp: Boolean(pendingOtp),
           otpLength: policy.otp.length,
           otpTtlSeconds: policy.otp.ttlSeconds,
           resendCooldownSeconds: policy.otp.resendCooldownSeconds,

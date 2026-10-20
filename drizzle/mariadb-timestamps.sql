@@ -63,6 +63,7 @@ ALTER TABLE media MODIFY fetched_at             timestamp NULL DEFAULT NULL;
 -- ── otp_code ──
 -- تا مصرف‌شدنِ کد، خالی است.
 ALTER TABLE otp_code MODIFY consumed_at         timestamp NULL DEFAULT NULL;
+ALTER TABLE otp_code MODIFY expires_at          timestamp NOT NULL DEFAULT '1970-01-02 00:00:00';
 
 -- ── پاک‌سازیِ داده‌ی موجود ──
 -- ردیف‌هایی که قبل از این اصلاح ساخته شده‌اند و صفر-تاریخ گرفته‌اند.

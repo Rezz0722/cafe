@@ -5,6 +5,7 @@ import { ChangePasswordForm } from '@/components/profile/ChangePasswordForm'
 import { getCurrentUser } from '@/core/auth/currentUser'
 import { findUserById } from '@/core/auth/userRepo'
 import { authUrl, paths } from '@/routes'
+import { safeAuthRedirect } from '@/core/auth/redirect'
 import styles from '../page.module.css'
 import { ArrowLeft } from 'lucide-react'
 
@@ -15,7 +16,8 @@ export const metadata: Metadata = {
 
 export const dynamic = 'force-dynamic'
 
-export default async function PasswordPage() {
+export default async function PasswordPage({ searchParams }: { searchParams: Promise<{ redirect?: string }> }) {
+  const { redirect: destination } = await searchParams
   const user = await getCurrentUser()
   if (!user) redirect(authUrl(paths.changePassword))
 
@@ -37,6 +39,7 @@ export default async function PasswordPage() {
       <ChangePasswordForm
         hasPassword={hasPassword}
         mustChange={account?.mustChangePassword ?? false}
+        redirectTo={destination ? safeAuthRedirect(destination) : undefined}
       />
     </div>
   )

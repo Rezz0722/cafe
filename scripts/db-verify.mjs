@@ -63,6 +63,15 @@ const REQUIRED = [
 const missing = REQUIRED.filter((table) => !names.has(table))
 check(`${REQUIRED.length} جدول لازم موجود است`, missing.length === 0, missing.join(', '))
 
+const [otpExpiryColumns] = await conn.query(`SELECT COLUMN_DEFAULT, EXTRA, IS_NULLABLE
+  FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE()
+    AND TABLE_NAME = 'otp_code' AND COLUMN_NAME = 'expires_at'`)
+const otpExpiry = otpExpiryColumns[0]
+check('OTP expiry is explicit and never advances on an attempt update',
+  Boolean(otpExpiry) && otpExpiry.IS_NULLABLE === 'NO'
+    && !String(otpExpiry.EXTRA ?? '').toLowerCase().includes('on update')
+    && !String(otpExpiry.COLUMN_DEFAULT ?? '').toLowerCase().includes('current_timestamp'))
+
 const [bookingColumns] = await conn.query(`SELECT TABLE_NAME, COLUMN_NAME, COLUMN_DEFAULT, EXTRA
   FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE()
     AND ((TABLE_NAME = 'venue_booking_settings' AND COLUMN_NAME = 'enabled')
